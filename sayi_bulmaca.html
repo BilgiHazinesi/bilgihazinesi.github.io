@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kişiselleştirilmiş Sayı Bulmacaları</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary-color: #64748b;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --correct-color: #16a34a;
+            --incorrect-color: #dc2626;
+            --unanswered-color: #f59e0b;
+            --solution-bg: #f8fafc;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            text-align: center;
+            border-top: 6px solid var(--primary-color);
+        }
+
+        #welcome-screen, .quiz-container, #report-card {
+            display: block;
+        }
+        .quiz-container, #report-card { display: none; }
+
+        h1 {
+            font-family: 'Roboto Slab', serif;
+            color: var(--primary-dark);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        #name-input {
+            font-size: 1.2rem; padding: 0.8rem; border-radius: 8px;
+            border: 2px solid var(--border-color); text-align: center;
+            width: 100%; margin-bottom: 1.5rem;
+        }
+
+        #start-btn {
+            font-size: 1.2rem; font-weight: 700; background-color: var(--correct-color);
+            color: white; padding: 0.8rem 2rem; border: none; border-radius: 8px; cursor: pointer;
+        }
+
+        #student-name-header { font-weight: 800; color: var(--primary-color); }
+        #question-counter { font-size: 1.1rem; font-weight: 700; color: var(--secondary-color); margin-top: 0.5rem; }
+
+        #question-text {
+            font-size: 1.3rem; min-height: 100px; display: flex; align-items: center;
+            justify-content: center; line-height: 1.7; margin: 2rem 0;
+            background-color: #f8fafc; padding: 1.5rem; border-radius: 8px;
+            border-left: 5px solid var(--primary-color); text-align: left;
+        }
+
+        #answer-input {
+            font-size: 1.8rem; font-weight: 700; padding: 0.7rem; border: 2px solid var(--border-color);
+            border-radius: 8px; text-align: center; width: 100%; max-width: 350px;
+        }
+        
+        #check-btn {
+            font-size: 1.1rem; font-weight: 700; background-color: var(--primary-color);
+            color: white; border: none; padding: 0.8rem 2rem; border-radius: 8px;
+            cursor: pointer; margin-top: 1rem;
+        }
+
+        .feedback-container { min-height: 60px; margin-top: 1rem; }
+        .feedback { font-size: 1.2rem; font-weight: 700; }
+        .feedback.correct { color: var(--correct-color); }
+        .feedback.incorrect { color: var(--incorrect-color); }
+        #attempts-text { font-size: 0.9rem; color: var(--secondary-color); margin-top: 0.5rem; }
+
+        #solution-container {
+            background-color: var(--solution-bg); border-radius: 8px; padding: 1.5rem;
+            margin-top: 1.5rem; text-align: left; display: none; border: 1px solid var(--border-color);
+        }
+        #solution-container h3 {
+            color: var(--primary-dark); font-family: 'Roboto Slab', serif; margin-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem;
+        }
+        .solution-step { list-style: none; padding-left: 0; }
+        .solution-step li { margin-bottom: 0.8rem; padding-left: 2rem; position: relative; }
+        .solution-step li::before {
+            content: '👉'; position: absolute; left: 0; top: 0;
+            font-size: 1.2rem;
+        }
+        .number-viz { margin: 1rem 0; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
+        .digit-box {
+            border: 2px solid var(--border-color); border-radius: 8px; padding: 10px;
+            min-width: 45px; text-align: center; background-color: white;
+        }
+        .digit-box .digit { font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); }
+        .digit-box .label { font-size: 0.7rem; color: var(--secondary-color); font-weight: 600; }
+        .digit-box.highlight { border-color: var(--secondary-color); background-color: #fffbeb; }
+
+        .navigation-controls {
+            display: flex; justify-content: space-between; margin-top: 2rem;
+            border-top: 1px solid var(--border-color); padding-top: 1.5rem;
+        }
+        .nav-btn, #restart-btn {
+            font-size: 1rem; font-weight: 700; background-color: var(--secondary-color);
+            color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer;
+        }
+        .nav-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        #restart-btn { background-color: var(--primary-color); }
+
+        /* --- Karne Stilleri --- */
+        #report-card { border-top-color: var(--unanswered-color); }
+        #final-message { font-size: 1.2rem; font-weight: 600; margin-bottom: 2rem; }
+        #question-summary-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+        .summary-card {
+            background-color: var(--solution-bg);
+            border: 1px solid var(--border-color);
+            border-left-width: 6px;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .summary-card.correct { border-left-color: var(--correct-color); }
+        .summary-card.incorrect { border-left-color: var(--incorrect-color); }
+        .summary-card.unanswered { border-left-color: var(--unanswered-color); }
+        
+        .card-question-number { font-weight: 800; color: var(--primary-dark); margin-bottom: 0.5rem; }
+        .card-status-icon { font-size: 2.5rem; line-height: 1; }
+        .card-status-text { font-weight: 700; }
+        .summary-card.correct .card-status-text { color: var(--correct-color); }
+        .summary-card.incorrect .card-status-text { color: var(--incorrect-color); }
+        .summary-card.unanswered .card-status-text { color: var(--unanswered-color); }
+    </style>
+</head>
+<body>
+
+    <div id="welcome-screen" class="container">
+        <h1>Görsel Sayı Bulmacaları</h1>
+        <p style="margin-bottom: 1.5rem;">Başlamadan önce ismini girer misin?</p>
+        <input type="text" id="name-input" placeholder="İsminizi buraya yazın..." maxlength="20">
+        <button id="start-btn">Teste Başla</button>
+    </div>
+
+    <div class="quiz-container container">
+        <div class="quiz-header">
+            <h1 id="student-name-header"></h1>
+            <p id="question-counter"></p>
+        </div>
+        <p id="question-text"></p>
+        <div class="answer-section">
+            <input type="number" id="answer-input" placeholder="Cevabınızı girin...">
+            <button id="check-btn">Kontrol Et</button>
+        </div>
+        <div class="feedback-container">
+            <p class="feedback" id="feedback-text"></p>
+            <p id="attempts-text"></p>
+        </div>
+        <div id="solution-container">
+            <h3>Adım Adım Çözüm</h3>
+            <div id="solution-content"></div>
+        </div>
+        <div class="navigation-controls">
+            <button class="nav-btn" id="prev-btn">Önceki Soru</button>
+            <button class="nav-btn" id="next-btn">Sonraki Soru</button>
+        </div>
+    </div>
+
+    <div id="report-card" class="container">
+        <h1>Başarı Kartı</h1>
+        <p id="final-message"></p>
+        <div id="question-summary-container">
+            </div>
+        <button id="restart-btn" style="margin-top: 2rem;">Tekrar Başla</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+             const questions = [
+                { question: "Binler bölüğündeki rakamların sayı değerleri toplamı 5 olan en küçük altı basamaklı sayıyı yazınız.", answer: 104000, 
+                  solution: `<p>Bu sayıyı adım adım bulalım:</p>
+                           <div class="number-viz">
+                                <div class="digit-box highlight"><div class="digit">1</div><div class="label">Yüz Binler</div></div>
+                                <div class="digit-box highlight"><div class="digit">0</div><div class="label">On Binler</div></div>
+                                <div class="digit-box highlight"><div class="digit">4</div><div class="label">Binler</div></div>
+                                <div class="digit-box"><div class="digit">0</div><div class="label">Yüzler</div></div>
+                                <div class="digit-box"><div class="digit">0</div><div class="label">Onlar</div></div>
+                                <div class="digit-box"><div class="digit">0</div><div class="label">Birler</div></div>
+                           </div>
+                           <ul class="solution-step">
+                               <li>En küçük 6 basamaklı sayı olması için en başa (Yüz Binler) '1' koymalıyız.</li>
+                               <li>Sayıyı küçük tutmak için On Binler basamağına '0' koyarız.</li>
+                               <li><b>Kural:</b> Binler bölüğü toplamı 5 olmalı. Şu an 1 + 0 = 1. Geriye 5 - 1 = 4 kalıyor. Demek ki Binler basamağı '4' olmalı.</li>
+                               <li>En küçük sayı için kalan tüm basamaklara '0' yazarız.</li>
+                           </ul>` },
+                { question: "Yüzler basamağında 7 rakamı bulunan, beş basamaklı en büyük çift sayıyı yazınız.", answer: 99798, 
+                  solution: `<p>Bu sayıyı en büyük olacak şekilde oluşturalım:</p>
+                           <div class="number-viz">
+                                <div class="digit-box"><div class="digit">9</div><div class="label">On Binler</div></div>
+                                <div class="digit-box"><div class="digit">9</div><div class="label">Binler</div></div>
+                                <div class="digit-box highlight"><div class="digit">7</div><div class="label">Yüzler</div></div>
+                                <div class="digit-box"><div class="digit">9</div><div class="label">Onlar</div></div>
+                                <div class="digit-box highlight"><div class="digit">8</div><div class="label">Birler</div></div>
+                           </div>
+                           <ul class="solution-step">
+                               <li>En büyük sayı için en değerli basamaklara (On Binler, Binler) '9' koyarız.</li>
+                               <li><b>Kural:</b> Yüzler basamağı '7' olmalı.</li>
+                               <li>Sayıyı büyük tutmaya devam etmek için Onlar basamağına da '9' koyarız.</li>
+                               <li><b>Kural:</b> Sayı çift olmalı. Birler basamağına yazabileceğimiz en büyük çift rakam '8'dir.</li>
+                           </ul>` },
+                { question: "Birler bölüğünün sayı değerleri toplamı 7, binler bölüğünün sayı değerleri toplamı 6 olan en küçük altı basamaklı tek sayıyı yazınız.", answer: 105007, 
+                  solution: `<p>İki kuralı da sağlayacak en küçük sayıyı bulalım:</p>
+                           <div class="number-viz">
+                                <div class="digit-box highlight"><div class="digit">1</div><div class="label">Yüz Binler</div></div>
+                                <div class="digit-box highlight"><div class="digit">0</div><div class="label">On Binler</div></div>
+                                <div class="digit-box highlight"><div class="digit">5</div><div class="label">Binler</div></div>
+                                <div class="digit-box"><div class="digit">0</div><div class="label">Yüzler</div></div>
+                                <div class="digit-box"><div class="digit">0</div><div class="label">Onlar</div></div>
+                                <div class="digit-box"><div class="digit">7</div><div class="label">Birler</div></div>
+                           </div>
+                           <ul class="solution-step">
+                               <li><b>Kural 1 (Binler Bölüğü):</b> Toplamı 6 olan en küçük 3 basamaklı sayı 105'tir. (1+0+5=6). Bu yüzden binler bölüğü 105 olur.</li>
+                               <li><b>Kural 2 (Birler Bölüğü):</b> Toplamı 7 olan en küçük 3 basamaklı sayı 007'dir. (0+0+7=7). Bu yüzden birler bölüğü 007 olur.</li>
+                               <li>Aynı zamanda '7' rakamı, sayının tek olmasını da sağlar!</li>
+                           </ul>` },
+                { question: "Rakamları farklı, beş basamaklı en küçük tek sayıyı yazınız.", answer: 10235, 
+                  solution: `<p>En küçük rakamları kullanarak bu sayıyı oluşturalım:</p>
+                           <div class="number-viz">
+                                <div class="digit-box"><div class="digit">1</div><div class="label">On Binler</div></div>
+                                <div class="digit-box"><div class="digit">0</div><div class="label">Binler</div></div>
+                                <div class="digit-box"><div class="digit">2</div><div class="label">Yüzler</div></div>
+                                <div class="digit-box"><div class="digit">3</div><div class="label">Onlar</div></div>
+                                <div class="digit-box highlight"><div class="digit">5</div><div class="label">Birler</div></div>
+                           </div>
+                           <ul class="solution-step">
+                               <li>En küçük olması için başa '1', yanına '0' koyarız.</li>
+                               <li>Sırayla en küçük farklı rakamları ('2', '3') yerleştiririz.</li>
+                               <li><b>Kural:</b> Sayı tek olmalı. Birler basamağına yazabileceğimiz en küçük ve kullanılmamış tek rakam '5'tir.</li>
+                           </ul>` },
+                { question: "Rakamları farklı, on binler basamağı ile yüzler basamağı tek olan en küçük altı basamaklı çift sayıyı yazınız.", answer: 130524, 
+                  solution: `<p>Tüm kurallara uyarak en küçük sayıyı yapalım:</p>
+                            <div class="number-viz">
+                                <div class="digit-box"><div class="digit">1</div><div class="label">Yüz Binler</div></div>
+                                <div class="digit-box highlight"><div class="digit">3</div><div class="label">On Binler</div></div>
+                                <div class="digit-box"><div class="digit">0</div><div class="label">Binler</div></div>
+                                <div class="digit-box highlight"><div class="digit">5</div><div class="label">Yüzler</div></div>
+                                <div class="digit-box"><div class="digit">2</div><div class="label">Onlar</div></div>
+                                <div class="digit-box highlight"><div class="digit">4</div><div class="label">Birler</div></div>
+                           </div>
+                           <ul class="solution-step">
+                               <li>En küçük sayı için başa '1' gelir.</li>
+                               <li><b>Kural:</b> On binler basamağı tek olmalı. En küçük ve kullanılmamış tek rakam '3'tür.</li>
+                               <li>Binler basamağına en küçük rakam olan '0' gelir.</li>
+                               <li><b>Kural:</b> Yüzler basamağı da tek olmalı. En küçük ve kullanılmamış tek rakam '5'tir.</li>
+                               <li>Onlar basamağına kalan en küçük rakam '2' gelir.</li>
+                               <li><b>Kural:</b> Sayı çift olmalı. Kalan en küçük çift rakam '4'tür.</li>
+                           </ul>` }
+            ];
+
+            let studentAnswers = [];
+            let currentQuestionIndex = 0;
+
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const quizContainer = document.querySelector('.quiz-container');
+            const reportCard = document.getElementById('report-card');
+            const nameInput = document.getElementById('name-input');
+            const startBtn = document.getElementById('start-btn');
+            const studentNameHeader = document.getElementById('student-name-header');
+            const questionCounter = document.getElementById('question-counter');
+            const questionText = document.getElementById('question-text');
+            const answerInput = document.getElementById('answer-input');
+            const checkBtn = document.getElementById('check-btn');
+            const feedbackText = document.getElementById('feedback-text');
+            const attemptsText = document.getElementById('attempts-text');
+            const solutionContainer = document.getElementById('solution-container');
+            const solutionContent = document.getElementById('solution-content');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            const finalMessage = document.getElementById('final-message');
+            const summaryContainer = document.getElementById('question-summary-container');
+
+            function initializeAnswers() {
+                studentAnswers = questions.map(() => ({
+                    attempts: 0,
+                    status: 'unanswered',
+                    lastAnswer: ''
+                }));
+            }
+
+            startBtn.addEventListener('click', () => {
+                const name = nameInput.value.trim();
+                if (name) {
+                    studentNameHeader.textContent = `Başarılar, ${name}!`;
+                    welcomeScreen.style.display = 'none';
+                    quizContainer.style.display = 'block';
+                    initializeAnswers();
+                    showQuestion(0);
+                } else {
+                    alert('Lütfen isminizi girin.');
+                }
+            });
+
+            function showQuestion(index) {
+                const question = questions[index];
+                questionCounter.textContent = `Soru ${index + 1} / ${questions.length}`;
+                questionText.textContent = question.question;
+                
+                updateUIForQuestion(index);
+
+                prevBtn.disabled = index === 0;
+                nextBtn.textContent = (index === questions.length - 1) ? 'Karneyi Gör' : 'Sonraki Soru';
+            }
+
+            function updateUIForQuestion(index) {
+                const answerData = studentAnswers[index];
+                answerInput.value = answerData.lastAnswer;
+                feedbackText.textContent = '';
+                solutionContainer.style.display = 'none';
+                
+                if (answerData.status === 'correct') {
+                    feedbackText.textContent = 'Bu soruyu doğru cevapladın! 🎉';
+                    feedbackText.className = 'feedback correct';
+                    disableQuestion();
+                    showSolution();
+                } else if (answerData.status === 'incorrect') {
+                    feedbackText.textContent = `Doğru cevap: ${questions[index].answer}`;
+                    feedbackText.className = 'feedback incorrect';
+                    disableQuestion();
+                    showSolution();
+                } else {
+                    answerInput.disabled = false;
+                    checkBtn.disabled = false;
+                    attemptsText.textContent = `Kalan deneme hakkınız: ${2 - answerData.attempts}`;
+                }
+            }
+
+            function checkAnswer() {
+                const answerData = studentAnswers[currentQuestionIndex];
+                if (answerData.status !== 'unanswered') return;
+
+                const userAnswer = parseInt(answerInput.value);
+                answerData.lastAnswer = answerInput.value;
+
+                if (isNaN(userAnswer)) {
+                    feedbackText.textContent = 'Lütfen geçerli bir sayı girin!';
+                    feedbackText.className = 'feedback incorrect';
+                    return;
+                }
+                
+                answerData.attempts++;
+                
+                if (userAnswer === questions[currentQuestionIndex].answer) {
+                    feedbackText.textContent = 'Tebrikler! Doğru cevap! 🎉';
+                    feedbackText.className = 'feedback correct';
+                    answerData.status = 'correct';
+                    disableQuestion();
+                    showSolution();
+                } else {
+                    const remainingAttempts = 2 - answerData.attempts;
+                    if (remainingAttempts > 0) {
+                        feedbackText.textContent = 'Yanlış cevap. Tekrar dene!';
+                        feedbackText.className = 'feedback incorrect';
+                        attemptsText.textContent = `Kalan deneme hakkınız: ${remainingAttempts}`;
+                    } else {
+                        feedbackText.textContent = `Doğru cevap: ${questions[currentQuestionIndex].answer}`;
+                        feedbackText.className = 'feedback incorrect';
+                        answerData.status = 'incorrect';
+                        disableQuestion();
+                        showSolution();
+                    }
+                }
+            }
+            
+            function disableQuestion() {
+                answerInput.disabled = true;
+                checkBtn.disabled = true;
+                attemptsText.textContent = '';
+            }
+
+            function showSolution() {
+                solutionContent.innerHTML = questions[currentQuestionIndex].solution;
+                solutionContainer.style.display = 'block';
+            }
+
+            function showReportCard() {
+                quizContainer.style.display = 'none';
+                reportCard.style.display = 'block';
+
+                const correctCount = studentAnswers.filter(a => a.status === 'correct').length;
+                finalMessage.textContent = `Harika bir iş çıkardın, ${nameInput.value}! İşte soru analizin:`;
+                summaryContainer.innerHTML = '';
+
+                studentAnswers.forEach((answer, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'summary-card';
+                    
+                    let icon = '';
+                    let text = '';
+                    
+                    switch(answer.status) {
+                        case 'correct':
+                            card.classList.add('correct');
+                            icon = '✅';
+                            text = 'Doğru';
+                            break;
+                        case 'incorrect':
+                             card.classList.add('incorrect');
+                            icon = '❌';
+                            text = 'Yanlış';
+                            break;
+                        default:
+                            card.classList.add('unanswered');
+                            icon = '🤔';
+                            text = 'Boş Bırakıldı';
+                            break;
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="card-question-number">Soru ${index + 1}</div>
+                        <div class="card-status-icon">${icon}</div>
+                        <div class="card-status-text">${text}</div>
+                    `;
+                    summaryContainer.appendChild(card);
+                });
+            }
+
+            prevBtn.addEventListener('click', () => {
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    showQuestion(currentQuestionIndex);
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (nextBtn.textContent === 'Karneyi Gör') {
+                    showReportCard();
+                } else {
+                    currentQuestionIndex++;
+                    showQuestion(currentQuestionIndex);
+                }
+            });
+
+            restartBtn.addEventListener('click', () => location.reload());
+            checkBtn.addEventListener('click', checkAnswer);
+            answerInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') checkBtn.click(); });
+        });
+    </script>
+</body>
+
+</html>
