@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eş Anlamlı Kelimeler</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --primary-color: #4a69bd;
+            --text-color: #343a40;
+            --border-color: #e9ecef;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-grow: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 2.25rem;
+        }
+        
+        p.subtitle {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .search-box {
+            flex-grow: 1;
+            max-width: 400px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.2);
+        }
+
+        .control-btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .control-btn:hover {
+            opacity: 0.85;
+            transform: translateY(-2px);
+        }
+        .control-btn.secondary {
+             background-color: #6c757d;
+        }
+        .control-btn.tertiary {
+             background-color: #28a745;
+        }
+
+
+        #word-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .word-pair {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .word-pair:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .word {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .synonym-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .synonym {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+        }
+        
+        .synonym.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .toggle-btn {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background-color: #f8f9fa;
+            color: #495057;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 70px; /* Sabit genişlik */
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>📚 Eş Anlamlı Kelimeler</h1>
+            <p class="subtitle">Kelimeleri arat, eş anlamlılarını keşfet ve kendini test et!</p>
+        </header>
+
+        <div class="controls">
+            <input type="text" id="search-box" class="search-box" placeholder="Aranacak kelimeyi yazın...">
+            <button id="show-all-btn" class="control-btn">👀 Hepsini Göster</button>
+            <button id="hide-all-btn" class="control-btn secondary">🙈 Hepsini Gizle</button>
+            <button id="shuffle-btn" class="control-btn tertiary">🔀 Karıştır</button>
+        </div>
+
+        <div id="word-grid"></div>
+    </div>
+
+    <footer>
+        <p>Bu çalışmayı hazırlayan Zeynal Öğretmen'e teşekkürler.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const wordPairs = [
+                "Kalp|Yürek", "Görev|Vazife", "Yaşlı|İhtiyar", "Cevap|Yanıt", "Tören|Merasim", "Kötü|Fena",
+                "Kafa|Baş", "Lugat|Sözlük", "Deprem|Zelzele", "Vapur|Gemi", "Rehber|Kılavuz",
+                "Olay|Hadise", "Kırmızı|Al", "Beyaz|Ak", "Davet|Çağrı", "Sema|Gökyüzü",
+                "Adet|Sayı", "Sözcük|Kelime", "Temel|Esas", "Hak|Adalet", "Pinti|Cimri", "İkaz|Uyarı",
+                "Sınav|İmtihan", "Hekim|Doktor", "Hızlı|Süratli", "Baytar|Veteriner", "Aleni|Açık", "Alelade|Sıradan",
+                "Vatan|Yurt", "Irmak|Nehir", "Aş|Yemek", "Seyyah|Gezgin", "Pabuç|Ayakkabı",
+                "Sima|Yüz", "Kenar|Kıyı", "Konuk|Misafir", "Araba|Otomobil", "Tasa|Üzüntü", "Yel|Rüzgâr",
+                "Affetme|Bağışlama", "Basınç|Tazyik", "Konut|Ev", "Cömert|Bonkör", "Sene|Yıl", "Ehil|Usta",
+                "Medeniyet|Uygarlık", "Özlem|Hasret", "Sıra|Dizi", "Arzu|İstek", "Bıkmak|Yılmak",
+                "Nadir|Ender", "Millet|Ulus", "Örnek|Misal", "Namzet|Aday",
+                "Ün|Şöhret", "Kuşak|Nesil", "His|Duygu", "Esbab|Elbise", "Fedakâr|Özverili", "Meta|Mal",
+                "Yas|Matem", "Atik|Seri", "Sabit|Durağan", "Büyük|Aka", "Umar|Çare",
+                "Kaide|Kural", "Güz|Sonbahar", "Vilayet|İl", "Önder|Lider", "Yüce|Ulu",
+                "Zayıf|Cılız", "Düşünce|Fikir", "Güçlü|Kuvvetli", "Sevi|Aşk", "Savaş|Muharebe", "Rey|Oy",
+                "Mektep|Okul", "Yapıt|Eser", "Kolay|Basit", "Çamur|Balçık", "Delil|Kanıt", "Güven|Emniyet",
+                "Mektup|Name", "İstasyon|Gar", "Rasat|Gözlem", "Gelecek|İstikbal", "İsim|Ad", "İvedi|Çabuk",
+                "Acemi|Toy", "Abide|Anıt", "Yoksul|Fakir", "Mutluluk|Saadet"
+            ].map(p => {
+                const [word, synonym] = p.split('|');
+                return { word, synonym };
+            });
+
+            const grid = document.getElementById('word-grid');
+            const searchBox = document.getElementById('search-box');
+            const showAllBtn = document.getElementById('show-all-btn');
+            const hideAllBtn = document.getElementById('hide-all-btn');
+            const shuffleBtn = document.getElementById('shuffle-btn');
+
+            const renderWords = (pairsToRender) => {
+                grid.innerHTML = '';
+                if (pairsToRender.length === 0) {
+                    grid.innerHTML = '<p>Sonuç bulunamadı.</p>';
+                    return;
+                }
+
+                pairsToRender.forEach(({ word, synonym }) => {
+                    const pairElement = document.createElement('div');
+                    pairElement.className = 'word-pair';
+                    
+                    pairElement.innerHTML = `
+                        <span class="word">${word}</span>
+                        <div class="synonym-container">
+                            <span class="synonym">${synonym}</span>
+                            <button class="toggle-btn">Göster</button>
+                        </div>
+                    `;
+
+                    const toggleBtn = pairElement.querySelector('.toggle-btn');
+                    const synonymEl = pairElement.querySelector('.synonym');
+
+                    toggleBtn.addEventListener('click', () => {
+                        synonymEl.classList.toggle('visible');
+                        toggleBtn.textContent = synonymEl.classList.contains('visible') ? 'Gizle' : 'Göster';
+                    });
+                    
+                    grid.appendChild(pairElement);
+                });
+            };
+
+            const toggleAll = (show) => {
+                document.querySelectorAll('.word-pair').forEach(pair => {
+                    const synonymEl = pair.querySelector('.synonym');
+                    const toggleBtn = pair.querySelector('.toggle-btn');
+                    if (show) {
+                        synonymEl.classList.add('visible');
+                        toggleBtn.textContent = 'Gizle';
+                    } else {
+                        synonymEl.classList.remove('visible');
+                        toggleBtn.textContent = 'Göster';
+                    }
+                });
+            };
+            
+            searchBox.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                const filteredPairs = wordPairs.filter(p => 
+                    p.word.toLowerCase().includes(searchTerm) || 
+                    p.synonym.toLowerCase().includes(searchTerm)
+                );
+                renderWords(filteredPairs);
+            });
+
+            showAllBtn.addEventListener('click', () => toggleAll(true));
+            hideAllBtn.addEventListener('click', () => toggleAll(false));
+            
+            shuffleBtn.addEventListener('click', () => {
+                const shuffledPairs = [...wordPairs].sort(() => Math.random() - 0.5);
+                renderWords(shuffledPairs);
+            });
+
+            // Initial render
+            renderWords(wordPairs);
+        });
+    </script>
+</body>
+
+</html>
