@@ -24,12 +24,17 @@
             color: var(--text-color);
             margin: 0;
             padding: 25px;
+            min-height: 100vh;
+        }
+        
+        .page-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            width: 100%;
         }
 
+        .header { width: 100%; }
         .header h1 {
             font-size: 3.8em;
             font-weight: 900;
@@ -39,7 +44,6 @@
             margin-bottom: 5px;
             text-align: center;
         }
-
         .header p {
             font-size: 1.2em;
             color: #667;
@@ -47,7 +51,8 @@
             margin-top: 0;
         }
         
-        nav {
+        /* --- MASAÜSTÜ NAVİGASYON --- */
+        .desktop-nav {
             background-color: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
             border-radius: 50px;
@@ -55,13 +60,11 @@
             padding: 10px 15px;
             margin-top: 25px;
         }
-
-        nav ul {
+        .desktop-nav ul {
             list-style: none; margin: 0; padding: 0; display: flex; gap: 8px;
         }
-        
-        nav ul li { position: relative; }
-        nav ul li a {
+        .desktop-nav ul li { position: relative; }
+        .desktop-nav ul li a {
             text-decoration: none;
             color: var(--primary-color);
             font-weight: 700;
@@ -71,205 +74,231 @@
             display: block;
             transition: all 0.3s ease;
         }
-        nav ul li a:hover {
+        .desktop-nav ul li a:hover {
             background-color: var(--primary-color);
             color: #ffffff;
         }
-
         .nav-dropdown-content {
             display: none;
             position: absolute;
             background-color: #fff;
             min-width: 220px;
             box-shadow: var(--card-shadow);
-            z-index: 1;
+            z-index: 100;
             border-radius: 12px;
             padding: 10px;
             margin-top: 8px;
             animation: fadeIn 0.3s ease-out;
         }
-
-        /* DEĞİŞİKLİK: Menülerin açılması artık fareyle üzerine gelince (hover) çalışacak */
-        nav ul li:hover .nav-dropdown-content {
-            display: block;
-        }
-
+        .desktop-nav ul li:hover .nav-dropdown-content { display: block; }
         .nav-dropdown-content a {
-            color: var(--text-color);
-            padding: 12px 20px;
-            border-radius: 8px;
+            color: var(--text-color); padding: 12px 20px; border-radius: 8px;
         }
         .nav-dropdown-content a:hover { background-color: #f4f4f4; color: var(--primary-color); }
         
+        /* --- YENİ EKLENDİ: MOBİL NAVİGASYON --- */
+        .mobile-nav-toggle {
+            display: none; /* Masaüstünde gizli */
+            font-size: 2.5em;
+            color: var(--primary-color);
+            cursor: pointer;
+            z-index: 1001; /* Her şeyin üzerinde olsun */
+            position: fixed;
+            top: 25px;
+            right: 25px;
+        }
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            right: -100%; /* Başlangıçta ekranın dışında */
+            width: 280px;
+            height: 100%;
+            background-color: #fff;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: right 0.4s ease-in-out;
+            padding-top: 80px;
+        }
+        .mobile-nav.active { right: 0; } /* Javascript ile bu class eklenince menü görünür */
+        .mobile-nav ul { list-style: none; padding: 0; margin: 0; }
+        .mobile-nav ul li a {
+            display: block;
+            padding: 15px 25px;
+            font-size: 1.2em;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 700;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .mobile-nav .mobile-dropdown a { padding-left: 40px; font-size: 1.1em; color: #555; }
+        
         .container { max-width: 1100px; width: 100%; text-align: center; margin-top: 30px; }
         .intro {
-            font-size: 1.15em;
-            line-height: 1.7;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            font-size: 1.15em; line-height: 1.7; background-color: rgba(255, 255, 255, 0.7);
+            padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .card-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 30px; margin-top: 40px;
         }
         
-        @keyframes card-fade-in {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        @keyframes card-fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .card {
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: var(--card-shadow);
-            padding: 25px;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: card-fade-in 0.5s ease-out forwards;
-            opacity: 0;
+            background: #ffffff; border-radius: 20px; box-shadow: var(--card-shadow);
+            padding: 25px; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: card-fade-in 0.5s ease-out forwards; opacity: 0;
         }
-        
-        .card:nth-child(1) { animation-delay: 0.1s; }
-        .card:nth-child(2) { animation-delay: 0.2s; }
-        .card:nth-child(3) { animation-delay: 0.3s; }
-        .card:nth-child(4) { animation-delay: 0.4s; }
-
-        .card:hover {
-            transform: translateY(-8px) scale(1.03);
-            box-shadow: var(--card-hover-shadow);
-        }
-
-        .card .icon {
-            font-size: 3.5em;
-            line-height: 1;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .card:nth-child(1) { animation-delay: 0.1s; } .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; } .card:nth-child(4) { animation-delay: 0.4s; }
+        .card:hover { transform: translateY(-8px) scale(1.03); box-shadow: var(--card-hover-shadow); }
+        .card .icon { font-size: 3.5em; line-height: 1; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card h2 { font-size: 1.6em; margin: 15px 0 10px 0; color: #333; }
         .card p { font-size: 1em; line-height: 1.6; margin-bottom: 0; }
         
-        .card-sub-links {
-            max-height: 0; overflow: hidden;
-            transition: max-height 0.5s ease-out;
-            margin: 0; padding: 0; list-style: none;
-        }
+        .card-sub-links { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; margin: 0; padding: 0; list-style: none; }
         .card-sub-links.show { max-height: 200px; margin-top: 15px; }
-        .card-sub-links a {
-            background-color: #f3f4f6;
-            display: block;
-            padding: 12px;
-            margin-top: 8px;
-            border-radius: 10px;
-            text-decoration: none;
-            color: var(--primary-color);
-            font-weight: bold;
-            transition: background-color 0.2s, color 0.2s;
-        }
+        .card-sub-links a { background-color: #f3f4f6; display: block; padding: 12px; margin-top: 8px; border-radius: 10px; text-decoration: none; color: var(--primary-color); font-weight: bold; transition: background-color 0.2s, color 0.2s; }
         .card-sub-links a:hover { background-color: var(--primary-color); color: #fff; }
 
         footer { margin-top: auto; padding: 30px; font-size: 0.9em; color: #888; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- YENİ EKLENDİ: MOBİL İÇİN EKRAN KIRILIMI --- */
+        @media (max-width: 992px) {
+            .desktop-nav { display: none; } /* Masaüstü menüsünü gizle */
+            .mobile-nav-toggle { display: block; } /* Hamburger ikonu göster */
+            .header h1 { font-size: 2.8em; }
+            body { padding: 15px; }
+        }
+
     </style>
 </head>
 <body>
-    <header class="header">
-        <h1>Bilgi Hazinesi</h1>
-        <p>Öğrenmenin Keşif Dolu Dünyasına Hoş Geldiniz!</p>
-    </header>
-    
-    <nav>
-        <ul>
-            <li><a href="index.html">Anasayfa</a></li>
-            <li data-nav-id="matematik">
-                <a href="#">Matematik</a>
-                <div class="nav-dropdown-content">
-                    <a href="/sayi_bulmaca.html">Sayı Bulmaca</a>
-                    <a href="/sayi_macerasi.html">Sayı Macerası</a>
-                    <a href="/sayi_yuvarlama.html">Sayı Yuvarlama</a>
-                </div>
-            </li>
-            <li data-nav-id="turkce">
-                <a href="#">Türkçe</a>
-                <div class="nav-dropdown-content">
-                    <a href="/es_anlam.html">Eş Anlamlı Kelimeler</a>
-                    <a href="/es_ses.html">Eş Sesli Kelimeler</a>
-                </div>
-            </li>
-            <li><a href="#">Fen Bilimleri</a></li>
-            <li><a href="#">Sosyal Bilgiler</a></li>
-        </ul>
-    </nav>
-
-    <main class="container">
-        <p class="intro">
-            <strong>Bilgi Hazinesi ekibi olarak,</strong> sizler için hazırladığımız birbirinden keyifli ders içeriklerine aşağıdaki kartlara tıklayarak ulaşabilirsiniz. İyi eğlenceler!
-        </p>
-
-        <div class="card-container">
-            <div class="card matematik" data-target-id="matematik">
-                <div class="icon"><i class="bi bi-calculator-fill"></i></div>
-                <h2>Matematik</h2>
-                <p>Sayılarla oynayın, problemleri çözün ve matematiğin eğlenceli dünyasını keşfedin!</p>
-                <ul class="card-sub-links">
-                    <li><a href="/sayi_bulmaca.html">Sayı Bulmaca</a></li>
-                    <li><a href="/sayi_macerasi.html">Sayı Macerası</a></li>
-                    <li><a href="/sayi_yuvarlama.html">Sayı Yuvarlama</a></li>
-                </ul>
-            </div>
-            <div class="card turkce" data-target-id="turkce">
-                <div class="icon"><i class="bi bi-book-half"></i></div>
-                <h2>Türkçe</h2>
-                <p>Kelimelerin sihirli dünyasına dalın ve dil becerilerinizi keyifle geliştirin!</p>
-                <ul class="card-sub-links">
-                    <li><a href="/es_anlam.html">Eş Anlamlı Kelimeler</a></li>
-                    <li><a href="/es_ses.html">Eş Sesli Kelimeler</a></li>
-                </ul>
-            </div>
-            <div class="card fen">
-                <div class="icon"><i class="bi bi-stars"></i></div>
-                <h2>Fen Bilimleri</h2>
-                <p>Doğanın sırlarını ve evrenin harikalarını deneyler ve etkinliklerle öğrenin!</p>
-            </div>
-            <div class="card sosyal">
-                <div class="icon"><i class="bi bi-globe-americas"></i></div>
-                <h2>Sosyal Bilgiler</h2>
-                <p>Geçmişe yolculuk yapın, kültürleri tanıyın ve yaşadığınız dünyayı keşfedin!</p>
-            </div>
+    <div class="page-wrapper">
+        <div class="mobile-nav-toggle" id="mobile-nav-toggle">
+            <i class="bi bi-list"></i>
         </div>
-    </main>
 
-    <footer>
-        <p>&copy; 2025 Bilgi Hazinesi Ekibi - Tüm Hakları Saklıdır.</p>
-    </footer>
+        <nav class="mobile-nav" id="mobile-nav">
+             <ul>
+                <li><a href="index.html">Anasayfa</a></li>
+                <li><a href="#">Matematik</a></li>
+                <li class="mobile-dropdown"><a href="/sayi_bulmaca.html">Sayı Bulmaca</a></li>
+                <li class="mobile-dropdown"><a href="/sayi_macerasi.html">Sayı Macerası</a></li>
+                <li class="mobile-dropdown"><a href="/sayi_yuvarlama.html">Sayı Yuvarlama</a></li>
+                <li><a href="#">Türkçe</a></li>
+                <li class="mobile-dropdown"><a href="/es_anlam.html">Eş Anlamlı Kelimeler</a></li>
+                <li class="mobile-dropdown"><a href="/es_ses.html">Eş Sesli Kelimeler</a></li>
+                <li><a href="#">Fen Bilimleri</a></li>
+                <li><a href="#">Sosyal Bilgiler</a></li>
+            </ul>
+        </nav>
+
+        <header class="header">
+            <h1>Bilgi Hazinesi</h1>
+            <p>Öğrenmenin Keşif Dolu Dünyasına Hoş Geldiniz!</p>
+        </header>
+        
+        <nav class="desktop-nav">
+            <ul>
+                <li><a href="index.html">Anasayfa</a></li>
+                <li data-nav-id="matematik">
+                    <a href="#">Matematik</a>
+                    <div class="nav-dropdown-content">
+                        <a href="/sayi_bulmaca.html">Sayı Bulmaca</a>
+                        <a href="/sayi_macerasi.html">Sayı Macerası</a>
+                        <a href="/sayi_yuvarlama.html">Sayı Yuvarlama</a>
+                    </div>
+                </li>
+                <li data-nav-id="turkce">
+                    <a href="#">Türkçe</a>
+                    <div class="nav-dropdown-content">
+                        <a href="/es_anlam.html">Eş Anlamlı Kelimeler</a>
+                        <a href="/es_ses.html">Eş Sesli Kelimeler</a>
+                    </div>
+                </li>
+                <li><a href="#">Fen Bilimleri</a></li>
+                <li><a href="#">Sosyal Bilgiler</a></li>
+            </ul>
+        </nav>
+
+        <main class="container">
+            <p class="intro">
+                <strong>Bilgi Hazinesi ekibi olarak,</strong> sizler için hazırladığımız birbirinden keyifli ders içeriklerine aşağıdaki kartlara tıklayarak ulaşabilirsiniz. İyi eğlenceler!
+            </p>
+
+            <div class="card-container">
+                <div class="card matematik" data-target-id="matematik">
+                    <div class="icon"><i class="bi bi-calculator-fill"></i></div>
+                    <h2>Matematik</h2>
+                    <p>Sayılarla oynayın, problemleri çözün ve matematiğin eğlenceli dünyasını keşfedin!</p>
+                    <ul class="card-sub-links">
+                        <li><a href="/sayi_bulmaca.html">Sayı Bulmaca</a></li>
+                        <li><a href="/sayi_macerasi.html">Sayı Macerası</a></li>
+                        <li><a href="/sayi_yuvarlama.html">Sayı Yuvarlama</a></li>
+                    </ul>
+                </div>
+                <div class="card turkce" data-target-id="turkce">
+                    <div class="icon"><i class="bi bi-book-half"></i></div>
+                    <h2>Türkçe</h2>
+                    <p>Kelimelerin sihirli dünyasına dalın ve dil becerilerinizi keyifle geliştirin!</p>
+                    <ul class="card-sub-links">
+                        <li><a href="/es_anlam.html">Eş Anlamlı Kelimeler</a></li>
+                        <li><a href="/es_ses.html">Eş Sesli Kelimeler</a></li>
+                    </ul>
+                </div>
+                <div class="card fen">
+                    <div class="icon"><i class="bi bi-stars"></i></div>
+                    <h2>Fen Bilimleri</h2>
+                    <p>Doğanın sırlarını ve evrenin harikalarını deneyler ve etkinliklerle öğrenin!</p>
+                </div>
+                <div class="card sosyal">
+                    <div class="icon"><i class="bi bi-globe-americas"></i></div>
+                    <h2>Sosyal Bilgiler</h2>
+                    <p>Geçmişe yolculuk yapın, kültürleri tanıyın ve yaşadığınız dünyayı keşfedin!</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Bilgi Hazinesi Ekibi - Tüm Hakları Saklıdır.</p>
+        </footer>
+    </div>
 
     <script>
+        // Kartların açılır/kapanır menü mekanizması (değişmedi)
         const cards = document.querySelectorAll('.card');
         cards.forEach(card => {
             card.addEventListener('click', function() {
                 const cardSubLinks = this.querySelector('.card-sub-links');
                 if (!cardSubLinks) return;
-
                 const isAlreadyOpen = cardSubLinks.classList.contains('show');
-                
-                // Önce tüm AÇIK KART menülerini kapatalım
                 document.querySelectorAll('.card-sub-links.show').forEach(menu => {
                     menu.classList.remove('show');
                 });
-                
-                // Eğer tıkladığımız menü zaten açık değilse, SADECE onu açalım
                 if (!isAlreadyOpen) {
                     cardSubLinks.classList.add('show');
                 }
-                
-                /* DEĞİŞİKLİK: Üst menüyü senkronize eden kodlar kaldırıldı.
-                   Artık üst menü sadece fareyle üzerine gelince çalışıyor ve bu tıklamadan etkilenmiyor. */
             });
+        });
+
+        // YENİ EKLENDİ: Mobil menü açma/kapama mekanizması
+        const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+        const mobileNav = document.getElementById('mobile-nav');
+        
+        mobileNavToggle.addEventListener('click', () => {
+            mobileNav.classList.toggle('active');
+        });
+        
+        // Menü dışına tıklanınca menüyü kapat (opsiyonel ama şık bir özellik)
+        document.addEventListener('click', (event) => {
+            const isClickInsideNav = mobileNav.contains(event.target);
+            const isClickOnToggle = mobileNavToggle.contains(event.target);
+
+            if (!isClickInsideNav && !isClickOnToggle && mobileNav.classList.contains('active')) {
+                mobileNav.classList.remove('active');
+            }
         });
     </script>
 </body>
