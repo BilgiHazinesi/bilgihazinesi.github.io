@@ -3,404 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yuvarlama Uzmanı v4</title>
+    <title>☀️ Yuvarlama Macerası v4.1</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700;800&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg-color: #f7f9fc;
-            --card-bg: #ffffff;
-            --primary: #5a67d8;
-            --primary-dark: #434190;
-            --secondary: #f6ad55;
-            --green: #38a169;
-            --red: #e53e3e;
-            --text-color: #2d3748;
-            --shadow: 0 10px B30px rgba(0, 0, 0, 0.07);
-            --border-color: #e2e8f0;
-            --road-bg: #edf2f7;
-            --tens-road-color: #38a169;
-            --hundreds-road-color: #e53e3e;
+            --bg-color: #f8f9fa; --card-bg: #ffffff; --primary: #4a90e2; --primary-dark: #357ABD;
+            --secondary: #f5a623; --text-color: #4a4a4a; --green: #7ed321; --red: #d0021b;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.06); --border-color: #e2e8f0; --solution-bg: #fffbe6;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         html { font-size: 16px; }
-
         body {
-            font-family: 'Nunito', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding: 1.5rem;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
+            font-family: 'Nunito', sans-serif; background-color: var(--bg-color); color: var(--text-color);
+            padding: 1.5rem; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh;
         }
-
         .container {
-            width: 100%;
-            max-width: 700px;
-            background: var(--card-bg);
-            border-radius: 1.5rem;
-            box-shadow: var(--shadow);
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            text-align: center;
+            width: 100%; max-width: 800px; background: var(--card-bg); border-radius: 1.5rem;
+            box-shadow: var(--shadow); padding: 2rem; border: 1px solid #dee2e6; text-align: center;
         }
-
-        header h1 {
-            font-family: 'Baloo 2', sans-serif;
-            color: var(--primary);
-            font-weight: 800;
-            font-size: 2rem;
-        }
+        header h1 { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 2.5rem; color: var(--primary); }
+        .mode-selector { display: flex; gap: 1rem; margin: 1.5rem 0; border-radius: 1rem; background-color: #f1f3f5; padding: 0.5rem; }
+        .mode-btn { width: 100%; border: none; background: transparent; color: #868e96; font-family: 'Baloo 2', sans-serif; font-size: 1.2rem; font-weight: 700; padding: 0.8rem; border-radius: 0.8rem; cursor: pointer; transition: all 0.3s ease; }
+        .mode-btn.active { background-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3); }
+        .mode-content { display: none; flex-direction: column; gap: 1.5rem; }
+        .mode-content.active { display: flex; }
+        .btn { border: none; border-radius: 0.75rem; padding: 0.6rem 1.2rem; font-family: 'Baloo 2', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s ease-out; background-color: #e9ecef; color: var(--text-color); }
+        .btn:hover { transform: translateY(-3px); } .btn.active { background-color: var(--primary); color: white; }
+        .number-display { background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 1rem; padding: 1.2rem; }
         
-        /* --- Ayarlar ve Diğer Kontroller --- */
-        .settings-section, .digit-controls, .number-display {
-            margin-bottom: 0.5rem;
-        }
-        .settings-section { background: #fafbff; border: 1px solid var(--border-color); border-radius: 1rem; padding: 1.2rem; }
-        .settings-section h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary-dark); }
-        .settings-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-        @media (min-width: 600px) {
-           .settings-grid { grid-template-columns: 1fr 1fr; }
-           .manual-input-container { grid-column: 1 / -1; }
-        }
+        /* Keşfet Modu */
+        #discovery-mode .settings-section { background: #f8f9fa; border-radius: 1rem; padding: 1.2rem; }
+        #discovery-mode .settings-section h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary-dark); }
+        #discovery-mode .settings-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        @media (min-width: 600px) { #discovery-mode .settings-grid { grid-template-columns: 1fr 1fr; } #discovery-mode .full-width { grid-column: 1 / -1; } }
+        #discovery-mode .control-group { display: flex; flex-direction: column; gap: 0.5rem; text-align: left;}
+        #discovery-mode .control-group label { font-weight: 700; font-size: 0.9rem; }
+        #discovery-mode .control-group select { width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 2px solid var(--border-color); font-weight: 600; background-color: #fff; color: var(--text-color); }
+        #discovery-mode .toggle-switch { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 0.5rem 1rem; border-radius: 0.75rem; height: 100%; }
+        #discovery-mode .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        #discovery-mode .switch input { opacity: 0; width: 0; height: 0; }
+        #discovery-mode .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+        #discovery-mode .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        #discovery-mode input:checked + .slider { background-color: var(--green); }
+        #discovery-mode input:checked + .slider:before { transform: translateX(22px); }
         .manual-input-group { display: flex; gap: 0.5rem; }
-        #manual-input { width: 100%; border: 2px solid var(--border-color); border-radius: 0.5rem; padding: 0.6rem; font-size: 1.2rem; text-align: center; font-family: 'Baloo 2', sans-serif; font-weight: 700; transition: border-color 0.2s; }
-        #manual-input:focus { outline: none; border-color: var(--primary); }
-        #submit-manual { padding: 0 1.2rem; }
-        .toggle-switch { display: flex; justify-content: space-between; align-items: center; background: #edf2f7; padding: 0.5rem 1rem; border-radius: 0.75rem; height: 100%; }
-        .toggle-switch label { font-weight: 700; cursor: pointer; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--green); }
-        input:checked + .slider:before { transform: translateX(22px); }
-        .digit-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
-        .btn { border: none; border-radius: 0.75rem; padding: 0.6rem 1rem; font-family: 'Baloo 2', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s ease-out; background-color: var(--border-color); color: var(--text-color); }
-        .btn:hover { transform: translateY(-3px); }
-        .btn.active { background-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(90, 103, 216, 0.4); }
-        #new-number-btn { width: 100%; background: linear-gradient(45deg, var(--secondary), #fbd38d); color: white; font-size: 1.2rem; padding: 0.8rem; box-shadow: 0 4px 0 0 #c08729; }
-        #new-number-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 0 #c08729; }
-        .number-display { background-color: var(--bg-color); border-radius: 1rem; padding: 1rem; }
-        #current-number { font-size: clamp(3rem, 15vw, 4.5rem); font-weight: 800; color: var(--text-color); letter-spacing: 2px; }
-        .green-digit { color: var(--green); }
-        .red-digit { color: var(--red); }
+        .manual-input-group input { width: 100%; border: 2px solid var(--border-color); border-radius: 0.5rem; padding: 0.6rem; font-size: 1.2rem; text-align: center; font-family: 'Baloo 2', sans-serif; font-weight: 700; }
+        #discovery-mode .digit-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+        #discovery-mode #new-number-btn { width: 100%; background: linear-gradient(45deg, var(--primary), var(--primary-dark)); color: #fff; font-size: 1.2rem; padding: 0.8rem; }
+        #current-number { font-size: clamp(3rem, 15vw, 4.5rem); font-weight: 800; }
+        .green-digit { color: var(--green); } .red-digit { color: var(--red); }
+        .rounding-visualizer { padding: 1.5rem 1rem; }
+        .visualizer-header { font-weight: 700; font-size: 1.1rem; margin-bottom: 2rem; }
+        .visualizer-body { display: flex; align-items: center; gap: 1rem; }
+        .endpoint-value { font-family: 'Baloo 2', sans-serif; font-size: 1.5rem; font-weight: 800; padding: 0.5rem; border-radius: 0.75rem; background: #e9ecef; min-width: 70px; }
+        .road-track { flex-grow: 1; height: 8px; background-color: #ced4da; border-radius: 8px; position: relative; }
+        .rocket { position: absolute; top: 50%; transform: translate(-50%, -50%); font-size: 2rem; transition: left 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .visualizer-footer { margin-top: 1.5rem; font-size: 1.1rem; }
+        #tens-visualizer .visualizer-header { color: var(--primary-dark); } #tens-visualizer .endpoint-value { color: var(--primary-dark); }
+        #hundreds-visualizer .visualizer-header { color: #c2410c; } #hundreds-visualizer .endpoint-value { color: #c2410c; }
+        .analysis-section { padding: 1.5rem; background-color: #f8f9fa; border-radius: 1rem; }
+        .analysis-box { background: #fff; border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.75rem; margin-top:1rem; }
+        .analysis-box h3 { font-size: 1rem; margin-bottom: 0.8rem; } .analysis-box p { font-size: 1.2rem; font-family: 'Baloo 2', sans-serif; font-weight: 700; } .analysis-box .range { color: var(--primary); }
         
-        /* --- YENİ GÖRSEL SONUÇ BÖLÜMÜ --- */
-        .results-container {
-            transition: all 0.4s ease-in-out;
-            max-height: 1000px;
-            opacity: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            margin-top: 1rem;
-        }
-        .results-container.hidden { max-height: 0; opacity: 0; margin-top: -1.5rem; pointer-events: none; }
-
-        .rounding-visualizer {
-            background: #fafbff;
-            border-radius: 1rem;
-            padding: 1.5rem 1rem;
-            border: 1px solid var(--border-color);
-        }
-        .visualizer-header {
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
-        }
-        .visualizer-body {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .endpoint-value {
-            font-family: 'Baloo 2', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            padding: 0.5rem;
-            border-radius: 8px;
-            background-color: var(--road-bg);
-            min-width: 70px;
-        }
-
-        .road-track {
-            flex-grow: 1;
-            height: 12px;
-            background-color: var(--road-bg);
-            border-radius: 12px;
-            position: relative;
-            border-top: 2px solid #dbe1e8;
-            border-bottom: 2px solid #dbe1e8;
-        }
-        
-        .road-marker {
-            position: absolute;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: auto;
-            min-width: 60px;
-            padding: 8px 12px;
-            background-color: var(--primary);
-            color: white;
-            border-radius: 8px;
-            font-family: 'Baloo 2', sans-serif;
-            font-weight: 700;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smooth slide */
-        }
-        .road-marker::after { /* İşaretçi ok */
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-top: 8px solid var(--primary);
-        }
-        
-        .visualizer-footer {
-            margin-top: 1.5rem;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        .visualizer-footer strong {
-            font-family: 'Baloo 2', sans-serif;
-            font-size: 1.2rem;
-            padding: 2px 8px;
-            border-radius: 6px;
-        }
-
-        /* Renk Kodlaması */
-        #tens-visualizer .visualizer-header { color: var(--tens-road-color); }
-        #tens-visualizer .endpoint-value { color: var(--tens-road-color); }
-        #tens-visualizer .visualizer-footer strong { background-color: var(--tens-road-color); color: white; }
-
-        #hundreds-visualizer .visualizer-header { color: var(--hundreds-road-color); }
-        #hundreds-visualizer .endpoint-value { color: var(--hundreds-road-color); }
-        #hundreds-visualizer .visualizer-footer strong { background-color: var(--hundreds-road-color); color: white; }
-
+        /* Alıştırma Modu */
+        #practice-mode .question-box { padding: 1rem; }
+        #practice-mode .question-text { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.5; }
+        #practice-mode .question-text strong { color: var(--primary); font-size: 1.5em; }
+        #practice-mode .answer-area { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+        #practice-input { font-family: 'Baloo 2'; font-size: 1.5rem; font-weight: 700; text-align: center; width: 200px; padding: 0.8rem; border-radius: 0.75rem; border: 2px solid var(--border-color); background-color: #fff; color: var(--text-color); }
+        #check-answer-btn { font-size: 1.1rem; background-color: var(--primary); color: white; }
+        #practice-mode .feedback-area { min-height: 30px; font-size: 1.2rem; font-weight: 700; margin-top: 1rem; }
+        #practice-mode .score-display { font-size: 1.1rem; }
+        #practice-mode #next-question-btn { display: none; width: 100%; margin-top: 1rem; font-size: 1.2rem; background-color: var(--secondary); color: #fff; }
+        #solution-box { display: none; margin-top: 1.5rem; padding: 1rem; background-color: var(--solution-bg); border: 2px dashed var(--secondary); border-radius: 1rem; text-align: left; }
+        #solution-box h3 { font-family: 'Baloo 2'; color: var(--primary-dark); } #solution-box p { margin-bottom: 0.5rem; }
+        .confetti { position: fixed; width: 10px; height: 10px; background-color: #f00; top: -20px; opacity: 0; }
+        @keyframes confetti-fall { 0% { top: -20px; opacity: 1; transform: rotate(0deg); } 100% { top: 100vh; opacity: 1; transform: rotate(720deg); } }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <header><h1>🔢 Yuvarlama Uzmanı v4</h1></header>
+        <header><h1>☀️ Yuvarlama Macerası</h1></header>
 
-        <section class="settings-section">
-            <h2>Araçlar ve Ayarlar</h2>
-            <div class="settings-grid">
-                <div class="manual-input-container">
-                     <div class="manual-input-group">
-                        <input type="number" id="manual-input" placeholder="Sayıyı elle girin...">
-                        <button id="submit-manual" class="btn active">Ayarla</button>
-                    </div>
-                </div>
-                <div class="toggle-switch">
-                    <label for="results-toggle">Sonuçları Göster</label>
-                    <label class="switch">
-                        <input type="checkbox" id="results-toggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                 <div class="toggle-switch">
-                    <label for="color-toggle">Renklendirme</label>
-                    <label class="switch">
-                        <input type="checkbox" id="color-toggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-        </section>
-
-        <div class="digit-controls">
-            <button class="btn digit-btn" data-digits="3">3 Basamaklı</button>
-            <button class="btn digit-btn active" data-digits="4">4 Basamaklı</button>
-            <button class="btn digit-btn" data-digits="5">5 Basamaklı</button>
-            <button class="btn digit-btn" data-digits="6">6 Basamaklı</button>
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="discovery-mode">🧭 Keşfet Modu</button>
+            <button class="mode-btn" data-mode="practice-mode">🎮 Alıştırma Modu</button>
         </div>
 
-        <div class="number-display">
-            <span id="current-number">0</span>
+        <div id="discovery-mode" class="mode-content active">
+             <section class="settings-section">
+                <h2>Gelişmiş Ayarlar</h2>
+                <div class="settings-grid">
+                    <div class="manual-input-container full-width">
+                        <div class="manual-input-group">
+                            <input type="number" id="manual-input-discovery" placeholder="Sayıyı elle fırlat...">
+                            <button id="submit-manual-discovery" class="btn active">Fırlat</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="results-display-select">Odaklan</label>
+                        <select id="results-display-select">
+                            <option value="all" selected>Tüm Sonuçlar</option>
+                            <option value="tens">Sadece Onluğa Yuvarlama</option>
+                            <option value="hundreds">Sadece Yüzlüğe Yuvarlama</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="color-target-select">Renklendirme</label>
+                        <select id="color-target-select">
+                            <option value="none" selected>Renk Olmasın</option>
+                            <option value="tens">Onluğa Yuvarlarken</option>
+                            <option value="hundreds">Yüzlüğe Yuvarlarken</option>
+                        </select>
+                    </div>
+                    <div class="toggle-switch">
+                        <span class="label">Yuvarlama Yolları</span>
+                        <label class="switch"> <input type="checkbox" id="show-visualizer-toggle" checked> <span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-switch">
+                        <span class="label">Yuvarlama Analizi</span>
+                        <label class="switch"> <input type="checkbox" id="show-analysis-toggle" checked> <span class="slider"></span></label>
+                    </div>
+                </div>
+            </section>
+            <div class="digit-controls">
+                <button class="btn digit-btn" data-digits="3">3 Basamaklı</button>
+                <button class="btn digit-btn active" data-digits="4">4 Basamaklı</button>
+                <button class="btn digit-btn" data-digits="5">5 Basamaklı</button>
+                <button class="btn digit-btn" data-digits="6">6 Basamaklı</button>
+            </div>
+            <div class="number-display"> <span id="current-number">0</span> </div>
+            <button class="btn" id="new-number-btn">🚀 Sayıyı Roketle</button>
+            <div id="results-container">
+                <div class="rounding-visualizer" id="tens-visualizer"></div>
+                <div class="analysis-section" id="tens-analysis-section"></div>
+                <div class="rounding-visualizer" id="hundreds-visualizer"></div>
+                <div class="analysis-section" id="hundreds-analysis-section"></div>
+            </div>
         </div>
 
-        <button class="btn" id="new-number-btn">🎲 Rastgele Sayı Üret</button>
-
-        <div class="results-container" id="results-container">
-            <div class="rounding-visualizer" id="tens-visualizer">
-                <div class="visualizer-header">Onluğa Yuvarlama Yolu</div>
-                <div class="visualizer-body">
-                    <div class="endpoint-value" id="prev-ten">0</div>
-                    <div class="road-track">
-                        <div class="road-marker" id="tens-marker" style="left: 0%;">0</div>
-                    </div>
-                    <div class="endpoint-value" id="next-ten">0</div>
-                </div>
-                <div class="visualizer-footer">
-                    En Yakın Onluk: <strong id="nearest-ten">0</strong>
-                </div>
+        <div id="practice-mode" class="mode-content">
+            <div class="question-box number-display">
+                <p class="question-text" id="question-text">Soru metni...</p>
             </div>
-
-            <div class="rounding-visualizer" id="hundreds-visualizer">
-                <div class="visualizer-header">Yüzlüğe Yuvarlama Yolu</div>
-                <div class="visualizer-body">
-                    <div class="endpoint-value" id="prev-hundred">0</div>
-                    <div class="road-track">
-                        <div class="road-marker" id="hundreds-marker" style="left: 0%;">0</div>
-                    </div>
-                    <div class="endpoint-value" id="next-hundred">0</div>
-                </div>
-                <div class="visualizer-footer">
-                    En Yakın Yüzlük: <strong id="nearest-hundred">0</strong>
-                </div>
+            <div class="answer-area">
+                <input type="number" id="practice-input" placeholder="Cevabını yaz...">
+                <button class="btn" id="check-answer-btn">Kontrol Et</button>
             </div>
+            <div class="feedback-area" id="feedback-area"></div>
+            <div class="score-display" id="score-display">Skor: 0 | Soru: 1 / 6</div>
+            <div id="solution-box"></div>
+            <button class="btn" id="next-question-btn">Sonraki Soru ➡️</button>
         </div>
     </div>
+    
+    <audio id="click-sound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
+    <audio id="correct-sound" src="https://www.soundjay.com/buttons/sounds/button-7.mp3" preload="auto"></audio>
+    <audio id="wrong-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- STATE ---
-            let currentNumber = 0;
-            let currentDigits = 4;
-            let isColoringEnabled = true;
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- SES KONTROLÜ ---
+    const sounds = { click: document.getElementById('click-sound'), correct: document.getElementById('correct-sound'), wrong: document.getElementById('wrong-sound') };
+    function playSound(sound) { try { sounds[sound].currentTime = 0; sounds[sound].play(); } catch (e) {} }
 
-            // --- DOM Elements ---
-            const elements = {
-                resultsContainer: document.getElementById('results-container'),
-                numberDisplay: document.getElementById('current-number'),
-                newNumberBtn: document.getElementById('new-number-btn'),
-                digitButtons: document.querySelectorAll('.digit-btn'),
-                manualInput: document.getElementById('manual-input'),
-                submitManualBtn: document.getElementById('submit-manual'),
-                colorToggle: document.getElementById('color-toggle'),
-                resultsToggle: document.getElementById('results-toggle'),
-                // Tens Visualizer
-                prevTen: document.getElementById('prev-ten'),
-                nextTen: document.getElementById('next-ten'),
-                tensMarker: document.getElementById('tens-marker'),
-                nearestTen: document.getElementById('nearest-ten'),
-                // Hundreds Visualizer
-                prevHundred: document.getElementById('prev-hundred'),
-                nextHundred: document.getElementById('next-hundred'),
-                hundredsMarker: document.getElementById('hundreds-marker'),
-                nearestHundred: document.getElementById('nearest-hundred'),
-            };
-
-            // --- LOGIC FUNCTIONS ---
-            const generateRandom = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-            const formatNumber = (num) => num.toLocaleString('tr-TR');
-
-            const getColoredNumberHTML = (num) => {
-                if (!isColoringEnabled || num < 10) return formatNumber(num);
-                const numStr = num.toString();
-                let html = '';
-                for (let i = 0; i < numStr.length; i++) {
-                    let char = numStr[i];
-                    if (i === numStr.length - 1) { // Birler basamağı
-                        const digit = parseInt(char);
-                        const className = digit < 5 ? 'green-digit' : 'red-digit';
-                        html += `<span class="${className}">${char}</span>`;
-                    } else if (i === numStr.length - 2) { // Onlar basamağı
-                        const digit = parseInt(char);
-                        const className = digit < 5 ? 'green-digit' : 'red-digit';
-                        html += `<span class="${className}">${char}</span>`;
-                    } else {
-                        html += char;
-                    }
-                }
-                return html;
-            };
-
-            // --- UI UPDATE ---
-            function updateUI() {
-                // Ana sayıyı göster
-                elements.numberDisplay.innerHTML = getColoredNumberHTML(currentNumber);
-                
-                // --- Onluk Yuvarlama Görselini Güncelle ---
-                const prevTen = Math.floor(currentNumber / 10) * 10;
-                const nextTen = prevTen + 10;
-                const nearestTen = Math.round(currentNumber / 10) * 10;
-                // Pozisyonu hesapla: 83 -> (83 % 10) * 10 = 30%
-                const tensPosition = (currentNumber % 10) * 10;
-
-                elements.prevTen.textContent = formatNumber(prevTen);
-                elements.nextTen.textContent = formatNumber(nextTen);
-                elements.nearestTen.textContent = formatNumber(nearestTen);
-                elements.tensMarker.textContent = formatNumber(currentNumber);
-                elements.tensMarker.style.left = `${tensPosition}%`;
-
-                // --- Yüzlük Yuvarlama Görselini Güncelle ---
-                const prevHundred = Math.floor(currentNumber / 100) * 100;
-                const nextHundred = prevHundred + 100;
-                const nearestHundred = Math.round(currentNumber / 100) * 100;
-                // Pozisyonu hesapla: 483 -> 483 % 100 = 83%
-                const hundredsPosition = currentNumber % 100;
-
-                elements.prevHundred.textContent = formatNumber(prevHundred);
-                elements.nextHundred.textContent = formatNumber(nextHundred);
-                elements.nearestHundred.textContent = formatNumber(nearestHundred);
-                elements.hundredsMarker.textContent = formatNumber(currentNumber);
-                elements.hundredsMarker.style.left = `${hundredsPosition}%`;
-            }
-
-            function generateNewNumber() {
-                const min = Math.pow(10, currentDigits - 1);
-                const max = Math.pow(10, currentDigits) - 1;
-                currentNumber = generateRandom(min, max);
-                elements.manualInput.value = '';
-                updateUI();
-            }
-
-            // --- EVENT LISTENERS ---
-            elements.digitButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    elements.digitButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    currentDigits = parseInt(button.dataset.digits);
-                    generateNewNumber();
-                });
-            });
-
-            elements.newNumberBtn.addEventListener('click', generateNewNumber);
-            
-            elements.submitManualBtn.addEventListener('click', () => {
-                const value = parseInt(elements.manualInput.value);
-                if (!isNaN(value) && value >= 0) {
-                    currentNumber = value;
-                    updateUI();
+    // --- MOD SEÇİMİ ---
+    const modeButtons = document.querySelectorAll('.mode-btn');
+    const modeContents = document.querySelectorAll('.mode-content');
+    modeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            playSound('click');
+            modeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            modeContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === btn.dataset.mode) {
+                    content.classList.add('active');
+                    if(content.id === 'practice-mode') startPracticeGame();
                 }
             });
-            elements.manualInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') elements.submitManualBtn.click();
-            });
-            
-            elements.colorToggle.addEventListener('change', (e) => {
-                isColoringEnabled = e.target.checked;
-                updateUI();
-            });
-
-            elements.resultsToggle.addEventListener('change', (e) => {
-                elements.resultsContainer.classList.toggle('hidden', !e.target.checked);
-            });
-
-            // --- INITIALIZATION ---
-            generateNewNumber();
         });
-    </script>
-</body>
+    });
 
+    // --- KEŞFET MODU ---
+    const discovery = {
+        numberDisplay: document.getElementById('current-number'), newNumberBtn: document.getElementById('new-number-btn'),
+        digitButtons: document.querySelectorAll('#discovery-mode .digit-btn'), tensVisualizer: document.getElementById('tens-visualizer'),
+        hundredsVisualizer: document.getElementById('hundreds-visualizer'), tensAnalysisSection: document.getElementById('tens-analysis-section'),
+        hundredsAnalysisSection: document.getElementById('hundreds-analysis-section'), colorTargetSelect: document.getElementById('color-target-select'),
+        resultsDisplaySelect: document.getElementById('results-display-select'), showVisualizerToggle: document.getElementById('show-visualizer-toggle'),
+        showAnalysisToggle: document.getElementById('show-analysis-toggle'), manualInput: document.getElementById('manual-input-discovery'),
+        submitManualBtn: document.getElementById('submit-manual-discovery'), currentNumber: 0, currentDigits: 4, colorTarget: 'none',
+        resultsDisplayMode: 'all', showVisualizer: true, showAnalysis: true
+    };
+    function generateRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function formatNumber(num) { return num.toLocaleString('tr-TR'); }
+    function getColoredNumberHTML(num, target) {
+        if (target === 'none' || num < 10) return formatNumber(num);
+        const numStr = num.toString(); let html = ''; let targetIndex = -1;
+        if (target === 'tens' && numStr.length >= 1) targetIndex = numStr.length - 1;
+        else if (target === 'hundreds' && numStr.length >= 2) targetIndex = numStr.length - 2;
+        for (let i = 0; i < numStr.length; i++) {
+            let char = numStr[i];
+            if (i === targetIndex) {
+                const digit = parseInt(char);
+                const className = digit < 5 ? 'green-digit' : 'red-digit';
+                html += `<span class="${className}">${char}</span>`;
+            } else { html += char; }
+        }
+        return html;
+    }
+    function updateDiscoveryUI() {
+        discovery.numberDisplay.innerHTML = getColoredNumberHTML(discovery.currentNumber, discovery.colorTarget);
+        const num = discovery.currentNumber; const nearestTen = Math.round(num / 10) * 10; const nearestHundred = Math.round(num / 100) * 100;
+        const showTens = discovery.resultsDisplayMode === 'all' || discovery.resultsDisplayMode === 'tens';
+        const showHundreds = discovery.resultsDisplayMode === 'all' || discovery.resultsDisplayMode === 'hundreds';
+        if (showTens) {
+            discovery.tensVisualizer.style.display = discovery.showVisualizer ? 'block' : 'none';
+            if (discovery.showVisualizer) { const prevTen = Math.floor(num / 10) * 10; const nextTen = prevTen + 10; const tensPosition = (num % 10) * 10; discovery.tensVisualizer.innerHTML = `<div class="visualizer-header">Onluğa Yuvarlama Yolu</div><div class="visualizer-body"><div class="endpoint-value">${formatNumber(prevTen)}</div><div class="road-track"><div class="rocket" style="left: ${tensPosition}%;">🚀</div></div><div class="endpoint-value">${formatNumber(nextTen)}</div></div><div class="visualizer-footer">En Yakın Onluk: <strong>${formatNumber(nearestTen)}</strong></div>`; }
+            discovery.tensAnalysisSection.style.display = discovery.showAnalysis ? 'block' : 'none';
+            if (discovery.showAnalysis) { discovery.tensAnalysisSection.innerHTML = `<div class="analysis-box"><h3><strong>${formatNumber(nearestTen)}</strong>'a Yuvarlananlar</h3><p>En Küçük: <span class="range">${formatNumber(nearestTen - 5)}</span></p><p>En Büyük: <span class="range">${formatNumber(nearestTen + 4)}</span></p></div>`; }
+        } else { discovery.tensVisualizer.style.display = 'none'; discovery.tensAnalysisSection.style.display = 'none'; }
+        if (showHundreds) {
+            discovery.hundredsVisualizer.style.display = discovery.showVisualizer ? 'block' : 'none';
+            if (discovery.showVisualizer) { const prevHundred = Math.floor(num / 100) * 100; const nextHundred = prevHundred + 100; const hundredsPosition = num % 100; discovery.hundredsVisualizer.innerHTML = `<div class="visualizer-header">Yüzlüğe Yuvarlama Yolu</div><div class="visualizer-body"><div class="endpoint-value">${formatNumber(prevHundred)}</div><div class="road-track"><div class="rocket" style="left: ${hundredsPosition}%;">🚀</div></div><div class="endpoint-value">${formatNumber(nextHundred)}</div></div><div class="visualizer-footer">En Yakın Yüzlük: <strong>${formatNumber(nearestHundred)}</strong></div>`; }
+            discovery.hundredsAnalysisSection.style.display = discovery.showAnalysis ? 'block' : 'none';
+            if (discovery.showAnalysis) { discovery.hundredsAnalysisSection.innerHTML = `<div class="analysis-box"><h3><strong>${formatNumber(nearestHundred)}</strong>'e Yuvarlananlar</h3><p>En Küçük: <span class="range">${formatNumber(nearestHundred - 50)}</span></p><p>En Büyük: <span class="range">${formatNumber(nearestHundred + 49)}</span></p></div>`; }
+        } else { discovery.hundredsVisualizer.style.display = 'none'; discovery.hundredsAnalysisSection.style.display = 'none'; }
+    }
+    function generateNewDiscoveryNumber() { playSound('click'); const min = Math.pow(10, discovery.currentDigits - 1); const max = Math.pow(10, discovery.currentDigits) - 1; discovery.currentNumber = generateRandom(min, max); updateDiscoveryUI(); }
+    discovery.digitButtons.forEach(button => { button.addEventListener('click', () => { playSound('click'); discovery.digitButtons.forEach(btn => btn.classList.remove('active')); button.classList.add('active'); discovery.currentDigits = parseInt(button.dataset.digits); generateNewDiscoveryNumber(); }); });
+    discovery.newNumberBtn.addEventListener('click', generateNewDiscoveryNumber);
+    discovery.colorTargetSelect.addEventListener('change', e => { discovery.colorTarget = e.target.value; updateDiscoveryUI(); });
+    discovery.resultsDisplaySelect.addEventListener('change', e => { discovery.resultsDisplayMode = e.target.value; updateDiscoveryUI(); });
+    discovery.showVisualizerToggle.addEventListener('change', e => { discovery.showVisualizer = e.target.checked; updateDiscoveryUI(); });
+    discovery.showAnalysisToggle.addEventListener('change', e => { discovery.showAnalysis = e.target.checked; updateDiscoveryUI(); });
+    discovery.submitManualBtn.addEventListener('click', () => { playSound('click'); const value = parseInt(discovery.manualInput.value); if (!isNaN(value) && value >= 0) { discovery.currentNumber = value; updateDiscoveryUI(); } });
+    discovery.manualInput.addEventListener('keydown', e => { if (e.key === 'Enter') discovery.submitManualBtn.click(); });
+
+    // --- ALIŞTIRMA MODU ---
+    const practice = {
+        questionText: document.getElementById('question-text'), input: document.getElementById('practice-input'),
+        checkBtn: document.getElementById('check-answer-btn'), feedbackArea: document.getElementById('feedback-area'),
+        scoreDisplay: document.getElementById('score-display'), nextBtn: document.getElementById('next-question-btn'),
+        solutionBox: document.getElementById('solution-box'), currentQuestion: {}, score: 0, questionNumber: 0, totalQuestions: 6, wrongAttempts: 0
+    };
+
+    const questionTemplates = [
+        { difficulty: 'easy', generate: () => { const num = generateRandom(100, 9999); const questionHTML = `<strong>${formatNumber(num)}</strong> sayısını en yakın <strong>onluğa</strong> yuvarla.`; const correctAnswer = Math.round(num / 10) * 10; const solutionSteps = [ `<strong>Adım 1:</strong> Sayının birler basamağına bakılır: ${num % 10}.`, `<strong>Adım 2:</strong> Bu rakam 5'ten küçük olmadığı için (${num % 10} >= 5) onluk yukarı yuvarlanır.`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; if (num % 10 < 5) solutionSteps[1] = `<strong>Adım 2:</strong> Bu rakam 5'ten küçük olduğu için (${num % 10} < 5) onluk aşağı yuvarlanır.`; return { questionHTML, correctAnswer, solutionSteps }; }},
+        { difficulty: 'easy', generate: () => { const num = generateRandom(100, 9999); const questionHTML = `<strong>${formatNumber(num)}</strong> sayısını en yakın <strong>yüzlüğe</strong> yuvarla.`; const correctAnswer = Math.round(num / 100) * 100; const lastTwoDigits = num % 100; const solutionSteps = [ `<strong>Adım 1:</strong> Sayının son iki basamağına bakılır: ${lastTwoDigits}.`, `<strong>Adım 2:</strong> Bu sayı 50'den küçük olmadığı için (${lastTwoDigits} >= 50) yüzlük yukarı yuvarlanır.`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; if (lastTwoDigits < 50) solutionSteps[1] = `<strong>Adım 2:</strong> Bu sayı 50'den küçük olduğu için (${lastTwoDigits} < 50) yüzlük aşağı yuvarlanır.`; return { questionHTML, correctAnswer, solutionSteps }; }},
+        { difficulty: 'medium', generate: () => { const num = generateRandom(1000, 9999); const nearestTen = Math.round(num / 10) * 10; const questionHTML = `En yakın onluğa yuvarlandığında <strong>${formatNumber(nearestTen)}</strong> sonucunu veren <strong>en küçük</strong> sayıyı yaz.`; const correctAnswer = nearestTen - 5; const solutionSteps = [ `<strong>Adım 1:</strong> Bir onluğa yuvarlanan en küçük sayıyı bulmak için o sayıdan 5 çıkarılır.`, `<strong>Adım 2:</strong> ${formatNumber(nearestTen)} - 5 = ${correctAnswer}`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; return { questionHTML, correctAnswer, solutionSteps }; }},
+        { difficulty: 'medium', generate: () => { const num = generateRandom(1000, 9999); const nearestHundred = Math.round(num / 100) * 100; const questionHTML = `En yakın yüzlüğe yuvarlandığında <strong>${formatNumber(nearestHundred)}</strong> sonucunu veren <strong>en büyük</strong> sayıyı yaz.`; const correctAnswer = nearestHundred + 49; const solutionSteps = [ `<strong>Adım 1:</strong> Bir yüzlüğe yuvarlanan en büyük sayıyı bulmak için o sayıya 49 eklenir.`, `<strong>Adım 2:</strong> ${formatNumber(nearestHundred)} + 49 = ${correctAnswer}`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; return { questionHTML, correctAnswer, solutionSteps }; }},
+        { difficulty: 'hard', generate: () => { const num = generateRandom(1000, 8999); const nearestTen = Math.round(num / 10) * 10; const largestNum = nearestTen + 4; const questionHTML = `<strong>${formatNumber(num)}</strong> sayısının en yakın onluğa yuvarlanmış haline yuvarlanan <strong>en büyük</strong> sayının <strong>birler bölüğünü</strong> yaz.`; const correctAnswer = largestNum % 1000; const solutionSteps = [ `<strong>Adım 1:</strong> ${formatNumber(num)} sayısını en yakın onluğa yuvarlayalım: <strong>${formatNumber(nearestTen)}</strong>.`, `<strong>Adım 2:</strong> ${formatNumber(nearestTen)}'a yuvarlanan en büyük sayıyı bulalım: ${formatNumber(nearestTen)} + 4 = <strong>${formatNumber(largestNum)}</strong>.`, `<strong>Adım 3:</strong> ${formatNumber(largestNum)} sayısının birler bölüğü (son üç basamağı) <strong>${correctAnswer}</strong>'dir.`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; return { questionHTML, correctAnswer, solutionSteps }; }},
+        { difficulty: 'hard', generate: () => { const num = generateRandom(1000, 8999); const nearestHundred = Math.round(num / 100) * 100; const smallestNum = nearestHundred - 50; const questionHTML = `<strong>${formatNumber(num)}</strong> sayısının en yakın yüzlüğe yuvarlanmış haline yuvarlanan <strong>en küçük</strong> sayının <strong>yüzler basamağındaki</strong> rakamı yaz.`; const correctAnswer = Math.floor((smallestNum % 1000) / 100); const solutionSteps = [ `<strong>Adım 1:</strong> ${formatNumber(num)} sayısını en yakın yüzlüğe yuvarlayalım: <strong>${formatNumber(nearestHundred)}</strong>.`, `<strong>Adım 2:</strong> ${formatNumber(nearestHundred)}'e yuvarlanan en küçük sayıyı bulalım: ${formatNumber(nearestHundred)} - 50 = <strong>${formatNumber(smallestNum)}</strong>.`, `<strong>Adım 3:</strong> ${formatNumber(smallestNum)} sayısının yüzler basamağındaki rakam <strong>${correctAnswer}</strong>'dir.`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; return { questionHTML, correctAnswer, solutionSteps }; }}
+    ];
+
+    let gameQuestions = [];
+
+    function startPracticeGame() {
+        practice.score = 0; practice.questionNumber = 0;
+        
+        const easyQuestions = shuffle(questionTemplates.filter(q => q.difficulty === 'easy'));
+        const mediumQuestions = shuffle(questionTemplates.filter(q => q.difficulty === 'medium'));
+        const hardQuestions = shuffle(questionTemplates.filter(q => q.difficulty === 'hard'));
+        
+        // DEĞİŞTİ: 2 kolay, 2 orta, 2 zor soru seç ve sıralı kalsın
+        gameQuestions = [
+            ...easyQuestions.slice(0, 2).map(q => q.generate()),
+            ...mediumQuestions.slice(0, 2).map(q => q.generate()),
+            ...hardQuestions.slice(0, 2).map(q => q.generate())
+        ];
+        
+        practice.totalQuestions = gameQuestions.length;
+        generatePracticeQuestion();
+    }
+
+    function generatePracticeQuestion() {
+        practice.wrongAttempts = 0; practice.feedbackArea.textContent = ''; practice.nextBtn.style.display = 'none';
+        practice.solutionBox.style.display = 'none'; practice.input.value = ''; practice.input.disabled = false;
+        practice.checkBtn.disabled = false; practice.input.style.borderColor = 'var(--border-color)';
+
+        if (practice.questionNumber >= practice.totalQuestions) {
+            practice.questionText.innerHTML = "Harika bir iş çıkardın! Alıştırma tamamlandı! 🏆";
+            practice.input.style.display = 'none'; practice.checkBtn.style.display = 'none';
+            practice.feedbackArea.textContent = `Toplam ${practice.totalQuestions} görevden ${practice.score} tanesini başardın!`;
+            return;
+        }
+        practice.input.style.display = 'block'; practice.checkBtn.style.display = 'block';
+        practice.currentQuestion = gameQuestions[practice.questionNumber];
+        practice.questionText.innerHTML = practice.currentQuestion.questionHTML;
+        practice.questionNumber++;
+        practice.scoreDisplay.textContent = `Skor: ${practice.score} | Soru: ${practice.questionNumber} / ${practice.totalQuestions}`;
+    }
+    
+    function checkAnswer() {
+        const userAnswer = parseInt(practice.input.value);
+        if(isNaN(userAnswer)) { practice.feedbackArea.textContent = "Lütfen bir sayı gir!"; return; }
+        if (userAnswer === practice.currentQuestion.correctAnswer) {
+            playSound('correct'); practice.input.style.borderColor = 'var(--green)';
+            practice.feedbackArea.innerHTML = "✅ Harika! Doğru cevap!"; practice.feedbackArea.style.color = 'var(--green)';
+            practice.score++; triggerConfetti(); practice.input.disabled = true; practice.checkBtn.disabled = true;
+            practice.nextBtn.style.display = 'block';
+        } else {
+            playSound('wrong'); practice.wrongAttempts++; practice.input.style.borderColor = 'var(--red)';
+            if (practice.wrongAttempts >= 3) {
+                practice.feedbackArea.innerHTML = `❌ 3 kez yanlış denedin. Doğru cevap aşağıda gösterilmiştir.`;
+                practice.feedbackArea.style.color = 'var(--red)'; showSolution();
+                practice.input.disabled = true; practice.checkBtn.disabled = true;
+                practice.nextBtn.style.display = 'block';
+            } else {
+                practice.feedbackArea.innerHTML = `🤔 Tekrar dene! (${3 - practice.wrongAttempts} hakkın kaldı)`;
+                practice.feedbackArea.style.color = '#ff9800'; practice.input.value = '';
+            }
+        }
+    }
+    
+    function showSolution() { const steps = practice.currentQuestion.solutionSteps; let solutionHTML = '<h3>💡 Çözüm Yolu</h3>'; steps.forEach(step => { solutionHTML += `<p>${step}</p>`; }); practice.solutionBox.innerHTML = solutionHTML; practice.solutionBox.style.display = 'block'; }
+    function shuffle(array) { const newArr = [...array]; for (let i = newArr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [newArr[i], newArr[j]] = [newArr[j], newArr[i]]; } return newArr; }
+    practice.checkBtn.addEventListener('click', () => { playSound('click'); checkAnswer(); });
+    practice.nextBtn.addEventListener('click', () => { playSound('click'); generatePracticeQuestion(); });
+    practice.input.addEventListener('keydown', (e) => { if(e.key === 'Enter') practice.checkBtn.click(); });
+    function triggerConfetti() { for (let i = 0; i < 50; i++) { const c = document.createElement('div'); c.className = 'confetti'; document.body.appendChild(c); c.style.left = Math.random() * 100 + 'vw'; c.style.animation = `confetti-fall ${Math.random() * 2 + 3}s linear forwards`; c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`; c.addEventListener('animationend', () => c.remove()); } }
+    
+    generateNewDiscoveryNumber();
+});
+</script>
+</body>
 </html>
