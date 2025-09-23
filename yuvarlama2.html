@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etkileşimli Yuvarlama Macerası - PYP</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50; /* Yeşil */
+            --secondary-color: #FFC107; /* Sarı */
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+        .header, .section {
+            background-color: #fff;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border-left: 5px solid var(--primary-color);
+        }
+        h1, h2, h3 {
+            color: var(--primary-color);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .pyp-intro {
+            background-color: #e6ffe6; /* Açık yeşil */
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px dashed var(--primary-color);
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .controls input[type="number"], .controls select, .controls button {
+            padding: 12px 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .controls input[type="number"] {
+            width: 150px;
+        }
+        .controls button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .controls button:hover {
+            background-color: #45a049;
+        }
+        .hill-container {
+            position: relative;
+            width: 100%;
+            height: 200px; /* Tepenin yüksekliği */
+            margin-top: 40px;
+            overflow: hidden; /* Taşmaları gizle */
+        }
+        .hill-path {
+            position: absolute;
+            bottom: 20px; /* Yolun zeminden yüksekliği */
+            left: 10%;
+            width: 80%;
+            height: 150px; /* Yolun kavis yüksekliği */
+            border: 3px dashed #ccc;
+            border-radius: 50% / 100%; /* Yarım daire şekli */
+            border-bottom: none; /* Alt çizgiyi kaldır */
+            border-left-color: transparent; /* Yan çizgileri şeffaf yap */
+            border-right-color: transparent;
+        }
+        .hill-label {
+            position: absolute;
+            bottom: -5px; /* Etiketlerin zemine yakınlığı */
+            font-weight: bold;
+            font-size: 1.1em;
+            background-color: #fff;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--text-color);
+        }
+        .start-point { left: 5%; }
+        .end-point { right: 5%; }
+        .mid-point {
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 130px; /* Orta noktanın tepe üzerindeki konumu */
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        .ball {
+            position: absolute;
+            font-size: 2.5em; /* Topun boyutu */
+            transition: all 2s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Yumuşak animasyon */
+            transform-origin: center 15px; /* Dönme noktası */
+            color: var(--secondary-color); /* Top rengi */
+        }
+        .explanation, #practice-feedback {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e6ffe6;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-align: center;
+            display: none; /* Başlangıçta gizli */
+        }
+        #practice-feedback {
+            font-weight: bold;
+        }
+        .correct { color: #28a745; }
+        .incorrect { color: #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Sayıları Yuvarlama Macerası</h1>
+        <div class="pyp-intro">
+            <p><strong>Merak Edelim:</strong> Markete gittiğinde alacaklarının yaklaşık ne kadar tutacağını veya stadyumdaki seyirci sayısını söylerken tam sayı vermek yerine "yaklaşık" bir değer kullanırız. İşte bu, yuvarlamadır! Sayıları daha basit ve anlaşılır hale getirmemize yarar.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Keşfet ve Gör: En Yakın Onluğa Yuvarlama</h2>
+        <p>Aşağıya 3, 4, 5 veya 6 basamaklı bir sayı yaz. Topun hangi onluğa yuvarlandığını görerek keşfet!</p>
+        <div class="controls">
+            <input type="number" id="numberInputOnlar" placeholder="Sayıyı girin (örn: 1234)">
+            <button onclick="startRounding('onlar')">Macerayı Başlat!</button>
+        </div>
+        <div class="hill-container">
+            <div class="hill-path"></div>
+            <div id="startPointOnlar" class="hill-label start-point"></div>
+            <div id="midPointOnlar" class="hill-label mid-point"></div>
+            <div id="endPointOnlar" class="hill-label end-point"></div>
+            <div id="ballOnlar" class="ball">⚽</div>
+        </div>
+        <div id="explanationOnlar" class="explanation"></div>
+    </div>
+
+    <div class="section">
+        <h2>Keşfet ve Gör: En Yakın Yüzlüğe Yuvarlama</h2>
+        <p>Aşağıya 3, 4, 5 veya 6 basamaklı bir sayı yaz. Topun hangi yüzlüğe yuvarlandığını görerek keşfet!</p>
+        <div class="controls">
+            <input type="number" id="numberInputYuzler" placeholder="Sayıyı girin (örn: 12345)">
+            <button onclick="startRounding('yuzler')">Macerayı Başlat!</button>
+        </div>
+        <div class="hill-container">
+            <div class="hill-path"></div>
+            <div id="startPointYuzler" class="hill-label start-point"></div>
+            <div id="midPointYuzler" class="hill-label mid-point"></div>
+            <div id="endPointYuzler" class="hill-label end-point"></div>
+            <div id="ballYuzler" class="ball">🏀</div>
+        </div>
+        <div id="explanationYuzler" class="explanation"></div>
+    </div>
+
+    <div class="section">
+        <h2>Sıra Sende: Bilgini Test Et!</h2>
+        <p>Hadi öğrendiklerimizi pekiştirelim. Bakalım doğru yuvarlayabilecek misin?</p>
+        <div class="controls">
+            <button onclick="generatePractice()">Yeni Soru Getir</button>
+            <h3 id="practiceQuestion" style="margin: 0;"></h3>
+        </div>
+        <div class="controls">
+            <input type="number" id="practiceInput" placeholder="Cevabını yaz...">
+            <button onclick="checkPractice()">Kontrol Et</button>
+        </div>
+        <div id="practice-feedback"></div>
+    </div>
+</div>
+
+<script>
+    let practiceNumber = 0;
+    let practiceRoundTo = 0;
+    let practiceAnswer = 0;
+
+    function startRounding(type) {
+        const inputId = type === 'onlar' ? 'numberInputOnlar' : 'numberInputYuzler';
+        const ballId = type === 'onlar' ? 'ballOnlar' : 'ballYuzler';
+        const startPointId = type === 'onlar' ? 'startPointOnlar' : 'startPointYuzler';
+        const midPointId = type === 'onlar' ? 'midPointOnlar' : 'midPointYuzler';
+        const endPointId = type === 'onlar' ? 'endPointOnlar' : 'endPointYuzler';
+        const explanationId = type === 'onlar' ? 'explanationOnlar' : 'explanationYuzler';
+
+        const num = parseInt(document.getElementById(inputId).value);
+        const roundTo = type === 'onlar' ? 10 : 100;
+
+        if (isNaN(num) || num < 100 || num > 999999) {
+            alert("Lütfen 3 ila 6 basamaklı bir sayı girin.");
+            return;
+        }
+
+        const lowerBound = Math.floor(num / roundTo) * roundTo;
+        const upperBound = lowerBound + roundTo;
+        const midPointVal = lowerBound + roundTo / 2;
+
+        document.getElementById(startPointId).innerText = lowerBound;
+        document.getElementById(endPointId).innerText = upperBound;
+        document.getElementById(midPointId).innerText = `${midPointVal} (Orta Nokta)`;
+
+        const ball = document.getElementById(ballId);
+        const explanation = document.getElementById(explanationId);
+
+        // Calculate ball's initial position on the curved path
+        const range = upperBound - lowerBound;
+        let positionPercentage;
+        if (range === 0) { // Handle cases like 100, 200 for tens where range is 0 initially for midpoint calc
+            positionPercentage = 10;
+        } else {
+            positionPercentage = ((num - lowerBound) / range) * 80 + 10; // Position on 80% width path (10% left offset)
+        }
+        
+        // Ensure position is within bounds
+        positionPercentage = Math.max(10, Math.min(90, positionPercentage));
+
+        const yPos = 130 * Math.sin(Math.PI * (positionPercentage - 10) / 80); // Sine wave for hill shape
+        const rotation = 90 - (180 * (positionPercentage - 10) / 80); // Adjust rotation based on position
+
+        ball.style.transition = 'none'; // Reset transition for instant positioning
+        ball.style.left = `${positionPercentage}%`;
+        ball.style.bottom = `${20 + yPos}px`;
+        ball.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
+        
+        explanation.style.display = 'none';
+
+        setTimeout(() => {
+            ball.style.transition = 'all 2s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+            const roundedResult = Math.round(num / roundTo) * roundTo;
+            let explanationText = '';
+            
+            if (num >= midPointVal) {
+                // Move to end point
+                ball.style.left = '90%';
+                ball.style.bottom = '20px';
+                ball.style.transform = 'translateX(-50%) rotate(0deg)';
+                explanationText = `Gördün mü? ${num} sayısı, orta nokta olan ${midPointVal}'e eşit veya ondan büyük olduğu için bir sonraki durak olan ${upperBound}'a yuvarlandı!`;
+            } else {
+                // Move to start point
+                ball.style.left = '10%';
+                ball.style.bottom = '20px';
+                ball.style.transform = 'translateX(-50%) rotate(0deg)';
+                explanationText = `Gördün mü? ${num} sayısı, orta nokta olan ${midPointVal}'ten küçük olduğu için önceki durak olan ${lowerBound}'a yuvarlandı!`;
+            }
+            
+            setTimeout(() => {
+                explanation.innerText = explanationText;
+                explanation.style.display = 'block';
+            }, 2000); // Show explanation after animation
+        }, 100);
+    }
+
+    function generatePractice() {
+        const digits = Math.floor(Math.random() * 4) + 3; // 3, 4, 5, or 6
+        const min = Math.pow(10, digits - 1);
+        const max = Math.pow(10, digits) - 1;
+        practiceNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+
+        practiceRoundTo = Math.random() < 0.5 ? 10 : 100; // Randomly choose onluk or yüzlük
+        
+        document.getElementById('practiceQuestion').innerText = `${practiceNumber} sayısını en yakın ${practiceRoundTo === 10 ? 'onluğa' : 'yüzlüğe'} yuvarla.`;
+        practiceAnswer = Math.round(practiceNumber / practiceRoundTo) * practiceRoundTo;
+
+        document.getElementById('practiceInput').value = '';
+        document.getElementById('practice-feedback').style.display = 'none';
+    }
+
+    function checkPractice() {
+        const userAnswer = parseInt(document.getElementById('practiceInput').value);
+        const feedback = document.getElementById('practice-feedback');
+        
+        if (isNaN(userAnswer)) {
+            alert("Lütfen bir sayı girin.");
+            return;
+        }
+
+        feedback.style.display = 'block';
+        if (userAnswer === practiceAnswer) {
+            feedback.innerText = "Harika! Cevabın doğru!";
+            feedback.className = 'correct';
+        } else {
+            feedback.innerText = `Tekrar dene! Doğru cevap ${practiceAnswer} olmalıydı. İstersen yukarıdaki tepelerde ${practiceNumber} sayısını deneyerek nedenini keşfedebilirsin.`;
+            feedback.className = 'incorrect';
+        }
+    }
+
+    // Initial state for balls and practice question
+    window.onload = () => {
+        // Initial setup for 'onlar' section
+        document.getElementById('ballOnlar').style.left = '10%';
+        document.getElementById('ballOnlar').style.bottom = '20px';
+        document.getElementById('ballOnlar').style.transform = 'translateX(-50%) rotate(0deg)';
+        document.getElementById('startPointOnlar').innerText = "0";
+        document.getElementById('endPointOnlar').innerText = "10";
+        document.getElementById('midPointOnlar').innerText = "5 (Orta Nokta)";
+
+        // Initial setup for 'yuzler' section
+        document.getElementById('ballYuzler').style.left = '10%';
+        document.getElementById('ballYuzler').style.bottom = '20px';
+        document.getElementById('ballYuzler').style.transform = 'translateX(-50%) rotate(0deg)';
+        document.getElementById('startPointYuzler').innerText = "0";
+        document.getElementById('endPointYuzler').innerText = "100";
+        document.getElementById('midPointYuzler').innerText = "50 (Orta Nokta)";
+
+        generatePractice(); // Load initial practice question
+    };
+</script>
+
+</body>
+</html>
