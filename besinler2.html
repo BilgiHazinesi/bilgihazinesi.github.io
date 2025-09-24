@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍎 Besinlerin İçerikleri - Eğlenceli Öğrenme</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: bounce 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes bounce {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-10px); }
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .game-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 3px solid #ff6b6b;
+        }
+        
+        .nutrition-wheel {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .wheel {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .wheel:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .wheel-section {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .wheel-section:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+        
+        .protein { background: #e74c3c; top: 0; left: 0; }
+        .carbs { background: #f39c12; top: 0; right: 0; }
+        .fats { background: #2ecc71; bottom: 0; right: 0; }
+        .vitamins { background: #9b59b6; bottom: 0; left: 0; }
+        
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .game-card {
+            background: linear-gradient(145deg, #f0f0f0, #cacaca);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            border-color: #ff6b6b;
+        }
+        
+        .game-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .food-item {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 20px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            border: none;
+            font-size: 1em;
+        }
+        
+        .food-item:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .food-item.correct {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            animation: pulse 0.5s;
+        }
+        
+        .food-item.wrong {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            animation: shake 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .drop-zone {
+            min-height: 100px;
+            border: 3px dashed #bdc3c7;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .score {
+            text-align: center;
+            font-size: 2em;
+            color: #2c3e50;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            color: #f39c12;
+            z-index: 1000;
+            animation: celebrate 1s ease-in-out;
+            pointer-events: none;
+        }
+        
+        @keyframes celebrate {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.5); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+        
+        .info-panel {
+            background: linear-gradient(145deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .info-panel.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .emoji {
+            font-size: 2em;
+            margin: 0 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2em; }
+            .wheel { width: 200px; height: 200px; }
+            .game-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍎 BESİNLERİN İÇERİKLERİ 🥕</h1>
+            <p>Eğlenerek öğren, sağlıklı beslen! 🌟</p>
+        </div>
+        
+        <div class="game-section">
+            <h2 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">🎯 Besin Grupları Oyunu</h2>
+            <p style="text-align: center; margin-bottom: 30px;">Aşağıdaki besinleri doğru gruplara sürükle!</p>
+            
+            <div class="game-grid">
+                <div class="game-card protein-zone" ondrop="drop(event, 'protein')" ondragover="allowDrop(event)">
+                    <h3>🥩 PROTEİN</h3>
+                    <div class="drop-zone" id="protein-zone">
+                        <p>Protein içeren besinleri buraya sürükle!</p>
+                    </div>
+                </div>
+                
+                <div class="game-card carbs-zone" ondrop="drop(event, 'carbs')" ondragover="allowDrop(event)">
+                    <h3>🍞 KARBONHİDRAT</h3>
+                    <div class="drop-zone" id="carbs-zone">
+                        <p>Karbonhidrat içeren besinleri buraya sürükle!</p>
+                    </div>
+                </div>
+                
+                <div class="game-card fats-zone" ondrop="drop(event, 'fats')" ondragover="allowDrop(event)">
+                    <h3>🫒 YAĞ</h3>
+                    <div class="drop-zone" id="fats-zone">
+                        <p>Yağ içeren besinleri buraya sürükle!</p>
+                    </div>
+                </div>
+                
+                <div class="game-card vitamins-zone" ondrop="drop(event, 'vitamins')" ondragover="allowDrop(event)">
+                    <h3>🥬 VİTAMİN & MİNERAL</h3>
+                    <div class="drop-zone" id="vitamins-zone">
+                        <p>Vitamin ve mineral içeren besinleri buraya sürükle!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <h3>🍽️ Besinler:</h3>
+                <div id="food-items">
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="protein">🥩 Et</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="protein">🥛 Süt</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="protein">🥚 Yumurta</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="carbs">🍞 Ekmek</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="carbs">🍝 Makarna</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="carbs">🥔 Patates</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="fats">🫒 Zeytin</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="fats">🧈 Tereyağı</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="fats">🥜 Fındık</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="vitamins">🥕 Havuç</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="vitamins">🍊 Portakal</div>
+                    <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="vitamins">🥬 Ispanak</div>
+                </div>
+            </div>
+            
+            <div class="score">
+                <span class="emoji">🏆</span>
+                Puan: <span id="score">0</span>
+                <span class="emoji">⭐</span>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="resetGame()">🔄 Oyunu Yeniden Başlat</button>
+                <button class="btn" onclick="showInfo()">📚 Bilgi Al</button>
+            </div>
+        </div>
+        
+        <div class="game-section">
+            <h2 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">🧠 Bilgi Yarışması</h2>
+            <div id="quiz-container">
+                <div id="question-container" style="text-align: center; margin: 30px 0;">
+                    <h3 id="question">Hangi besin grubunun görevi vücudun enerji ihtiyacını karşılamaktır?</h3>
+                    <div style="margin: 20px 0;">
+                        <button class="btn" onclick="checkAnswer(0)">Protein</button>
+                        <button class="btn" onclick="checkAnswer(1)">Karbonhidrat</button>
+                        <button class="btn" onclick="checkAnswer(2)">Yağ</button>
+                        <button class="btn" onclick="checkAnswer(3)">Vitamin</button>
+                    </div>
+                    <div id="quiz-feedback" style="margin: 20px 0; font-size: 1.2em;"></div>
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <button class="btn" onclick="nextQuestion()">➡️ Sonraki Soru</button>
+            </div>
+        </div>
+        
+        <div class="info-panel" id="info-panel">
+            <h3>🌟 Besin Grupları Hakkında Bilgiler:</h3>
+            <div style="margin: 20px 0;">
+                <h4>🥩 PROTEİN:</h4>
+                <p>• Vücudun yapı taşıdır<br>• Kas gelişimi için gereklidir<br>• Et, süt, yumurta, balık gibi besinlerde bulunur</p>
+                
+                <h4>🍞 KARBONHİDRAT:</h4>
+                <p>• Vücudun enerji kaynağıdır<br>• Beyin için çok önemlidir<br>• Ekmek, makarna, pirinç gibi besinlerde bulunur</p>
+                
+                <h4>🫒 YAĞ:</h4>
+                <p>• Enerji verir ve organları korur<br>• Bazı vitaminlerin emilimi için gereklidir<br>• Zeytinyağı, fındık, tereyağı gibi besinlerde bulunur</p>
+                
+                <h4>🥬 VİTAMİN & MİNERAL:</h4>
+                <p>• Vücudun düzenleyicisidir<br>• Hastalıklara karşı korur<br>• Meyve ve sebzelerde bol miktarda bulunur</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let score = 0;
+        let currentQuestionIndex = 0;
+        
+        const questions = [
+            {
+                question: "Hangi besin grubunun görevi vücudun enerji ihtiyacını karşılamaktır?",
+                answers: ["Protein", "Karbonhidrat", "Yağ", "Vitamin"],
+                correct: 1
+            },
+            {
+                question: "Hangi besin grubu vücudun yapı taşı görevini görür?",
+                answers: ["Karbonhidrat", "Protein", "Su", "Mineral"],
+                correct: 1
+            },
+            {
+                question: "Vitaminler hangi besinlerde en çok bulunur?",
+                answers: ["Et ve süt", "Meyve ve sebze", "Ekmek ve makarna", "Yağ ve tereyağı"],
+                correct: 1
+            },
+            {
+                question: "Hangi besin vücudun %70'ini oluşturur?",
+                answers: ["Protein", "Karbonhidrat", "Su", "Yağ"],
+                correct: 2
+            },
+            {
+                question: "Hangi vitamin vücutta üretilmez ve dışarıdan alınmalıdır?",
+                answers: ["Tüm vitaminler", "Sadece C vitamini", "Sadece A vitamini", "Hiçbiri"],
+                correct: 0
+            }
+        ];
+        
+        function dragStart(event) {
+            event.dataTransfer.setData("text", event.target.dataset.type);
+            event.dataTransfer.setData("element", event.target.outerHTML);
+        }
+        
+        function allowDrop(event) {
+            event.preventDefault();
+            event.target.closest('.drop-zone').classList.add('drag-over');
+        }
+        
+        function drop(event, targetType) {
+            event.preventDefault();
+            event.target.classList.remove('drag-over');
+            
+            const draggedType = event.dataTransfer.getData("text");
+            const draggedElement = event.dataTransfer.getData("element");
+            
+            if (draggedType === targetType) {
+                score += 10;
+                showCelebration("🎉 Doğru! +10 puan");
+                event.target.innerHTML = draggedElement;
+                const newElement = event.target.querySelector('.food-item');
+                newElement.classList.add('correct');
+                newElement.draggable = false;
+                newElement.style.cursor = 'default';
+            } else {
+                showCelebration("❌ Yanlış! Tekrar dene");
+            }
+            
+            document.getElementById('score').textContent = score;
+        }
+        
+        function showCelebration(message) {
+            const celebration = document.createElement('div');
+            celebration.className = 'celebration';
+            celebration.textContent = message;
+            document.body.appendChild(celebration);
+            
+            setTimeout(() => {
+                document.body.removeChild(celebration);
+            }, 1000);
+        }
+        
+        function resetGame() {
+            score = 0;
+            document.getElementById('score').textContent = score;
+            
+            // Reset food items
+            const foodItems = document.getElementById('food-items');
+            foodItems.innerHTML = `
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="protein">🥩 Et</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="protein">🥛 Süt</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="protein">🥚 Yumurta</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="carbs">🍞 Ekmek</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="carbs">🍝 Makarna</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="carbs">🥔 Patates</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="fats">🫒 Zeytin</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="fats">🧈 Tereyağı</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="fats">🥜 Fındık</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="vitamins">🥕 Havuç</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="vitamins">🍊 Portakal</div>
+                <div class="food-item" draggable="true" ondragstart="dragStart(event)" data-type="vitamins">🥬 Ispanak</div>
+            `;
+            
+            // Reset drop zones
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => {
+                zone.innerHTML = '<p>' + zone.parentElement.querySelector('h3').textContent.substring(2) + ' içeren besinleri buraya sürükle!</p>';
+            });
+        }
+        
+        function showInfo() {
+            const infoPanel = document.getElementById('info-panel');
+            infoPanel.classList.toggle('show');
+        }
+        
+        function checkAnswer(selectedIndex) {
+            const question = questions[currentQuestionIndex];
+            const feedback = document.getElementById('quiz-feedback');
+            
+            if (selectedIndex === question.correct) {
+                feedback.innerHTML = '<span style="color: #2ecc71;">🎉 Doğru cevap! Tebrikler!</span>';
+                score += 20;
+                showCelebration("🌟 Süper! +20 puan");
+            } else {
+                feedback.innerHTML = '<span style="color: #e74c3c;">❌ Yanlış cevap. Doğru cevap: ' + question.answers[question.correct] + '</span>';
+            }
+            
+            document.getElementById('score').textContent = score;
+        }
+        
+        function nextQuestion() {
+            currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+            const question = questions[currentQuestionIndex];
+            
+            document.getElementById('question').textContent = question.question;
+            document.getElementById('quiz-feedback').innerHTML = '';
+            
+            const buttons = document.querySelectorAll('#question-container .btn');
+            buttons.forEach((btn, index) => {
+                if (index < 4) {
+                    btn.textContent = question.answers[index];
+                }
+            });
+        }
+        
+        // Sayfa yüklendiğinde drag over olaylarını temizle
+        document.addEventListener('dragleave', function(e) {
+            if (e.target.classList.contains('drop-zone')) {
+                e.target.classList.remove('drag-over');
+            }
+        });
+        
+        // Başlangıçta ilk soruyu yükle
+        nextQuestion();
+    </script>
+</body>
+</html>
