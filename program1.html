@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haftalık Ders Programı</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f4f7f9;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 15px;
+        }
+
+        header h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .nav-container {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .nav-buttons button {
+            padding: 10px 15px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: #e9ecef;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        .nav-buttons button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .week-nav {
+            margin-bottom: 15px;
+        }
+        
+        .day-nav {
+            border-top: 1px solid var(--border-color);
+            margin-top: 15px;
+            padding-top: 15px;
+        }
+
+        .schedule-card {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+        
+        .schedule-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+        }
+        
+        .card-header .lesson-time {
+            color: var(--primary-color);
+        }
+        
+        .card-header .lesson-name {
+            color: #343a40;
+        }
+
+        .card-body {
+            padding: 15px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .card-body.empty {
+            color: #999;
+            font-style: italic;
+        }
+        
+        .week-content, .day-content {
+            display: none;
+        }
+
+        .week-content.active, .day-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <header>
+        <h1>Ders Programı ve Kazanımlar</h1>
+    </header>
+
+    <div class="nav-container">
+        <div class="week-nav">
+            <div class="nav-buttons" id="week-buttons">
+                <button onclick="showWeek('week1', this)" class="active">1. Hafta</button>
+                <button onclick="showWeek('week2', this)">2. Hafta</button>
+                <button onclick="showWeek('week3', this)">3. Hafta</button>
+                <button onclick="showWeek('week4', this)">4. Hafta</button>
+            </div>
+        </div>
+
+        <div id="day-nav-container"></div>
+    </div>
+
+    <main id="schedule-container">
+        </main>
+</div>
+
+<script>
+    // Tüm ders verilerini tek bir yerde toplayalım
+    const scheduleData = {
+        week1: {
+            pazartesi: [
+                { time: "1. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.1.</b> 4, 5 ve 6 basamaklı doğal sayıları okur ve yazar." },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "<b>KONUŞMA:</b> T.4.2.1. Kelimeleri anlamlarına uygun kullanır. T.4.2.2. Hazırlıksız konuşmalar yapar.T.4.2.3. Hazırlıklı konuşmalar yapar. T.4.2.4. Konuşma stratejilerini uygular." },
+                { time: "3. Ders", name: "İNGİLİZCE", objective: "-" },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "<b>T4.2.5.</b> Sınıf içindeki tartışma ve konuşmalara katılır. T.4.2.6. Konuşmalarında yabancı dillerden alınmış, dilimize henüz yerleşmemiş kelimelerin Türkçelerini kullanır." },
+                { time: "5. Ders", name: "KULÜP", objective: "-" },
+                { time: "6. Ders", name: "KULÜP", objective: "-" },
+                { time: "7. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.1.</b> Resmî kimlik belgesini inceleyerek kişisel kimliğine ilişkin çıkarımlarda bulunur." },
+                { time: "8. Ders", name: "İNSAN HAKLARI", objective: "<b>Y.4.1.1.</b> İnsan olmanın niteliklerini açıklar." }
+            ],
+            sali: [
+                { time: "1. Ders", name: "TÜRKÇE", objective: "<b>OKUMA:</b> T.4.3.2. Vurgu, tonlama ve telaffuza dikkat ederek okur. T.4.3.3. Şiir okur. T.4.3.4. Metinleri türün özelliklerine uygun biçimde okur." },
+                { time: "2. Ders", name: "BİLİŞİM", objective: "-" },
+                { time: "3. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.1.1.</b> Yer kabuğunun kara tabakasının kayaçlardan oluştuğunu belirtir." },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "<b>T.4.3.16.</b> Okuduğu metnin konusunu belirler. T.4.3.17. Metnin ana fikri/ana duygusunu belirler. T.4.3.18. Okuduğu metinle ilgili soruları cevaplar." },
+                { time: "5. Ders", name: "İNSAN HAKLARI", objective: "<b>Y.4.1.1.</b> İnsan olmanın niteliklerini açıklar." },
+                { time: "6. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.1.2.</b> Kayaçlarla madenleri ilişkilendirir ve kayaçların ham madde olarak önemini tartışır." },
+                { time: "7. Ders", name: "GÖRSEL SANATLAR", objective: "<b>G.4.1.1.</b> Görsel sanat çalışmasını oluştururken biçimlendirme basamaklarını kullanır." },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "-" }
+            ],
+            carsamba: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "Öğrencilerle tanışma ve ders müfredatı hakkında bilgi verme." },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "<b>T.4.3.21.</b> Okuduğu metnin içeriğine uygun başlık belirler. T.4.3.28. Okudukları ile ilgili çıkarımlar yapar. T.4.3.37. Okuduğu metindeki olaylara ilişkin düşüncelerini ifade eder." },
+                { time: "3. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.1.</b> 4, 5 ve 6 basamaklı doğal sayıları okur ve yazar." },
+                { time: "4. Ders", name: "MÜZİK", objective: "<b>Mü.4.A.2.</b> İstiklal Marşı'nı doğru söylemeye özen gösterir." },
+                { time: "5. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.1.</b> Resmî kimlik belgesini inceleyerek kişisel kimliğine ilişkin çıkarımlarda bulunur." },
+                { time: "6. Ders", name: "ALMANCA", objective: "-" },
+                { time: "7. Ders", name: "SERBEST ETKİNLİK", objective: "-" },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "-" }
+            ],
+            persembe: [
+                 { time: "1. Ders", name: "TÜRKÇE", objective: "<b>YAZMA:</b> T.4.4.1. Şiir yazar. T.4.4.8. Yazdıklarında yabancı dillerden alınmış, dilimize henüz yerleşmemiş kelimelerin Türkçelerini kullanır." },
+                 { time: "2. Ders", name: "TRAFİK GÜVENLİĞİ", objective: "<b>TG.4.1.1.</b> Trafikte kendisinin ve başkalarının hayatının önemli olduğunu fark eder." },
+                 { time: "3. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.1.</b> Resmî kimlik belgesini inceleyerek kişisel kimliğine ilişkin çıkarımlarda bulunur." },
+                 { time: "4. Ders", name: "ALMANCA", objective: "-" },
+                 { time: "5. Ders", name: "MATEMATİK", objective: "<b>Μ.4.1.1.3.</b> 4, 5 ve 6 basamaklı doğal sayıların bölüklerini ve basamaklarını, basamaklarındaki rakamların basamak değerlerini belirler ve çözümler." },
+                 { time: "6. Ders", name: "İNGİLİZCE", objective: "-" },
+                 { time: "7. Ders", name: "TÜRKÇE", objective: "<b>T.4.4.10.</b> Büyük harfleri ve noktalama işaretlerini uygun yerlerde kullanır." },
+                 { time: "8. Ders", name: "SERBEST ETKİNLİK", objective: "-" }
+            ],
+            cuma: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "<b>4.1.1.</b> Dinî ifadeleri, günlük konuşmalarda doğru ve yerinde kullanır." },
+                { time: "2. Ders", name: "MATEMATİK", objective: "<b>Μ.4.1.1.3.</b> 4, 5 ve 6 basamaklı doğal sayıların bölüklerini ve basamaklarını, basamaklarındaki rakamların basamak değerlerini belirler ve çözümler." },
+                { time: "3. Ders", name: "TÜRKÇE", objective: "<b>OKUMA:</b> T.4.3.7. Kelimelerin zit anlamlılarını bulur.T.4.3.12. Bağlamdan yararlanarak bilmediği kelime ve kelime gruplarının anlamını tahmin eder." },
+                { time: "4. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.1.2.</b> Kayaçlarla madenleri ilişkilendirir ve kayaçların ham madde olarak önemini tartışır." },
+                { time: "5. Ders", name: "MATEMATİK", objective: "<b>Μ.4.1.1.3.</b> 4, 5 ve 6 basamaklı doğal sayıların bölüklerini ve basamaklarını, basamaklarındaki rakamların basamak değerlerini belirler ve çözümler." },
+                { time: "6. Ders", name: "BEDEN EĞİTİMİ", objective: "<b>BO.4.1.1.1.</b> Yer değiştirme hareketlerini artan kuvvet, hız ve çeviklikle yapar." },
+                { time: "7. Ders", name: "BEDEN EĞİTİMİ", objective: "<b>BO.4.1.1.1.</b> Yer değiştirme hareketlerini artan kuvvet, hız ve çeviklikle yapar." },
+                { time: "8. Ders", name: "BİLİŞİM", objective: "-" }
+            ]
+        },
+        week2: {
+             pazartesi: [
+                { time: "1. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.3.</b> 4, 5 ve 6 basamaklı doğal sayıların bölüklerini ve basamaklarını, basamaklarındaki rakamların basamak değerlerini belirler ve çözümler." },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "<b>KONUŞMA:</b> T.4.2.1. Kelimeleri anlamlarına uygun kullanır. T.4.2.2. Hazırlıksız konuşmalar yapar." },
+                { time: "3. Ders", name: "İNGİLİZCE", objective: "-" },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "<b>T.4.2.3.</b> Hazırlıklı konuşmalar yapar. T.4.2.4. Konuşma stratejilerini uygular. T4.2.5. Sınıf içindeki tartışma ve konuşmalara katılır." },
+                { time: "5. Ders", name: "KULÜP", objective: "-" },
+                { time: "6. Ders", name: "KULÜP", objective: "-" },
+                { time: "7. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.2.</b> Yaşamına ilişkin belli başlı olayları kronolojik sıraya koyar." },
+                { time: "8. Ders", name: "İNSAN HAKLARI", objective: "<b>Y.4.1.2.</b> İnsanın doğuştan gelen temel ve vazgeçilmez hakları olduğunu bilir." }
+            ],
+            sali: [
+                { time: "1. Ders", name: "TÜRKÇE", objective: "<b>OKUMA:</b> T.4.3.1. Noktalama işaretlerine dikkat ederek sesli ve sessiz okur. T.4.3.4. Metinleri türün özelliklerine uygun biçimde okur." },
+                { time: "2. Ders", name: "BİLİŞİM", objective: "-" },
+                { time: "3. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.1.3.</b> Fosillerin oluşumunu açıklar." },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "<b>T.4.3.7.</b> Kelimelerin zıt anlamlılarını bulur. T.4.3.12. Bağlamdan yararlanarak bilmediği kelime ve kelime gruplarının anlamını tahmin eder." },
+                { time: "5. Ders", name: "İNSAN HAKLARI", objective: "<b>Y.4.1.2.</b> İnsanın doğuştan gelen temel ve vazgeçilmez hakları olduğunu bilir." },
+                { time: "6. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.1.3.</b> Fosillerin oluşumunu açıklar." },
+                { time: "7. Ders", name: "GÖRSEL SANATLAR", objective: "<b>G.4.1.2.</b> Deneyimlerini farklı fikirler, sanat formları ve kültürel temalarla ilişkilendirerek görsel sanat çalışması oluşturur." },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "-" }
+            ],
+            carsamba: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "<b>4.1.1.</b> Dinî ifadeleri, günlük konuşmalarda doğru ve yerinde kullanır. (Allah ve Peygamber)" },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "<b>T.4.3.16.</b> Okuduğu metnin konusunu belirler. T.4.3.17. Metnin ana fikri/ana duygusunu belirler. T.4.3.18. Okuduğu metinle ilgili soruları cevaplar." },
+                { time: "3. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.3.</b> 4, 5 ve 6 basamaklı doğal sayıların bölüklerini ve basamaklarını, basamaklarındaki rakamların basamak değerlerini belirler ve çözümler." },
+                { time: "4. Ders", name: "MÜZİK", objective: "<b>Mü.4.A.1.</b> Birlikte söyleme kurallarına uyar." },
+                { time: "5. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.2.</b> Yaşamına ilişkin belli başlı olayları kronolojik sıraya koyar." },
+                { time: "6. Ders", name: "ALMANCA", objective: "-" },
+                { time: "7. Ders", name: "SERBEST ETKİNLİK", objective: "-" },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "-" }
+            ],
+            persembe: [
+                { time: "1. Ders", name: "TÜRKÇE", objective: "<b>YAZMA:</b> T.4.4.10. Büyük harfleri ve noktalama işaretlerini uygun yerlerde kullanır." },
+                { time: "2. Ders", name: "TRAFİK GÜVENLİĞİ", objective: "<b>TG.4.1.1.</b> Trafikte kendisinin ve başkalarının hayatının önemli olduğunu fark eder." },
+                { time: "3. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.2.</b> Yaşamına ilişkin belli başlı olayları kronolojik sıraya koyar." },
+                { time: "4. Ders", name: "ALMANCA", objective: "-" },
+                { time: "5. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.2.</b> 10 000'e kadar (10 000 dâhil) yüzer ve biner sayar." },
+                { time: "6. Ders", name: "İNGİLİZCE", objective: "-" },
+                { time: "7. Ders", name: "TÜRKÇE", objective: "<b>T.4.3.23.</b> Metin türlerini ayırt eder. T.4.3.31. Metinler arasında karşılaştırma yapar. T.4.3.34. Grafik, tablo ve çizelgelerle ilgili soruları cevaplar." },
+                { time: "8. Ders", name: "SERBEST ETKİNLİK", objective: "-" }
+            ],
+            cuma: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "<b>4.1.1.</b> Dini ifadeleri, günlük konuşmalarda doğru ve yerinde kullanır. (Besmele)" },
+                { time: "2. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.2.</b> 10 000'e kadar (10 000 dâhil) yüzer ve biner sayar." },
+                { time: "3. Ders", name: "TÜRKÇE", objective: "<b>T.4.4.20.</b> Harflerin yapısal özelliklerine uygun metin yazar." },
+                { time: "4. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.1.3.</b> Fosillerin oluşumunu açıklar." },
+                { time: "5. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.2.</b> 10 000'e kadar (10 000 dâhil) yüzer ve biner sayar." },
+                { time: "6. Ders", name: "BEDEN EĞİTİMİ", objective: "<b>BO.4.1.1.1.</b> Yer değiştirme hareketlerini artan kuvvet, hız ve çeviklikle yapar." },
+                { time: "7. Ders", name: "BEDEN EĞİTİMİ", objective: "<b>BO.4.1.1.1.</b> Yer değiştirme hareketlerini artan kuvvet, hız ve çeviklikle yapar." },
+                { time: "8. Ders", name: "BİLİŞİM", objective: "-" }
+            ]
+        },
+        week3: {
+             pazartesi: [
+                { time: "1. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.4.</b> Doğal sayıları en yakın onluğa veya yüzlüğe yuvarlar." },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "<b>DİNLEME/İZLEME:</b> T.4.1.1. Görselden/görsellerden hareketle dinleyeceği/izleyeceği metnin konusunu tahmin eder. T.4.1.4. Dinlediklerinde/izlediklerinde geçen, bilmediği kelimelerin anlamını tahmin eder." },
+                { time: "3. Ders", name: "İNGİLİZCE", objective: "-" },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "<b>T.4.1.5.</b> Dinlediklerinin/izlediklerinin konusunu belirler. T.4.1.6. Dinlediklerinin/izlediklerinin ana fikrini/ana duygusunu belirler. T.4.1.7. Dinlediklerine/izlediklerine yönelik sorulara cevap verir." },
+                { time: "5. Ders", name: "KULÜP", objective: "-" },
+                { time: "6. Ders", name: "KULÜP", objective: "-" },
+                { time: "7. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.3.</b> Bireysel ilgi, ihtiyaç ve yeteneklerini tanır." },
+                { time: "8. Ders", name: "İNSAN HAKLARI", objective: "<b>Y.4.1.3.</b> Haklarına kendi yaşamından örnekler verir." }
+            ],
+            sali: [
+                { time: "1. Ders", name: "TÜRKÇE", objective: "<b>KONUŞMA:</b> T.4.2.1. Kelimeleri anlamlarına uygun kullanır. T.4.2.2. Hazırlıksız konuşmalar yapar." },
+                { time: "2. Ders", name: "BİLİŞİM", objective: "-" },
+                { time: "3. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.2.1.</b> Dünya'nın dönme ve dolanma hareketleri arasındaki farkı açıklar." },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "<b>T.4.2.3.</b> Hazırlıklı konuşmalar yapar. T.4.2.4. Konuşma stratejilerini uygular. T4.2.5. Sınıf içindeki tartışma ve konuşmalara katılır." },
+                { time: "5. Ders", name: "İNSAN HAKLARI", objective: "<b>Y.4.1.3.</b> Haklarına kendi yaşamından örnekler verir." },
+                { time: "6. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.2.1.</b> Dünya'nın dönme ve dolanma hareketleri arasındaki farkı açıklar." },
+                { time: "7. Ders", name: "GÖRSEL SANATLAR", objective: "<b>G.4.1.3.</b> Görsel sanat çalışmasında kompozisyon birliğini oluşturmak için seçimler yapar." },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "-" }
+            ],
+            carsamba: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "<b>4.1.1.</b> Dinî ifadeleri, günlük konuşmalarda doğru ve yerinde kullanır. (Selam)" },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "<b>OKUMA:</b> T.4.3.8. Kelimelerin eş anlamlılarını bulur." },
+                { time: "3. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.4.</b> Doğal sayıları en yakın onluğa veya yüzlüğe yuvarlar." },
+                { time: "4. Ders", name: "MÜZİK", objective: "<b>Mü.4.B.1.</b> Temel müzik yazı ve ögelerini tanır." },
+                { time: "5. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.3.</b> Bireysel ilgi, ihtiyaç ve yeteneklerini tanır." },
+                { time: "6. Ders", name: "ALMANCA", objective: "-" },
+                { time: "7. Ders", name: "SERBEST ETKİNLİK", objective: "-" },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "-" }
+            ],
+            persembe: [
+                { time: "1. Ders", name: "TÜRKÇE", objective: "<b>T.4.3.27.</b> Okuduğu metindeki kahramanların özelliklerini karşılaştırır. T.4.3.32. Kısa ve basit dijital metinlerdeki mesajı kavrar." },
+                { time: "2. Ders", name: "TRAFİK GÜVENLİĞİ", objective: "<b>TG.4.1.2.</b> Trafikle ilgili temel kavramları açıklar." },
+                { time: "3. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.3.</b> Bireysel ilgi, ihtiyaç ve yeteneklerini tanır." },
+                { time: "4. Ders", name: "ALMANCA", objective: "-" },
+                { time: "5. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.5.</b> En çok altı basamaklı doğal sayıları büyük/küçük sembolü kullanarak sıralar." },
+                { time: "6. Ders", name: "İNGİLİZCE", objective: "-" },
+                { time: "7. Ders", name: "TÜRKÇE", objective: "<b>YAZMA:</b> T.4.4.10. Büyük harfleri ve noktalama işaretlerini uygun yerlerde kullanır." },
+                { time: "8. Ders", name: "SERBEST ETKİNLİK", objective: "-" }
+            ],
+            cuma: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "<b>4.1.1.</b> Dinî ifadeleri, günlük konuşmalarda doğru ve yerinde kullanır. (Selam)" },
+                { time: "2. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.5.</b> En çok altı basamaklı doğal sayıları büyük/küçük sembolü kullanarak sıralar." },
+                { time: "3. Ders", name: "TÜRKÇE", objective: "<b>T.4.4.10.</b> Büyük harfleri ve noktalama işaretlerini uygun yerlerde kullanır." },
+                { time: "4. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.2.1.</b> Dünya'nın dönme ve dolanma hareketleri arasındaki farkı açıklar." },
+                { time: "5. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.5.</b> En çok altı basamaklı doğal sayıları büyük/küçük sembolü kullanarak sıralar." },
+                { time: "6. Ders", name: "BEDEN EĞİTİMİ", objective: "<b>BO.4.1.1.2.</b> Oyunlarda dengeleme gerektiren hareketleri etkili kullanır." },
+                { time: "7. Ders", name: "BEDEN EĞİTİMİ", objective: "<b>BO.4.1.1.2.</b> Oyunlarda dengeleme gerektiren hareketleri etkili kullanır." },
+                { time: "8. Ders", name: "BİLİŞİM", objective: "-" }
+            ]
+        },
+        week4: {
+             pazartesi: [
+                { time: "1. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.6.</b> Belli bir kurala göre artan veya azalan sayı örüntüleri oluşturur ve kuralını açıklar." },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "<b>KONUŞMA:</b> T.4.2.1Kelimeleri anlamlarına uygun kullanır. T.4.2.2. Hazırlıksız konuşmalar yapar." },
+                { time: "3. Ders", name: "İNGİLİZCE", objective: "-" },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "<b>T.4.2.3.</b> Hazırlıklı konuşmalar yapar. T.4.2.4. Konuşma stratejilerini uygular. T4.2.5. Sınıf içindeki tartışma ve konuşmalara katılır." },
+                { time: "5. Ders", name: "KULÜP", objective: "-" },
+                { time: "6. Ders", name: "KULÜP", objective: "-" },
+                { time: "7. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.4.</b> Kendisini farklı özelliklere sahip diğer bireylerin yerine koyar." },
+                { time: "8. Ders", name: "İNSAN HAKLARI", objective: "<b>Y.4.1.4.</b> Çocuk ile yetişkin arasındaki farkları açıklar." }
+            ],
+            sali: [
+                { time: "1. Ders", name: "TÜRKÇE", objective: "<b>OKUMA:</b> T.4.3.1. Noktalama işaretlerine dikkat ederek sesli ve sessiz okur. T.4.3.4. Metinleri türün özelliklerine uygun biçimde okur." },
+                { time: "2. Ders", name: "BİLİŞİM", objective: "-" },
+                { time: "3. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.2.1.</b> Dünya'nın dönme ve dolanma hareketleri arasındaki farkı açıklar." },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "<b>T.4.3.7.</b> Kelimelerin zıt anlamlılarını bulur. T.4.3.8. Kelimelerin eş anlamlılarını bulur. T.4.3.18. Okuduğu metinle ilgili soruları cevaplar." },
+                { time: "5. Ders", name: "İNSAN HAKLARI", objective: "<b>Y.4.1.4.</b> Çocuk ile yetişkin arasındaki farkları açıklar." },
+                { time: "6. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.2.2.</b> Dünya'nın hareketleri sonucu gerçekleşen olayları açıklar." },
+                { time: "7. Ders", name: "GÖRSEL SANATLAR", objective: "<b>G.4.1.4.</b> İki boyutlu yüzey üzerinde derinlik etkisi oluşturur." },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "-" }
+            ],
+            carsamba: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "<b>4.1.1.</b> Dinî ifadeleri, günlük konuşmalarda doğru ve yerinde kullanır. (Hamd ve Şükür)" },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "<b>T.4.3.20.</b> Okuduğu metinlerdeki hikâye unsurlarını belirler. T.4.3.25. Yönergeleri kavrar. T.4.3.26. Metindeki gerçek ve hayalî ögeleri ayırt eder." },
+                { time: "3. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.6.</b> Belli bir kurala göre artan veya azalan sayı örüntüleri oluşturur ve kuralını açıklar." },
+                { time: "4. Ders", name: "MÜZİK", objective: "<b>Mü.4.B.1.</b> Temel müzik yazı ve ögelerini tanır." },
+                { time: "5. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.4.</b> Kendisini farklı özelliklere sahip diğer bireylerin yerine koyar." },
+                { time: "6. Ders", name: "ALMANCA", objective: "-" },
+                { time: "7. Ders", name: "SERBEST ETKİNLİK", objective: "-" },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "-" }
+            ],
+            persembe: [
+                { time: "1. Ders", name: "TÜRKÇE", objective: "<b>YAZMA:</b> T.4.4.3. Hikâye edici metin yazar. T.4.4.7. Yazdıklarının içeriğine uygun başlık belirler. T.4.4.9. Formları yönergelerine uygun doldurur." },
+                { time: "2. Ders", name: "TRAFİK GÜVENLİĞİ", objective: "<b>TG.4.1.2.</b> Trafikle ilgili temel kavramları açıklar." },
+                { time: "3. Ders", name: "SOSYAL BİLGİLER", objective: "<b>SB.4.1.4.</b> Kendisini farklı özelliklere sahip diğer bireylerin yerine koyar." },
+                { time: "4. Ders", name: "ALMANCA", objective: "-" },
+                { time: "5. Ders", name: "MATEMATİK", objective: "<b>Μ.4.1.2.1.</b> En çok dört basamaklı doğal sayılarla toplama işlemini yapar." },
+                { time: "6. Ders", name: "İNGİLİZCE", objective: "-" },
+                { time: "7. Ders", name: "TÜRKÇE", objective: "<b>T.4.4.10.</b> Büyük harfleri ve noktalama işaretlerini uygun yerlerde kullanır. T.4.4.14. Yazdıklarını zenginleştirmek için çizim, grafik ve görseller kullanır." },
+                { time: "8. Ders", name: "SERBEST ETKİNLİK", objective: "-" }
+            ],
+            cuma: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "<b>4.1.1.</b> Dinî ifadeleri, günlük konuşmalarda doğru ve yerinde kullanır. (Estağfirullah ve Sübhanallah)" },
+                { time: "2. Ders", name: "MATEMATİK", objective: "<b>M.4.1.2.1.</b> En çok dört basamaklı doğal sayılarla toplama işlemini yapar." },
+                { time: "3. Ders", name: "TÜRKÇE", objective: "<b>T.4.4.20.</b> Harflerin yapısal özelliklerine uygun metin yazar." },
+                { time: "4. Ders", name: "FEN BİLİMLERİ", objective: "<b>F.4.1.2.2.</b> Dünya'nın hareketleri sonucu gerçekleşen olayları açıklar." },
+                { time: "5. Ders", name: "MATEMATİK", objective: "<b>M.4.1.2.1.</b> En çok dört basamaklı doğal sayılarla toplama işlemini yapar." },
+                { time: "6. Ders", name: "BEDEN EĞİTİMİ", objective: "<b>BO.4.1.1.2.</b> Oyunlarda dengeleme gerektiren hareketleri etkili kullanır." },
+                { time: "7. Ders", name: "BEDEN EĞİTİMİ", objective: "<b>BO.4.1.1.2.</b> Oyunlarda dengeleme gerektiren hareketleri etkili kullanır." },
+                { time: "8. Ders", name: "BİLİŞİM", objective: "-" }
+            ]
+        }
+    };
+
+    const scheduleContainer = document.getElementById('schedule-container');
+    const dayNavContainer = document.getElementById('day-nav-container');
+    let activeWeekId = 'week1';
+
+    function createScheduleCard(lesson) {
+        const card = document.createElement('div');
+        card.className = 'schedule-card';
+
+        const header = document.createElement('div');
+        header.className = 'card-header';
+        header.innerHTML = `<span class="lesson-time">${lesson.time}</span><span class="lesson-name">${lesson.name}</span>`;
+
+        const body = document.createElement('div');
+        body.className = 'card-body';
+        if (lesson.objective === '-') {
+            body.classList.add('empty');
+            body.textContent = 'Kazanım belirtilmemiş.';
+        } else {
+            body.innerHTML = lesson.objective;
+        }
+
+        card.appendChild(header);
+        card.appendChild(body);
+        return card;
+    }
+
+    function createDayContent(weekId, dayId) {
+        const dayDiv = document.createElement('div');
+        dayDiv.id = `${weekId}-${dayId}`;
+        dayDiv.className = 'day-content';
+        
+        const lessons = scheduleData[weekId][dayId];
+        if (lessons) {
+            lessons.forEach(lesson => {
+                dayDiv.appendChild(createScheduleCard(lesson));
+            });
+        }
+        return dayDiv;
+    }
+
+    function createWeekContent(weekId) {
+        const weekDiv = document.createElement('div');
+        weekDiv.id = weekId;
+        weekDiv.className = 'week-content';
+        
+        const days = ['pazartesi', 'sali', 'carsamba', 'persembe', 'cuma'];
+        days.forEach(day => {
+            weekDiv.appendChild(createDayContent(weekId, day));
+        });
+        
+        return weekDiv;
+    }
+    
+    function createDayNav(weekId) {
+        const dayNav = document.createElement('div');
+        dayNav.className = 'nav-buttons day-nav';
+        dayNav.id = `${weekId}-day-nav`;
+        
+        const days = { pazartesi: "Pazartesi", sali: "Salı", carsamba: "Çarşamba", persembe: "Perşembe", cuma: "Cuma" };
+        
+        for (const [dayId, dayName] of Object.entries(days)) {
+            const button = document.createElement('button');
+            button.textContent = dayName;
+            button.onclick = () => showDay(`${weekId}-${dayId}`, button);
+            dayNav.appendChild(button);
+        }
+        
+        return dayNav;
+    }
+
+    // Başlangıçta tüm içeriği oluştur
+    Object.keys(scheduleData).forEach(weekId => {
+        scheduleContainer.appendChild(createWeekContent(weekId));
+        dayNavContainer.appendChild(createDayNav(weekId));
+    });
+
+
+    function showWeek(weekId, weekButton) {
+        activeWeekId = weekId;
+
+        // Haftaları yönet
+        document.querySelectorAll('.week-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(weekId).classList.add('active');
+
+        document.querySelectorAll('#week-buttons button').forEach(el => el.classList.remove('active'));
+        weekButton.classList.add('active');
+        
+        // Gün navigasyonlarını yönet
+        document.querySelectorAll('.day-nav').forEach(el => el.style.display = 'none');
+        const activeDayNav = document.getElementById(`${weekId}-day-nav`);
+        activeDayNav.style.display = 'flex';
+        
+        // O haftanın ilk gününü varsayılan olarak göster
+        const firstDayButton = activeDayNav.querySelector('button');
+        showDay(`${weekId}-pazartesi`, firstDayButton);
+    }
+    
+    function showDay(dayId, dayButton) {
+         // Aktif hafta içindeki tüm günleri gizle
+        document.querySelectorAll(`#${activeWeekId} .day-content`).forEach(el => el.classList.remove('active'));
+        
+        // İstenen günü göster
+        document.getElementById(dayId).classList.add('active');
+        
+        // Butonların aktif durumunu yönet
+        const dayNav = dayButton.parentElement;
+        dayNav.querySelectorAll('button').forEach(el => el.classList.remove('active'));
+        dayButton.classList.add('active');
+    }
+
+    // Sayfa ilk yüklendiğinde 1. haftayı ve Pazartesi'yi göster
+    window.onload = () => {
+        showWeek('week1', document.querySelector('#week-buttons button'));
+    };
+
+</script>
+
+</body>
+</html>
