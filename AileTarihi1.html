@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aile Tarihi Macerası</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --secondary-color: #007bff;
+            --light-bg: #f4f7fc;
+            --white: #ffffff;
+            --dark-text: #333;
+            --light-text: #666;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0, 86, 179, 0.2);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background-color: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--card-shadow);
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.8em;
+            border-bottom: 2px solid var(--light-bg);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        p, ul {
+            margin-bottom: 15px;
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 5px;
+        }
+
+        ul li::marker {
+            color: var(--secondary-color);
+        }
+
+        /* İnteraktif Oyun Alanı */
+        .interactive-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .items-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            background: var(--light-bg);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .draggable-item {
+            padding: 10px 15px;
+            background-color: var(--secondary-color);
+            color: var(--white);
+            border-radius: 20px;
+            cursor: grab;
+            transition: transform 0.2s;
+            font-weight: 600;
+        }
+
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .drop-zones {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .drop-zone {
+            padding: 15px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            min-height: 100px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .drop-zone.drag-over {
+            background-color: #e9f5ff;
+            border-color: var(--secondary-color);
+        }
+
+        .drop-zone h4 {
+            margin-bottom: 10px;
+            text-align: center;
+            color: var(--light-text);
+        }
+        .drop-zone .draggable-item {
+            margin-top: 5px;
+            background-color: var(--success-color);
+            cursor: default;
+        }
+
+        /* Quiz Alanı */
+        #quiz-container {
+            text-align: center;
+        }
+
+        #question-text {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .option-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--white);
+            border: 2px solid var(--secondary-color);
+            color: var(--secondary-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: var(--secondary-color);
+            color: var(--white);
+        }
+        
+        .option-btn.correct {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            color: var(--white);
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error-color);
+            border-color: var(--error-color);
+            color: var(--white);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        #feedback-text {
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        #next-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--light-text);
+        }
+
+        @media (min-width: 768px) {
+            header h1 {
+                font-size: 3em;
+            }
+            .drop-zones {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .options-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Aile Tarihi Macerası</h1>
+            <p>Geçmişe bir yolculuk yapmaya ve ailemizin hikayesini keşfetmeye ne dersin?</p>
+        </header>
+
+        <main>
+            <section id="introduction" class="card">
+                <h2>Aile Tarihi Nedir?</h2>
+                <p>Her insanın bir yaşam öyküsü olduğu gibi, her ailenin de kendine özgü bir geçmişi vardır. Buna <strong>aile tarihi</strong> diyoruz. Ailemizi oluşturan anne, baba, dede, nine gibi büyüklerimizin yaşadıkları olaylar, meslekleri, göçleri ve başarıları aile tarihimizi oluşturur.</p>
+            </section>
+
+            <section id="oral-history" class="card">
+                <h2>Sözlü Tarih: Geçmişin Sesini Dinlemek</h2>
+                <p>Aile tarihimizi öğrenmenin en güzel yollarından biri, aile büyüklerimizle sohbet etmektir. Bir olayı yaşamış veya ona tanıklık etmiş kişilerle yapılan görüşmelere dayanarak geçmişi araştırmaya <strong>sözlü tarih</strong> denir.</p>
+                <h3>Sözlü Tarih Çalışması Nasıl Yapılır?</h3>
+                <ul>
+                    <li><strong>Görüşülecek Kişi Belirlenir:</strong> Deden, ninen veya ailendeki en yaşlı kişi olabilir.</li>
+                    <li><strong>Yer ve Zaman Belirlenir:</strong> Görüşme için en uygun zaman ve yer ayarlanır.</li>
+                    <li><strong>Sorular Hazırlanır:</strong> "Ne zaman ve nerede doğdun?", "Çocukken hangi oyunları oynardın?", "Mesleğin neydi?" gibi sorular hazırlanır.</li>
+                    <li><strong>Araçlar Hazırlanır:</strong> Ses kayıt cihazı, kamera veya not almak için kalem ve kağıt hazır edilir.</li>
+                    <li><strong>Görüşme Yapılır:</strong> Hazırlanan sorular saygıyla sorulur ve cevaplar dikkatle kaydedilir.</li>
+                    <li><strong>Kayıtlar Düzenlenir:</strong> Görüşme sonrası toplanan bilgiler bir rapor haline getirilir.</li>
+                </ul>
+            </section>
+
+            <section id="source-types" class="card">
+                <h2>Tarih Dedektifinin Kanıtları: Kaynaklar</h2>
+                <p>Aile tarihimizi araştırırken tıpkı bir dedektif gibi kanıtlar toplarız. Bu kanıtlar bize geçmiş hakkında doğru bilgiler verir. Başlıca kaynaklarımız şunlardır:</p>
+                <div>
+                    <h3>📄 Yazılı Kaynaklar</h3>
+                    <p>Eski mektuplar, günlükler, öğrenci karneleri, diplomalar, tapu senetleri ve kimlik belgeleri bu gruba girer.</p>
+                </div>
+                <div>
+                    <h3>🖼️ Görsel Kaynaklar</h3>
+                    <p>Siyah-beyaz fotoğraflar, video kayıtları, madalyalar ve tablolardır. Bize o dönemdeki yaşam hakkında fikir verirler.</p>
+                </div>
+                <div>
+                    <h3>🕰️ Eşya ve Nesneler</h3>
+                    <p>Aile büyüklerimizden kalan köstekli saat, gaz lambası, dikiş makinesi, bakır güğüm, sandık gibi eşyalardır. Her birinin bir hikayesi olabilir.</p>
+                </div>
+            </section>
+
+            <section id="interactive-game" class="card">
+                <h2>Hadi Eşleştirelim!</h2>
+                <p>Aşağıdaki kaynakları doğru kutulara sürükleyerek bilgilerini test et!</p>
+                <div class="interactive-section">
+                    <div id="items-container" class="items-container">
+                        <div class="draggable-item" draggable="true" id="item1" data-source-type="yazili">💌 Mektup</div>
+                        <div class="draggable-item" draggable="true" id="item2" data-source-type="gorsel">📷 Fotoğraf</div>
+                        <div class="draggable-item" draggable="true" id="item3" data-source-type="esya">🕰️ Köstekli Saat</div>
+                        <div class="draggable-item" draggable="true" id="item4" data-source-type="yazili">🎓 Diploma</div>
+                        <div class="draggable-item" draggable="true" id="item5" data-source-type="esya">🪡 Dikiş Makinesi</div>
+                        <div class="draggable-item" draggable="true" id="item6" data-source-type="gorsel">🏅 Madalya</div>
+                        <div class="draggable-item" draggable="true" id="item7" data-source-type="yazili">📝 Karne</div>
+                        <div class="draggable-item" draggable="true" id="item8" data-source-type="esya">💡 Gaz Lambası</div>
+                    </div>
+                    <div class="drop-zones">
+                        <div class="drop-zone" data-target-type="yazili">
+                            <h4>📄 Yazılı Kaynaklar</h4>
+                        </div>
+                        <div class="drop-zone" data-target-type="gorsel">
+                            <h4>🖼️ Görsel Kaynaklar</h4>
+                        </div>
+                        <div class="drop-zone" data-target-type="esya">
+                            <h4>🕰️ Eşya ve Nesneler</h4>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="quiz-section" class="card">
+                <h2>Bilgini Ölçme Zamanı!</h2>
+                <div id="quiz-container">
+                    <p id="question-text"></p>
+                    <div id="options-container" class="options-container"></div>
+                    <p id="feedback-text"></p>
+                    <button id="next-btn">Sonraki Soru</button>
+                </div>
+            </section>
+
+            <section id="project-guide" class="card">
+                <h2>Kendi Aile Tarihi Projeni Yap!</h2>
+                <p>Artık sen de bir aile tarihi araştırmacısı olabilirsin! İşte izlemen gereken adımlar:</p>
+                <ul>
+                    <li><strong>Konuşacağın Kişiyi Seç:</strong> Ailendeki en yaşlı ve en bilgili kişiyi (dede, nine vb.) seç.</li>
+                    <li><strong>Sorularını Hazırla:</strong> Onun çocukluğu, ailesi, yaşadığı önemli olaylar, mesleği ve anıları hakkında merak ettiklerini liste yap.</li>
+                    <li><strong>Görüşmeye Git:</strong> Not defterini, kalemini veya bir ses kayıt cihazını yanına alarak onunla sohbet et.</li>
+                    <li><strong>Kanıtları Topla:</strong> Varsa eski fotoğrafları, belgeleri (karne, kimlik) ve eşyaları incelemek için izin iste. Onların hikayelerini dinle.</li>
+                    <li><strong>Raporunu Yaz:</strong> Topladığın tüm bilgileri, fotoğrafları ve hikayeleri bir araya getirerek kendi "Aile Tarihi" raporunu veya sunumunu oluştur.</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <p>Bu sayfa öğrencilerin Aile Tarihi konusunu öğrenmesi için hazırlanmıştır.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Sürükle Bırak Oyunu ---
+            const draggableItems = document.querySelectorAll('.draggable-item');
+            const dropZones = document.querySelectorAll('.drop-zone');
+            
+            draggableItems.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', item.id);
+                    e.dataTransfer.setData('source-type', item.dataset.sourceType);
+                    setTimeout(() => item.style.display = 'none', 0);
+                });
+
+                item.addEventListener('dragend', () => {
+                   setTimeout(() => item.style.display = 'block', 0);
+                });
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('drag-over');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('drag-over');
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+
+                    const id = e.dataTransfer.getData('text/plain');
+                    const sourceType = e.dataTransfer.getData('source-type');
+                    const targetType = zone.dataset.targetType;
+                    const draggableElement = document.getElementById(id);
+
+                    if (sourceType === targetType) {
+                        zone.appendChild(draggableElement);
+                        draggableElement.draggable = false;
+                        draggableElement.style.cursor = 'default';
+                    }
+                });
+            });
+
+            // --- Quiz Alanı ---
+            const questions = [
+                {
+                    question: "Aile büyüklerimizle konuşarak geçmişi araştırma yöntemine ne ad verilir?",
+                    options: ["Yazılı Tarih", "Sözlü Tarih", "Görsel Tarih", "Arkeoloji"],
+                    correctAnswer: "Sözlü Tarih"
+                },
+                {
+                    question: "Aşağıdakilerden hangisi bir 'yazılı kaynak' örneğidir?",
+                    options: ["Eski bir fotoğraf", "Dedenin köstekli saati", "Ninenin mektubu", "Aile videosu"],
+                    correctAnswer: "Ninenin mektubu"
+                },
+                {
+                    question: "Eski bir gaz lambası veya dikiş makinesi hangi tür kaynağa örnektir?",
+                    options: ["Görsel Kaynak", "Yazılı Kaynak", "Sözlü Kaynak", "Eşya ve Nesne"],
+                    correctAnswer: "Eşya ve Nesne"
+                },
+                {
+                    question: "Sözlü tarih çalışmasının ilk adımı nedir?",
+                    options: ["Soruları hazırlamak", "Görüşme yapılacak kişiyi belirlemek", "Kayıt cihazı almak", "Rapor yazmak"],
+                    correctAnswer: "Görüşme yapılacak kişiyi belirlemek"
+                },
+                {
+                    question: "Siyah-beyaz bir aile fotoğrafı hangi tür kaynağa örnektir?",
+                    options: ["Yazılı Kaynak", "Eşya ve Nesne", "Görsel Kaynak", "Sözlü Tarih"],
+                    correctAnswer: "Görsel Kaynak"
+                }
+            ];
+
+            let currentQuestionIndex = 0;
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const feedbackText = document.getElementById('feedback-text');
+            const nextBtn = document.getElementById('next-btn');
+
+            function loadQuestion() {
+                feedbackText.textContent = '';
+                nextBtn.style.display = 'none';
+                optionsContainer.innerHTML = '';
+
+                if (currentQuestionIndex >= questions.length) {
+                    questionText.textContent = "Tebrikler, testi tamamladın!";
+                    return;
+                }
+
+                const currentQuestion = questions[currentQuestionIndex];
+                questionText.textContent = currentQuestion.question;
+
+                currentQuestion.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('option-btn');
+                    button.addEventListener('click', () => selectAnswer(button, currentQuestion.correctAnswer));
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            function selectAnswer(selectedButton, correctAnswer) {
+                const buttons = optionsContainer.querySelectorAll('.option-btn');
+                buttons.forEach(btn => btn.disabled = true);
+                
+                if (selectedButton.textContent === correctAnswer) {
+                    selectedButton.classList.add('correct');
+                    feedbackText.textContent = "Harika! Doğru cevap!";
+                    feedbackText.style.color = 'var(--success-color)';
+                } else {
+                    selectedButton.classList.add('wrong');
+                    feedbackText.textContent = `Doğru cevap: ${correctAnswer}`;
+                    feedbackText.style.color = 'var(--error-color)';
+                    buttons.forEach(btn => {
+                       if(btn.textContent === correctAnswer) btn.classList.add('correct');
+                    });
+                }
+                
+                if (currentQuestionIndex < questions.length - 1) {
+                    nextBtn.style.display = 'block';
+                } else {
+                    nextBtn.textContent = 'Testi Bitir';
+                    nextBtn.style.display = 'block';
+                }
+            }
+            
+            nextBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                loadQuestion();
+                 if (currentQuestionIndex >= questions.length) {
+                    nextBtn.style.display = 'none';
+                }
+            });
+
+            loadQuestion();
+        });
+    </script>
+</body>
+</html>
