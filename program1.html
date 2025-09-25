@@ -146,23 +146,75 @@
     <div class="nav-container">
         <div class="week-nav">
             <div class="nav-buttons" id="week-buttons">
-                <button onclick="showWeek('week1', this)" class="active">1. Hafta</button>
-                <button onclick="showWeek('week2', this)">2. Hafta</button>
-                <button onclick="showWeek('week3', this)">3. Hafta</button>
-                <button onclick="showWeek('week4', this)">4. Hafta</button>
+                <button data-week="uyumHaftasi">Uyum Haftası</button>
+                <button data-week="week1">1. Hafta</button>
+                <button data-week="week2">2. Hafta</button>
+                <button data-week="week3">3. Hafta</button>
+                <button data-week="week4">4. Hafta</button>
             </div>
         </div>
 
         <div id="day-nav-container"></div>
     </div>
 
-    <main id="schedule-container">
-        </main>
+    <main id="schedule-container"></main>
 </div>
 
 <script>
-    // Tüm ders verilerini tek bir yerde toplayalım
+document.addEventListener('DOMContentLoaded', function() {
     const scheduleData = {
+        uyumHaftasi: {
+            pazartesi: [
+                { time: "1. Ders", name: "MATEMATİK", objective: "Serbest etkinlik" },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "Tanışma etkinliği" },
+                { time: "3. Ders", name: "İNGİLİZCE", objective: "Orientation" },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "Kelime oyunu etkinliği" },
+                { time: "5. Ders", name: "KULÜP", objective: "-" },
+                { time: "6. Ders", name: "KULÜP", objective: "-" },
+                { time: "7. Ders", name: "SOSYAL BİLGİLER", objective: "Serbest etkinlik" },
+                { time: "8. Ders", name: "İNSAN HAKLARI", objective: "Serbest etkinlik" }
+            ],
+            sali: [
+                { time: "1. Ders", name: "TÜRKÇE", objective: "Eş anlamlı ve zıt anlamlı sözcükler etkinliği" },
+                { time: "2. Ders", name: "BİLİŞİM", objective: "Açık kaynak işletim sistemi" },
+                { time: "3. Ders", name: "FEN BİLİMLERİ", objective: "Serbest etkinlik" },
+                { time: "4. Ders", name: "TÜRKÇE", objective: "Serbest etkinlik" },
+                { time: "5. Ders", name: "İNSAN HAKLARI", objective: "Serbest etkinlik" },
+                { time: "6. Ders", name: "FEN BİLİMLERİ", objective: "Serbest etkinlik" },
+                { time: "7. Ders", name: "GÖRSEL SANATLAR", objective: "Görsel sanat çalışmasını oluştururken biçimlendirme basamaklarını kullanır" },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "Orientation" }
+            ],
+            carsamba: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "Serbest etkinlik" },
+                { time: "2. Ders", name: "TÜRKÇE", objective: "Tombala oyunu" },
+                { time: "3. Ders", name: "MATEMATİK", objective: "Serbest etkinlik" },
+                { time: "4. Ders", name: "MÜZİK", objective: "Serbest etkinlik" },
+                { time: "5. Ders", name: "SOSYAL BİLGİLER", objective: "Serbest etkinlik" },
+                { time: "6. Ders", name: "ALMANCA", objective: "Serbest etkinlik" },
+                { time: "7. Ders", name: "SERBEST ETKİNLİK", objective: "Serbest etkinlik" },
+                { time: "8. Ders", name: "İNGİLİZCE", objective: "Orientation" }
+            ],
+            persembe: [
+                 { time: "1. Ders", name: "TÜRKÇE", objective: "Eş sesli sözcükler etkinliği" },
+                 { time: "2. Ders", name: "TRAFİK GÜVENLİĞİ", objective: "Serbest etkinlik" },
+                 { time: "3. Ders", name: "SOSYAL BİLGİLER", objective: "Serbest etkinlik" },
+                 { time: "4. Ders", name: "ALMANCA", objective: "Serbest etkinlik" },
+                 { time: "5. Ders", name: "MATEMATİK", objective: "Serbest etkinlik" },
+                 { time: "6. Ders", name: "İNGİLİZCE", objective: "Hazine avı etkinliği" },
+                 { time: "7. Ders", name: "TÜRKÇE", objective: "Serbest etkinlik" },
+                 { time: "8. Ders", name: "SERBEST ETKİNLİK", objective: "Serbest etkinlik" }
+            ],
+            cuma: [
+                { time: "1. Ders", name: "DİN KÜLTÜRÜ", objective: "Serbest etkinlik" },
+                { time: "2. Ders", name: "MATEMATİK", objective: "Serbest etkinlik" },
+                { time: "3. Ders", name: "TÜRKÇE", objective: "Serbest etkinlik" },
+                { time: "4. Ders", name: "FEN BİLİMLERİ", objective: "Serbest etkinlik" },
+                { time: "5. Ders", name: "MATEMATİK", objective: "Serbest etkinlik" },
+                { time: "6. Ders", name: "BEDEN EĞİTİMİ", objective: "-" },
+                { time: "7. Ders", name: "BEDEN EĞİTİMİ", objective: "-" },
+                { time: "8. Ders", name: "BİLİŞİM", objective: "Açık kaynak internet siteleri" }
+            ]
+        },
         week1: {
             pazartesi: [
                 { time: "1. Ders", name: "MATEMATİK", objective: "<b>M.4.1.1.1.</b> 4, 5 ve 6 basamaklı doğal sayıları okur ve yazar." },
@@ -375,119 +427,123 @@
 
     const scheduleContainer = document.getElementById('schedule-container');
     const dayNavContainer = document.getElementById('day-nav-container');
-    let activeWeekId = 'week1';
+    const weekButtons = document.querySelectorAll('#week-buttons button');
+    let activeWeekId = 'uyumHaftasi';
 
     function createScheduleCard(lesson) {
         const card = document.createElement('div');
         card.className = 'schedule-card';
-
-        const header = document.createElement('div');
-        header.className = 'card-header';
-        header.innerHTML = `<span class="lesson-time">${lesson.time}</span><span class="lesson-name">${lesson.name}</span>`;
-
-        const body = document.createElement('div');
-        body.className = 'card-body';
-        if (lesson.objective === '-') {
-            body.classList.add('empty');
-            body.textContent = 'Kazanım belirtilmemiş.';
-        } else {
-            body.innerHTML = lesson.objective;
-        }
-
-        card.appendChild(header);
-        card.appendChild(body);
+        const bodyClass = (lesson.objective === '-') ? 'card-body empty' : 'card-body';
+        const bodyContent = (lesson.objective === '-') ? 'Kazanım belirtilmemiş.' : lesson.objective;
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="lesson-time">${lesson.time}</span>
+                <span class="lesson-name">${lesson.name}</span>
+            </div>
+            <div class="${bodyClass}">${bodyContent}</div>
+        `;
         return card;
     }
 
-    function createDayContent(weekId, dayId) {
-        const dayDiv = document.createElement('div');
-        dayDiv.id = `${weekId}-${dayId}`;
-        dayDiv.className = 'day-content';
-        
-        const lessons = scheduleData[weekId][dayId];
-        if (lessons) {
-            lessons.forEach(lesson => {
-                dayDiv.appendChild(createScheduleCard(lesson));
-            });
+    function generateContent() {
+        // Clear existing content
+        scheduleContainer.innerHTML = '';
+        dayNavContainer.innerHTML = '';
+
+        for (const weekId in scheduleData) {
+            // Create week container
+            const weekContent = document.createElement('div');
+            weekContent.id = weekId;
+            weekContent.className = 'week-content';
+            scheduleContainer.appendChild(weekContent);
+
+            // Create day nav for the week
+            const dayNav = document.createElement('div');
+            dayNav.className = 'nav-buttons day-nav';
+            dayNav.id = `${weekId}-day-nav`;
+            dayNav.style.display = 'none';
+            const days = { pazartesi: "Pazartesi", sali: "Salı", carsamba: "Çarşamba", persembe: "Perşembe", cuma: "Cuma" };
+            for (const dayId in days) {
+                if (scheduleData[weekId][dayId]) {
+                    // Create day content container
+                    const dayContent = document.createElement('div');
+                    dayContent.id = `${weekId}-${dayId}`;
+                    dayContent.className = 'day-content';
+                    scheduleData[weekId][dayId].forEach(lesson => {
+                        dayContent.appendChild(createScheduleCard(lesson));
+                    });
+                    weekContent.appendChild(dayContent);
+                    
+                    // Create day button
+                    const dayButton = document.createElement('button');
+                    dayButton.textContent = days[dayId];
+                    dayButton.dataset.day = `${weekId}-${dayId}`;
+                    dayNav.appendChild(dayButton);
+                }
+            }
+            dayNavContainer.appendChild(dayNav);
         }
-        return dayDiv;
     }
 
-    function createWeekContent(weekId) {
-        const weekDiv = document.createElement('div');
-        weekDiv.id = weekId;
-        weekDiv.className = 'week-content';
-        
-        const days = ['pazartesi', 'sali', 'carsamba', 'persembe', 'cuma'];
-        days.forEach(day => {
-            weekDiv.appendChild(createDayContent(weekId, day));
-        });
-        
-        return weekDiv;
-    }
-    
-    function createDayNav(weekId) {
-        const dayNav = document.createElement('div');
-        dayNav.className = 'nav-buttons day-nav';
-        dayNav.id = `${weekId}-day-nav`;
-        
-        const days = { pazartesi: "Pazartesi", sali: "Salı", carsamba: "Çarşamba", persembe: "Perşembe", cuma: "Cuma" };
-        
-        for (const [dayId, dayName] of Object.entries(days)) {
-            const button = document.createElement('button');
-            button.textContent = dayName;
-            button.onclick = () => showDay(`${weekId}-${dayId}`, button);
-            dayNav.appendChild(button);
-        }
-        
-        return dayNav;
-    }
-
-    // Başlangıçta tüm içeriği oluştur
-    Object.keys(scheduleData).forEach(weekId => {
-        scheduleContainer.appendChild(createWeekContent(weekId));
-        dayNavContainer.appendChild(createDayNav(weekId));
-    });
-
-
-    function showWeek(weekId, weekButton) {
+    function showWeek(weekId) {
         activeWeekId = weekId;
-
-        // Haftaları yönet
-        document.querySelectorAll('.week-content').forEach(el => el.classList.remove('active'));
-        document.getElementById(weekId).classList.add('active');
-
-        document.querySelectorAll('#week-buttons button').forEach(el => el.classList.remove('active'));
-        weekButton.classList.add('active');
         
-        // Gün navigasyonlarını yönet
-        document.querySelectorAll('.day-nav').forEach(el => el.style.display = 'none');
+        // Update week buttons
+        weekButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.week === weekId);
+        });
+
+        // Show/Hide week content
+        document.querySelectorAll('.week-content').forEach(wc => {
+            wc.style.display = 'none';
+        });
+        document.getElementById(weekId).style.display = 'block';
+
+        // Show/Hide day navigations
+        document.querySelectorAll('.day-nav').forEach(dn => {
+            dn.style.display = 'none';
+        });
         const activeDayNav = document.getElementById(`${weekId}-day-nav`);
         activeDayNav.style.display = 'flex';
         
-        // O haftanın ilk gününü varsayılan olarak göster
+        // Show first day of the week by default
         const firstDayButton = activeDayNav.querySelector('button');
-        showDay(`${weekId}-pazartesi`, firstDayButton);
-    }
-    
-    function showDay(dayId, dayButton) {
-         // Aktif hafta içindeki tüm günleri gizle
-        document.querySelectorAll(`#${activeWeekId} .day-content`).forEach(el => el.classList.remove('active'));
-        
-        // İstenen günü göster
-        document.getElementById(dayId).classList.add('active');
-        
-        // Butonların aktif durumunu yönet
-        const dayNav = dayButton.parentElement;
-        dayNav.querySelectorAll('button').forEach(el => el.classList.remove('active'));
-        dayButton.classList.add('active');
+        if (firstDayButton) {
+            showDay(firstDayButton.dataset.day, weekId);
+        }
     }
 
-    // Sayfa ilk yüklendiğinde 1. haftayı ve Pazartesi'yi göster
-    window.onload = () => {
-        showWeek('week1', document.querySelector('#week-buttons button'));
-    };
+    function showDay(dayId, weekId) {
+        // Hide all day contents for the active week
+        document.querySelectorAll(`#${weekId} .day-content`).forEach(dc => {
+            dc.style.display = 'none';
+        });
 
+        // Show selected day content
+        document.getElementById(dayId).style.display = 'block';
+        
+        // Update day buttons
+        const dayNav = document.getElementById(`${weekId}-day-nav`);
+        dayNav.querySelectorAll('button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.day === dayId);
+        });
+    }
+
+    // Event Listeners
+    weekButtons.forEach(button => {
+        button.addEventListener('click', () => showWeek(button.dataset.week));
+    });
+
+    dayNavContainer.addEventListener('click', function(e) {
+        if (e.target.tagName === 'BUTTON') {
+            showDay(e.target.dataset.day, activeWeekId);
+        }
+    });
+
+    // Initial load
+    generateContent();
+    showWeek('uyumHaftasi');
+});
 </script>
 
 </body>
