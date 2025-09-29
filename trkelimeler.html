@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Türkçesi Varken!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #29b6f6; /* Canlı Mavi */
+            --secondary-color: #ffca28; /* Sıcak Sarı */
+            --correct-color: #66bb6a; /* Yeşil */
+            --wrong-color: #ef5350; /* Kırmızı */
+            --bg-color: #f0f4f8; /* Açık Gri Mavi */
+            --card-bg: #ffffff;
+            --text-color: #37474f;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+        header p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .tab-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            background-color: var(--card-bg);
+            color: var(--primary-color);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .tab-button.active, .tab-button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .activity-content { display: none; }
+        .activity-content.active { display: block; }
+        
+        /* Kartları Öğrenelim Bölümü */
+        #learn-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            perspective: 1000px;
+        }
+
+        .card {
+            background-color: transparent;
+            height: 120px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card.is-flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            font-size: 1.2rem;
+            font-weight: 700;
+            flex-direction: column; /* Birden fazla cevap için alt alta sırala */
+        }
+        .card-front {
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        .card-back {
+            background: var(--secondary-color);
+            color: var(--text-color);
+            transform: rotateY(180deg);
+        }
+         .card-back span {
+            display: block; /* Her cevabı yeni satırda göster */
+        }
+
+        /* Boşluk Doldurma Bölümü */
+        #fill-blanks .quiz-card, #sentence-quiz .quiz-card {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin: 0 auto 20px auto;
+            max-width: 600px;
+        }
+        
+        #fill-blanks .question, #sentence-quiz .question {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        #fill-blanks input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .quiz-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .quiz-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .check-btn { background-color: var(--primary-color); color: white; }
+        .next-btn { background-color: var(--secondary-color); color: var(--text-color); }
+        .feedback { font-weight: 700; margin-top: 15px; height: auto; min-height: 24px; }
+        .correct { color: var(--correct-color); }
+        .wrong { color: var(--wrong-color); }
+        
+        /* Cümledeki Yabancı Kelimeyi Bul ve Değiştir */
+        #sentence-quiz .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        #sentence-quiz .option-btn {
+            width: 100%;
+            background-color: var(--card-bg);
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        #sentence-quiz .option-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        #sentence-quiz .option-btn.correct { background-color: var(--correct-color); color: white; border-color: var(--correct-color); }
+        #sentence-quiz .option-btn.wrong { background-color: var(--wrong-color); color: white; border-color: var(--wrong-color); }
+        #sentence-quiz .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Türkçesi Varken!</h1>
+            <p>Yabancı kelimeler yerine dilimizin zenginliğindeki Türkçe karşılıklarını kullanalım.</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="showActivity('learn')">Kartları Öğren</button>
+            <button class="tab-button" onclick="showActivity('fill')">Boşluk Doldur</button>
+            <button class="tab-button" onclick="showActivity('sentence')">Cümleyi Düzelt</button>
+        </div>
+
+        <main>
+            <div id="learn" class="activity-content active">
+                <div id="learn-cards"></div>
+            </div>
+
+            <div id="fill" class="activity-content">
+                <div id="fill-blanks">
+                    <div class="quiz-card">
+                        <p class="question" id="fill-question"></p>
+                        <input type="text" id="fill-answer" placeholder="Türkçesini yazın...">
+                        <p class="feedback" id="fill-feedback"></p>
+                         <div class="quiz-buttons">
+                            <button class="quiz-btn check-btn" onclick="fillBlanks.checkAnswer()">Kontrol Et</button>
+                            <button class="quiz-btn next-btn" onclick="fillBlanks.loadQuestion()">Sonraki</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="sentence" class="activity-content">
+                <div id="sentence-quiz">
+                     <div class="quiz-card">
+                        <p class="question" id="sentence-question"></p>
+                        <div class="options" id="sentence-options"></div>
+                        <p class="feedback" id="sentence-feedback"></p>
+                        <div class="quiz-buttons">
+                           <button class="quiz-btn next-btn" onclick="sentenceQuiz.loadQuestion()">Sonraki Soru</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- YÖNTEM 2 İÇİN GÜNCELLEME ---
+        // JSON verisi doğrudan buraya eklendi. Artık harici dosya okunmuyor.
+        const wordsData = [
+          { "yabanci": "Absürt", "turkce": ["Saçma", "Anlamsız"], "cumle": "Anlattığı olaylar o kadar __ geldi ki kimse inanmadı." },
+          { "yabanci": "Laptop", "turkce": ["Dizüstü bilgisayar"], "cumle": "Ödevimi yapmak için __'ımı yanıma aldım." },
+          { "yabanci": "Jenerasyon", "turkce": ["Kuşak", "Soy"], "cumle": "Yeni __ teknolojiye çok daha hâkim." },
+          { "yabanci": "Defans", "turkce": ["Savunma"], "cumle": "Takımımız maç boyunca çok iyi bir __ yaptı." },
+          { "yabanci": "Stil", "turkce": ["Üslup", "Biçem"], "cumle": "Her yazarın kendine özgü bir anlatım __'i vardır." },
+          { "yabanci": "Star", "turkce": ["Yıldız"], "cumle": "Yeni filmin __'ı çok sevilen bir oyuncuydu." },
+          { "yabanci": "Filtre", "turkce": ["Süzgeç"], "cumle": "Çayı demlerken yaprakları ayırmak için __ kullandı." },
+          { "yabanci": "Antipatik", "turkce": ["Sevimsiz"], "cumle": "Davranışları yüzünden oldukça __ birine dönüştü." },
+          { "yabanci": "Galeri", "turkce": ["Sergi"], "cumle": "Ünlü ressamın eserleri sanat __'sinde gösteriliyor." },
+          { "yabanci": "Spiker", "turkce": ["Konuşmacı"], "cumle": "Haberleri her akşam aynı __ sunuyordu." },
+          { "yabanci": "Anons", "turkce": ["Duyuru"], "cumle": "Okul müdürü toplantı için bir __ yaptı." },
+          { "yabanci": "Ofis", "turkce": ["İş yeri"], "cumle": "Babam her sabah __'e gitmek için erken kalkar." },
+          { "yabanci": "Dizayn", "turkce": ["Tasarım"], "cumle": "Yeni evin __'ı çok modern ve kullanışlıydı." },
+          { "yabanci": "Agresif", "turkce": ["Sinirli"], "cumle": "Oyun kaybedince __ tavırlar sergiledi." },
+          { "yabanci": "Kaos", "turkce": ["Kargaşa"], "cumle": "Elektrikler kesilince salonda bir __ ortamı oluştu." },
+          { "yabanci": "Mouse", "turkce": ["Fare"], "cumle": "Bilgisayar __'u çalışmadığı için tıklama yapamıyorum." },
+          { "yabanci": "Link", "turkce": ["Ağ", "Bağlantı"], "cumle": "Öğretmen, konuyu anlatan videonun __'ini bizimle paylaştı." },
+          { "yabanci": "Spontane", "turkce": ["Kendiliğinden"], "cumle": "Plan yapmamıştık, her şey __ gelişti." },
+          { "yabanci": "Exit", "turkce": ["Çıkış"], "cumle": "Acil durumlarda __ kapısını kullanmalısınız." },
+          { "yabanci": "Aktivite", "turkce": ["Etkinlik"], "cumle": "Hafta sonu okulda birçok sosyal __ düzenlendi." },
+          { "yabanci": "Trend", "turkce": ["Eğilim"], "cumle": "Bu yılın modasında renkli kıyafetler yeni __ oldu." },
+          { "yabanci": "Okey", "turkce": ["Tamam"], "cumle": "Ödevi yapacağımı söyledim, o da '__' dedi." },
+          { "yabanci": "Selfie", "turkce": ["Öz çekim"], "cumle": "Gezdiğimiz güzel yerlerde bol bol __ yaptık." },
+          { "yabanci": "Şov", "turkce": ["Gösteri"], "cumle": "Sirkteki palyaçonun __'u çok eğlenceliydi." },
+          { "yabanci": "Aroma", "turkce": ["Has koku"], "cumle": "Annemin yaptığı kekin vanilyalı __'sı tüm eve yayıldı." }
+        ];
+
+        // Sayfa yüklendiğinde etkinlikleri başlat
+        document.addEventListener('DOMContentLoaded', () => {
+            // fetch komutu kaldırıldı, çünkü veriler zaten 'wordsData' içinde.
+            setupLearnCards();
+            fillBlanks.loadQuestion();
+            sentenceQuiz.loadQuestion();
+        });
+        
+        function showActivity(activityId) {
+            document.querySelectorAll('.activity-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(activityId).classList.add('active');
+            
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="showActivity('${activityId}')"]`).classList.add('active');
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // --- Aktivite 1: Kartları Öğren ---
+        function setupLearnCards() {
+            const container = document.getElementById('learn-cards');
+            container.innerHTML = '';
+            shuffleArray([...wordsData]).forEach(word => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                
+                // Birden fazla cevabı alt alta göstermek için join('<br>') kullanıldı.
+                const turkceHtml = word.turkce.map(t => `<span>${t}</span>`).join('');
+                
+                card.innerHTML = `
+                    <div class="card-face card-front">${word.yabanci}</div>
+                    <div class="card-face card-back">${turkceHtml}</div>
+                `;
+                card.addEventListener('click', () => card.classList.toggle('is-flipped'));
+                container.appendChild(card);
+            });
+        }
+        
+        // --- Aktivite 2: Boşluk Doldurma ---
+        const fillBlanks = {
+            currentIndex: -1,
+            shuffledWords: [],
+            
+            loadQuestion: function() {
+                if (this.shuffledWords.length === 0) {
+                    this.shuffledWords = shuffleArray([...wordsData]);
+                }
+                
+                this.currentIndex = (this.currentIndex + 1) % this.shuffledWords.length;
+                const word = this.shuffledWords[this.currentIndex];
+                
+                document.getElementById('fill-question').textContent = `Aşağıdaki cümlenin boşluğuna hangi kelime gelmelidir? "${word.cumle}"`;
+                document.getElementById('fill-answer').value = '';
+                document.getElementById('fill-feedback').textContent = '';
+                document.getElementById('fill-answer').disabled = false;
+            },
+            
+            checkAnswer: function() {
+                const correctAnswers = this.shuffledWords[this.currentIndex].turkce.map(ans => ans.toLowerCase());
+                const userAnswer = document.getElementById('fill-answer').value.toLowerCase().trim();
+                const feedbackEl = document.getElementById('fill-feedback');
+                
+                // Kullanıcının cevabı doğru cevaplar listesinde var mı diye kontrol et.
+                if (correctAnswers.includes(userAnswer)) {
+                    feedbackEl.textContent = "Harika! Doğru bildin!";
+                    feedbackEl.className = 'feedback correct';
+                } else {
+                    // Doğru cevapları virgülle ayırarak göster.
+                    feedbackEl.innerHTML = `Tekrar dene! <br>Doğru cevap: <strong>${this.shuffledWords[this.currentIndex].turkce.join(' / ')}</strong>`;
+                    feedbackEl.className = 'feedback wrong';
+                }
+                document.getElementById('fill-answer').disabled = true;
+            }
+        };
+        
+        // --- Aktivite 3: Cümleyi Düzelt ---
+        const sentenceQuiz = {
+            currentIndex: -1,
+            shuffledWords: [],
+
+            loadQuestion: function() {
+                 if (this.shuffledWords.length === 0) {
+                    this.shuffledWords = shuffleArray([...wordsData]);
+                }
+                this.currentIndex = (this.currentIndex + 1) % this.shuffledWords.length;
+                const word = this.shuffledWords[this.currentIndex];
+                const correctAnswer = word.turkce[0]; // Şıklarda göstermek için ilk doğru cevabı alalım.
+                
+                const questionText = `Aşağıdaki cümlede renkli yazılmış kelimenin Türkçe karşılığı hangisidir? <br><br> "Bu çok <strong>${word.yabanci}</strong> bir hareketti."`;
+                document.getElementById('sentence-question').innerHTML = questionText;
+                
+                const optionsContainer = document.getElementById('sentence-options');
+                optionsContainer.innerHTML = '';
+
+                const wrongOptions = wordsData
+                    .filter(w => w.turkce[0] !== correctAnswer)
+                    .map(w => w.turkce[0]);
+                const shuffledWrong = shuffleArray(wrongOptions).slice(0, 3);
+                
+                const options = shuffleArray([correctAnswer, ...shuffledWrong]);
+
+                options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.classList.add('option-btn');
+                    button.textContent = option;
+                    button.onclick = () => this.checkAnswer(option, correctAnswer);
+                    optionsContainer.appendChild(button);
+                });
+                
+                document.getElementById('sentence-feedback').textContent = '';
+            },
+
+            checkAnswer: function(selected, correct) {
+                const feedbackEl = document.getElementById('sentence-feedback');
+                const optionButtons = document.querySelectorAll('#sentence-options .option-btn');
+                
+                optionButtons.forEach(btn => {
+                    btn.disabled = true;
+                    if(btn.textContent === correct) {
+                        btn.classList.add('correct');
+                    } else if (btn.textContent === selected) {
+                        btn.classList.add('wrong');
+                    }
+                });
+
+                if (selected === correct) {
+                    feedbackEl.textContent = 'Tebrikler, doğru cevap!';
+                    feedbackEl.className = 'feedback correct';
+                } else {
+                    feedbackEl.textContent = 'Maalesef yanlış, doğru cevap işaretlendi.';
+                    feedbackEl.className = 'feedback wrong';
+                }
+            }
+        };
+    </script>
+</body>
+</html>
