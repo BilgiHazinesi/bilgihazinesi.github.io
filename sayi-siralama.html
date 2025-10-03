@@ -179,8 +179,10 @@
         #missing-activity .missing-digit-container { display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.8em; font-weight: 800; margin-block: 25px; flex-wrap: wrap; }
         #missing-activity .operator { opacity: 0.8; }
         #missing-activity .missing-placeholder { display: inline-block; width: 22px; height: 40px; border: 2px dashed rgba(255,255,255,0.6); border-radius: 5px; text-align: center; line-height: 40px; }
-        #missing-activity .answer-input { margin: 15px auto; width: 200px; padding: 10px; }
-        
+        #missing-activity .digit-pad { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 20px auto; max-width: 350px; }
+        #missing-activity .digit-btn { width: 50px; height: 50px; font-size: 1.5em; font-weight: bold; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); background: rgba(255,255,255,0.2); color: white; cursor: pointer; transition: all 0.2s; }
+        #missing-activity .digit-btn.selected { background: rgba(32, 201, 151, 0.7); border-color: white; }
+
         /* --- MOBİL UYUMLULUK --- */
         @media (max-width: 600px) {
             h1 { font-size: 1.8em; margin-top: 45px; }
@@ -278,9 +280,9 @@
     </div>
     
     <div id="missing-activity" class="activity-view">
-        <div class="instruction">Karşılaştırmanın doğru olması için boşluğa gelebilecek rakamların <b>toplamı</b> kaçtır?</div>
+        <div class="instruction" id="missing-instruction"></div>
         <div class="missing-digit-container" id="missing-digit-container"></div>
-        <input type="number" id="missing-answer-input" class="answer-input" placeholder="Toplamı buraya yaz">
+        <div class="digit-pad" id="digit-selection-pad"></div>
         <div class="feedback" id="missing-feedback"></div>
         <div class="btn-group">
             <button class="btn check-btn" onclick="checkMissingDigit()">Kontrol Et</button>
@@ -297,7 +299,7 @@
     let sortState = { numbers: [], direction: 'asc', correctOrder: [], selectedNumber: null };
     let compareState = { num1: 0, num2: 0, correctOp: '', selectedOp: null };
     let betweenState = { num1: 0, num2: 0, correctMin: 0, correctMax: 0 };
-    let missingState = { correctSum: 0, possibleDigits: [] };
+    let missingState = { possibleDigits: [] };
 
     const formatNumber = (num) => num.toLocaleString('tr-TR');
 
@@ -319,7 +321,7 @@
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
     
-    // --- 1. SAYI SIRALAMA ---
+    // --- BÖLÜM 1 & 2 & 3 (Değişiklik yok) ---
     function startSortGame() {
         sortState = { numbers: [], direction: 'asc', correctOrder: [], selectedNumber: null };
         const digits = 4;
@@ -327,10 +329,8 @@
             const newNum = generateRandomNumber(digits);
             if(!sortState.numbers.includes(newNum)) sortState.numbers.push(newNum);
         }
-        
         sortState.direction = Math.random() < 0.5 ? 'asc' : 'desc';
         document.getElementById('sort-instruction').textContent = sortState.direction === 'asc' ? 'Sayıları KÜÇÜKTEN BÜYÜĞE sırala!' : 'Sayıları BÜYÜKTEN KÜÇÜĞE sırala!';
-        
         const numberList = document.getElementById('sort-number-list');
         numberList.innerHTML = '';
         sortState.numbers.forEach(num => {
@@ -341,9 +341,7 @@
             numSpan.onclick = () => selectSourceNumber(numSpan);
             numberList.appendChild(numSpan);
         });
-        
         sortState.correctOrder = sortState.direction === 'asc' ? [...sortState.numbers].sort((a,b)=>a-b) : [...sortState.numbers].sort((a,b)=>b-a);
-        
         const container = document.getElementById('sort-container');
         container.innerHTML = '';
         for (let i = 0; i < 5; i++) {
@@ -390,8 +388,6 @@
             feedback.textContent = "Sıralama yanlış, tekrar kontrol et. 🤔"; feedback.className = 'feedback incorrect';
         }
     }
-
-    // --- 2. SAYI KARŞILAŞTIRMA ---
     function startCompareGame() {
         const digits = 5;
         compareState.num1 = generateRandomNumber(digits);
@@ -426,8 +422,6 @@
             feedback.textContent = `Yanlış. Doğru cevap "${compareState.correctOp}" olmalıydı.`; feedback.className = 'feedback incorrect';
         }
     }
-
-    // --- 3. ARADAKİ SAYIYI BUL ---
     function startBetweenGame() {
         const digits = 4;
         betweenState.num1 = generateRandomNumber(digits);
@@ -463,8 +457,9 @@
         }
     }
 
-    // --- 4. EKSİK RAKAMI BUL (Düzeltildi) ---
+    // --- 4. EKSİK RAKAMI BUL (Yeniden Düzenlendi) ---
     function startMissingDigitGame() {
+        document.getElementById('missing-instruction').innerHTML = `Karşılaştırmanın doğru olması için boşluğa gelebilecek <b>tüm rakamları</b> seç.`;
         const digits = 4;
         missingState.possibleDigits = [];
         let baseNumArr, referenceNum, operator, missingIndex;
@@ -480,15 +475,13 @@
             let numA_arr = [...baseNumArr];
             numA_arr[missingIndex] = boundaryDigit;
             const numA = parseInt(numA_arr.join(''));
-
             let numB_arr = [...baseNumArr];
             const nextDigit = (conditionType === 'greater') ? boundaryDigit + 1 : boundaryDigit - 1;
             if (nextDigit < 0 || nextDigit > 9) continue;
             numB_arr[missingIndex] = nextDigit;
             const numB = parseInt(numB_arr.join(''));
-
             referenceNum = Math.floor(Math.random() * Math.abs(numA - numB)) + Math.min(numA, numB);
-            if (referenceNum === Math.min(numA, numB) && Math.abs(numA-numB) > 1) referenceNum++;
+            if (referenceNum === Math.min(numA, numB) && Math.abs(numA - numB) > 1) referenceNum++;
             if (referenceNum <= 0) continue;
             
             for (let d = 0; d < 10; d++) {
@@ -501,16 +494,15 @@
             }
         }
         
+        missingState.possibleDigits.sort((a,b)=>a-b);
+        
         let parts = [...baseNumArr];
         parts[missingIndex] = `<span class="missing-placeholder">_</span>`;
         let numWithMissingHTML = parts.join('');
 
-        missingState.correctSum = missingState.possibleDigits.reduce((sum, digit) => sum + digit, 0);
-
         const container = document.getElementById('missing-digit-container');
         const isMissingOnLeft = Math.random() < 0.5;
         const finalOperator = isMissingOnLeft ? operator : (operator === '>' ? '<' : '>');
-        
         const missingNumDisplay = `<span>${numWithMissingHTML}</span>`;
         const referenceNumDisplay = `<span>${formatNumber(referenceNum)}</span>`;
         
@@ -520,21 +512,33 @@
             container.innerHTML = `${referenceNumDisplay} <span class="operator">${finalOperator}</span> ${missingNumDisplay}`;
         }
         
-        document.getElementById('missing-answer-input').value = '';
+        const pad = document.getElementById('digit-selection-pad');
+        pad.innerHTML = '';
+        for (let i = 0; i < 10; i++) {
+            const btn = document.createElement('button');
+            btn.classList.add('digit-btn');
+            btn.textContent = i;
+            btn.dataset.digit = i;
+            btn.onclick = () => btn.classList.toggle('selected');
+            pad.appendChild(btn);
+        }
+        
         document.getElementById('missing-feedback').textContent = '';
     }
 
     function checkMissingDigit() {
-        const userAnswer = parseInt(document.getElementById('missing-answer-input').value);
+        const selectedButtons = document.querySelectorAll('#digit-selection-pad .digit-btn.selected');
+        const userSelection = Array.from(selectedButtons).map(btn => parseInt(btn.dataset.digit)).sort((a,b)=>a-b);
+        
         const feedback = document.getElementById('missing-feedback');
-        if (isNaN(userAnswer)) {
-            feedback.textContent = "Lütfen bir sayı gir."; feedback.className = 'feedback incorrect'; return;
-        }
-        if (userAnswer === missingState.correctSum) {
-            feedback.textContent = "Doğru cevap! Harikasın! 🧠"; feedback.className = 'feedback correct';
+        const isCorrect = JSON.stringify(userSelection) === JSON.stringify(missingState.possibleDigits);
+
+        if (isCorrect) {
+            feedback.textContent = "Doğru cevap! Harikasın! 🧠";
+            feedback.className = 'feedback correct';
         } else {
-            const possibleDigitsStr = missingState.possibleDigits.join(', ');
-            feedback.innerHTML = `Yanlış. Gelebilecek rakamlar (${possibleDigitsStr}) idi.<br>Doğru toplam ${missingState.correctSum} olmalıydı.`;
+            const correctDigitsStr = missingState.possibleDigits.join(', ');
+            feedback.innerHTML = `Yanlış. Doğru rakamlar (${correctDigitsStr}) olmalıydı.`;
             feedback.className = 'feedback incorrect';
         }
     }
