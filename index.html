@@ -26,15 +26,27 @@
         .desktop-nav ul li { position: relative; }
         .desktop-nav ul li a { text-decoration: none; color: var(--primary-color); font-weight: 700; font-size: 1.05em; padding: 10px 18px; border-radius: 30px; display: block; transition: all 0.3s ease; }
         .desktop-nav ul li a:hover { background-color: var(--primary-color); color: #ffffff; }
-        
-        /* DÜZELTME 1: Açılır menünün diğer elemanların üzerinde kalması için z-index eklendi */
         .nav-dropdown-content { display: none; position: absolute; background-color: #fff; min-width: 220px; box-shadow: var(--card-shadow); z-index: 100; border-radius: 12px; padding: 10px; margin-top: 8px; animation: fadeIn 0.3s ease-out; }
-        
         .desktop-nav ul li:hover .nav-dropdown-content { display: block; }
         .nav-dropdown-content a { color: var(--text-color); padding: 12px 20px; border-radius: 8px; }
         .nav-dropdown-content a:hover { background-color: #f4f4f4; color: var(--primary-color); }
         .mobile-nav-toggle { display: none; font-size: 2.5em; color: var(--primary-color); cursor: pointer; z-index: 1001; position: fixed; top: 25px; right: 25px; }
-        .mobile-nav { position: fixed; top: 0; right: -100%; width: 280px; height: 100%; background-color: #fff; box-shadow: -5px 0 20px rgba(0,0,0,0.1); z-index: 1000; transition: right 0.4s ease-in-out; padding-top: 80px; }
+        
+        /* DÜZELTME: İçerik sığmadığında dikey kaydırma çubuğu çıkması için overflow-y eklendi. */
+        .mobile-nav { 
+            position: fixed; 
+            top: 0; 
+            right: -100%; 
+            width: 280px; 
+            height: 100%; 
+            background-color: #fff; 
+            box-shadow: -5px 0 20px rgba(0,0,0,0.1); 
+            z-index: 1000; 
+            transition: right 0.4s ease-in-out; 
+            padding-top: 80px; 
+            overflow-y: auto; /* Bu satır eklendi */
+        }
+
         .mobile-nav.active { right: 0; }
         .mobile-nav ul { list-style: none; padding: 0; margin: 0; }
         .mobile-nav ul li a { display: block; padding: 15px 25px; font-size: 1.2em; color: var(--primary-color); text-decoration: none; font-weight: 700; border-bottom: 1px solid #f0f0f0; }
@@ -50,11 +62,8 @@
         .card .icon { font-size: 3.5em; line-height: 1; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card h2 { font-size: 1.6em; margin: 15px 0 10px 0; color: #333; }
         .card p { font-size: 1em; line-height: 1.6; margin-bottom: 0; }
-        
-        /* DÜZELTME 2: ".show" class'ından sabit max-height kaldırıldı. JS dinamik olarak yönetecek. */
         .card-sub-links { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; margin: 0; padding: 0; list-style: none; }
-        .card-sub-links.show { /* Bu class artık sadece durum takibi için var, yükseklik JS ile verilecek */ margin-top: 15px; }
-
+        .card-sub-links.show { margin-top: 15px; }
         .card-sub-links a { background-color: #f3f4f6; display: block; padding: 12px; margin-top: 8px; border-radius: 10px; text-decoration: none; color: var(--primary-color); font-weight: bold; transition: background-color 0.2s, color 0.2s; }
         .card-sub-links a:hover { background-color: var(--primary-color); color: #fff; }
         footer { margin-top: auto; padding: 30px; font-size: 0.9em; color: #888; }
@@ -121,7 +130,6 @@
             mobileNavUl.innerHTML = '<li><a href="index.html">Anasayfa</a></li>';
 
             data.forEach(kategori => {
-                // 1. Masaüstü Menüyü Oluştur
                 let desktopNavHtml = `
                     <li data-nav-id="${kategori.id}">
                         <a href="#">${kategori.isim}</a>
@@ -133,14 +141,12 @@
                 desktopNavHtml += '</div></li>';
                 desktopNavUl.innerHTML += desktopNavHtml;
 
-                // 2. Mobil Menüyü Oluştur
                 let mobileNavHtml = `<li><a href="#">${kategori.isim}</a></li>`;
                 kategori.sayfalar.forEach(sayfa => {
                     mobileNavHtml += `<li class="mobile-dropdown"><a href="${sayfa.url}">${sayfa.isim}</a></li>`;
                 });
                 mobileNavUl.innerHTML += mobileNavHtml;
 
-                // 3. Ders Kartlarını Oluştur
                 let cardHtml = `
                     <div class="card ${kategori.id}" data-target-id="${kategori.id}">
                         <div class="icon"><i class="bi ${kategori.ikon}"></i></div>
@@ -167,27 +173,21 @@
                     }
                     const cardSubLinks = this.querySelector('.card-sub-links');
                     if (!cardSubLinks) return;
-
-                    // DÜZELTME 3: Kart açma/kapama mantığı dinamik yüksekliğe göre güncellendi.
-                    // Tıklanan kartın menüsü zaten açık mı diye kontrol et (maxHeight set edilmiş mi?)
+                    
                     const isAlreadyOpen = cardSubLinks.style.maxHeight;
 
-                    // Önce tüm açık menüleri kapat
                     document.querySelectorAll('.card-sub-links').forEach(menu => {
                         menu.style.maxHeight = null;
                         menu.classList.remove('show');
                     });
                     
-                    // Eğer tıklanan menü zaten açık değilse, onu aç
                     if (!isAlreadyOpen) {
                         cardSubLinks.classList.add('show');
-                        // max-height değerini içeriğin gerçek yüksekliğine ayarla
                         cardSubLinks.style.maxHeight = cardSubLinks.scrollHeight + "px";
                     }
                 });
             });
 
-            // Mobil menü açma/kapama mekanizması
             const mobileNavToggle = document.getElementById('mobile-nav-toggle');
             const mobileNav = document.getElementById('mobile-nav');
             
@@ -195,7 +195,6 @@
                 mobileNav.classList.toggle('active');
             });
             
-            // Menü dışına tıklanınca menüyü kapat
             document.addEventListener('click', (event) => {
                 const isClickInsideNav = mobileNav.contains(event.target);
                 const isClickOnToggle = mobileNavToggle.contains(event.target);
