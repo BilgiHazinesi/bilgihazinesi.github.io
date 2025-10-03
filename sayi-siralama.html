@@ -150,11 +150,13 @@
         
         /* --- TEMA 2: KARŞILAŞTIRMA --- */
         #compare-activity .nav-btn.active { background-color: rgba(253, 126, 20, 0.4); }
+        #compare-activity .compare-wrapper { background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 20px; margin-top: 20px; }
         #compare-activity .op-btn { font-size: 2em; font-weight: bold; width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); background: rgba(255,255,255,0.2); color: white; cursor: pointer; transition: all 0.2s; margin: 0 10px; }
         #compare-activity .op-btn:hover { background: rgba(253, 126, 20, 0.6); }
-        #compare-activity .comparison-container, #compare-activity .operator-choices { margin-block: 25px; }
-        #compare-activity .compare-number, #compare-activity .operator-box { font-size: 1.8em; font-weight: 800; padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.1); }
-        #compare-activity .operator-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        #compare-activity .comparison-container { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; }
+        #compare-activity .operator-choices { text-align: center; }
+        #compare-activity .compare-number { font-size: 1.8em; font-weight: 800; }
+        #compare-activity .operator-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; font-size: 2em; font-weight: bold; }
         #compare-activity .operator-box .op-fly { position: absolute; transition: transform 0.4s ease-out; }
 
         /* --- TEMALAR & GENEL INPUT/BOX STİLLERİ --- */
@@ -176,7 +178,7 @@
         #missing-activity .nav-btn.active { background-color: rgba(32, 201, 151, 0.4); }
         #missing-activity .missing-digit-container { display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.8em; font-weight: 800; margin-block: 25px; flex-wrap: wrap; }
         #missing-activity .operator { opacity: 0.8; }
-        #missing-activity .missing-placeholder { display: inline-block; width: 30px; height: 40px; border: 2px dashed rgba(255,255,255,0.6); border-radius: 5px; text-align: center; line-height: 40px; }
+        #missing-activity .missing-placeholder { display: inline-block; width: 22px; height: 40px; border: 2px dashed rgba(255,255,255,0.6); border-radius: 5px; text-align: center; line-height: 40px; }
         #missing-activity .answer-input { margin: 15px auto; width: 200px; padding: 10px; }
         
         /* --- MOBİL UYUMLULUK --- */
@@ -226,16 +228,18 @@
     </div>
 
     <div id="compare-activity" class="activity-view">
-        <div class="instruction">Doğru sembole tıkla ve yerleşmesini izle!</div>
-        <div class="operator-choices">
-            <button class="op-btn" onclick="selectOperator(this, '>')">&gt;</button>
-            <button class="op-btn" onclick="selectOperator(this, '<')">&lt;</button>
-            <button class="op-btn" onclick="selectOperator(this, '=')">=</button>
-        </div>
-        <div class="comparison-container">
-            <div id="compare-num1" class="compare-number"></div>
-            <div id="operator-box" class="operator-box"></div>
-            <div id="compare-num2" class="compare-number"></div>
+        <div class="instruction">Doğru sembolü seçerek sayıları karşılaştır.</div>
+        <div class="compare-wrapper">
+            <div class="operator-choices">
+                <button class="op-btn" onclick="selectOperator(this, '>')">&gt;</button>
+                <button class="op-btn" onclick="selectOperator(this, '<')">&lt;</button>
+                <button class="op-btn" onclick="selectOperator(this, '=')">=</button>
+            </div>
+            <div class="comparison-container">
+                <div id="compare-num1" class="compare-number"></div>
+                <div id="operator-box" class="operator-box"></div>
+                <div id="compare-num2" class="compare-number"></div>
+            </div>
         </div>
         <div class="feedback" id="compare-feedback"></div>
         <div class="btn-group">
@@ -288,6 +292,8 @@
 </div>
 
 <script>
+    // --- JS BÖLÜMÜNDE GEREKLİ DÜZELTMELER YAPILMIŞTIR ---
+
     const mainContainer = document.getElementById('main-container');
 
     let sortState = { numbers: [], direction: 'asc', correctOrder: [], selectedNumber: null };
@@ -423,23 +429,19 @@
         }
     }
 
-    // --- 3. ARADAKİ SAYIYI BUL (Yeni Arayüzle Güncellendi) ---
+    // --- 3. ARADAKİ SAYIYI BUL ---
     function startBetweenGame() {
         const digits = 4;
         betweenState.num1 = generateRandomNumber(digits);
         betweenState.num2 = betweenState.num1 + Math.floor(Math.random() * 20) + 5;
-        
         const formattedNum1 = formatNumber(betweenState.num1);
         const formattedNum2 = formatNumber(betweenState.num2);
-        
         document.getElementById('min-q-num1').textContent = formattedNum1;
         document.getElementById('min-q-num2').textContent = formattedNum2;
         document.getElementById('max-q-num1').textContent = formattedNum1;
         document.getElementById('max-q-num2').textContent = formattedNum2;
-
         betweenState.correctMin = betweenState.num1 + 1;
         betweenState.correctMax = betweenState.num2 - 1;
-
         document.getElementById('min-input').value = '';
         document.getElementById('max-input').value = '';
         document.getElementById('between-feedback').textContent = '';
@@ -463,15 +465,15 @@
         }
     }
 
-    // --- 4. EKSİK RAKAMI BUL (Mantık Düzeltildi) ---
+    // --- 4. EKSİK RAKAMI BUL (Hata Giderildi) ---
     function startMissingDigitGame() {
         const digits = 4;
         missingState.possibleDigits = [];
-        let numWithMissingStr, referenceNum, operator, numWithMissingHTML;
+        let baseNumArr, referenceNum, operator;
 
         while (missingState.possibleDigits.length < 1 || missingState.possibleDigits.length > 5) {
             missingState.possibleDigits = [];
-            const baseNumArr = String(generateRandomNumber(digits)).split('');
+            baseNumArr = String(generateRandomNumber(digits)).split('');
             const missingIndex = Math.floor(Math.random() * digits);
             const boundaryDigit = Math.floor(Math.random() * 8) + 1;
             const conditionType = Math.random() < 0.5 ? 'greater' : 'less';
@@ -488,7 +490,7 @@
             const numB = parseInt(numB_arr.join(''));
 
             referenceNum = Math.floor(Math.random() * Math.abs(numA - numB)) + Math.min(numA, numB);
-            if (referenceNum === Math.min(numA, numB)) referenceNum++;
+            if (referenceNum === Math.min(numA, numB) && Math.abs(numA-numB) > 1) referenceNum++;
             if (referenceNum <= 0) continue;
             
             for (let d = 0; d < 10; d++) {
@@ -501,9 +503,9 @@
             }
         }
         
-        let parts = String(generateRandomNumber(digits)).split(''); // Yeni bir temel numara alalım
+        let parts = [...baseNumArr];
         parts[missingIndex] = `<span class="missing-placeholder">_</span>`;
-        numWithMissingHTML = parts.join('');
+        let numWithMissingHTML = parts.join('');
 
         missingState.correctSum = missingState.possibleDigits.reduce((sum, digit) => sum + digit, 0);
 
@@ -523,6 +525,7 @@
         document.getElementById('missing-answer-input').value = '';
         document.getElementById('missing-feedback').textContent = '';
     }
+
     function checkMissingDigit() {
         const userAnswer = parseInt(document.getElementById('missing-answer-input').value);
         const feedback = document.getElementById('missing-feedback');
