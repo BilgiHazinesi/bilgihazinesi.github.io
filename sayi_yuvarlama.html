@@ -3,334 +3,537 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>☀️ Yuvarlama Macerası v4.1</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700;800&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
-
+    <title>Camsı Tema - Sayı Atölyesi</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
         :root {
-            --bg-color: #f8f9fa; --card-bg: #ffffff; --primary: #4a90e2; --primary-dark: #357ABD;
-            --secondary: #f5a623; --text-color: #4a4a4a; --green: #7ed321; --red: #d0021b;
-            --shadow: 0 8px 30px rgba(0, 0, 0, 0.06); --border-color: #e2e8f0; --solution-bg: #fffbe6;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --white-color: #ffffff;
+            --text-color: #f0f0f0;
+            --correct-color: #4ade80;
+            --incorrect-color: #f87171;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { font-size: 16px; }
+        
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         body {
-            font-family: 'Nunito', sans-serif; background-color: var(--bg-color); color: var(--text-color);
-            padding: 1.5rem; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh;
+            font-family: 'Nunito', sans-serif;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient-animation 15s ease infinite;
+            color: var(--text-color);
         }
+
         .container {
-            width: 100%; max-width: 800px; background: var(--card-bg); border-radius: 1.5rem;
-            box-shadow: var(--shadow); padding: 2rem; border: 1px solid #dee2e6; text-align: center;
+            width: 100%;
+            max-width: 650px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            position: relative;
         }
-        header h1 { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 2.5rem; color: var(--primary); }
-        .mode-selector { display: flex; gap: 1rem; margin: 1.5rem 0; border-radius: 1rem; background-color: #f1f3f5; padding: 0.5rem; }
-        .mode-btn { width: 100%; border: none; background: transparent; color: #868e96; font-family: 'Baloo 2', sans-serif; font-size: 1.2rem; font-weight: 700; padding: 0.8rem; border-radius: 0.8rem; cursor: pointer; transition: all 0.3s ease; }
-        .mode-btn.active { background-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3); }
-        .mode-content { display: none; flex-direction: column; gap: 1.5rem; }
-        .mode-content.active { display: flex; }
-        .btn { border: none; border-radius: 0.75rem; padding: 0.6rem 1.2rem; font-family: 'Baloo 2', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s ease-out; background-color: #e9ecef; color: var(--text-color); }
-        .btn:hover { transform: translateY(-3px); } .btn.active { background-color: var(--primary); color: white; }
-        .number-display { background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 1rem; padding: 1.2rem; }
         
-        /* Keşfet Modu */
-        #discovery-mode .settings-section { background: #f8f9fa; border-radius: 1rem; padding: 1.2rem; }
-        #discovery-mode .settings-section h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary-dark); }
-        #discovery-mode .settings-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-        @media (min-width: 600px) { #discovery-mode .settings-grid { grid-template-columns: 1fr 1fr; } #discovery-mode .full-width { grid-column: 1 / -1; } }
-        #discovery-mode .control-group { display: flex; flex-direction: column; gap: 0.5rem; text-align: left;}
-        #discovery-mode .control-group label { font-weight: 700; font-size: 0.9rem; }
-        #discovery-mode .control-group select { width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 2px solid var(--border-color); font-weight: 600; background-color: #fff; color: var(--text-color); }
-        #discovery-mode .toggle-switch { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 0.5rem 1rem; border-radius: 0.75rem; height: 100%; }
-        #discovery-mode .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-        #discovery-mode .switch input { opacity: 0; width: 0; height: 0; }
-        #discovery-mode .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
-        #discovery-mode .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        #discovery-mode input:checked + .slider { background-color: var(--green); }
-        #discovery-mode input:checked + .slider:before { transform: translateX(22px); }
-        .manual-input-group { display: flex; gap: 0.5rem; }
-        .manual-input-group input { width: 100%; border: 2px solid var(--border-color); border-radius: 0.5rem; padding: 0.6rem; font-size: 1.2rem; text-align: center; font-family: 'Baloo 2', sans-serif; font-weight: 700; }
-        #discovery-mode .digit-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
-        #discovery-mode #new-number-btn { width: 100%; background: linear-gradient(45deg, var(--primary), var(--primary-dark)); color: #fff; font-size: 1.2rem; padding: 0.8rem; }
-        #current-number { font-size: clamp(3rem, 15vw, 4.5rem); font-weight: 800; }
-        .green-digit { color: var(--green); } .red-digit { color: var(--red); }
-        .rounding-visualizer { padding: 1.5rem 1rem; }
-        .visualizer-header { font-weight: 700; font-size: 1.1rem; margin-bottom: 2rem; }
-        .visualizer-body { display: flex; align-items: center; gap: 1rem; }
-        .endpoint-value { font-family: 'Baloo 2', sans-serif; font-size: 1.5rem; font-weight: 800; padding: 0.5rem; border-radius: 0.75rem; background: #e9ecef; min-width: 70px; }
-        .road-track { flex-grow: 1; height: 8px; background-color: #ced4da; border-radius: 8px; position: relative; }
-        .rocket { position: absolute; top: 50%; transform: translate(-50%, -50%); font-size: 2rem; transition: left 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        .visualizer-footer { margin-top: 1.5rem; font-size: 1.1rem; }
-        #tens-visualizer .visualizer-header { color: var(--primary-dark); } #tens-visualizer .endpoint-value { color: var(--primary-dark); }
-        #hundreds-visualizer .visualizer-header { color: #c2410c; } #hundreds-visualizer .endpoint-value { color: #c2410c; }
-        .analysis-section { padding: 1.5rem; background-color: #f8f9fa; border-radius: 1rem; }
-        .analysis-box { background: #fff; border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.75rem; margin-top:1rem; }
-        .analysis-box h3 { font-size: 1rem; margin-bottom: 0.8rem; } .analysis-box p { font-size: 1.2rem; font-family: 'Baloo 2', sans-serif; font-weight: 700; } .analysis-box .range { color: var(--primary); }
+        .home-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
         
-        /* Alıştırma Modu */
-        #practice-mode .question-box { padding: 1rem; }
-        #practice-mode .question-text { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.5; }
-        #practice-mode .question-text strong { color: var(--primary); font-size: 1.5em; }
-        #practice-mode .answer-area { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
-        #practice-input { font-family: 'Baloo 2'; font-size: 1.5rem; font-weight: 700; text-align: center; width: 200px; padding: 0.8rem; border-radius: 0.75rem; border: 2px solid var(--border-color); background-color: #fff; color: var(--text-color); }
-        #check-answer-btn { font-size: 1.1rem; background-color: var(--primary); color: white; }
-        #practice-mode .feedback-area { min-height: 30px; font-size: 1.2rem; font-weight: 700; margin-top: 1rem; }
-        #practice-mode .score-display { font-size: 1.1rem; }
-        #practice-mode #next-question-btn { display: none; width: 100%; margin-top: 1rem; font-size: 1.2rem; background-color: var(--secondary); color: #fff; }
-        #solution-box { display: none; margin-top: 1.5rem; padding: 1rem; background-color: var(--solution-bg); border: 2px dashed var(--secondary); border-radius: 1rem; text-align: left; }
-        #solution-box h3 { font-family: 'Baloo 2'; color: var(--primary-dark); } #solution-box p { margin-bottom: 0.5rem; }
-        .confetti { position: fixed; width: 10px; height: 10px; background-color: #f00; top: -20px; opacity: 0; }
-        @keyframes confetti-fall { 0% { top: -20px; opacity: 1; transform: rotate(0deg); } 100% { top: 100vh; opacity: 1; transform: rotate(720deg); } }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 800;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .activity-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active {
+            transform: scale(1.05);
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .activity-view { display: none; }
+        .activity-view.active { display: block; }
+        
+        .instruction { text-align: center; margin: 15px auto; font-size: 1.2em; font-weight: bold; max-width: 90%; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .feedback { margin-top: 15px; font-size: 1.2em; font-weight: bold; min-height: 30px; text-align: center; }
+        .correct { color: var(--correct-color); }
+        .incorrect { color: var(--incorrect-color); }
+
+        .btn-group { text-align: center; margin-top: 20px; }
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white-color);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 700;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        .btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+        .check-btn { background: rgba(40, 167, 69, 0.5); }
+        .new-question-btn { background: rgba(0, 123, 255, 0.5); }
+
+        footer { text-align: center; margin-top: 30px; font-weight: 400; color: rgba(255,255,255,0.7); }
+
+        /* --- TEMA 1: SAYI SIRALAMA (Mavi) --- */
+        #sort-activity .nav-btn.active { background-color: rgba(0, 123, 255, 0.4); }
+        #sort-activity .clickable-number { font-weight: 800; cursor: pointer; padding: 5px 8px; border-radius: 5px; transition: background-color 0.2s; margin: 0 2px; }
+        #sort-activity .clickable-number.selected { background-color: rgba(0, 123, 255, 0.7); color: white; }
+        #sort-activity .clickable-number.used { text-decoration: line-through; opacity: 0.5; cursor: not-allowed; }
+        #sort-activity .sort-container { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px; margin-top: 15px; }
+        #sort-activity .target-box { width: 90px; height: 50px; border: 2px dashed rgba(255,255,255,0.5); border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        #sort-activity .sort-container span { font-size: 2em; font-weight: 800; color: rgba(255,255,255,0.8); }
+        #sort-activity .orientation-warning { display: none; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 20px; background: rgba(255, 193, 7, 0.2); border: 1px solid rgba(255, 193, 7, 0.5); border-radius: 10px; font-weight: bold; }
+        
+        /* --- TEMA 2: KARŞILAŞTIRMA (Turuncu) --- */
+        #compare-activity .nav-btn.active { background-color: rgba(253, 126, 20, 0.4); }
+        #compare-activity .op-btn { font-size: 2em; font-weight: bold; width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); background: rgba(255,255,255,0.2); color: white; cursor: pointer; transition: all 0.2s; margin: 0 10px; }
+        #compare-activity .op-btn:hover { background: rgba(253, 126, 20, 0.6); }
+        #compare-activity .comparison-container, #compare-activity .operator-choices { margin-block: 25px; }
+        #compare-activity .compare-number, #compare-activity .operator-box { font-size: 1.8em; font-weight: 800; padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.1); }
+        #compare-activity .operator-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        #compare-activity .operator-box .op-fly { position: absolute; transition: transform 0.4s ease-out; }
+
+        /* --- TEMALAR & GENEL INPUT/BOX STİLLERİ --- */
+        input[type="number"], .target-box {
+            background: rgba(255,255,255,0.2); color: var(--text-color); border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); text-align: center; font-family: 'Nunito', sans-serif; font-size: 1.1em;
+        }
+        input::placeholder { color: rgba(255,255,255,0.5); }
+        input:focus { outline: 2px solid rgba(255,255,255,0.5); }
+        
+        #between-activity .nav-btn.active { background-color: rgba(111, 66, 193, 0.4); }
+        #between-activity .between-number { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; }
+        #between-activity .placeholder { border-bottom: 3px solid rgba(255,255,255,0.5); width: 80px; }
+        #between-activity .between-display { margin-block: 25px; font-size: 1.5em; font-weight: 800; }
+        #between-activity .input-group { margin-bottom: 15px; text-align: center; }
+        #between-activity .input-group label { font-weight: 700; margin-bottom: 8px; display: block; }
+        #between-activity .input-group input { width: 200px; padding: 10px; }
+        
+        #missing-activity .nav-btn.active { background-color: rgba(32, 201, 151, 0.4); }
+        #missing-activity .missing-digit-container { display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.8em; font-weight: 800; margin-block: 25px; flex-wrap: wrap; }
+        #missing-activity .operator { opacity: 0.8; }
+        #missing-activity .missing-placeholder { display: inline-block; width: 30px; height: 40px; border: 2px dashed rgba(255,255,255,0.6); border-radius: 5px; text-align: center; line-height: 40px; }
+        #missing-activity .answer-input { margin: 15px auto; width: 200px; padding: 10px; }
+        
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8em; margin-top: 45px; }
+            .home-btn { top: 15px; right: 15px; padding: 6px 12px; font-size: 12px; }
+            @media (orientation: portrait) {
+                #sort-activity .orientation-warning { display: flex; }
+                #sort-activity .sort-content { display: none; }
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header><h1>☀️ Yuvarlama Macerası</h1></header>
 
-        <div class="mode-selector">
-            <button class="mode-btn active" data-mode="discovery-mode">🧭 Keşfet Modu</button>
-            <button class="mode-btn" data-mode="practice-mode">🎮 Alıştırma Modu</button>
+<div class="container" id="main-container">
+    
+    <a href="https://bilgihazinesi.github.io/" class="home-btn" title="Ana Sayfaya Dön">
+        <span class="material-symbols-outlined">home</span> Ana Sayfa
+    </a>
+
+    <h1>Sayı Atölyesi</h1>
+    <nav class="activity-nav">
+        <button id="nav-sort" class="nav-btn active" onclick="showActivity('sort-activity')">Sayı Sırala</button>
+        <button id="nav-compare" class="nav-btn" onclick="showActivity('compare-activity')">Sayı Karşılaştır</button>
+        <button id="nav-between" class="nav-btn" onclick="showActivity('between-activity')">Aradaki Sayıyı Bul</button>
+        <button id="nav-missing" class="nav-btn" onclick="showActivity('missing-activity')">Eksik Rakamı Bul</button>
+    </nav>
+
+    <div id="sort-activity" class="activity-view active">
+        <div class="orientation-warning">
+            <span class="material-symbols-outlined">screen_rotation</span>
+            Lütfen bu etkinlik için telefonunuzu yatay konuma getirin.
         </div>
-
-        <div id="discovery-mode" class="mode-content active">
-             <section class="settings-section">
-                <h2>Gelişmiş Ayarlar</h2>
-                <div class="settings-grid">
-                    <div class="manual-input-container full-width">
-                        <div class="manual-input-group">
-                            <input type="number" id="manual-input-discovery" placeholder="Sayıyı elle fırlat...">
-                            <button id="submit-manual-discovery" class="btn active">Fırlat</button>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label for="results-display-select">Odaklan</label>
-                        <select id="results-display-select">
-                            <option value="all" selected>Tüm Sonuçlar</option>
-                            <option value="tens">Sadece Onluğa Yuvarlama</option>
-                            <option value="hundreds">Sadece Yüzlüğe Yuvarlama</option>
-                        </select>
-                    </div>
-                    <div class="control-group">
-                        <label for="color-target-select">Renklendirme</label>
-                        <select id="color-target-select">
-                            <option value="none" selected>Renk Olmasın</option>
-                            <option value="tens">Onluğa Yuvarlarken</option>
-                            <option value="hundreds">Yüzlüğe Yuvarlarken</option>
-                        </select>
-                    </div>
-                    <div class="toggle-switch">
-                        <span class="label">Yuvarlama Yolları</span>
-                        <label class="switch"> <input type="checkbox" id="show-visualizer-toggle" checked> <span class="slider"></span></label>
-                    </div>
-                    <div class="toggle-switch">
-                        <span class="label">Yuvarlama Analizi</span>
-                        <label class="switch"> <input type="checkbox" id="show-analysis-toggle" checked> <span class="slider"></span></label>
-                    </div>
-                </div>
-            </section>
-            <div class="digit-controls">
-                <button class="btn digit-btn" data-digits="3">3 Basamaklı</button>
-                <button class="btn digit-btn active" data-digits="4">4 Basamaklı</button>
-                <button class="btn digit-btn" data-digits="5">5 Basamaklı</button>
-                <button class="btn digit-btn" data-digits="6">6 Basamaklı</button>
-            </div>
-            <div class="number-display"> <span id="current-number">0</span> </div>
-            <button class="btn" id="new-number-btn">🚀 Sayıyı Roketle</button>
-            <div id="results-container">
-                <div class="rounding-visualizer" id="tens-visualizer"></div>
-                <div class="analysis-section" id="tens-analysis-section"></div>
-                <div class="rounding-visualizer" id="hundreds-visualizer"></div>
-                <div class="analysis-section" id="hundreds-analysis-section"></div>
+        <div class="sort-content">
+            <p class="instruction" id="sort-instruction"></p>
+            <p class="instruction">Sıralanacak Sayılar: <span id="sort-number-list"></span></p>
+            <div class="sort-container" id="sort-container"></div>
+            <div class="feedback" id="sort-feedback"></div>
+            <div class="btn-group">
+                <button class="btn check-btn" onclick="checkSort()">Kontrol Et</button>
+                <button class="btn new-question-btn" onclick="startSortGame()">Yeni Soru</button>
             </div>
         </div>
+    </div>
 
-        <div id="practice-mode" class="mode-content">
-            <div class="question-box number-display">
-                <p class="question-text" id="question-text">Soru metni...</p>
-            </div>
-            <div class="answer-area">
-                <input type="number" id="practice-input" placeholder="Cevabını yaz...">
-                <button class="btn" id="check-answer-btn">Kontrol Et</button>
-            </div>
-            <div class="feedback-area" id="feedback-area"></div>
-            <div class="score-display" id="score-display">Skor: 0 | Soru: 1 / 6</div>
-            <div id="solution-box"></div>
-            <button class="btn" id="next-question-btn">Sonraki Soru ➡️</button>
+    <div id="compare-activity" class="activity-view">
+        <div class="instruction">Doğru sembole tıkla ve yerleşmesini izle!</div>
+        <div class="operator-choices">
+            <button class="op-btn" onclick="selectOperator(this, '>')">&gt;</button>
+            <button class="op-btn" onclick="selectOperator(this, '<')">&lt;</button>
+            <button class="op-btn" onclick="selectOperator(this, '=')">=</button>
+        </div>
+        <div class="comparison-container">
+            <div id="compare-num1" class="compare-number"></div>
+            <div id="operator-box" class="operator-box"></div>
+            <div id="compare-num2" class="compare-number"></div>
+        </div>
+        <div class="feedback" id="compare-feedback"></div>
+        <div class="btn-group">
+            <button class="btn check-btn" onclick="checkCompare()">Kontrol Et</button>
+            <button class="btn new-question-btn" onclick="startCompareGame()">Yeni Soru</button>
         </div>
     </div>
     
-    <audio id="click-sound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
-    <audio id="correct-sound" src="https://www.soundjay.com/buttons/sounds/button-7.mp3" preload="auto"></audio>
-    <audio id="wrong-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
+    <div id="between-activity" class="activity-view">
+        <div class="instruction">Boşluğa gelebilecek en büyük ve en küçük sayıları bul.</div>
+        <div class="between-display">
+            <span id="between-num1" class="between-number"></span>
+            <span>&lt;</span>
+            <span class="placeholder"></span>
+            <span>&lt;</span>
+            <span id="between-num2" class="between-number"></span>
+        </div>
+        <div class="input-group">
+            <label for="min-input">Bu aralığa yazılabilecek <b>en küçük</b> sayı:</label>
+            <input type="number" id="min-input">
+        </div>
+        <div class="input-group">
+            <label for="max-input">Bu aralığa yazılabilecek <b>en büyük</b> sayı:</label>
+            <input type="number" id="max-input">
+        </div>
+        <div class="feedback" id="between-feedback"></div>
+        <div class="btn-group">
+            <button class="btn check-btn" onclick="checkBetween()">Kontrol Et</button>
+            <button class="btn new-question-btn" onclick="startBetweenGame()">Yeni Soru</button>
+        </div>
+    </div>
+    
+    <div id="missing-activity" class="activity-view">
+        <div class="instruction">Karşılaştırmanın doğru olması için boşluğa gelebilecek rakamların <b>toplamı</b> kaçtır?</div>
+        <div class="missing-digit-container" id="missing-digit-container"></div>
+        <input type="number" id="missing-answer-input" class="answer-input" placeholder="Toplamı buraya yaz">
+        <div class="feedback" id="missing-feedback"></div>
+        <div class="btn-group">
+            <button class="btn check-btn" onclick="checkMissingDigit()">Kontrol Et</button>
+            <button class="btn new-question-btn" onclick="startMissingDigitGame()">Yeni Soru</button>
+        </div>
+    </div>
+
+    <footer>Zeynal Öğretmen'e teşekkürler</footer>
+</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // --- SES KONTROLÜ ---
-    const sounds = { click: document.getElementById('click-sound'), correct: document.getElementById('correct-sound'), wrong: document.getElementById('wrong-sound') };
-    function playSound(sound) { try { sounds[sound].currentTime = 0; sounds[sound].play(); } catch (e) {} }
+    const mainContainer = document.getElementById('main-container');
 
-    // --- MOD SEÇİMİ ---
-    const modeButtons = document.querySelectorAll('.mode-btn');
-    const modeContents = document.querySelectorAll('.mode-content');
-    modeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            playSound('click');
-            modeButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            modeContents.forEach(content => {
-                content.classList.remove('active');
-                if (content.id === btn.dataset.mode) {
-                    content.classList.add('active');
-                    if(content.id === 'practice-mode') startPracticeGame();
-                }
-            });
-        });
-    });
+    let sortState = { numbers: [], direction: 'asc', correctOrder: [], selectedNumber: null };
+    let compareState = { num1: 0, num2: 0, correctOp: '', selectedOp: null };
+    let betweenState = { num1: 0, num2: 0, correctMin: 0, correctMax: 0 };
+    let missingState = { correctSum: 0, possibleDigits: [] };
 
-    // --- KEŞFET MODU ---
-    const discovery = {
-        numberDisplay: document.getElementById('current-number'), newNumberBtn: document.getElementById('new-number-btn'),
-        digitButtons: document.querySelectorAll('#discovery-mode .digit-btn'), tensVisualizer: document.getElementById('tens-visualizer'),
-        hundredsVisualizer: document.getElementById('hundreds-visualizer'), tensAnalysisSection: document.getElementById('tens-analysis-section'),
-        hundredsAnalysisSection: document.getElementById('hundreds-analysis-section'), colorTargetSelect: document.getElementById('color-target-select'),
-        resultsDisplaySelect: document.getElementById('results-display-select'), showVisualizerToggle: document.getElementById('show-visualizer-toggle'),
-        showAnalysisToggle: document.getElementById('show-analysis-toggle'), manualInput: document.getElementById('manual-input-discovery'),
-        submitManualBtn: document.getElementById('submit-manual-discovery'), currentNumber: 0, currentDigits: 4, colorTarget: 'none',
-        resultsDisplayMode: 'all', showVisualizer: true, showAnalysis: true
-    };
-    function generateRandom(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-    function formatNumber(num) { return num.toLocaleString('tr-TR'); }
-    function getColoredNumberHTML(num, target) {
-        if (target === 'none' || num < 10) return formatNumber(num);
-        const numStr = num.toString(); let html = ''; let targetIndex = -1;
-        if (target === 'tens' && numStr.length >= 1) targetIndex = numStr.length - 1;
-        else if (target === 'hundreds' && numStr.length >= 2) targetIndex = numStr.length - 2;
-        for (let i = 0; i < numStr.length; i++) {
-            let char = numStr[i];
-            if (i === targetIndex) {
-                const digit = parseInt(char);
-                const className = digit < 5 ? 'green-digit' : 'red-digit';
-                html += `<span class="${className}">${char}</span>`;
-            } else { html += char; }
-        }
-        return html;
-    }
-    function updateDiscoveryUI() {
-        discovery.numberDisplay.innerHTML = getColoredNumberHTML(discovery.currentNumber, discovery.colorTarget);
-        const num = discovery.currentNumber; const nearestTen = Math.round(num / 10) * 10; const nearestHundred = Math.round(num / 100) * 100;
-        const showTens = discovery.resultsDisplayMode === 'all' || discovery.resultsDisplayMode === 'tens';
-        const showHundreds = discovery.resultsDisplayMode === 'all' || discovery.resultsDisplayMode === 'hundreds';
-        if (showTens) {
-            discovery.tensVisualizer.style.display = discovery.showVisualizer ? 'block' : 'none';
-            if (discovery.showVisualizer) { const prevTen = Math.floor(num / 10) * 10; const nextTen = prevTen + 10; const tensPosition = (num % 10) * 10; discovery.tensVisualizer.innerHTML = `<div class="visualizer-header">Onluğa Yuvarlama Yolu</div><div class="visualizer-body"><div class="endpoint-value">${formatNumber(prevTen)}</div><div class="road-track"><div class="rocket" style="left: ${tensPosition}%;">🚀</div></div><div class="endpoint-value">${formatNumber(nextTen)}</div></div><div class="visualizer-footer">En Yakın Onluk: <strong>${formatNumber(nearestTen)}</strong></div>`; }
-            discovery.tensAnalysisSection.style.display = discovery.showAnalysis ? 'block' : 'none';
-            if (discovery.showAnalysis) { discovery.tensAnalysisSection.innerHTML = `<div class="analysis-box"><h3><strong>${formatNumber(nearestTen)}</strong>'a Yuvarlananlar</h3><p>En Küçük: <span class="range">${formatNumber(nearestTen - 5)}</span></p><p>En Büyük: <span class="range">${formatNumber(nearestTen + 4)}</span></p></div>`; }
-        } else { discovery.tensVisualizer.style.display = 'none'; discovery.tensAnalysisSection.style.display = 'none'; }
-        if (showHundreds) {
-            discovery.hundredsVisualizer.style.display = discovery.showVisualizer ? 'block' : 'none';
-            if (discovery.showVisualizer) { const prevHundred = Math.floor(num / 100) * 100; const nextHundred = prevHundred + 100; const hundredsPosition = num % 100; discovery.hundredsVisualizer.innerHTML = `<div class="visualizer-header">Yüzlüğe Yuvarlama Yolu</div><div class="visualizer-body"><div class="endpoint-value">${formatNumber(prevHundred)}</div><div class="road-track"><div class="rocket" style="left: ${hundredsPosition}%;">🚀</div></div><div class="endpoint-value">${formatNumber(nextHundred)}</div></div><div class="visualizer-footer">En Yakın Yüzlük: <strong>${formatNumber(nearestHundred)}</strong></div>`; }
-            discovery.hundredsAnalysisSection.style.display = discovery.showAnalysis ? 'block' : 'none';
-            if (discovery.showAnalysis) { discovery.hundredsAnalysisSection.innerHTML = `<div class="analysis-box"><h3><strong>${formatNumber(nearestHundred)}</strong>'e Yuvarlananlar</h3><p>En Küçük: <span class="range">${formatNumber(nearestHundred - 50)}</span></p><p>En Büyük: <span class="range">${formatNumber(nearestHundred + 49)}</span></p></div>`; }
-        } else { discovery.hundredsVisualizer.style.display = 'none'; discovery.hundredsAnalysisSection.style.display = 'none'; }
-    }
-    function generateNewDiscoveryNumber() { playSound('click'); const min = Math.pow(10, discovery.currentDigits - 1); const max = Math.pow(10, discovery.currentDigits) - 1; discovery.currentNumber = generateRandom(min, max); updateDiscoveryUI(); }
-    discovery.digitButtons.forEach(button => { button.addEventListener('click', () => { playSound('click'); discovery.digitButtons.forEach(btn => btn.classList.remove('active')); button.classList.add('active'); discovery.currentDigits = parseInt(button.dataset.digits); generateNewDiscoveryNumber(); }); });
-    discovery.newNumberBtn.addEventListener('click', generateNewDiscoveryNumber);
-    discovery.colorTargetSelect.addEventListener('change', e => { discovery.colorTarget = e.target.value; updateDiscoveryUI(); });
-    discovery.resultsDisplaySelect.addEventListener('change', e => { discovery.resultsDisplayMode = e.target.value; updateDiscoveryUI(); });
-    discovery.showVisualizerToggle.addEventListener('change', e => { discovery.showVisualizer = e.target.checked; updateDiscoveryUI(); });
-    discovery.showAnalysisToggle.addEventListener('change', e => { discovery.showAnalysis = e.target.checked; updateDiscoveryUI(); });
-    discovery.submitManualBtn.addEventListener('click', () => { playSound('click'); const value = parseInt(discovery.manualInput.value); if (!isNaN(value) && value >= 0) { discovery.currentNumber = value; updateDiscoveryUI(); } });
-    discovery.manualInput.addEventListener('keydown', e => { if (e.key === 'Enter') discovery.submitManualBtn.click(); });
+    const formatNumber = (num) => num.toLocaleString('tr-TR');
 
-    // --- ALIŞTIRMA MODU ---
-    const practice = {
-        questionText: document.getElementById('question-text'), input: document.getElementById('practice-input'),
-        checkBtn: document.getElementById('check-answer-btn'), feedbackArea: document.getElementById('feedback-area'),
-        scoreDisplay: document.getElementById('score-display'), nextBtn: document.getElementById('next-question-btn'),
-        solutionBox: document.getElementById('solution-box'), currentQuestion: {}, score: 0, questionNumber: 0, totalQuestions: 6, wrongAttempts: 0
-    };
-
-    const questionTemplates = [
-        { difficulty: 'easy', generate: () => { const num = generateRandom(100, 9999); const questionHTML = `<strong>${formatNumber(num)}</strong> sayısını en yakın <strong>onluğa</strong> yuvarla.`; const correctAnswer = Math.round(num / 10) * 10; const solutionSteps = [ `<strong>Adım 1:</strong> Sayının birler basamağına bakılır: ${num % 10}.`, `<strong>Adım 2:</strong> Bu rakam 5'ten küçük olmadığı için (${num % 10} >= 5) onluk yukarı yuvarlanır.`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; if (num % 10 < 5) solutionSteps[1] = `<strong>Adım 2:</strong> Bu rakam 5'ten küçük olduğu için (${num % 10} < 5) onluk aşağı yuvarlanır.`; return { questionHTML, correctAnswer, solutionSteps }; }},
-        { difficulty: 'easy', generate: () => { const num = generateRandom(100, 9999); const questionHTML = `<strong>${formatNumber(num)}</strong> sayısını en yakın <strong>yüzlüğe</strong> yuvarla.`; const correctAnswer = Math.round(num / 100) * 100; const lastTwoDigits = num % 100; const solutionSteps = [ `<strong>Adım 1:</strong> Sayının son iki basamağına bakılır: ${lastTwoDigits}.`, `<strong>Adım 2:</strong> Bu sayı 50'den küçük olmadığı için (${lastTwoDigits} >= 50) yüzlük yukarı yuvarlanır.`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; if (lastTwoDigits < 50) solutionSteps[1] = `<strong>Adım 2:</strong> Bu sayı 50'den küçük olduğu için (${lastTwoDigits} < 50) yüzlük aşağı yuvarlanır.`; return { questionHTML, correctAnswer, solutionSteps }; }},
-        { difficulty: 'medium', generate: () => { const num = generateRandom(1000, 9999); const nearestTen = Math.round(num / 10) * 10; const questionHTML = `En yakın onluğa yuvarlandığında <strong>${formatNumber(nearestTen)}</strong> sonucunu veren <strong>en küçük</strong> sayıyı yaz.`; const correctAnswer = nearestTen - 5; const solutionSteps = [ `<strong>Adım 1:</strong> Bir onluğa yuvarlanan en küçük sayıyı bulmak için o sayıdan 5 çıkarılır.`, `<strong>Adım 2:</strong> ${formatNumber(nearestTen)} - 5 = ${correctAnswer}`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; return { questionHTML, correctAnswer, solutionSteps }; }},
-        { difficulty: 'medium', generate: () => { const num = generateRandom(1000, 9999); const nearestHundred = Math.round(num / 100) * 100; const questionHTML = `En yakın yüzlüğe yuvarlandığında <strong>${formatNumber(nearestHundred)}</strong> sonucunu veren <strong>en büyük</strong> sayıyı yaz.`; const correctAnswer = nearestHundred + 49; const solutionSteps = [ `<strong>Adım 1:</strong> Bir yüzlüğe yuvarlanan en büyük sayıyı bulmak için o sayıya 49 eklenir.`, `<strong>Adım 2:</strong> ${formatNumber(nearestHundred)} + 49 = ${correctAnswer}`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; return { questionHTML, correctAnswer, solutionSteps }; }},
-        { difficulty: 'hard', generate: () => { const num = generateRandom(1000, 8999); const nearestTen = Math.round(num / 10) * 10; const largestNum = nearestTen + 4; const questionHTML = `<strong>${formatNumber(num)}</strong> sayısının en yakın onluğa yuvarlanmış haline yuvarlanan <strong>en büyük</strong> sayının <strong>birler bölüğünü</strong> yaz.`; const correctAnswer = largestNum % 1000; const solutionSteps = [ `<strong>Adım 1:</strong> ${formatNumber(num)} sayısını en yakın onluğa yuvarlayalım: <strong>${formatNumber(nearestTen)}</strong>.`, `<strong>Adım 2:</strong> ${formatNumber(nearestTen)}'a yuvarlanan en büyük sayıyı bulalım: ${formatNumber(nearestTen)} + 4 = <strong>${formatNumber(largestNum)}</strong>.`, `<strong>Adım 3:</strong> ${formatNumber(largestNum)} sayısının birler bölüğü (son üç basamağı) <strong>${correctAnswer}</strong>'dir.`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; return { questionHTML, correctAnswer, solutionSteps }; }},
-        { difficulty: 'hard', generate: () => { const num = generateRandom(1000, 8999); const nearestHundred = Math.round(num / 100) * 100; const smallestNum = nearestHundred - 50; const questionHTML = `<strong>${formatNumber(num)}</strong> sayısının en yakın yüzlüğe yuvarlanmış haline yuvarlanan <strong>en küçük</strong> sayının <strong>yüzler basamağındaki</strong> rakamı yaz.`; const correctAnswer = Math.floor((smallestNum % 1000) / 100); const solutionSteps = [ `<strong>Adım 1:</strong> ${formatNumber(num)} sayısını en yakın yüzlüğe yuvarlayalım: <strong>${formatNumber(nearestHundred)}</strong>.`, `<strong>Adım 2:</strong> ${formatNumber(nearestHundred)}'e yuvarlanan en küçük sayıyı bulalım: ${formatNumber(nearestHundred)} - 50 = <strong>${formatNumber(smallestNum)}</strong>.`, `<strong>Adım 3:</strong> ${formatNumber(smallestNum)} sayısının yüzler basamağındaki rakam <strong>${correctAnswer}</strong>'dir.`, `<strong>Doğru Cevap:</strong> ${correctAnswer}` ]; return { questionHTML, correctAnswer, solutionSteps }; }}
-    ];
-
-    let gameQuestions = [];
-
-    function startPracticeGame() {
-        practice.score = 0; practice.questionNumber = 0;
+    function showActivity(activityId) {
+        document.querySelectorAll('.activity-view').forEach(v => v.classList.remove('active'));
+        document.getElementById(activityId).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`nav-${activityId.split('-')[0]}`).classList.add('active');
         
-        const easyQuestions = shuffle(questionTemplates.filter(q => q.difficulty === 'easy'));
-        const mediumQuestions = shuffle(questionTemplates.filter(q => q.difficulty === 'medium'));
-        const hardQuestions = shuffle(questionTemplates.filter(q => q.difficulty === 'hard'));
-        
-        // DEĞİŞTİ: 2 kolay, 2 orta, 2 zor soru seç ve sıralı kalsın
-        gameQuestions = [
-            ...easyQuestions.slice(0, 2).map(q => q.generate()),
-            ...mediumQuestions.slice(0, 2).map(q => q.generate()),
-            ...hardQuestions.slice(0, 2).map(q => q.generate())
-        ];
-        
-        practice.totalQuestions = gameQuestions.length;
-        generatePracticeQuestion();
+        // Bu satır kaldırıldı çünkü arka plan artık body'de ve sabit
+        // const activityTheme = document.querySelector(`#${activityId}`).style;
+        // mainContainer.style.backgroundColor = activityTheme.getPropertyValue('--theme-bg');
+
+        if (activityId === 'sort-activity') startSortGame();
+        else if (activityId === 'compare-activity') startCompareGame();
+        else if (activityId === 'between-activity') startBetweenGame();
+        else if (activityId === 'missing-activity') startMissingDigitGame();
     }
 
-    function generatePracticeQuestion() {
-        practice.wrongAttempts = 0; practice.feedbackArea.textContent = ''; practice.nextBtn.style.display = 'none';
-        practice.solutionBox.style.display = 'none'; practice.input.value = ''; practice.input.disabled = false;
-        practice.checkBtn.disabled = false; practice.input.style.borderColor = 'var(--border-color)';
-
-        if (practice.questionNumber >= practice.totalQuestions) {
-            practice.questionText.innerHTML = "Harika bir iş çıkardın! Alıştırma tamamlandı! 🏆";
-            practice.input.style.display = 'none'; practice.checkBtn.style.display = 'none';
-            practice.feedbackArea.textContent = `Toplam ${practice.totalQuestions} görevden ${practice.score} tanesini başardın!`;
-            return;
-        }
-        practice.input.style.display = 'block'; practice.checkBtn.style.display = 'block';
-        practice.currentQuestion = gameQuestions[practice.questionNumber];
-        practice.questionText.innerHTML = practice.currentQuestion.questionHTML;
-        practice.questionNumber++;
-        practice.scoreDisplay.textContent = `Skor: ${practice.score} | Soru: ${practice.questionNumber} / ${practice.totalQuestions}`;
+    function generateRandomNumber(digits) {
+        const min = Math.pow(10, digits - 1);
+        const max = Math.pow(10, digits) - 1;
+        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
     
-    function checkAnswer() {
-        const userAnswer = parseInt(practice.input.value);
-        if(isNaN(userAnswer)) { practice.feedbackArea.textContent = "Lütfen bir sayı gir!"; return; }
-        if (userAnswer === practice.currentQuestion.correctAnswer) {
-            playSound('correct'); practice.input.style.borderColor = 'var(--green)';
-            practice.feedbackArea.innerHTML = "✅ Harika! Doğru cevap!"; practice.feedbackArea.style.color = 'var(--green)';
-            practice.score++; triggerConfetti(); practice.input.disabled = true; practice.checkBtn.disabled = true;
-            practice.nextBtn.style.display = 'block';
+    // --- 1. SAYI SIRALAMA (Tıkla-Yapıştır) ---
+    function startSortGame() {
+        sortState = { numbers: [], direction: 'asc', correctOrder: [], selectedNumber: null };
+        const digits = 4;
+        while(sortState.numbers.length < 5){
+            const newNum = generateRandomNumber(digits);
+            if(!sortState.numbers.includes(newNum)) sortState.numbers.push(newNum);
+        }
+        
+        sortState.direction = Math.random() < 0.5 ? 'asc' : 'desc';
+        document.getElementById('sort-instruction').textContent = sortState.direction === 'asc' ? 'Sayıları KÜÇÜKTEN BÜYÜĞE sırala!' : 'Sayıları BÜYÜKTEN KÜÇÜĞE sırala!';
+        
+        const numberList = document.getElementById('sort-number-list');
+        numberList.innerHTML = '';
+        sortState.numbers.forEach(num => {
+            const numSpan = document.createElement('span');
+            numSpan.textContent = formatNumber(num);
+            numSpan.dataset.value = num;
+            numSpan.classList.add('clickable-number');
+            numSpan.onclick = () => selectSourceNumber(numSpan);
+            numberList.appendChild(numSpan);
+        });
+        
+        sortState.correctOrder = sortState.direction === 'asc' ? [...sortState.numbers].sort((a,b)=>a-b) : [...sortState.numbers].sort((a,b)=>b-a);
+        
+        const container = document.getElementById('sort-container');
+        container.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const targetBox = document.createElement('div');
+            targetBox.classList.add('target-box');
+            targetBox.onclick = () => placeNumber(targetBox);
+            container.appendChild(targetBox);
+            if (i < 4) container.appendChild(document.createElement('span')).textContent = sortState.direction === 'asc' ? ' < ' : ' > ';
+        }
+        document.getElementById('sort-feedback').textContent = '';
+    }
+
+    function selectSourceNumber(numSpan) {
+        if (numSpan.classList.contains('used')) return;
+        document.querySelectorAll('.clickable-number').forEach(s => s.classList.remove('selected'));
+        numSpan.classList.add('selected');
+        sortState.selectedNumber = numSpan;
+    }
+
+    function placeNumber(targetBox) {
+        if (targetBox.dataset.value) {
+            const returnedValue = targetBox.dataset.value;
+            const sourceSpan = document.querySelector(`.clickable-number[data-value='${returnedValue}']`);
+            if (sourceSpan) sourceSpan.classList.remove('used');
+            targetBox.textContent = '';
+            targetBox.dataset.value = '';
+        }
+
+        if (sortState.selectedNumber) {
+            targetBox.textContent = sortState.selectedNumber.textContent;
+            targetBox.dataset.value = sortState.selectedNumber.dataset.value;
+            sortState.selectedNumber.classList.add('used');
+            sortState.selectedNumber.classList.remove('selected');
+            sortState.selectedNumber = null;
+        }
+    }
+
+    function checkSort() {
+        const inputs = Array.from(document.querySelectorAll('.target-box')).map(box => parseInt(box.dataset.value));
+        const feedback = document.getElementById('sort-feedback');
+        if (inputs.some(isNaN)) {
+            feedback.textContent = "Lütfen bütün kutuları doldur."; feedback.className = 'feedback incorrect'; return;
+        }
+        const isOrderCorrect = JSON.stringify(inputs) === JSON.stringify(sortState.correctOrder);
+        if (isOrderCorrect) {
+            feedback.textContent = "Harika! Tamamen doğru! 🎉"; feedback.className = 'feedback correct';
         } else {
-            playSound('wrong'); practice.wrongAttempts++; practice.input.style.borderColor = 'var(--red)';
-            if (practice.wrongAttempts >= 3) {
-                practice.feedbackArea.innerHTML = `❌ 3 kez yanlış denedin. Doğru cevap aşağıda gösterilmiştir.`;
-                practice.feedbackArea.style.color = 'var(--red)'; showSolution();
-                practice.input.disabled = true; practice.checkBtn.disabled = true;
-                practice.nextBtn.style.display = 'block';
-            } else {
-                practice.feedbackArea.innerHTML = `🤔 Tekrar dene! (${3 - practice.wrongAttempts} hakkın kaldı)`;
-                practice.feedbackArea.style.color = '#ff9800'; practice.input.value = '';
+            feedback.textContent = "Sıralama yanlış, tekrar kontrol et. 🤔"; feedback.className = 'feedback incorrect';
+        }
+    }
+
+    // --- 2. SAYI KARŞILAŞTIRMA ---
+    function startCompareGame() {
+        const digits = 5;
+        compareState.num1 = generateRandomNumber(digits);
+        compareState.num2 = Math.random() < 0.2 ? compareState.num1 : generateRandomNumber(digits);
+        document.getElementById('compare-num1').textContent = formatNumber(compareState.num1);
+        document.getElementById('compare-num2').textContent = formatNumber(compareState.num2);
+        document.getElementById('operator-box').innerHTML = '';
+        document.getElementById('compare-feedback').textContent = '';
+        if (compareState.num1 > compareState.num2) compareState.correctOp = '>';
+        else if (compareState.num1 < compareState.num2) compareState.correctOp = '<';
+        else compareState.correctOp = '=';
+        compareState.selectedOp = null;
+    }
+    
+    function selectOperator(btn, op) {
+        compareState.selectedOp = op;
+        const box = document.getElementById('operator-box'); box.innerHTML = '';
+        const flyingOp = document.createElement('span'); flyingOp.textContent = op; flyingOp.classList.add('op-fly');
+        const btnRect = btn.getBoundingClientRect(); const boxRect = box.getBoundingClientRect();
+        const startX = btnRect.left - boxRect.left + (btnRect.width/2) - 15; const startY = btnRect.top - boxRect.top + (btnRect.height/2) - 25;
+        flyingOp.style.transform = `translate(${startX}px, ${startY}px) scale(1.5)`;
+        box.appendChild(flyingOp);
+        requestAnimationFrame(() => { flyingOp.style.transform = 'translate(0, 0) scale(1)'; });
+    }
+
+    function checkCompare() {
+        const feedback = document.getElementById('compare-feedback');
+        if (compareState.selectedOp === null) {
+            feedback.textContent = "Lütfen bir sembol seç."; feedback.className = 'feedback incorrect'; return;
+        }
+        if (compareState.selectedOp === compareState.correctOp) {
+            feedback.textContent = "Doğru seçim! Tebrikler! ✅"; feedback.className = 'feedback correct';
+        } else {
+            feedback.textContent = `Yanlış. Doğru cevap "${compareState.correctOp}" olmalıydı.`; feedback.className = 'feedback incorrect';
+        }
+    }
+
+    // --- 3. ARADAKİ SAYIYI BUL ---
+    function startBetweenGame() {
+        const digits = 4;
+        betweenState.num1 = generateRandomNumber(digits);
+        betweenState.num2 = betweenState.num1 + Math.floor(Math.random() * 20) + 5;
+        document.getElementById('between-num1').textContent = formatNumber(betweenState.num1);
+        document.getElementById('between-num2').textContent = formatNumber(betweenState.num2);
+        betweenState.correctMin = betweenState.num1 + 1;
+        betweenState.correctMax = betweenState.num2 - 1;
+        document.getElementById('min-input').value = '';
+        document.getElementById('max-input').value = '';
+        document.getElementById('between-feedback').textContent = '';
+    }
+
+    function checkBetween() {
+        const minVal = parseInt(document.getElementById('min-input').value);
+        const maxVal = parseInt(document.getElementById('max-input').value);
+        const feedback = document.getElementById('between-feedback');
+        if (isNaN(minVal) || isNaN(maxVal)) {
+            feedback.textContent = "Lütfen her iki kutuyu da doldur."; feedback.className = 'feedback incorrect'; return;
+        }
+        const isMinCorrect = minVal === betweenState.correctMin; const isMaxCorrect = maxVal === betweenState.correctMax;
+        if (isMinCorrect && isMaxCorrect) {
+            feedback.textContent = "İkisi de doğru, harikasın! 🥳"; feedback.className = 'feedback correct';
+        } else if (isMinCorrect) {
+            feedback.textContent = "En küçük sayı doğru, ama en büyüğü hatalı."; feedback.className = 'feedback incorrect';
+        } else if (isMaxCorrect) {
+            feedback.textContent = "En büyük sayı doğru, ama en küçüğü hatalı."; feedback.className = 'feedback incorrect';
+        } else {
+            feedback.textContent = "Maalesef ikisi de yanlış, tekrar dene!"; feedback.className = 'feedback incorrect';
+        }
+    }
+
+    // --- 4. EKSİK RAKAMI BUL (Akıllı Soru Üretimi) ---
+    function startMissingDigitGame() {
+        const digits = 4;
+        missingState.possibleDigits = [];
+        let numWithMissingStr, referenceNum, operator, numWithMissingHTML;
+
+        while (missingState.possibleDigits.length < 1 || missingState.possibleDigits.length > 5) {
+            missingState.possibleDigits = [];
+            const baseNumArr = String(generateRandomNumber(digits)).split('');
+            const missingIndex = Math.floor(Math.random() * digits);
+            const boundaryDigit = Math.floor(Math.random() * 8) + 1;
+            const conditionType = Math.random() < 0.5 ? 'greater' : 'less';
+            operator = Math.random() < 0.5 ? '>' : '<';
+            
+            let numA_arr = [...baseNumArr];
+            numA_arr[missingIndex] = boundaryDigit;
+            const numA = parseInt(numA_arr.join(''));
+
+            let numB_arr = [...baseNumArr];
+            const nextDigit = (conditionType === 'greater') ? boundaryDigit + 1 : boundaryDigit - 1;
+            if (nextDigit < 0 || nextDigit > 9) continue;
+            numB_arr[missingIndex] = nextDigit;
+            const numB = parseInt(numB_arr.join(''));
+
+            referenceNum = Math.floor(Math.random() * Math.abs(numA - numB)) + Math.min(numA, numB);
+            if (referenceNum === Math.min(numA, numB)) referenceNum++;
+            if (referenceNum <= 0) continue;
+            
+            numWithMissingStr = baseNumArr.join('');
+            
+            for (let d = 0; d < 10; d++) {
+                if (missingIndex === 0 && d === 0) continue;
+                let tempArr = [...baseNumArr];
+                tempArr[missingIndex] = d;
+                const currentNum = parseInt(tempArr.join(''));
+                const condition = operator === '>' ? (currentNum > referenceNum) : (currentNum < referenceNum);
+                if (condition) missingState.possibleDigits.push(d);
             }
         }
+        
+        let parts = numWithMissingStr.split('');
+        parts[missingIndex] = `<span class="missing-placeholder">_</span>`;
+        numWithMissingHTML = parts.join('');
+
+        missingState.correctSum = missingState.possibleDigits.reduce((sum, digit) => sum + digit, 0);
+
+        const container = document.getElementById('missing-digit-container');
+        if(Math.random() < 0.5) {
+             container.innerHTML = `<span>${formatNumber(parseInt(numWithMissingHTML.replace(/<.*?>/g, '0')))}</span> <span class="operator">${operator}</span> <span>${formatNumber(referenceNum)}</span>`;
+             container.querySelector('.missing-placeholder').parentElement.innerHTML = numWithMissingHTML;
+        } else {
+             const tempOp = operator === '>' ? '<' : '>';
+             container.innerHTML = `<span>${formatNumber(referenceNum)}</span> <span class="operator">${tempOp}</span> <span>${formatNumber(parseInt(numWithMissingHTML.replace(/<.*?>/g, '0')))}</span>`;
+             container.querySelector('span:last-child').innerHTML = numWithMissingHTML;
+        }
+        
+        document.getElementById('missing-answer-input').value = '';
+        document.getElementById('missing-feedback').textContent = '';
     }
-    
-    function showSolution() { const steps = practice.currentQuestion.solutionSteps; let solutionHTML = '<h3>💡 Çözüm Yolu</h3>'; steps.forEach(step => { solutionHTML += `<p>${step}</p>`; }); practice.solutionBox.innerHTML = solutionHTML; practice.solutionBox.style.display = 'block'; }
-    function shuffle(array) { const newArr = [...array]; for (let i = newArr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [newArr[i], newArr[j]] = [newArr[j], newArr[i]]; } return newArr; }
-    practice.checkBtn.addEventListener('click', () => { playSound('click'); checkAnswer(); });
-    practice.nextBtn.addEventListener('click', () => { playSound('click'); generatePracticeQuestion(); });
-    practice.input.addEventListener('keydown', (e) => { if(e.key === 'Enter') practice.checkBtn.click(); });
-    function triggerConfetti() { for (let i = 0; i < 50; i++) { const c = document.createElement('div'); c.className = 'confetti'; document.body.appendChild(c); c.style.left = Math.random() * 100 + 'vw'; c.style.animation = `confetti-fall ${Math.random() * 2 + 3}s linear forwards`; c.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`; c.addEventListener('animationend', () => c.remove()); } }
-    
-    generateNewDiscoveryNumber();
-});
+
+    function checkMissingDigit() {
+        const userAnswer = parseInt(document.getElementById('missing-answer-input').value);
+        const feedback = document.getElementById('missing-feedback');
+        if (isNaN(userAnswer)) {
+            feedback.textContent = "Lütfen bir sayı gir."; feedback.className = 'feedback incorrect'; return;
+        }
+        if (userAnswer === missingState.correctSum) {
+            feedback.textContent = "Doğru cevap! Harikasın! 🧠"; feedback.className = 'feedback correct';
+        } else {
+            const possibleDigitsStr = missingState.possibleDigits.join(', ');
+            feedback.innerHTML = `Yanlış. Gelebilecek rakamlar (${possibleDigitsStr}) idi.<br>Doğru toplam ${missingState.correctSum} olmalıydı.`;
+            feedback.className = 'feedback incorrect';
+        }
+    }
+
+    window.onload = () => { showActivity('sort-activity'); };
 </script>
+
 </body>
 </html>
