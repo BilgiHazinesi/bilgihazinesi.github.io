@@ -6,7 +6,6 @@
     <title>BilgiHazinesi - Eğitimin Keşif Dünyası</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        /* CSS kodunuzda hiçbir değişiklik yok, aynen kalabilir */
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
         :root {
             --primary-color: #6a11cb;
@@ -27,7 +26,10 @@
         .desktop-nav ul li { position: relative; }
         .desktop-nav ul li a { text-decoration: none; color: var(--primary-color); font-weight: 700; font-size: 1.05em; padding: 10px 18px; border-radius: 30px; display: block; transition: all 0.3s ease; }
         .desktop-nav ul li a:hover { background-color: var(--primary-color); color: #ffffff; }
+        
+        /* DÜZELTME 1: Açılır menünün diğer elemanların üzerinde kalması için z-index eklendi */
         .nav-dropdown-content { display: none; position: absolute; background-color: #fff; min-width: 220px; box-shadow: var(--card-shadow); z-index: 100; border-radius: 12px; padding: 10px; margin-top: 8px; animation: fadeIn 0.3s ease-out; }
+        
         .desktop-nav ul li:hover .nav-dropdown-content { display: block; }
         .nav-dropdown-content a { color: var(--text-color); padding: 12px 20px; border-radius: 8px; }
         .nav-dropdown-content a:hover { background-color: #f4f4f4; color: var(--primary-color); }
@@ -48,8 +50,11 @@
         .card .icon { font-size: 3.5em; line-height: 1; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card h2 { font-size: 1.6em; margin: 15px 0 10px 0; color: #333; }
         .card p { font-size: 1em; line-height: 1.6; margin-bottom: 0; }
+        
+        /* DÜZELTME 2: ".show" class'ından sabit max-height kaldırıldı. JS dinamik olarak yönetecek. */
         .card-sub-links { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; margin: 0; padding: 0; list-style: none; }
-        .card-sub-links.show { max-height: 250px; margin-top: 15px; }
+        .card-sub-links.show { /* Bu class artık sadece durum takibi için var, yükseklik JS ile verilecek */ margin-top: 15px; }
+
         .card-sub-links a { background-color: #f3f4f6; display: block; padding: 12px; margin-top: 8px; border-radius: 10px; text-decoration: none; color: var(--primary-color); font-weight: bold; transition: background-color 0.2s, color 0.2s; }
         .card-sub-links a:hover { background-color: var(--primary-color); color: #fff; }
         footer { margin-top: auto; padding: 30px; font-size: 0.9em; color: #888; }
@@ -96,7 +101,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // JSON dosyasını yükle ve sayfayı oluştur
             fetch('sayfalar.json')
                 .then(response => response.json())
                 .then(data => {
@@ -104,7 +108,6 @@
                 })
                 .catch(error => {
                     console.error('sayfalar.json yüklenirken bir hata oluştu:', error);
-                    // Hata durumunda kullanıcıya bilgi verilebilir
                     document.getElementById('card-container').innerHTML = '<p>İçerik yüklenemedi. Lütfen daha sonra tekrar deneyin.</p>';
                 });
         });
@@ -114,7 +117,6 @@
             const mobileNavUl = document.getElementById('mobile-nav-ul');
             const cardContainer = document.getElementById('card-container');
 
-            // Başlangıç için sabit "Anasayfa" linkleri
             desktopNavUl.innerHTML = '<li><a href="index.html">Anasayfa</a></li>';
             mobileNavUl.innerHTML = '<li><a href="index.html">Anasayfa</a></li>';
 
@@ -153,27 +155,34 @@
                 cardContainer.innerHTML += cardHtml;
             });
 
-            // Sayfa dinamik olarak oluşturulduktan sonra event listener'ları yeniden kur
             setupEventListeners();
         }
 
         function setupEventListeners() {
-            // Kartların açılır/kapanır menü mekanizması
             const cards = document.querySelectorAll('.card');
             cards.forEach(card => {
                 card.addEventListener('click', function(event) {
-                    // Eğer tıklanan bir link ise, menüyü aç/kapa yapma, linke git
                     if (event.target.tagName === 'A') {
                         return;
                     }
                     const cardSubLinks = this.querySelector('.card-sub-links');
                     if (!cardSubLinks) return;
-                    const isAlreadyOpen = cardSubLinks.classList.contains('show');
-                    document.querySelectorAll('.card-sub-links.show').forEach(menu => {
+
+                    // DÜZELTME 3: Kart açma/kapama mantığı dinamik yüksekliğe göre güncellendi.
+                    // Tıklanan kartın menüsü zaten açık mı diye kontrol et (maxHeight set edilmiş mi?)
+                    const isAlreadyOpen = cardSubLinks.style.maxHeight;
+
+                    // Önce tüm açık menüleri kapat
+                    document.querySelectorAll('.card-sub-links').forEach(menu => {
+                        menu.style.maxHeight = null;
                         menu.classList.remove('show');
                     });
+                    
+                    // Eğer tıklanan menü zaten açık değilse, onu aç
                     if (!isAlreadyOpen) {
                         cardSubLinks.classList.add('show');
+                        // max-height değerini içeriğin gerçek yüksekliğine ayarla
+                        cardSubLinks.style.maxHeight = cardSubLinks.scrollHeight + "px";
                     }
                 });
             });
