@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gelişmiş Sayı Atölyesi</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+        :root {
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --white-color: #ffffff;
+            --text-color: #333;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background-color: #f4f7f6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background-color: var(--white-color);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            transition: background-color 0.5s;
+            position: relative; /* Ana sayfa butonu için konumlandırma referansı */
+        }
+        
+        /* YENİ EKLENDİ: Ana Sayfa Butonu */
+        .home-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s;
+            z-index: 10;
+        }
+
+        .home-btn:hover {
+            background-color: #5a6268;
+            transform: scale(1.05);
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .activity-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 2px solid transparent;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active {
+            color: var(--white-color);
+            transform: scale(1.05);
+        }
+
+        .activity-view { display: none; }
+        .activity-view.active { display: block; }
+        
+        .controls { text-align: center; margin-bottom: 20px; }
+        .instruction { text-align: center; margin: 15px auto; font-size: 1.1em; font-weight: bold; max-width: 90%; }
+        .feedback { margin-top: 15px; font-size: 1.2em; font-weight: bold; min-height: 30px; text-align: center; }
+        .correct { color: var(--correct-color); }
+        .incorrect { color: var(--incorrect-color); }
+
+        .btn-group { text-align: center; margin-top: 20px; }
+        .btn {
+            color: var(--white-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 700;
+            transition: all 0.3s;
+            margin: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .check-btn { background-color: var(--correct-color); }
+        .new-question-btn { background-color: #007bff; }
+
+        footer { text-align: center; margin-top: 30px; font-weight: 700; color: #adb5bd; }
+
+        /* --- TEMA 1: SAYI SIRALAMA (Mavi) --- */
+        #sort-activity { --theme-color: #007bff; --theme-bg: #f0f7ff; }
+        #sort-activity .nav-btn.active { background-color: var(--theme-color); border-color: var(--theme-color); }
+        #sort-activity .instruction { color: var(--theme-color); }
+        #sort-activity .number-list { font-weight: 800; color: #17a2b8; }
+        #sort-activity .sort-container { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px; margin-top: 15px; }
+        #sort-activity .sort-container input { width: 80px; height: 50px; border: 2px solid #ced4da; border-radius: 10px; text-align: center; font-size: 1.1em; font-weight: 700; }
+        #sort-activity .sort-container span { font-size: 2em; font-weight: 800; color: var(--theme-color); }
+
+        /* --- TEMA 2: KARŞILAŞTIRMA (Turuncu) --- */
+        #compare-activity { --theme-color: #fd7e14; --theme-bg: #fff8f0; }
+        #compare-activity .nav-btn.active { background-color: var(--theme-color); border-color: var(--theme-color); }
+        #compare-activity .instruction { color: var(--theme-color); }
+        #compare-activity .operator-choices { text-align: center; margin-bottom: 25px; }
+        #compare-activity .op-btn { font-size: 2em; font-weight: bold; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--theme-color); background-color: #fff; color: var(--theme-color); cursor: pointer; transition: all 0.2s; margin: 0 10px; }
+        #compare-activity .op-btn:hover { background-color: var(--theme-color); color: #fff; }
+        #compare-activity .comparison-container { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        #compare-activity .compare-number, #compare-activity .operator-box { font-size: 1.8em; font-weight: 800; padding: 15px; border-radius: 15px; background-color: var(--theme-bg); }
+        #compare-activity .operator-box { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; color: var(--theme-color); position: relative; overflow: hidden; }
+        #compare-activity .operator-box .op-fly { position: absolute; transition: transform 0.4s ease-out; }
+
+        /* --- TEMA 3: ARADAKİ SAYI (Mor) --- */
+        #between-activity { --theme-color: #6f42c1; --theme-bg: #f8f6fc; }
+        #between-activity .nav-btn.active { background-color: var(--theme-color); border-color: var(--theme-color); }
+        #between-activity .instruction { color: var(--theme-color); }
+        #between-activity .between-display { display: flex; align-items: center; justify-content: center; gap: 10px; margin-block: 25px; font-size: 1.5em; font-weight: 800; }
+        #between-activity .between-display .placeholder { border-bottom: 3px solid var(--theme-color); width: 80px; }
+        #between-activity .between-number { background-color: var(--theme-bg); padding: 10px; border-radius: 10px; }
+        #between-activity .input-group { margin-bottom: 15px; text-align: center; }
+        #between-activity .input-group label { font-weight: 700; margin-bottom: 8px; display: block; }
+        #between-activity .input-group input { width: 200px; padding: 10px; border-radius: 10px; border: 2px solid #ced4da; text-align: center; font-size: 1.1em; }
+
+        /* --- TEMA 4: EKSİK RAKAM (Yeşil) --- */
+        #missing-activity { --theme-color: #20c997; --theme-bg: #f0fff9; }
+        #missing-activity .nav-btn.active { background-color: var(--theme-color); border-color: var(--theme-color); }
+        #missing-activity .instruction { color: var(--theme-color); }
+        #missing-activity .missing-digit-container { display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.8em; font-weight: 800; margin-block: 25px; flex-wrap: wrap;}
+        #missing-activity .missing-digit-container .operator { color: var(--theme-color); }
+        #missing-activity .missing-digit-container .missing-placeholder { display: inline-block; width: 30px; height: 40px; border: 2px dashed var(--theme-color); border-radius: 5px; text-align: center; line-height: 40px; }
+        #missing-activity .answer-input { display: block; margin: 15px auto; width: 200px; padding: 10px; border-radius: 10px; border: 2px solid #ced4da; text-align: center; font-size: 1.2em; }
+        
+        /* YENİ EKLENDİ: Mobil Cihazlar için Ayar */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+                margin-top: 45px; /* Butonla başlığın arasına boşluk koy */
+            }
+            .home-btn {
+                top: 15px;
+                right: 15px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+    
+    <a href="https://bilgihazinesi.github.io/" class="home-btn" title="Ana Sayfaya Dön">🏠 Ana Sayfa</a>
+
+    <h1>Sayı Atölyesi</h1>
+    <nav class="activity-nav">
+        <button id="nav-sort" class="nav-btn active" onclick="showActivity('sort-activity')">Sayı Sırala</button>
+        <button id="nav-compare" class="nav-btn" onclick="showActivity('compare-activity')">Sayı Karşılaştır</button>
+        <button id="nav-between" class="nav-btn" onclick="showActivity('between-activity')">Aradaki Sayıyı Bul</button>
+        <button id="nav-missing" class="nav-btn" onclick="showActivity('missing-activity')">Eksik Rakamı Bul</button>
+    </nav>
+
+    <div id="sort-activity" class="activity-view active">
+        <p class="instruction" id="sort-instruction"></p>
+        <p class="instruction">Sıralanacak Sayılar: <span id="sort-number-list" class="number-list"></span></p>
+        <div class="sort-container" id="sort-container"></div>
+        <div class="feedback" id="sort-feedback"></div>
+        <div class="btn-group">
+            <button class="btn check-btn" onclick="checkSort()">Kontrol Et</button>
+            <button class="btn new-question-btn" onclick="startSortGame()">Yeni Soru</button>
+        </div>
+    </div>
+
+    <div id="compare-activity" class="activity-view">
+        <div class="instruction">Doğru sembole tıkla ve yerleşmesini izle!</div>
+        <div class="operator-choices">
+            <button class="op-btn" onclick="selectOperator(this, '>')">&gt;</button>
+            <button class="op-btn" onclick="selectOperator(this, '<')">&lt;</button>
+            <button class="op-btn" onclick="selectOperator(this, '=')">=</button>
+        </div>
+        <div class="comparison-container">
+            <div id="compare-num1" class="compare-number"></div>
+            <div id="operator-box" class="operator-box"></div>
+            <div id="compare-num2" class="compare-number"></div>
+        </div>
+        <div class="feedback" id="compare-feedback"></div>
+        <div class="btn-group">
+            <button class="btn check-btn" onclick="checkCompare()">Kontrol Et</button>
+            <button class="btn new-question-btn" onclick="startCompareGame()">Yeni Soru</button>
+        </div>
+    </div>
+    
+    <div id="between-activity" class="activity-view">
+        <div class="instruction">Boşluğa gelebilecek en büyük ve en küçük sayıları bul.</div>
+        <div class="between-display">
+            <span id="between-num1" class="between-number"></span>
+            <span>&lt;</span>
+            <span class="placeholder"></span>
+            <span>&lt;</span>
+            <span id="between-num2" class="between-number"></span>
+        </div>
+        <div class="input-group">
+            <label for="min-input">Bu aralığa yazılabilecek <b>en küçük</b> sayı:</label>
+            <input type="number" id="min-input">
+        </div>
+        <div class="input-group">
+            <label for="max-input">Bu aralığa yazılabilecek <b>en büyük</b> sayı:</label>
+            <input type="number" id="max-input">
+        </div>
+        <div class="feedback" id="between-feedback"></div>
+        <div class="btn-group">
+            <button class="btn check-btn" onclick="checkBetween()">Kontrol Et</button>
+            <button class="btn new-question-btn" onclick="startBetweenGame()">Yeni Soru</button>
+        </div>
+    </div>
+    
+    <div id="missing-activity" class="activity-view">
+        <div class="instruction">Karşılaştırmanın doğru olması için boşluğa gelebilecek rakamların <b>toplamı</b> kaçtır?</div>
+        <div class="missing-digit-container" id="missing-digit-container">
+            </div>
+        <input type="number" id="missing-answer-input" class="answer-input" placeholder="Toplamı buraya yaz">
+        <div class="feedback" id="missing-feedback"></div>
+        <div class="btn-group">
+            <button class="btn check-btn" onclick="checkMissingDigit()">Kontrol Et</button>
+            <button class="btn new-question-btn" onclick="startMissingDigitGame()">Yeni Soru</button>
+        </div>
+    </div>
+
+    <footer>Zeynal Öğretmen'e teşekkürler</footer>
+</div>
+
+<script>
+    // --- Javascript bölümünde bir değişiklik yoktur ---
+    const mainContainer = document.getElementById('main-container');
+
+    let sortState = { numbers: [], direction: 'asc', correctOrder: [] };
+    let compareState = { num1: 0, num2: 0, correctOp: '', selectedOp: null };
+    let betweenState = { num1: 0, num2: 0, correctMin: 0, correctMax: 0 };
+    let missingState = { correctSum: 0, possibleDigits: [] };
+
+    const formatNumber = (num) => num.toLocaleString('tr-TR');
+
+    function showActivity(activityId) {
+        document.querySelectorAll('.activity-view').forEach(v => v.classList.remove('active'));
+        document.getElementById(activityId).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`nav-${activityId.split('-')[0]}`).classList.add('active');
+        
+        const activityTheme = document.querySelector(`#${activityId}`).style;
+        mainContainer.style.backgroundColor = activityTheme.getPropertyValue('--theme-bg');
+
+        if (activityId === 'sort-activity') startSortGame();
+        else if (activityId === 'compare-activity') startCompareGame();
+        else if (activityId === 'between-activity') startBetweenGame();
+        else if (activityId === 'missing-activity') startMissingDigitGame();
+    }
+
+    function generateRandomNumber(digits) {
+        const min = Math.pow(10, digits - 1);
+        const max = Math.pow(10, digits) - 1;
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    
+    // --- 1. SAYI SIRALAMA ---
+    function startSortGame() {
+        const digits = 4;
+        sortState.numbers = Array.from({length: 5}, () => generateRandomNumber(digits));
+        sortState.direction = Math.random() < 0.5 ? 'asc' : 'desc';
+        const instruction = document.getElementById('sort-instruction');
+        const numberList = document.getElementById('sort-number-list');
+        const container = document.getElementById('sort-container');
+        instruction.textContent = sortState.direction === 'asc' ? 'Sayıları KÜÇÜKTEN BÜYÜĞE sırala!' : 'Sayıları BÜYÜKTEN KÜÇÜĞE sırala!';
+        numberList.textContent = sortState.numbers.map(formatNumber).join(', ');
+        sortState.correctOrder = sortState.direction === 'asc' ? [...sortState.numbers].sort((a,b)=>a-b) : [...sortState.numbers].sort((a,b)=>b-a);
+        container.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            container.appendChild(document.createElement('input')).type = 'number';
+            if (i < 4) container.appendChild(document.createElement('span')).textContent = sortState.direction === 'asc' ? ' < ' : ' > ';
+        }
+        document.getElementById('sort-feedback').textContent = '';
+    }
+
+    function checkSort() {
+        const inputs = Array.from(document.querySelectorAll('#sort-container input')).map(i => parseInt(i.value));
+        const feedback = document.getElementById('sort-feedback');
+        if (inputs.some(isNaN)) {
+            feedback.textContent = "Lütfen bütün kutuları doldur."; feedback.className = 'feedback incorrect'; return;
+        }
+        const isOrderCorrect = JSON.stringify(inputs) === JSON.stringify(sortState.correctOrder);
+        const isSetCorrect = JSON.stringify([...inputs].sort()) === JSON.stringify([...sortState.numbers].sort());
+        if (isOrderCorrect && isSetCorrect) {
+            feedback.textContent = "Harika! Tamamen doğru! 🎉"; feedback.className = 'feedback correct';
+        } else if (!isSetCorrect) {
+            feedback.textContent = "Sıralama doğru ama farklı sayılar kullandın!"; feedback.className = 'feedback incorrect';
+        } else {
+            feedback.textContent = "Sıralama yanlış, tekrar kontrol et. 🤔"; feedback.className = 'feedback incorrect';
+        }
+    }
+
+    // --- 2. SAYI KARŞILAŞTIRMA ---
+    function startCompareGame() {
+        const digits = 5;
+        compareState.num1 = generateRandomNumber(digits);
+        compareState.num2 = Math.random() < 0.2 ? compareState.num1 : generateRandomNumber(digits);
+        document.getElementById('compare-num1').textContent = formatNumber(compareState.num1);
+        document.getElementById('compare-num2').textContent = formatNumber(compareState.num2);
+        document.getElementById('operator-box').innerHTML = '';
+        document.getElementById('compare-feedback').textContent = '';
+        if (compareState.num1 > compareState.num2) compareState.correctOp = '>';
+        else if (compareState.num1 < compareState.num2) compareState.correctOp = '<';
+        else compareState.correctOp = '=';
+        compareState.selectedOp = null;
+    }
+    
+    function selectOperator(btn, op) {
+        compareState.selectedOp = op;
+        const box = document.getElementById('operator-box'); box.innerHTML = '';
+        const flyingOp = document.createElement('span'); flyingOp.textContent = op; flyingOp.classList.add('op-fly');
+        const btnRect = btn.getBoundingClientRect(); const boxRect = box.getBoundingClientRect();
+        const startX = btnRect.left - boxRect.left + (btnRect.width/2) - 15; const startY = btnRect.top - boxRect.top + (btnRect.height/2) - 25;
+        flyingOp.style.transform = `translate(${startX}px, ${startY}px) scale(1.5)`;
+        box.appendChild(flyingOp);
+        requestAnimationFrame(() => { flyingOp.style.transform = 'translate(0, 0) scale(1)'; });
+    }
+
+    function checkCompare() {
+        const feedback = document.getElementById('compare-feedback');
+        if (compareState.selectedOp === null) {
+            feedback.textContent = "Lütfen bir sembol seç."; feedback.className = 'feedback incorrect'; return;
+        }
+        if (compareState.selectedOp === compareState.correctOp) {
+            feedback.textContent = "Doğru seçim! Tebrikler! ✅"; feedback.className = 'feedback correct';
+        } else {
+            feedback.textContent = `Yanlış. Doğru cevap "${compareState.correctOp}" olmalıydı.`; feedback.className = 'feedback incorrect';
+        }
+    }
+
+    // --- 3. ARADAKİ SAYIYI BUL ---
+    function startBetweenGame() {
+        const digits = 4;
+        betweenState.num1 = generateRandomNumber(digits);
+        betweenState.num2 = betweenState.num1 + Math.floor(Math.random() * 20) + 5;
+        document.getElementById('between-num1').textContent = formatNumber(betweenState.num1);
+        document.getElementById('between-num2').textContent = formatNumber(betweenState.num2);
+        betweenState.correctMin = betweenState.num1 + 1;
+        betweenState.correctMax = betweenState.num2 - 1;
+        document.getElementById('min-input').value = '';
+        document.getElementById('max-input').value = '';
+        document.getElementById('between-feedback').textContent = '';
+    }
+
+    function checkBetween() {
+        const minVal = parseInt(document.getElementById('min-input').value);
+        const maxVal = parseInt(document.getElementById('max-input').value);
+        const feedback = document.getElementById('between-feedback');
+        if (isNaN(minVal) || isNaN(maxVal)) {
+            feedback.textContent = "Lütfen her iki kutuyu da doldur."; feedback.className = 'feedback incorrect'; return;
+        }
+        const isMinCorrect = minVal === betweenState.correctMin; const isMaxCorrect = maxVal === betweenState.correctMax;
+        if (isMinCorrect && isMaxCorrect) {
+            feedback.textContent = "İkisi de doğru, harikasın! 🥳"; feedback.className = 'feedback correct';
+        } else if (isMinCorrect) {
+            feedback.textContent = "En küçük sayı doğru, ama en büyüğü hatalı."; feedback.className = 'feedback incorrect';
+        } else if (isMaxCorrect) {
+            feedback.textContent = "En büyük sayı doğru, ama en küçüğü hatalı."; feedback.className = 'feedback incorrect';
+        } else {
+            feedback.textContent = "Maalesef ikisi de yanlış, tekrar dene!"; feedback.className = 'feedback incorrect';
+        }
+    }
+
+    // --- 4. EKSİK RAKAMI BUL ---
+    function startMissingDigitGame() {
+        const digits = 4;
+        missingState.possibleDigits = [];
+        let numStrWithPlaceholder = '', referenceNum = 0, operator = '';
+
+        while (missingState.possibleDigits.length < 2) { 
+            missingState.possibleDigits = [];
+            const num1 = generateRandomNumber(digits);
+            let num2 = num1 - Math.floor(Math.random() * Math.pow(10, digits-1));
+            if (num2 < 0) num2 = generateRandomNumber(digits);
+            
+            operator = Math.random() < 0.5 ? '>' : '<';
+            let numWithMissingStr = operator === '>' ? String(num1) : String(num2);
+            referenceNum = operator === '>' ? num2 : num1;
+
+            const missingIndex = Math.floor(Math.random() * digits);
+            
+            for (let d = 0; d < 10; d++) {
+                if (missingIndex === 0 && d === 0) continue;
+                let tempArr = numWithMissingStr.split('');
+                tempArr[missingIndex] = d;
+                const currentNum = parseInt(tempArr.join(''));
+                
+                const condition = operator === '>' ? (currentNum > referenceNum) : (currentNum < referenceNum);
+                if (condition) {
+                    missingState.possibleDigits.push(d);
+                }
+            }
+            
+            let parts = formatNumber(parseInt(numWithMissingStr)).split('');
+            let digitCount = 0;
+            let formattedMissingIndex = -1;
+            for(let i=0; i<parts.length; i++){
+                if(!isNaN(parseInt(parts[i]))){
+                    if(digitCount === missingIndex){
+                        formattedMissingIndex = i;
+                        break;
+                    }
+                    digitCount++;
+                }
+            }
+
+            parts[formattedMissingIndex] = `<span class="missing-placeholder">_</span>`;
+            numStrWithPlaceholder = parts.join('');
+        }
+
+        missingState.correctSum = missingState.possibleDigits.reduce((sum, digit) => sum + digit, 0);
+
+        const container = document.getElementById('missing-digit-container');
+        container.innerHTML = `<span>${numStrWithPlaceholder}</span> <span class="operator">${operator}</span> <span>${formatNumber(referenceNum)}</span>`;
+        document.getElementById('missing-answer-input').value = '';
+        document.getElementById('missing-feedback').textContent = '';
+    }
+
+    function checkMissingDigit() {
+        const userAnswer = parseInt(document.getElementById('missing-answer-input').value);
+        const feedback = document.getElementById('missing-feedback');
+        if (isNaN(userAnswer)) {
+            feedback.textContent = "Lütfen bir sayı gir."; feedback.className = 'feedback incorrect'; return;
+        }
+
+        if (userAnswer === missingState.correctSum) {
+            feedback.textContent = "Doğru cevap! Harikasın! 🧠"; feedback.className = 'feedback correct';
+        } else {
+            const possibleDigitsStr = missingState.possibleDigits.join(', ');
+            feedback.innerHTML = `Yanlış. Gelebilecek rakamlar (${possibleDigitsStr}) idi.<br>Doğru toplam ${missingState.correctSum} olmalıydı.`;
+            feedback.className = 'feedback incorrect';
+        }
+    }
+
+    // --- Sayfa Yüklenince Başlat ---
+    window.onload = () => {
+        showActivity('sort-activity');
+    };
+</script>
+
+</body>
+</html>
