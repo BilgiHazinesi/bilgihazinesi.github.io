@@ -11,9 +11,7 @@ async function loadLichessMenu() {
         const placeholder = document.getElementById('lichess-menu-placeholder');
         if (placeholder) {
             placeholder.innerHTML = menuHTML;
-        } else {
-            return; // Placeholder yoksa devam etme
-        }
+        } else { return; }
         
         const dataResponse = await fetch('sayfalar.json');
         if (!dataResponse.ok) throw new Error('sayfalar.json yüklenemedi');
@@ -58,14 +56,12 @@ function setupLichessMenuEventListeners() {
     openBtn.addEventListener('click', openMenu);
     closeBtn.addEventListener('click', closeMenu);
 
-    // Dışarıya (overlay'e) tıklanınca kapat
     overlay.addEventListener('click', (event) => {
         if (event.target === overlay) {
             closeMenu();
         }
     });
 
-    // ESC tuşuna basılınca kapat
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && overlay.classList.contains('open')) {
             closeMenu();
