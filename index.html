@@ -6,13 +6,15 @@
     <title>Bilgi Hazinesi - Eğitimin Keşif Dünyası</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:wght@400;500;700&display=swap" rel="stylesheet">
-
+    
     <link rel="stylesheet" href="stiller/stil.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 
-    <div id="lichess-menu-placeholder"></div>
+    <a href="https://bilgihazinesi.github.io/" class="home-button" title="Anasayfa'ya Dön"><i class="bi bi-house-heart-fill"></i></a>
+    <div id="menu-container"></div>
+    <div id="float-menu-placeholder"></div>
     
     <div class="page-wrapper">
         <header class="header">
@@ -35,11 +37,11 @@
             <p>&copy; 2025 Bilgi Hazinesi Ekibi - Tüm Hakları Saklıdır.</p>
         </footer>
     </div>
+    
+    <script src="bilesenler/menu.js"></script>
+    <script src="bilesenler/float-menu.js"></script>
 
-    <script src="bilesenler/lichess-menu.js"></script>
     <script>
-        // Bu bölümdeki JavaScript kodunda bir değişiklik yapmanıza gerek yok.
-        // Aynen kalabilir.
         document.addEventListener('DOMContentLoaded', () => {
             fetch('sayfalar.json')
                 .then(response => response.json())
@@ -71,7 +73,7 @@
                 desktopNavUl.innerHTML += desktopNavHtml;
 
                 let cardHtml = `
-                    <div class="card ${kategori.id}" data-target-id="${kategori.id}">
+                    <div class="card">
                         <div class="icon"><i class="bi ${kategori.ikon}"></i></div>
                         <h2>${kategori.isim}</h2>
                         <p>${kategori.aciklama}</p>
@@ -88,23 +90,20 @@
         }
 
         function setupCardClickEvents() {
-            const cards = document.querySelectorAll('.card');
-            cards.forEach(card => {
+            document.querySelectorAll('.card').forEach(card => {
                 card.addEventListener('click', function(event) {
                     if (event.target.tagName === 'A') { return; }
-                    const cardSubLinks = this.querySelector('.card-sub-links');
-                    if (!cardSubLinks) return;
+                    const subLinks = this.querySelector('.card-sub-links');
+                    if (!subLinks) return;
                     
-                    const isAlreadyOpen = cardSubLinks.style.maxHeight;
-
+                    const isOpen = subLinks.style.maxHeight && subLinks.style.maxHeight !== "0px";
+                    
                     document.querySelectorAll('.card-sub-links').forEach(menu => {
                         menu.style.maxHeight = null;
-                        menu.classList.remove('show');
                     });
                     
-                    if (!isAlreadyOpen) {
-                        cardSubLinks.classList.add('show');
-                        cardSubLinks.style.maxHeight = cardSubLinks.scrollHeight + "px";
+                    if (!isOpen) {
+                        subLinks.style.maxHeight = subLinks.scrollHeight + "px";
                     }
                 });
             });
