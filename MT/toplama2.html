@@ -23,8 +23,11 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes carry-over-glow {
-            from { box-shadow: 0 0 20px 10px #ffeb3b; }
-            to { box-shadow: none; }
+            from { box-shadow: 0 0 20px 10px #ffeb3b; transform: scale(1.1); }
+            to { box-shadow: none; transform: scale(1); }
+        }
+        @keyframes fade-out-shrink {
+            to { opacity: 0; transform: scale(0); }
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,6 +49,7 @@
         .controls select, .controls button, .visual-controls input { font-family: 'Kalam', cursive; font-size: 1.1rem; padding: 8px 12px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--box-bg); color: var(--text-primary); }
         .controls button, .visual-controls button { font-family: 'Cinzel Decorative', cursive; font-weight: 700; background-color: var(--accent-color); color: var(--papyrus-bg); cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .controls button:hover, .visual-controls button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px var(--shadow-color); }
+        .controls button:disabled, .visual-controls button:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
 
         #problems-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
         .problem { background-color: var(--box-bg); padding: 20px; border-radius: 8px; border: 2px solid var(--border-color); box-shadow: 0 3px 6px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: flex-end; animation: fadeIn 0.6s ease-out forwards; position: relative; padding-top: 40px; }
@@ -72,7 +76,7 @@
         #visualization-area { display: flex; flex-direction: row-reverse; justify-content: center; gap: 10px; padding: 20px; background: #a58860; border: 2px solid #6d5537; border-radius: 10px; min-height: 400px; overflow-x: auto;}
         .place-value-col { display: flex; flex-direction: column; align-items: center; width: 120px; flex-shrink: 0; }
         .place-value-col h4 { font-family: 'Cinzel Decorative', cursive; color: var(--box-bg); text-shadow: 1px 1px #5a452d; }
-        .blocks-container { margin-top: 10px; width: 100%; min-height: 350px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; padding: 5px; background: rgba(0,0,0,0.1); border-radius: 5px; }
+        .blocks-container { position: relative; margin-top: 10px; width: 100%; min-height: 350px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; padding: 5px; background: rgba(0,0,0,0.1); border-radius: 5px; }
         .block { transition: transform 0.5s ease, opacity 0.5s ease, background-color 0.5s ease; }
         .block.ones { width: 15px; height: 15px; background-color: #f4d03f; }
         .block.tens { width: 15px; height: 34px; background-color: #4caf50; }
@@ -81,7 +85,8 @@
         .block.ten_thousands { width: 15px; height: 34px; background-color: #ff9800; }
         .block.hundred_thousands { width: 34px; height: 34px; background-color: #9c27b0; }
         .block.num2 { opacity: 0.6; transform: translateY(50px); }
-        .block.bundling { background-color: #ffeb3b !important; transform: scale(1.1); }
+        .block.bundling { background-color: #ffeb3b !important; transform: scale(1.1); box-shadow: 0 0 10px #fff; z-index: 10; }
+        .block.fading-out { animation: fade-out-shrink 0.5s forwards; }
         .block.carried-over { animation: carry-over-glow 1s ease-out; }
         #visual-sum { text-align: center; margin-top: 20px; font-size: 1.8rem; font-weight: bold; }
     </style>
@@ -190,7 +195,7 @@
             const visualizationArea = document.getElementById('visualization-area');
             const visualSumSpan = document.getElementById('visual-sum');
             const placeValueNames = ['Birler', 'Onlar', 'Yüzler', 'Binler', 'On Binler', 'Yüz Binler', 'Milyonlar'];
-            const blockClasses = ['ones', 'tens', 'hundreds', 'thousands', 'ten_thousands', 'hundred_thousands', 'ones'];
+            const blockClasses = ['ones', 'tens', 'hundreds', 'thousands', 'ten_thousands', 'hundred_thousands', 'ones']; 
             const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
             async function visualizeAddition() {
@@ -217,11 +222,11 @@
 
                 String(num1).split('').reverse().forEach((digit, i) => {
                     const container = visualizationArea.querySelector(`[data-place='${i}']`);
-                    if(container) for (let j = 0; j < parseInt(digit); j++) { const block = document.createElement('div'); block.className = `block ${blockClasses[i]}`; container.firstChild.appendChild(block); }
+                    if(container) for (let j = 0; j < parseInt(digit); j++) { const block = document.createElement('div'); block.className = `block ${blockClasses[i] || 'ones'}`; container.firstChild.appendChild(block); }
                 });
                 String(num2).split('').reverse().forEach((digit, i) => {
                     const container = visualizationArea.querySelector(`[data-place='${i}']`);
-                    if(container) for (let j = 0; j < parseInt(digit); j++) { const block = document.createElement('div'); block.className = `block ${blockClasses[i]} num2`; container.firstChild.appendChild(block); }
+                    if(container) for (let j = 0; j < parseInt(digit); j++) { const block = document.createElement('div'); block.className = `block ${blockClasses[i] || 'ones'} num2`; container.firstChild.appendChild(block); }
                 });
 
                 await delay(200);
@@ -232,23 +237,27 @@
                     const container = visualizationArea.querySelector(`[data-place='${i}'] .blocks-container`);
                     if(!container) continue;
                     
-                    // DÜZELTME: 'if' yerine 'while' döngüsü kullanıldı
+                    // DÜZELTİLMİŞ MANTIK: 'if' yerine 'while' döngüsü
                     while (container.children.length >= 10) {
                         await delay(800);
-                        let blocks = Array.from(container.children);
+                        const blocks = Array.from(container.children);
                         const blocksToCarry = blocks.slice(0, 10);
                         blocksToCarry.forEach(b => b.classList.add('bundling'));
                         await delay(800);
-                        blocksToCarry.forEach(b => { b.style.transform = 'scale(0)'; b.style.opacity = '0'; });
-                        await delay(500);
-                        blocksToCarry.forEach(b => b.remove());
-
+                        blocksToCarry.forEach(b => b.classList.add('fading-out'));
+                        
                         const nextCol = visualizationArea.querySelector(`[data-place='${i + 1}'] .blocks-container`);
                         if(nextCol) { 
-                            const newBlock = document.createElement('div'); 
-                            newBlock.className = `block ${blockClasses[i+1]} carried-over`; 
-                            nextCol.appendChild(newBlock); 
+                            const newBlock = document.createElement('div');
+                            newBlock.style.opacity = '0';
+                            newBlock.className = `block ${blockClasses[i+1] || 'ones'} carried-over`; 
+                            nextCol.appendChild(newBlock);
+                            await delay(100);
+                            newBlock.style.opacity = '1';
                         }
+                        
+                        await delay(500);
+                        blocksToCarry.forEach(b => b.remove());
                     }
                 }
                 visualizeBtn.disabled = false;
