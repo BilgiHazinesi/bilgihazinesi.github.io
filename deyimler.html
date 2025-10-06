@@ -149,6 +149,56 @@
 
 
         /* Hafıza Oyunu Stilleri */
+        #oyun-modu-secimi {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .mod-btn {
+             font-family: 'Cinzel Decorative', cursive;
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 2px solid var(--accent-color);
+            background-color: var(--papyrus-bg);
+            color: var(--accent-color);
+            border-radius: 8px;
+        }
+        .mod-btn:hover {
+            background-color: var(--accent-color);
+            color: var(--papyrus-bg);
+        }
+
+        #skor-tablosu {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .skor-karti {
+            text-align: center;
+            padding: 10px 20px;
+            border: 3px solid transparent;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            width: 150px;
+        }
+        .skor-karti.aktif-tur {
+            border-color: var(--accent-color);
+            transform: scale(1.1);
+            background-color: #fffaf0;
+        }
+        .skor-karti h3 {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+        .skor-karti p {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
         .hafiza-oyunu-alani {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -208,7 +258,6 @@
             transform: rotateY(180deg);
         }
         
-        /* YENİ EKLENEN STİLLER */
         .kart-arka.deyim-metni {
             font-size: clamp(1rem, 2.5vw, 1.3rem);
             font-weight: 700;
@@ -218,7 +267,6 @@
         .kart-arka.anlam-metni {
             font-size: clamp(0.7rem, 2vw, 1rem);
         }
-        /* YENİ EKLENEN STİLLER SONU */
 
         .controls {
             text-align: center;
@@ -278,12 +326,26 @@
             </div>
 
             <div id="hafiza-oyunu" class="view">
-                 <div class="game-info">
-                    Kartları çevirerek deyimleri ve anlamlarını eşleştir. Bol şans!
+                 <div id="oyun-modu-secimi">
+                    <button class="mod-btn" id="tek-oyuncu-btn">Tek Başına Oyna</button>
+                    <button class="mod-btn" id="iki-oyuncu-btn">İki Takım İle Oyna</button>
                 </div>
-                <div class="hafiza-oyunu-alani"></div>
-                 <div class="controls">
-                    <button class="restart-btn" onclick="initMemoryGame()">Yeni Oyun</button>
+
+                <div id="skor-tablosu" style="display: none;">
+                    <div id="takim-bilgin" class="skor-karti">
+                        <h3>Bilgin</h3>
+                        <p id="skor-bilgin">0</p>
+                    </div>
+                    <div id="takim-gezgin" class="skor-karti">
+                        <h3>Gezgin</h3>
+                        <p id="skor-gezgin">0</p>
+                    </div>
+                </div>
+
+                <div class="hafiza-oyunu-alani" style="display: none;"></div>
+
+                 <div class="controls" style="display: none;">
+                    <button class="restart-btn" id="yeni-oyun-btn">Yeni Oyun</button>
                 </div>
             </div>
         </main>
@@ -291,106 +353,7 @@
 
     <script>
         const deyimler = [
-            { deyim: 'Abayı yakmak', anlam: 'Aşık olmak, birisini çok sevmek' },
-            { deyim: 'Küplere binmek', anlam: 'Çok kızmak, çok öfkelenmek' },
-            { deyim: 'Etekleri zil çalmak', anlam: 'Çok sevinmek' },
-            { deyim: 'Ağzı açık kalmak', anlam: 'Çok şaşırmak' },
-            { deyim: 'A\'dan Z\'ye', anlam: 'Baştan aşağı, tamamen, bütünüyle her şey' },
-            { deyim: 'Ağırdan almak', anlam: 'Bir işi geciktirmek, yavaşlatmak' },
-            { deyim: 'Ağız değiştirmek', anlam: 'Önceki söylediğinden farklı şeyler söylemek' },
-            { deyim: 'Etekleri tutuşmak', anlam: 'Bir konuda çok telaşlanmak, panik olmak' },
-            { deyim: 'Ağzında bakla ıslanmamak', anlam: 'Gizli kalması gerekenleri başkasına söylemek' },
-            { deyim: 'Ağzı sulanmak', anlam: 'Yemek yemeye çok istekli olmak' },
-            { deyim: 'Göz atmak', anlam: 'İncelemek, araştırmak' },
-            { deyim: 'Başına çorap örmek', anlam: 'Birisine ondan habersiz kötülük yapmak' },
-            { deyim: 'Çam devirmek', anlam: 'Karşısındakini üzecek şekilde konuşmak' },
-            { deyim: 'Burnundan getirmek', anlam: 'Yaptığına pişman etmek' },
-            { deyim: 'Dili çözülmek', anlam: 'Susan birisinin bir anda konuşmaya başlamsı' },
-            { deyim: 'Çivi kesmek', anlam: 'Çok üşümek' },
-            { deyim: 'Kafa tutmak', anlam: 'Bir kimseye boyun eğmemek, karşı gelmek' },
-            { deyim: 'Ağzı kulaklarına varmak', anlam: 'Çok sevinçli olmak, çok gülmek' },
-            { deyim: 'Ağzından baklayı çıkarmak', anlam: 'Gizlediği şeyleri söylemeye başlamak' },
-            { deyim: 'Beti benzi atmak', anlam: 'Ansızın yüzü solmak, yüzünün rengi değişmek' },
-            { deyim: 'Dizini dövmek', anlam: 'Yapılan bir şeyden çok pişmanlık duymak' },
-            { deyim: 'İpe un sermek', anlam: 'Bir işi yapmamak için bahaneler üretmek' },
-            { deyim: 'Arka çıkmak', anlam: 'Birisini korumak için onu desteklemek' },
-            { deyim: 'Boş gezenin boş kalfası', anlam: 'İşsiz güçsüz dolaşan kişi, hiçbir iş yapmayan' },
-            { deyim: 'Saçını süpürge etmek', anlam: 'Birisi için her fedakarlığı yapmak' },
-            { deyim: 'Yarım ağız konuşmak', anlam: 'İsteksiz konuşmak, sözleri eksik söylemek' },
-            { deyim: 'Pireyi deve yapmak', anlam: 'Bir işteki küçük meseleleri çok büyütmek' },
-            { deyim: 'Şifayı kapmak', anlam: 'Hastalanmak' },
-            { deyim: 'Ateş püskürmek', anlam: 'Çok öfkelenmek, aşırı sinirlenmek' },
-            { deyim: 'Canına tak etmek', anlam: 'Bir konuda dayanılmaz bir halde olmak' },
-            { deyim: 'Tükürdüğünü yalamak', anlam: 'Yapmayacağını söylediği şeyi yapmak' },
-            { deyim: 'El etek çekmek', anlam: 'Eskiden ilgilendiği konuyla şimdi ilgilenmemek' },
-            { deyim: 'Zurnanın zırt dediği yer', anlam: 'Bir işin en önemli kısmı' },
-            { deyim: 'Yaka silkmek', anlam: 'Bir işten veya bir kişiden bıkmak, usanmak' },
-            { deyim: 'Eceline susamak', anlam: 'Çok tehlikeli işler yapmak' },
-            { deyim: 'Taş yürekli', anlam: 'Merhametli olmayan, katı yürekli, zalim' },
-            { deyim: 'Etle tırnak olmak', anlam: 'Birbirine çok güçlü bağlarla bağlanmak' },
-            { deyim: 'Leyleği havada görmek', anlam: 'Çok sık seyahat yapmak, sürekli gezmek' },
-            { deyim: 'Çantada keklik', anlam: 'Bir şeyi emeksiz kolayca elde etmek' },
-            { deyim: 'Kulağına küpe olmak', anlam: 'Başına gelen bir durumdan ders çıkarmak' },
-            { deyim: 'Kafa yormak', anlam: 'Bir konuda çok düşünmek, konuyu incelemek' },
-            { deyim: 'Ağzı var dili yok', anlam: 'Çok az konuşan, sessiz biri' },
-            { deyim: 'Kedi gibi dört ayak üstüne düşmek', anlam: 'Tehlikeli durumdan zarar görmeden kurtulmak' },
-            { deyim: 'Başının etini yemek', anlam: 'Bir konuda bıktırana kadar konuşmak' },
-            { deyim: 'Ok yayadan çıktı', anlam: 'Bir işin geri dönülemeyecek şekilde yapılması' },
-            { deyim: 'Zıvanadan çıkmak', anlam: 'Çok sinirlenmek, aklını kaybetmek' },
-            { deyim: 'Kanı kaynamak', anlam: 'Ani bir sevgiyle içi coşmak' },
-            { deyim: 'Fink atmak', anlam: 'Bir işte istediği gibi davranmak, eğlenmek' },
-            { deyim: 'Damarına basmak', anlam: 'Bir kişinin en hassas olduğu konuyu söylemek' },
-            { deyim: 'Saman alevi gibi parlamak', anlam: 'Bir anda sinirlenen ardından sakinleşen' },
-            { deyim: 'Üç maymunu oynamak', anlam: 'Bir olayı görmemek, duymamak, konuşmamak' },
-            { deyim: 'Aklını peynir ekmekle yemek', anlam: 'Akılsızca ve düşüncesizce davranmak' },
-            { deyim: 'Yağmurdan kaçarken doluya tutulmak', anlam: 'Güç bir durumdan kurtulmak isterken daha güç bir duruma düşmek' },
-            { deyim: 'Özrü kabahatinden büyük', anlam: 'Özür dilerken daha büyük bir suç işlemek' },
-            { deyim: 'Karadeniz\'de gemileri batmak', anlam: 'Çok düşünceli ve durgun bir halde bulunmak' },
-            { deyim: 'Kül yutmamak', anlam: 'Kolay kandırılmamak' },
-            { deyim: 'Kabak başına patlamak', anlam: 'Bir olayda bir kişinin zarar görmesi' },
-            { deyim: 'Kabak tadı vermek', anlam: 'Bir işten usanmak, bıkmak, sıkılmak' },
-            { deyim: 'Başından kaynar su dökülmek', anlam: 'Bir olay karşısında birdenbire çok üzülmek' },
-            { deyim: 'Turnayı gözünden vurmak', anlam: 'Uzun süre bekleyip istediğine kavuşmak' },
-            { deyim: 'Defterden silmek', anlam: 'Bir insanı arkadaşlarının arasından çıkarmak' },
-            { deyim: 'Hızır gibi yetişmek', anlam: 'En zor anda yardım etmek' },
-            { deyim: 'Bindiği dalı kesmek', anlam: 'Kendisi için faydalı olan şeyleri yok etmek' },
-            { deyim: 'Kara kara düşünmek', anlam: 'Çok üzüntülü düşüncelere dalmak' },
-            { deyim: 'Tereyağından kıl çeker gibi', anlam: 'Bir işi çok kolay olacak şekilde yapmak' },
-            { deyim: 'Suya götürüp susuz getirmek', anlam: 'Bir işi yaparken çevresindekileri kurnazca kandırmak' },
-            { deyim: 'Pabucu dama atılmak', anlam: 'Gözden düşmek, eskisi gibi ilgi görmemek' },
-            { deyim: 'Kulak kabartmak', anlam: 'Bir konuşmayı dikkatli şekilde dinlemek' },
-            { deyim: 'Kabuğuna çekilmek', anlam: 'Kimseyle görüşmemek, kendi halinde olmak' },
-            { deyim: 'Kabak çiçeği gibi açılmak', anlam: 'Utangaçlığı bitmek ve daha özgür konuşmak' },
-            { deyim: 'Muradına etmek', anlam: 'Çok istediği bir şeye kavuşmak' },
-            { deyim: 'Sinek avlamak', anlam: 'Bir işyerinde müşterilerin olmaması' },
-            { deyim: 'Tüyleri ürpermek', anlam: 'Bir olay karşısında korku ve heyecan duymak' },
-            { deyim: 'Burnunu dikine gitmek', anlam: 'Kimseyi dinlemeyip kendi bildiğini yapmak' },
-            { deyim: 'Buluttan nem kapmak', anlam: 'En küçük şeylerden alınganlık yapmak' },
-            { deyim: 'Burnundan kıl aldırmamak', anlam: 'Kendisine söz söyletmemek' },
-            { deyim: 'Eski hamam eski tas', anlam: 'Eskisi gibi olmak, hiçbir şeyin değişmemesi' },
-            { deyim: 'Göğsü kabarmak', anlam: 'Bir olayla ilgili gurur duymak' },
-            { deyim: 'Dut yemiş bülbüle dönmek', anlam: 'Neşesini ve konuşkanlığını kaybetmek' },
-            { deyim: 'İçine kurt düşmek', anlam: 'Bir şey hakkında kuşkulanma, tereddüt etme' },
-            { deyim: 'Hapı yutmak', anlam: 'Çok kötü bir duruma düşmek' },
-            { deyim: 'Kolu kanadı kırılmak', anlam: 'Hiçbir şey yapamayacak kadar güçsüz kalmak' },
-            { deyim: 'Burnundan solumak', anlam: 'Çok öfkelenmek, sinirlenmek' },
-            { deyim: 'Damdan düşer gibi', anlam: 'Aniden birdenbire bir işe başlamak' },
-            { deyim: 'Faka basmak', anlam: 'Tuzağa düşmek, aldatılmak, kandırılmak' },
-            { deyim: 'Dolap çevirmek', anlam: 'Bir işte hile yapmak, kandırmak' },
-            { deyim: 'Foyası meydana çıkmak', anlam: 'Bir olaydaki kötü niyetin ortaya çıkması' },
-            { deyim: 'Gözdağı vermek', anlam: 'Bir ceza ile korkutmak, tehdit etmek' },
-            { deyim: 'İçini dökmek', anlam: 'İnsanlara içindeki duyguları söylemek' },
-            { deyim: 'Elini eteğini çekmek', anlam: 'Bir konu ile ilgilenmemek' },
-            { deyim: 'Burnunda tütmek', anlam: 'Bir kimseyi yada bir şeyi çok özlemek' },
-            { deyim: 'Göz boyamak', anlam: 'Bir iş için insanların övgüsünü almak' },
-            { deyim: 'Göz kulak olmak', anlam: 'Bir kimseyi korumak onun işlerinde yardım etmek' },
-            { deyim: 'Gözü kalmak', anlam: 'Elde edemediği bir şeyi sürekli istemek' },
-            { deyim: 'Aklına koymak', anlam: 'Bir şeyi yapabilmek için çok istekli olmak' },
-            { deyim: 'Adam etmek', anlam: 'Bir insanı eğitmek, onu terbiye etmek' },
-            { deyim: 'Adı gibi bilmek', anlam: 'Bir bilginin doğruluğundan çok emin olmak' },
-            { deyim: 'Kulak ardı etmek', anlam: 'Bir konu ile ilgili uyarıları dikkate almamak' },
-            { deyim: 'Başı sıkışmak', anlam: 'Bir olay karşısında zor durumda kalmak' },
-            { deyim: 'Dili dolaşmak', anlam: 'Bir olayı anlatırken şaşırmak' }
+            { deyim: 'Abayı yakmak', anlam: 'Aşık olmak, birisini çok sevmek' }, { deyim: 'Küplere binmek', anlam: 'Çok kızmak, çok öfkelenmek' }, { deyim: 'Etekleri zil çalmak', anlam: 'Çok sevinmek' }, { deyim: 'Ağzı açık kalmak', anlam: 'Çok şaşırmak' }, { deyim: 'A\'dan Z\'ye', anlam: 'Baştan aşağı, tamamen, bütünüyle her şey' }, { deyim: 'Ağırdan almak', anlam: 'Bir işi geciktirmek, yavaşlatmak' }, { deyim: 'Ağız değiştirmek', anlam: 'Önceki söylediğinden farklı şeyler söylemek' }, { deyim: 'Etekleri tutuşmak', anlam: 'Bir konuda çok telaşlanmak, panik olmak' }, { deyim: 'Ağzında bakla ıslanmamak', anlam: 'Gizli kalması gerekenleri başkasına söylemek' }, { deyim: 'Ağzı sulanmak', anlam: 'Yemek yemeye çok istekli olmak' }, { deyim: 'Göz atmak', anlam: 'İncelemek, araştırmak' }, { deyim: 'Başına çorap örmek', anlam: 'Birisine ondan habersiz kötülük yapmak' }, { deyim: 'Çam devirmek', anlam: 'Karşısındakini üzecek şekilde konuşmak' }, { deyim: 'Burnundan getirmek', anlam: 'Yaptığına pişman etmek' }, { deyim: 'Dili çözülmek', anlam: 'Susan birisinin bir anda konuşmaya başlamsı' }, { deyim: 'Çivi kesmek', anlam: 'Çok üşümek' }, { deyim: 'Kafa tutmak', anlam: 'Bir kimseye boyun eğmemek, karşı gelmek' }, { deyim: 'Ağzı kulaklarına varmak', anlam: 'Çok sevinçli olmak, çok gülmek' }, { deyim: 'Ağzından baklayı çıkarmak', anlam: 'Gizlediği şeyleri söylemeye başlamak' }, { deyim: 'Beti benzi atmak', anlam: 'Ansızın yüzü solmak, yüzünün rengi değişmek' }, { deyim: 'Dizini dövmek', anlam: 'Yapılan bir şeyden çok pişmanlık duymak' }, { deyim: 'İpe un sermek', anlam: 'Bir işi yapmamak için bahaneler üretmek' }, { deyim: 'Arka çıkmak', anlam: 'Birisini korumak için onu desteklemek' }, { deyim: 'Boş gezenin boş kalfası', anlam: 'İşsiz güçsüz dolaşan kişi, hiçbir iş yapmayan' }, { deyim: 'Saçını süpürge etmek', anlam: 'Birisi için her fedakarlığı yapmak' }, { deyim: 'Yarım ağız konuşmak', anlam: 'İsteksiz konuşmak, sözleri eksik söylemek' }, { deyim: 'Pireyi deve yapmak', anlam: 'Bir işteki küçük meseleleri çok büyütmek' }, { deyim: 'Şifayı kapmak', anlam: 'Hastalanmak' }, { deyim: 'Ateş püskürmek', anlam: 'Çok öfkelenmek, aşırı sinirlenmek' }, { deyim: 'Canına tak etmek', anlam: 'Bir konuda dayanılmaz bir halde olmak' }, { deyim: 'Tükürdüğünü yalamak', anlam: 'Yapmayacağını söylediği şeyi yapmak' }, { deyim: 'El etek çekmek', anlam: 'Eskiden ilgilendiği konuyla şimdi ilgilenmemek' }, { deyim: 'Zurnanın zırt dediği yer', anlam: 'Bir işin en önemli kısmı' }, { deyim: 'Yaka silkmek', anlam: 'Bir işten veya bir kişiden bıkmak, usanmak' }, { deyim: 'Eceline susamak', anlam: 'Çok tehlikeli işler yapmak' }, { deyim: 'Taş yürekli', anlam: 'Merhametli olmayan, katı yürekli, zalim' }, { deyim: 'Etle tırnak olmak', anlam: 'Birbirine çok güçlü bağlarla bağlanmak' }, { deyim: 'Leyleği havada görmek', anlam: 'Çok sık seyahat yapmak, sürekli gezmek' }, { deyim: 'Çantada keklik', anlam: 'Bir şeyi emeksiz kolayca elde etmek' }, { deyim: 'Kulağına küpe olmak', anlam: 'Başına gelen bir durumdan ders çıkarmak' }, { deyim: 'Kafa yormak', anlam: 'Bir konuda çok düşünmek, konuyu incelemek' }, { deyim: 'Ağzı var dili yok', anlam: 'Çok az konuşan, sessiz biri' }, { deyim: 'Kedi gibi dört ayak üstüne düşmek', anlam: 'Tehlikeli durumdan zarar görmeden kurtulmak' }, { deyim: 'Başının etini yemek', anlam: 'Bir konuda bıktırana kadar konuşmak' }, { deyim: 'Ok yayadan çıktı', anlam: 'Bir işin geri dönülemeyecek şekilde yapılması' }, { deyim: 'Zıvanadan çıkmak', anlam: 'Çok sinirlenmek, aklını kaybetmek' }, { deyim: 'Kanı kaynamak', anlam: 'Ani bir sevgiyle içi coşmak' }, { deyim: 'Fink atmak', anlam: 'Bir işte istediği gibi davranmak, eğlenmek' }, { deyim: 'Damarına basmak', anlam: 'Bir kişinin en hassas olduğu konuyu söylemek' }, { deyim: 'Saman alevi gibi parlamak', anlam: 'Bir anda sinirlenen ardından sakinleşen' }, { deyim: 'Üç maymunu oynamak', anlam: 'Bir olayı görmemek, duymamak, konuşmamak' }, { deyim: 'Aklını peynir ekmekle yemek', anlam: 'Akılsızca ve düşüncesizce davranmak' }, { deyim: 'Yağmurdan kaçarken doluya tutulmak', anlam: 'Güç bir durumdan kurtulmak isterken daha güç bir duruma düşmek' }, { deyim: 'Özrü kabahatinden büyük', anlam: 'Özür dilerken daha büyük bir suç işlemek' }, { deyim: 'Karadeniz\'de gemileri batmak', anlam: 'Çok düşünceli ve durgun bir halde bulunmak' }, { deyim: 'Kül yutmamak', anlam: 'Kolay kandırılmamak' }, { deyim: 'Kabak başına patlamak', anlam: 'Bir olayda bir kişinin zarar görmesi' }, { deyim: 'Kabak tadı vermek', anlam: 'Bir işten usanmak, bıkmak, sıkılmak' }, { deyim: 'Başından kaynar su dökülmek', anlam: 'Bir olay karşısında birdenbire çok üzülmek' }, { deyim: 'Turnayı gözünden vurmak', anlam: 'Uzun süre bekleyip istediğine kavuşmak' }, { deyim: 'Defterden silmek', anlam: 'Bir insanı arkadaşlarının arasından çıkarmak' }, { deyim: 'Hızır gibi yetişmek', anlam: 'En zor anda yardım etmek' }, { deyim: 'Bindiği dalı kesmek', anlam: 'Kendisi için faydalı olan şeyleri yok etmek' }, { deyim: 'Kara kara düşünmek', anlam: 'Çok üzüntülü düşüncelere dalmak' }, { deyim: 'Tereyağından kıl çeker gibi', anlam: 'Bir işi çok kolay olacak şekilde yapmak' }, { deyim: 'Suya götürüp susuz getirmek', anlam: 'Bir işi yaparken çevresindekileri kurnazca kandırmak' }, { deyim: 'Pabucu dama atılmak', anlam: 'Gözden düşmek, eskisi gibi ilgi görmemek' }, { deyim: 'Kulak kabartmak', anlam: 'Bir konuşmayı dikkatli şekilde dinlemek' }, { deyim: 'Kabuğuna çekilmek', anlam: 'Kimseyle görüşmemek, kendi halinde olmak' }, { deyim: 'Kabak çiçeği gibi açılmak', anlam: 'Utangaçlığı bitmek ve daha özgür konuşmak' }, { deyim: 'Muradına etmek', anlam: 'Çok istediği bir şeye kavuşmak' }, { deyim: 'Sinek avlamak', anlam: 'Bir işyerinde müşterilerin olmaması' }, { deyim: 'Tüyleri ürpermek', anlam: 'Bir olay karşısında korku ve heyecan duymak' }, { deyim: 'Burnunu dikine gitmek', anlam: 'Kimseyi dinlemeyip kendi bildiğini yapmak' }, { deyim: 'Buluttan nem kapmak', anlam: 'En küçük şeylerden alınganlık yapmak' }, { deyim: 'Burnundan kıl aldırmamak', anlam: 'Kendisine söz söyletmemek' }, { deyim: 'Eski hamam eski tas', anlam: 'Eskisi gibi olmak, hiçbir şeyin değişmemesi' }, { deyim: 'Göğsü kabarmak', anlam: 'Bir olayla ilgili gurur duymak' }, { deyim: 'Dut yemiş bülbüle dönmek', anlam: 'Neşesini ve konuşkanlığını kaybetmek' }, { deyim: 'İçine kurt düşmek', anlam: 'Bir şey hakkında kuşkulanma, tereddüt etme' }, { deyim: 'Hapı yutmak', anlam: 'Çok kötü bir duruma düşmek' }, { deyim: 'Kolu kanadı kırılmak', anlam: 'Hiçbir şey yapamayacak kadar güçsüz kalmak' }, { deyim: 'Burnundan solumak', anlam: 'Çok öfkelenmek, sinirlenmek' }, { deyim: 'Damdan düşer gibi', anlam: 'Aniden birdenbire bir işe başlamak' }, { deyim: 'Faka basmak', anlam: 'Tuzağa düşmek, aldatılmak, kandırılmak' }, { deyim: 'Dolap çevirmek', anlam: 'Bir işte hile yapmak, kandırmak' }, { deyim: 'Foyası meydana çıkmak', anlam: 'Bir olaydaki kötü niyetin ortaya çıkması' }, { deyim: 'Gözdağı vermek', anlam: 'Bir ceza ile korkutmak, tehdit etmek' }, { deyim: 'İçini dökmek', anlam: 'İnsanlara içindeki duyguları söylemek' }, { deyim: 'Elini eteğini çekmek', anlam: 'Bir konu ile ilgilenmemek' }, { deyim: 'Burnunda tütmek', anlam: 'Bir kimseyi yada bir şeyi çok özlemek' }, { deyim: 'Göz boyamak', anlam: 'Bir iş için insanların övgüsünü almak' }, { deyim: 'Göz kulak olmak', anlam: 'Bir kimseyi korumak onun işlerinde yardım etmek' }, { deyim: 'Gözü kalmak', anlam: 'Elde edemediği bir şeyi sürekli istemek' }, { deyim: 'Aklına koymak', anlam: 'Bir şeyi yapabilmek için çok istekli olmak' }, { deyim: 'Adam etmek', anlam: 'Bir insanı eğitmek, onu terbiye etmek' }, { deyim: 'Adı gibi bilmek', anlam: 'Bir bilginin doğruluğundan çok emin olmak' }, { deyim: 'Kulak ardı etmek', anlam: 'Bir konu ile ilgili uyarıları dikkate almamak' }, { deyim: 'Başı sıkışmak', anlam: 'Bir olay karşısında zor durumda kalmak' }, { deyim: 'Dili dolaşmak', anlam: 'Bir olayı anlatırken şaşırmak' }
         ];
 
         // --- Genel Fonksiyonlar ---
@@ -442,11 +405,47 @@
 
         // --- Hafıza Oyunu Mantığı ---
         const memoryGameArea = document.querySelector('.hafiza-oyunu-alani');
+        const modeSelection = document.getElementById('oyun-modu-secimi');
+        const scoreboard = document.getElementById('skor-tablosu');
+        const gameControls = document.querySelector('.controls');
+        const skorBilginEl = document.getElementById('skor-bilgin');
+        const skorGezginEl = document.getElementById('skor-gezgin');
+        const takimBilginEl = document.getElementById('takim-bilgin');
+        const takimGezginEl = document.getElementById('takim-gezgin');
+        
         let flippedCards = [];
         let lockBoard = false;
         let matchedPairs = 0;
+        let gameMode = null; // 'tek' veya 'iki'
+        let currentPlayer = null; // 'bilgin' veya 'gezgin'
+        let scores = { bilgin: 0, gezgin: 0 };
 
-        function initMemoryGame() {
+
+        function setupNewGameScreen() {
+            modeSelection.style.display = 'flex';
+            scoreboard.style.display = 'none';
+            memoryGameArea.style.display = 'none';
+            gameControls.style.display = 'none';
+            memoryGameArea.innerHTML = '';
+        }
+
+        function startGame(mode) {
+            gameMode = mode;
+            modeSelection.style.display = 'none';
+            memoryGameArea.style.display = 'grid';
+            gameControls.style.display = 'block';
+
+            if (gameMode === 'iki') {
+                scores = { bilgin: 0, gezgin: 0 };
+                currentPlayer = 'bilgin';
+                updateScoreboard();
+                scoreboard.style.display = 'flex';
+            }
+
+            buildBoard();
+        }
+
+        function buildBoard() {
             memoryGameArea.innerHTML = '';
             flippedCards = [];
             lockBoard = false;
@@ -466,10 +465,7 @@
                 const card = document.createElement('div');
                 card.classList.add('kart');
                 card.dataset.id = cardData.id;
-                
-                // KART TÜRÜNE GÖRE CLASS EKLEME (DEĞİŞİKLİK BURADA)
                 const textTypeClass = cardData.type === 'deyim' ? 'deyim-metni' : 'anlam-metni';
-
                 card.innerHTML = `
                     <div class="kart-icerik">
                         <div class="kart-on">?</div>
@@ -479,6 +475,24 @@
                 card.addEventListener('click', flipCard);
                 memoryGameArea.appendChild(card);
             });
+        }
+        
+        function updateScoreboard() {
+            skorBilginEl.textContent = scores.bilgin;
+            skorGezginEl.textContent = scores.gezgin;
+            if (currentPlayer === 'bilgin') {
+                takimBilginEl.classList.add('aktif-tur');
+                takimGezginEl.classList.remove('aktif-tur');
+            } else {
+                takimGezginEl.classList.add('aktif-tur');
+                takimBilginEl.classList.remove('aktif-tur');
+            }
+        }
+
+        function switchTurn() {
+            if (gameMode !== 'iki') return;
+            currentPlayer = currentPlayer === 'bilgin' ? 'gezgin' : 'bilgin';
+            updateScoreboard();
         }
 
         function flipCard() {
@@ -508,16 +522,30 @@
                 card.classList.add('eslesti');
                 card.removeEventListener('click', flipCard);
             });
+            
+            if (gameMode === 'iki') {
+                scores[currentPlayer]++;
+                updateScoreboard();
+            }
+            
             matchedPairs++;
             resetBoard();
+            
             if (matchedPairs === 12) {
-                 setTimeout(() => alert("Tebrikler! Oyunu tamamladın!"), 500);
+                let winnerMessage = "Tebrikler! Oyunu tamamladın!";
+                if(gameMode === 'iki') {
+                    if(scores.bilgin > scores.gezgin) winnerMessage = "Oyun bitti! Kazanan: Bilgin!";
+                    else if (scores.gezgin > scores.bilgin) winnerMessage = "Oyun bitti! Kazanan: Gezgin!";
+                    else winnerMessage = "Oyun bitti! Berabere!";
+                }
+                 setTimeout(() => alert(winnerMessage), 500);
             }
         }
 
         function unflipCards() {
             setTimeout(() => {
                 flippedCards.forEach(card => card.classList.remove('cevrildi'));
+                if (gameMode === 'iki') switchTurn();
                 resetBoard();
             }, 1200);
         }
@@ -529,8 +557,11 @@
         // --- Sayfa Yüklendiğinde Başlat ---
         document.addEventListener('DOMContentLoaded', () => {
             initLearningSet();
-            initMemoryGame();
-            showView('ogrenme-seti'); // İlk olarak öğrenme setini göster
+            setupNewGameScreen();
+
+            document.getElementById('tek-oyuncu-btn').addEventListener('click', () => startGame('tek'));
+            document.getElementById('iki-oyuncu-btn').addEventListener('click', () => startGame('iki'));
+            document.getElementById('yeni-oyun-btn').addEventListener('click', setupNewGameScreen);
         });
 
     </script>
