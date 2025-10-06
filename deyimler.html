@@ -34,6 +34,28 @@
             overflow-x: hidden;
         }
 
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--accent-color);
+            color: var(--papyrus-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-decoration: none;
+            box-shadow: 0 4px 10px var(--shadow-color);
+            z-index: 1000;
+            transition: transform 0.2s ease;
+        }
+        .home-button:hover {
+            transform: scale(1.1);
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -201,9 +223,11 @@
 
         .hafiza-oyunu-alani {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             perspective: 1000px;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .kart {
@@ -259,24 +283,27 @@
         }
         
         .kart-arka.deyim-metni {
-            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            font-size: clamp(0.8rem, 2.5vw, 1.1rem);
             font-weight: 700;
             color: var(--accent-color);
         }
 
         .kart-arka.anlam-metni {
-            font-size: clamp(0.7rem, 2vw, 1rem);
+            font-size: clamp(0.7rem, 2vw, 0.9rem);
         }
 
         .controls {
             text-align: center;
             margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
         }
 
         .restart-btn {
             font-family: 'Cinzel Decorative', cursive;
             padding: 12px 25px;
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
             border: 2px solid var(--accent-color);
@@ -292,13 +319,14 @@
         }
 
         /* Responsive Tasarım */
-        @media (max-width: 768px) {
+        @media screen and (min-aspect-ratio: 3/2) {
             .hafiza-oyunu-alani {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(6, 1fr);
             }
         }
-        @media (max-width: 480px) {
-             .hafiza-oyunu-alani {
+
+        @media screen and (max-aspect-ratio: 4/5) {
+            .hafiza-oyunu-alani {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
@@ -306,6 +334,8 @@
     </style>
 </head>
 <body>
+
+    <a href="https://bilgihazinesi.github.io/" class="home-button" title="Ana Sayfaya Dön">&#127968;</a>
 
     <div class="container">
         <header>
@@ -345,7 +375,8 @@
                 <div class="hafiza-oyunu-alani" style="display: none;"></div>
 
                  <div class="controls" style="display: none;">
-                    <button class="restart-btn" id="yeni-oyun-btn">Yeni Oyun</button>
+                    <button class="restart-btn" id="yeniden-baslat-btn">Yeniden Başlat</button>
+                    <button class="restart-btn" id="mod-secim-btn">Mod Seçimine Dön</button>
                 </div>
             </div>
         </main>
@@ -416,10 +447,10 @@
         let flippedCards = [];
         let lockBoard = false;
         let matchedPairs = 0;
-        let gameMode = null; // 'tek' veya 'iki'
-        let currentPlayer = null; // 'bilgin' veya 'gezgin'
+        let gameMode = null;
+        let currentPlayer = null;
         let scores = { bilgin: 0, gezgin: 0 };
-
+        let currentGameDeyimler = [];
 
         function setupNewGameScreen() {
             modeSelection.style.display = 'flex';
@@ -433,7 +464,7 @@
             gameMode = mode;
             modeSelection.style.display = 'none';
             memoryGameArea.style.display = 'grid';
-            gameControls.style.display = 'block';
+            gameControls.style.display = 'flex';
 
             if (gameMode === 'iki') {
                 scores = { bilgin: 0, gezgin: 0 };
@@ -441,7 +472,8 @@
                 updateScoreboard();
                 scoreboard.style.display = 'flex';
             }
-
+            
+            currentGameDeyimler = shuffleArray([...deyimler]).slice(0, 6);
             buildBoard();
         }
 
@@ -450,11 +482,15 @@
             flippedCards = [];
             lockBoard = false;
             matchedPairs = 0;
-
-            const selectedDeyimler = shuffleArray([...deyimler]).slice(0, 12);
-            const gameCards = [];
             
-            selectedDeyimler.forEach((item, index) => {
+            if (gameMode === 'iki') {
+                 scores = { bilgin: 0, gezgin: 0 };
+                 currentPlayer = 'bilgin';
+                 updateScoreboard();
+            }
+
+            const gameCards = [];
+            currentGameDeyimler.forEach((item, index) => {
                 gameCards.push({ type: 'deyim', text: item.deyim, id: index });
                 gameCards.push({ type: 'anlam', text: item.anlam, id: index });
             });
@@ -531,7 +567,7 @@
             matchedPairs++;
             resetBoard();
             
-            if (matchedPairs === 12) {
+            if (matchedPairs === 6) {
                 let winnerMessage = "Tebrikler! Oyunu tamamladın!";
                 if(gameMode === 'iki') {
                     if(scores.bilgin > scores.gezgin) winnerMessage = "Oyun bitti! Kazanan: Bilgin!";
@@ -561,7 +597,8 @@
 
             document.getElementById('tek-oyuncu-btn').addEventListener('click', () => startGame('tek'));
             document.getElementById('iki-oyuncu-btn').addEventListener('click', () => startGame('iki'));
-            document.getElementById('yeni-oyun-btn').addEventListener('click', setupNewGameScreen);
+            document.getElementById('yeniden-baslat-btn').addEventListener('click', buildBoard);
+            document.getElementById('mod-secim-btn').addEventListener('click', setupNewGameScreen);
         });
 
     </script>
