@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toplama Alıştırmaları</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --papyrus-bg: #fdf5e6;
+            --text-primary: #5a452d;
+            --text-secondary: #7a654d;
+            --accent-color: #8B4513;
+            --border-color: #c8b79b;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --box-bg: #fffaf0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Kalam', cursive;
+            background-color: var(--papyrus-bg);
+            color: var(--text-primary);
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            background-attachment: fixed;
+            padding: 15px;
+        }
+
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--accent-color);
+            color: var(--papyrus-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-decoration: none;
+            box-shadow: 0 4px 10px var(--shadow-color);
+            z-index: 1000;
+            transition: transform 0.2s ease;
+        }
+        .home-button:hover { transform: scale(1.1); }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(253, 245, 230, 0.85);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            padding: clamp(15px, 3vw, 30px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px double var(--border-color);
+            padding-bottom: 20px;
+        }
+        header h1 {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            color: var(--accent-color);
+            text-shadow: 1px 1px 2px var(--shadow-color);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .control-group { display: flex; align-items: center; gap: 10px; }
+        .controls label { font-size: 1.2rem; font-weight: bold; }
+        .controls select, .controls button {
+            font-family: 'Kalam', cursive;
+            font-size: 1.1rem;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 2px solid var(--border-color);
+            background-color: var(--box-bg);
+            color: var(--text-primary);
+        }
+        .controls button {
+            font-family: 'Cinzel Decorative', cursive;
+            font-weight: 700;
+            background-color: var(--accent-color);
+            color: var(--papyrus-bg);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+
+        #problems-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .problem {
+            background-color: var(--box-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .numbers-wrapper {
+            width: 100%;
+            border-bottom: 2px solid var(--text-primary);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .number-row {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            position: relative;
+        }
+        
+        .operator {
+            font-size: 2rem;
+            font-weight: bold;
+            position: absolute;
+            left: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding-right: 10px;
+        }
+
+        .digit-box {
+            width: 45px;
+            height: 45px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            margin: 2px;
+            background-color: #fff;
+            border-radius: 4px;
+            user-select: none;
+        }
+        
+        .answer-row {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .answer-row .digit-box {
+            background-color: #e8f5e9;
+            font-weight: bold;
+            color: var(--accent-color);
+            padding: 0;
+            text-align: center;
+        }
+        .answer-row .digit-box:focus {
+            outline: 2px solid var(--accent-color);
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="https://bilgihazinesi.github.io/" class="home-button" title="Ana Sayfaya Dön">&#127968;</a>
+
+    <div class="container">
+        <header>
+            <h1>Toplama Alıştırmaları</h1>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="digit-count">Basamak Sayısı:</label>
+                <select id="digit-count">
+                    <option value="3">3 Basamaklı</option>
+                    <option value="4" selected>4 Basamaklı</option>
+                    <option value="5">5 Basamaklı</option>
+                    <option value="6">6 Basamaklı</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="number-count">Sayı Adedi:</label>
+                <select id="number-count">
+                    <option value="2" selected>2 Sayı</option>
+                    <option value="3">3 Sayı</option>
+                    <option value="4">4 Sayı</option>
+                </select>
+            </div>
+            <button id="generate-btn">Yeni Alıştırmalar Oluştur</button>
+        </div>
+
+        <div id="problems-container"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const digitCountSelect = document.getElementById('digit-count');
+            const numberCountSelect = document.getElementById('number-count');
+            const generateBtn = document.getElementById('generate-btn');
+            const problemsContainer = document.getElementById('problems-container');
+
+            function getRandomNumber(digits) {
+                const min = Math.pow(10, digits - 1);
+                const max = Math.pow(10, digits) - 1;
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            function generateProblems() {
+                const digitCount = parseInt(digitCountSelect.value);
+                const numberCount = parseInt(numberCountSelect.value);
+
+                problemsContainer.innerHTML = ''; // Clear previous problems
+
+                for (let i = 0; i < 4; i++) {
+                    const problemDiv = document.createElement('div');
+                    problemDiv.className = 'problem';
+
+                    const numbersWrapper = document.createElement('div');
+                    numbersWrapper.className = 'numbers-wrapper';
+
+                    for (let j = 0; j < numberCount; j++) {
+                        const number = getRandomNumber(digitCount);
+                        const numberRow = document.createElement('div');
+                        numberRow.className = 'number-row';
+
+                        if (j === numberCount - 1) { // Add '+' sign to the last number
+                            const operator = document.createElement('span');
+                            operator.className = 'operator';
+                            operator.textContent = '+';
+                            numberRow.appendChild(operator);
+                        }
+                        
+                        String(number).split('').forEach(digit => {
+                            const digitBox = document.createElement('div');
+                            digitBox.className = 'digit-box';
+                            digitBox.textContent = digit;
+                            numberRow.appendChild(digitBox);
+                        });
+                        numbersWrapper.appendChild(numberRow);
+                    }
+                    
+                    const answerRow = document.createElement('div');
+                    answerRow.className = 'answer-row';
+                    
+                    // Create answer boxes, one extra for potential carry-over
+                    const answerLength = digitCount + 1;
+                    for (let k = 0; k < answerLength; k++) {
+                        const answerBox = document.createElement('input');
+                        answerBox.type = 'text';
+                        answerBox.className = 'digit-box answer';
+                        answerBox.maxLength = 1;
+                        
+                        // Auto-focus to next input
+                        answerBox.addEventListener('input', (e) => {
+                            if (e.target.value && e.target.nextElementSibling) {
+                                e.target.nextElementSibling.focus();
+                            }
+                        });
+
+                        // Move focus to previous input on backspace
+                        answerBox.addEventListener('keydown', (e) => {
+                             if (e.key === 'Backspace' && !e.target.value && e.target.previousElementSibling) {
+                                e.target.previousElementSibling.focus();
+                            }
+                        });
+
+                        answerRow.appendChild(answerBox);
+                    }
+
+                    problemDiv.appendChild(numbersWrapper);
+                    problemDiv.appendChild(answerRow);
+                    problemsContainer.appendChild(problemDiv);
+                }
+            }
+
+            generateBtn.addEventListener('click', generateProblems);
+
+            // Initial generation on page load
+            generateProblems();
+        });
+    </script>
+
+</body>
+</html>
