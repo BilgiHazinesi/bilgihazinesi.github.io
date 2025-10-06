@@ -1,1 +1,585 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deyimler Macerası - İnteraktif Öğrenme</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --papyrus-bg: #fdf5e6;
+            --text-primary: #5a452d;
+            --text-secondary: #7a654d;
+            --accent-color: #8B4513;
+            --correct-color: #2e7d32;
+            --incorrect-color: #c62828;
+            --border-color: #c8b79b;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Kalam', cursive;
+            background-color: var(--papyrus-bg);
+            color: var(--text-primary);
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            background-attachment: fixed;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(253, 245, 230, 0.8);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 3px double var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        header h1 {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: clamp(2rem, 5vw, 3rem);
+            color: var(--accent-color);
+            text-shadow: 1px 1px 2px var(--shadow-color);
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .tab-button {
+            font-family: 'Cinzel Decorative', cursive;
+            padding: 10px 20px;
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            font-weight: 700;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            background-color: transparent;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button:hover, .tab-button.active {
+            background-color: var(--accent-color);
+            color: var(--papyrus-bg);
+            box-shadow: 0 2px 8px var(--shadow-color);
+            transform: translateY(-2px);
+        }
+        
+        .view {
+            display: none;
+        }
+        
+        .view.active {
+            display: block;
+        }
+
+        .game-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Eşleştirme Oyunu Stilleri */
+        #eslestirme-oyunu .content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .lists-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .deyim-list, .anlam-list {
+            width: 48%;
+            list-style: none;
+        }
+        
+        .item {
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #fffaf0;
+        }
+
+        .item:hover {
+            border-color: var(--accent-color);
+            transform: scale(1.02);
+        }
+
+        .item.selected {
+            background-color: #ffe0b2;
+            border-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .item.correct {
+            background-color: #c8e6c9;
+            border-color: var(--correct-color);
+            color: var(--correct-color);
+            cursor: default;
+            opacity: 0.7;
+        }
+        
+        #feedback {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        /* Hafıza Oyunu Stilleri */
+        .hafiza-oyunu-alani {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            perspective: 1000px;
+        }
+
+        .kart {
+            background-color: transparent;
+            aspect-ratio: 1 / 1;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .kart-icerik {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            border-radius: 10px;
+        }
+        
+        .kart.cevrildi .kart-icerik {
+            transform: rotateY(180deg);
+        }
+        
+        .kart.eslesti .kart-icerik {
+            transform: rotateY(180deg);
+            box-shadow: 0 0 15px var(--correct-color);
+        }
+
+        .kart-on, .kart-arka {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 5px;
+            font-size: clamp(0.7rem, 2vw, 1rem);
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+        }
+
+        .kart-on {
+            background: var(--accent-color);
+            color: var(--papyrus-bg);
+            font-size: 2rem;
+        }
+
+        .kart-arka {
+            background-color: #fffaf0;
+            color: var(--text-primary);
+            transform: rotateY(180deg);
+        }
+        
+        .controls {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .restart-btn {
+            font-family: 'Cinzel Decorative', cursive;
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 2px solid var(--accent-color);
+            background-color: var(--accent-color);
+            color: var(--papyrus-bg);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        
+        .restart-btn:hover {
+            background-color: #6d3a14;
+        }
+
+        /* Responsive Tasarım */
+        @media (max-width: 768px) {
+            .lists-container {
+                flex-direction: column;
+            }
+            .deyim-list, .anlam-list {
+                width: 100%;
+            }
+            .hafiza-oyunu-alani {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+             .hafiza-oyunu-alani {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Deyimler Macerası</h1>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="showView('eslestirme-oyunu')">Deyim Eşleştirme</button>
+            <button class="tab-button" onclick="showView('hafiza-oyunu')">Hafıza Oyunu</button>
+        </div>
+
+        <main>
+            <div id="eslestirme-oyunu" class="view active">
+                <div class="game-info">
+                    Soldaki deyimin üzerine tıkla, sonra sağdaki doğru anlamını bul ve eşleştir!
+                </div>
+                <div class="content">
+                    <div id="feedback"></div>
+                    <div class="lists-container">
+                        <ul class="deyim-list"></ul>
+                        <ul class="anlam-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="hafiza-oyunu" class="view">
+                 <div class="game-info">
+                    Kartları çevirerek deyimleri ve anlamlarını eşleştir. Bol şans!
+                </div>
+                <div class="hafiza-oyunu-alani"></div>
+                 <div class="controls">
+                    <button class="restart-btn" onclick="initMemoryGame()">Yeni Oyun</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const deyimler = [
+            { deyim: 'Abayı yakmak', anlam: 'Aşık olmak, birisini çok sevmek' },
+            { deyim: 'Küplere binmek', anlam: 'Çok kızmak, çok öfkelenmek' },
+            { deyim: 'Etekleri zil çalmak', anlam: 'Çok sevinmek' },
+            { deyim: 'Ağzı açık kalmak', anlam: 'Çok şaşırmak' },
+            { deyim: 'A\'dan Z\'ye', anlam: 'Baştan aşağı, tamamen, bütünüyle her şey' },
+            { deyim: 'Ağırdan almak', anlam: 'Bir işi geciktirmek, yavaşlatmak' },
+            { deyim: 'Ağız değiştirmek', anlam: 'Önceki söylediğinden farklı şeyler söylemek' },
+            { deyim: 'Etekleri tutuşmak', anlam: 'Bir konuda çok telaşlanmak, panik olmak' },
+            { deyim: 'Ağzında bakla ıslanmamak', anlam: 'Gizli kalması gerekenleri başkasına söylemek' },
+            { deyim: 'Ağzı sulanmak', anlam: 'Yemek yemeye çok istekli olmak' },
+            { deyim: 'Göz atmak', anlam: 'İncelemek, araştırmak' },
+            { deyim: 'Başına çorap örmek', anlam: 'Birisine ondan habersiz kötülük yapmak' },
+            { deyim: 'Çam devirmek', anlam: 'Karşısındakini üzecek şekilde konuşmak' },
+            { deyim: 'Burnundan getirmek', anlam: 'Yaptığına pişman etmek' },
+            { deyim: 'Dili çözülmek', anlam: 'Susan birisinin bir anda konuşmaya başlamsı' },
+            { deyim: 'Çivi kesmek', anlam: 'Çok üşümek' },
+            { deyim: 'Kafa tutmak', anlam: 'Bir kimseye boyun eğmemek, karşı gelmek' },
+            { deyim: 'Ağzı kulaklarına varmak', anlam: 'Çok sevinçli olmak, çok gülmek' },
+            { deyim: 'Ağzından baklayı çıkarmak', anlam: 'Gizlediği şeyleri söylemeye başlamak' },
+            { deyim: 'Beti benzi atmak', anlam: 'Ansızın yüzü solmak, yüzünün rengi değişmek' },
+            { deyim: 'Dizini dövmek', anlam: 'Yapılan bir şeyden çok pişmanlık duymak' },
+            { deyim: 'İpe un sermek', anlam: 'Bir işi yapmamak için bahaneler üretmek' },
+            { deyim: 'Arka çıkmak', anlam: 'Birisini korumak için onu desteklemek' },
+            { deyim: 'Boş gezenin boş kalfası', anlam: 'İşsiz güçsüz dolaşan kişi, hiçbir iş yapmayan' },
+            { deyim: 'Saçını süpürge etmek', anlam: 'Birisi için her fedakarlığı yapmak' },
+            { deyim: 'Yarım ağız konuşmak', anlam: 'İsteksiz konuşmak, sözleri eksik söylemek' },
+            { deyim: 'Pireyi deve yapmak', anlam: 'Bir işteki küçük meseleleri çok büyütmek' },
+            { deyim: 'Şifayı kapmak', anlam: 'Hastalanmak' },
+            { deyim: 'Ateş püskürmek', anlam: 'Çok öfkelenmek, aşırı sinirlenmek' },
+            { deyim: 'Canına tak etmek', anlam: 'Bir konuda dayanılmaz bir halde olmak' },
+            { deyim: 'Tükürdüğünü yalamak', anlam: 'Yapmayacağını söylediği şeyi yapmak' },
+            { deyim: 'El etek çekmek', anlam: 'Eskiden ilgilendiği konuyla şimdi ilgilenmemek' },
+            { deyim: 'Zurnanın zırt dediği yer', anlam: 'Bir işin en önemli kısmı' },
+            { deyim: 'Yaka silkmek', anlam: 'Bir işten veya bir kişiden bıkmak, usanmak' },
+            { deyim: 'Eceline susamak', anlam: 'Çok tehlikeli işler yapmak' },
+            { deyim: 'Taş yürekli', anlam: 'Merhametli olmayan, katı yürekli, zalim' },
+            { deyim: 'Etle tırnak olmak', anlam: 'Birbirine çok güçlü bağlarla bağlanmak' },
+            { deyim: 'Leyleği havada görmek', anlam: 'Çok sık seyahat yapmak, sürekli gezmek' },
+            { deyim: 'Çantada keklik', anlam: 'Bir şeyi emeksiz kolayca elde etmek' },
+            { deyim: 'Kulağına küpe olmak', anlam: 'Başına gelen bir durumdan ders çıkarmak' },
+            { deyim: 'Kafa yormak', anlam: 'Bir konuda çok düşünmek, konuyu incelemek' },
+            { deyim: 'Ağzı var dili yok', anlam: 'Çok az konuşan, sessiz biri' },
+            { deyim: 'Kedi gibi dört ayak üstüne düşmek', anlam: 'Tehlikeli durumdan zarar görmeden kurtulmak' },
+            { deyim: 'Başının etini yemek', anlam: 'Bir konuda bıktırana kadar konuşmak' },
+            { deyim: 'Ok yayadan çıktı', anlam: 'Bir işin geri dönülemeyecek şekilde yapılması' },
+            { deyim: 'Zıvanadan çıkmak', anlam: 'Çok sinirlenmek, aklını kaybetmek' },
+            { deyim: 'Kanı kaynamak', anlam: 'Ani bir sevgiyle içi coşmak' },
+            { deyim: 'Fink atmak', anlam: 'Bir işte istediği gibi davranmak, eğlenmek' },
+            { deyim: 'Damarına basmak', anlam: 'Bir kişinin en hassas olduğu konuyu söylemek' },
+            { deyim: 'Saman alevi gibi parlamak', anlam: 'Bir anda sinirlenen ardından sakinleşen' },
+            { deyim: 'Üç maymunu oynamak', anlam: 'Bir olayı görmemek, duymamak, konuşmamak' },
+            { deyim: 'Aklını peynir ekmekle yemek', anlam: 'Akılsızca ve düşüncesizce davranmak' },
+            { deyim: 'Yağmurdan kaçarken doluya tutulmak', anlam: 'Güç bir durumdan kurtulmak isterken daha güç bir duruma düşmek' },
+            { deyim: 'Özrü kabahatinden büyük', anlam: 'Özür dilerken daha büyük bir suç işlemek' },
+            { deyim: 'Karadeniz\'de gemileri batmak', anlam: 'Çok düşünceli ve durgun bir halde bulunmak' },
+            { deyim: 'Kül yutmamak', anlam: 'Kolay kandırılmamak' },
+            { deyim: 'Kabak başına patlamak', anlam: 'Bir olayda bir kişinin zarar görmesi' },
+            { deyim: 'Kabak tadı vermek', anlam: 'Bir işten usanmak, bıkmak, sıkılmak' },
+            { deyim: 'Başından kaynar su dökülmek', anlam: 'Bir olay karşısında birdenbire çok üzülmek' },
+            { deyim: 'Turnayı gözünden vurmak', anlam: 'Uzun süre bekleyip istediğine kavuşmak' },
+            { deyim: 'Defterden silmek', anlam: 'Bir insanı arkadaşlarının arasından çıkarmak' },
+            { deyim: 'Hızır gibi yetişmek', anlam: 'En zor anda yardım etmek' },
+            { deyim: 'Bindiği dalı kesmek', anlam: 'Kendisi için faydalı olan şeyleri yok etmek' },
+            { deyim: 'Kara kara düşünmek', anlam: 'Çok üzüntülü düşüncelere dalmak' },
+            { deyim: 'Tereyağından kıl çeker gibi', anlam: 'Bir işi çok kolay olacak şekilde yapmak' },
+            { deyim: 'Suya götürüp susuz getirmek', anlam: 'Bir işi yaparken çevresindekileri kurnazca kandırmak' },
+            { deyim: 'Pabucu dama atılmak', anlam: 'Gözden düşmek, eskisi gibi ilgi görmemek' },
+            { deyim: 'Kulak kabartmak', anlam: 'Bir konuşmayı dikkatli şekilde dinlemek' },
+            { deyim: 'Kabuğuna çekilmek', anlam: 'Kimseyle görüşmemek, kendi halinde olmak' },
+            { deyim: 'Kabak çiçeği gibi açılmak', anlam: 'Utangaçlığı bitmek ve daha özgür konuşmak' },
+            { deyim: 'Muradına etmek', anlam: 'Çok istediği bir şeye kavuşmak' },
+            { deyim: 'Sinek avlamak', anlam: 'Bir işyerinde müşterilerin olmaması' },
+            { deyim: 'Tüyleri ürpermek', anlam: 'Bir olay karşısında korku ve heyecan duymak' },
+            { deyim: 'Burnunu dikine gitmek', anlam: 'Kimseyi dinlemeyip kendi bildiğini yapmak' },
+            { deyim: 'Buluttan nem kapmak', anlam: 'En küçük şeylerden alınganlık yapmak' },
+            { deyim: 'Burnundan kıl aldırmamak', anlam: 'Kendisine söz söyletmemek' },
+            { deyim: 'Eski hamam eski tas', anlam: 'Eskisi gibi olmak, hiçbir şeyin değişmemesi' },
+            { deyim: 'Göğsü kabarmak', anlam: 'Bir olayla ilgili gurur duymak' },
+            { deyim: 'Dut yemiş bülbüle dönmek', anlam: 'Neşesini ve konuşkanlığını kaybetmek' },
+            { deyim: 'İçine kurt düşmek', anlam: 'Bir şey hakkında kuşkulanma, tereddüt etme' },
+            { deyim: 'Hapı yutmak', anlam: 'Çok kötü bir duruma düşmek' },
+            { deyim: 'Kolu kanadı kırılmak', anlam: 'Hiçbir şey yapamayacak kadar güçsüz kalmak' },
+            { deyim: 'Burnundan solumak', anlam: 'Çok öfkelenmek, sinirlenmek' },
+            { deyim: 'Damdan düşer gibi', anlam: 'Aniden birdenbire bir işe başlamak' },
+            { deyim: 'Faka basmak', anlam: 'Tuzağa düşmek, aldatılmak, kandırılmak' },
+            { deyim: 'Dolap çevirmek', anlam: 'Bir işte hile yapmak, kandırmak' },
+            { deyim: 'Foyası meydana çıkmak', anlam: 'Bir olaydaki kötü niyetin ortaya çıkması' },
+            { deyim: 'Gözdağı vermek', anlam: 'Bir ceza ile korkutmak, tehdit etmek' },
+            { deyim: 'İçini dökmek', anlam: 'İnsanlara içindeki duyguları söylemek' },
+            { deyim: 'Elini eteğini çekmek', anlam: 'Bir konu ile ilgilenmemek' },
+            { deyim: 'Burnunda tütmek', anlam: 'Bir kimseyi yada bir şeyi çok özlemek' },
+            { deyim: 'Göz boyamak', anlam: 'Bir iş için insanların övgüsünü almak' },
+            { deyim: 'Göz kulak olmak', anlam: 'Bir kimseyi korumak onun işlerinde yardım etmek' },
+            { deyim: 'Gözü kalmak', anlam: 'Elde edemediği bir şeyi sürekli istemek' },
+            { deyim: 'Aklına koymak', anlam: 'Bir şeyi yapabilmek için çok istekli olmak' },
+            { deyim: 'Adam etmek', anlam: 'Bir insanı eğitmek, onu terbiye etmek' },
+            { deyim: 'Adı gibi bilmek', anlam: 'Bir bilginin doğruluğundan çok emin olmak' },
+            { deyim: 'Kulak ardı etmek', anlam: 'Bir konu ile ilgili uyarıları dikkate almamak' },
+            { deyim: 'Başı sıkışmak', anlam: 'Bir olay karşısında zor durumda kalmak' },
+            { deyim: 'Dili dolaşmak', anlam: 'Bir olayı anlatırken şaşırmak' }
+        ];
+
+        // --- Genel Fonksiyonlar ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('onclick').includes(viewId));
+            });
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+
+        // --- Eşleştirme Oyunu Mantığı ---
+        const deyimList = document.querySelector('.deyim-list');
+        const anlamList = document.querySelector('.anlam-list');
+        const feedbackEl = document.getElementById('feedback');
+        let selectedDeyim = null;
+        let correctMatches = 0;
+
+        function initMatchingGame() {
+            deyimList.innerHTML = '';
+            anlamList.innerHTML = '';
+            selectedDeyim = null;
+            correctMatches = 0;
+            feedbackEl.textContent = '';
+
+            const anlamlar = deyimler.map(d => ({ text: d.anlam, id: d.deyim }));
+            const shuffledAnlamlar = shuffleArray([...anlamlar]);
+
+            deyimler.forEach(deyim => {
+                const li = document.createElement('li');
+                li.className = 'item';
+                li.textContent = deyim.deyim;
+                li.dataset.id = deyim.deyim;
+                li.addEventListener('click', handleDeyimClick);
+                deyimList.appendChild(li);
+            });
+
+            shuffledAnlamlar.forEach(anlam => {
+                const li = document.createElement('li');
+                li.className = 'item';
+                li.textContent = anlam.text;
+                li.dataset.id = anlam.id;
+                li.addEventListener('click', handleAnlamClick);
+                anlamList.appendChild(li);
+            });
+        }
+
+        function handleDeyimClick(event) {
+            if (event.target.classList.contains('correct')) return;
+            
+            document.querySelectorAll('.deyim-list .item').forEach(item => item.classList.remove('selected'));
+            event.target.classList.add('selected');
+            selectedDeyim = event.target;
+        }
+
+        function handleAnlamClick(event) {
+            const selectedAnlam = event.target;
+            if (!selectedDeyim || selectedAnlam.classList.contains('correct')) return;
+
+            if (selectedDeyim.dataset.id === selectedAnlam.dataset.id) {
+                selectedDeyim.classList.add('correct');
+                selectedAnlam.classList.add('correct');
+                selectedDeyim.classList.remove('selected');
+                
+                feedbackEl.textContent = "Harika! Doğru eşleştirme!";
+                feedbackEl.style.color = 'var(--correct-color)';
+                
+                selectedDeyim = null;
+                correctMatches++;
+                if(correctMatches === deyimler.length){
+                    feedbackEl.textContent = "Tebrikler! Tüm deyimleri eşleştirdin!";
+                }
+
+            } else {
+                feedbackEl.textContent = "Tekrar dene...";
+                feedbackEl.style.color = 'var(--incorrect-color)';
+                selectedDeyim.classList.remove('selected');
+                selectedDeyim = null;
+            }
+             setTimeout(() => { if(correctMatches !== deyimler.length) feedbackEl.textContent = ''; }, 1500);
+        }
+
+        // --- Hafıza Oyunu Mantığı ---
+        const memoryGameArea = document.querySelector('.hafiza-oyunu-alani');
+        let flippedCards = [];
+        let lockBoard = false;
+        let matchedPairs = 0;
+
+        function initMemoryGame() {
+            memoryGameArea.innerHTML = '';
+            flippedCards = [];
+            lockBoard = false;
+            matchedPairs = 0;
+
+            const selectedDeyimler = shuffleArray([...deyimler]).slice(0, 12);
+            const gameCards = [];
+            
+            selectedDeyimler.forEach((item, index) => {
+                gameCards.push({ type: 'deyim', text: item.deyim, id: index });
+                gameCards.push({ type: 'anlam', text: item.anlam, id: index });
+            });
+
+            const shuffledCards = shuffleArray(gameCards);
+
+            shuffledCards.forEach(cardData => {
+                const card = document.createElement('div');
+                card.classList.add('kart');
+                card.dataset.id = cardData.id;
+
+                card.innerHTML = `
+                    <div class="kart-icerik">
+                        <div class="kart-on">?</div>
+                        <div class="kart-arka">${cardData.text}</div>
+                    </div>
+                `;
+                card.addEventListener('click', flipCard);
+                memoryGameArea.appendChild(card);
+            });
+        }
+
+        function flipCard() {
+            if (lockBoard || this.classList.contains('cevrildi') || this.classList.contains('eslesti')) return;
+            
+            this.classList.add('cevrildi');
+            flippedCards.push(this);
+
+            if (flippedCards.length === 2) {
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            lockBoard = true;
+            const [card1, card2] = flippedCards;
+
+            if (card1.dataset.id === card2.dataset.id) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+        
+        function disableCards() {
+            flippedCards.forEach(card => {
+                card.classList.add('eslesti');
+                card.removeEventListener('click', flipCard);
+            });
+            matchedPairs++;
+            resetBoard();
+            if (matchedPairs === 12) {
+                 setTimeout(() => alert("Tebrikler! Oyunu tamamladın!"), 500);
+            }
+        }
+
+        function unflipCards() {
+            setTimeout(() => {
+                flippedCards.forEach(card => card.classList.remove('cevrildi'));
+                resetBoard();
+            }, 1200);
+        }
+
+        function resetBoard() {
+            [flippedCards, lockBoard] = [[], false];
+        }
+
+        // --- Sayfa Yüklendiğinde Başlat ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initMatchingGame();
+            initMemoryGame();
+            showView('eslestirme-oyunu'); // İlk olarak eşleştirme oyununu göster
+        });
+
+    </script>
+</body>
+</html>
