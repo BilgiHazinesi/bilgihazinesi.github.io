@@ -14,7 +14,6 @@
             --text-secondary: #7a654d;
             --accent-color: #8B4513;
             --correct-color: #2e7d32;
-            --incorrect-color: #c62828;
             --border-color: #c8b79b;
             --shadow-color: rgba(0, 0, 0, 0.15);
         }
@@ -101,59 +100,53 @@
             color: var(--text-secondary);
         }
 
-        /* Eşleştirme Oyunu Stilleri */
-        #eslestirme-oyunu .content {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .lists-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .deyim-list, .anlam-list {
-            width: 48%;
-            list-style: none;
-        }
-        
-        .item {
-            padding: 12px;
-            margin-bottom: 10px;
+        /* Öğrenme Seti Stilleri */
+        .ogrenme-karti {
+            background-color: #fffaf0;
             border: 2px solid var(--border-color);
             border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: box-shadow 0.3s ease;
+        }
+        .ogrenme-karti:hover {
+             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .deyim-kismi {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             cursor: pointer;
-            transition: all 0.3s ease;
-            background-color: #fffaf0;
-        }
-
-        .item:hover {
-            border-color: var(--accent-color);
-            transform: scale(1.02);
-        }
-
-        .item.selected {
-            background-color: #ffe0b2;
-            border-color: var(--accent-color);
+            font-size: 1.2rem;
             font-weight: bold;
         }
+        .anlam-kismi {
+            padding: 0 15px;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding 0.5s ease-in-out;
+            color: var(--text-secondary);
+            border-top: 1px dashed var(--border-color);
+        }
+        .anlam-kismi.goster {
+            padding-top: 15px;
+            padding-bottom: 15px;
+            max-height: 150px;
+            opacity: 1;
+        }
+        .deyim-kismi::after {
+            content: '▼';
+            font-size: 1rem;
+            color: var(--accent-color);
+            transition: transform 0.3s ease;
+        }
+        .deyim-kismi.acik::after {
+            transform: rotate(180deg);
+        }
 
-        .item.correct {
-            background-color: #c8e6c9;
-            border-color: var(--correct-color);
-            color: var(--correct-color);
-            cursor: default;
-            opacity: 0.7;
-        }
-        
-        #feedback {
-            text-align: center;
-            font-size: 1.3rem;
-            font-weight: bold;
-            min-height: 30px;
-        }
 
         /* Hafıza Oyunu Stilleri */
         .hafiza-oyunu-alani {
@@ -241,12 +234,6 @@
 
         /* Responsive Tasarım */
         @media (max-width: 768px) {
-            .lists-container {
-                flex-direction: column;
-            }
-            .deyim-list, .anlam-list {
-                width: 100%;
-            }
             .hafiza-oyunu-alani {
                 grid-template-columns: repeat(4, 1fr);
             }
@@ -267,22 +254,16 @@
         </header>
 
         <div class="tabs">
-            <button class="tab-button active" onclick="showView('eslestirme-oyunu')">Deyim Eşleştirme</button>
+            <button class="tab-button active" onclick="showView('ogrenme-seti')">Deyim Öğrenme Seti</button>
             <button class="tab-button" onclick="showView('hafiza-oyunu')">Hafıza Oyunu</button>
         </div>
 
         <main>
-            <div id="eslestirme-oyunu" class="view active">
+            <div id="ogrenme-seti" class="view active">
                 <div class="game-info">
-                    Soldaki deyimin üzerine tıkla, sonra sağdaki doğru anlamını bul ve eşleştir!
+                    Deyimin üzerine tıklayarak anlamını öğren. Bakalım kaç tanesini doğru tahmin edeceksin?
                 </div>
-                <div class="content">
-                    <div id="feedback"></div>
-                    <div class="lists-container">
-                        <ul class="deyim-list"></ul>
-                        <ul class="anlam-list"></ul>
-                    </div>
-                </div>
+                <div id="ogrenme-listesi"></div>
             </div>
 
             <div id="hafiza-oyunu" class="view">
@@ -418,77 +399,35 @@
             return array;
         }
 
+        // --- Öğrenme Seti Mantığı ---
+        const learningList = document.getElementById('ogrenme-listesi');
 
-        // --- Eşleştirme Oyunu Mantığı ---
-        const deyimList = document.querySelector('.deyim-list');
-        const anlamList = document.querySelector('.anlam-list');
-        const feedbackEl = document.getElementById('feedback');
-        let selectedDeyim = null;
-        let correctMatches = 0;
-
-        function initMatchingGame() {
-            deyimList.innerHTML = '';
-            anlamList.innerHTML = '';
-            selectedDeyim = null;
-            correctMatches = 0;
-            feedbackEl.textContent = '';
-
-            const anlamlar = deyimler.map(d => ({ text: d.anlam, id: d.deyim }));
-            const shuffledAnlamlar = shuffleArray([...anlamlar]);
-
+        function initLearningSet() {
+            learningList.innerHTML = '';
             deyimler.forEach(deyim => {
-                const li = document.createElement('li');
-                li.className = 'item';
-                li.textContent = deyim.deyim;
-                li.dataset.id = deyim.deyim;
-                li.addEventListener('click', handleDeyimClick);
-                deyimList.appendChild(li);
-            });
-
-            shuffledAnlamlar.forEach(anlam => {
-                const li = document.createElement('li');
-                li.className = 'item';
-                li.textContent = anlam.text;
-                li.dataset.id = anlam.id;
-                li.addEventListener('click', handleAnlamClick);
-                anlamList.appendChild(li);
+                const card = document.createElement('div');
+                card.className = 'ogrenme-karti';
+                card.innerHTML = `
+                    <div class="deyim-kismi">
+                        <span>${deyim.deyim}</span>
+                    </div>
+                    <div class="anlam-kismi">
+                        <p>${deyim.anlam}</p>
+                    </div>
+                `;
+                learningList.appendChild(card);
             });
         }
+        
+        learningList.addEventListener('click', (event) => {
+            const deyimKismi = event.target.closest('.deyim-kismi');
+            if (!deyimKismi) return;
 
-        function handleDeyimClick(event) {
-            if (event.target.classList.contains('correct')) return;
-            
-            document.querySelectorAll('.deyim-list .item').forEach(item => item.classList.remove('selected'));
-            event.target.classList.add('selected');
-            selectedDeyim = event.target;
-        }
+            const anlamKismi = deyimKismi.nextElementSibling;
+            deyimKismi.classList.toggle('acik');
+            anlamKismi.classList.toggle('goster');
+        });
 
-        function handleAnlamClick(event) {
-            const selectedAnlam = event.target;
-            if (!selectedDeyim || selectedAnlam.classList.contains('correct')) return;
-
-            if (selectedDeyim.dataset.id === selectedAnlam.dataset.id) {
-                selectedDeyim.classList.add('correct');
-                selectedAnlam.classList.add('correct');
-                selectedDeyim.classList.remove('selected');
-                
-                feedbackEl.textContent = "Harika! Doğru eşleştirme!";
-                feedbackEl.style.color = 'var(--correct-color)';
-                
-                selectedDeyim = null;
-                correctMatches++;
-                if(correctMatches === deyimler.length){
-                    feedbackEl.textContent = "Tebrikler! Tüm deyimleri eşleştirdin!";
-                }
-
-            } else {
-                feedbackEl.textContent = "Tekrar dene...";
-                feedbackEl.style.color = 'var(--incorrect-color)';
-                selectedDeyim.classList.remove('selected');
-                selectedDeyim = null;
-            }
-             setTimeout(() => { if(correctMatches !== deyimler.length) feedbackEl.textContent = ''; }, 1500);
-        }
 
         // --- Hafıza Oyunu Mantığı ---
         const memoryGameArea = document.querySelector('.hafiza-oyunu-alani');
@@ -575,9 +514,9 @@
 
         // --- Sayfa Yüklendiğinde Başlat ---
         document.addEventListener('DOMContentLoaded', () => {
-            initMatchingGame();
+            initLearningSet();
             initMemoryGame();
-            showView('eslestirme-oyunu'); // İlk olarak eşleştirme oyununu göster
+            showView('ogrenme-seti'); // İlk olarak öğrenme setini göster
         });
 
     </script>
