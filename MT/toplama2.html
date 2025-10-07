@@ -74,7 +74,6 @@
         #interactive-problem .carry-digit { width: 40px; height: 40px; font-size: 1.8rem; }
         #interactive-problem .operator { font-size: 3rem; }
 
-        /* YENİ: EKSİK RAKAM BULMA ARACI STİLLERİ */
         .missing-digit-tool { padding: 20px; background-color: var(--box-bg); border: 2px solid var(--border-color); border-radius: 8px; }
         #missing-digit-problem { max-width: 500px; margin: 0 auto; }
         .missing-digit-controls { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
@@ -178,7 +177,7 @@
                     quickAnswerInput.type = 'number'; quickAnswerInput.className = 'quick-answer'; quickAnswerInput.placeholder = 'Cevap';
                     const showAnswerBtn = document.createElement('button');
                     showAnswerBtn.className = 'show-answer-btn'; showAnswerBtn.textContent = 'Cevabı Göster';
-                    showAnswerBtn.addEventListener('click', () => { runAnimatedAddition(numbersWrapper, carryRow, answerRow, showAnswerBtn, true); });
+                    showAnswerBtn.addEventListener('click', () => { animateTopProblem(numbersWrapper, carryRow, answerRow, showAnswerBtn); });
                     problemFooter.appendChild(showAnswerBtn);
                     problemFooter.appendChild(quickAnswerInput);
                     problemDiv.appendChild(carryRow);
@@ -188,11 +187,11 @@
                     problemsContainer.appendChild(problemDiv);
                 }
             }
-            async function runAnimatedAddition(numbersWrapper, carryRow, answerRow, button, isToggle) {
+            async function animateTopProblem(numbersWrapper, carryRow, answerRow, button) {
                 const answerElements = Array.from(answerRow.children);
                 const carryPlaceholders = Array.from(carryRow.children);
                 const answerLength = answerElements.length;
-                if (isToggle && button.textContent === 'Cevabı Gizle') {
+                if (button.textContent === 'Cevabı Gizle') {
                     answerElements.forEach(el => el.value = '');
                     carryPlaceholders.forEach(p => p.innerHTML = '');
                     button.textContent = 'Cevabı Göster';
@@ -218,7 +217,7 @@
                     row.querySelectorAll('.number-input').forEach(input => numStr += input.value || '0');
                     if (parseInt(numStr, 10)) numbersToSum.push(parseInt(numStr, 10));
                 });
-                const sum = numbersToSum.reduce((acc, curr) => acc + curr, 0);
+                const sum = numbersToSum.length > 0 ? numbersToSum.reduce((acc, curr) => acc + curr, 0) : 0;
                 let carry = 0;
                 for (let i = 0; i < answerLength; i++) {
                     const colIndex = answerLength - 1 - i;
@@ -242,7 +241,7 @@
                     carry = newCarry;
                     setTimeout(() => currentAnswerEl.classList.remove('highlight'), 500);
                 }
-                if (isToggle) button.textContent = 'Cevabı Gizle';
+                button.textContent = 'Cevabı Gizle';
                 button.disabled = false;
             }
             generateBtn.addEventListener('click', generateProblems);
@@ -261,11 +260,10 @@
                 const num1 = getRandomNumber(3);
                 const num2 = getRandomNumber(3);
                 correctMissingSum = num1 + num2;
-
                 let num1Str = String(num1).split('');
                 let num2Str = String(num2).split('');
                 let hiddenCount = 0;
-                while(hiddenCount < 3) { // 3 rakam gizle
+                while(hiddenCount < 3) {
                     const numToHide = Math.random() < 0.5 ? num1Str : num2Str;
                     const posToHide = Math.floor(Math.random() * 3);
                     if(numToHide[posToHide] !== '?') {
@@ -273,40 +271,32 @@
                         hiddenCount++;
                     }
                 }
-
                 const numbersWrapper = document.createElement('div');
                 numbersWrapper.className = 'numbers-wrapper';
                 [num1Str, num2Str].forEach((numArr, index) => {
                     const numberRow = document.createElement('div');
                     numberRow.className = 'number-row';
-                    if (index === 1) { numberRow.innerHTML = `<span class="operator">+</span>`; }
+                    if (index === 1) { const operator = document.createElement('span'); operator.className = 'operator'; operator.textContent = '+'; numberRow.appendChild(operator); }
                     numArr.forEach(digit => {
                         let box;
                         if (digit === '?') {
                             box = document.createElement('input');
-                            box.type = 'text';
-                            box.className = 'digit-box missing-input';
-                            box.maxLength = 1;
-                            box.pattern = "\\d*";
+                            box.type = 'text'; box.className = 'digit-box missing-input'; box.maxLength = 1; box.pattern = "\\d*";
                         } else {
                             box = document.createElement('div');
-                            box.className = 'digit-box static';
-                            box.textContent = digit;
+                            box.className = 'digit-box static'; box.textContent = digit;
                         }
                         numberRow.appendChild(box);
                     });
                     numbersWrapper.appendChild(numberRow);
                 });
-
                 const answerRow = document.createElement('div');
                 answerRow.className = 'answer-row';
-                String(correctMissingSum).split('').forEach(digit => {
+                String(correctMissingSum).padStart(4, ' ').split('').forEach(digit => {
                     const box = document.createElement('div');
-                    box.className = 'digit-box static';
-                    box.textContent = digit;
+                    box.className = 'digit-box static'; box.innerHTML = digit === ' ' ? '&nbsp;' : digit;
                     answerRow.appendChild(box);
                 });
-                
                 missingDigitProblemDiv.appendChild(numbersWrapper);
                 missingDigitProblemDiv.appendChild(answerRow);
             }
@@ -316,11 +306,10 @@
                 let userSum = 0;
                 rows.forEach(row => {
                     let numStr = '';
-                    row.childNodes.forEach(node => {
-                        if (node.tagName === 'INPUT') {
-                            numStr += node.value || '0';
-                        } else if (node.classList && node.classList.contains('digit-box')) {
-                            numStr += node.textContent;
+                    // DÜZELTME: childNodes yerine children kullanıldı
+                    Array.from(row.children).forEach(node => {
+                        if (node.classList.contains('digit-box')) {
+                            numStr += node.tagName === 'INPUT' ? (node.value || '0') : node.textContent;
                         }
                     });
                     userSum += parseInt(numStr, 10) || 0;
@@ -334,10 +323,8 @@
                     missingDigitFeedback.className = 'feedback-incorrect';
                 }
             });
-
             newMissingBtn.addEventListener('click', generateMissingDigitProblem);
             generateMissingDigitProblem();
-
 
             // --- BÖLÜM 3: ANİMASYONLU TOPLAMA ARACI ---
             const visualizeBtn = document.getElementById('visualize-btn');
@@ -346,10 +333,7 @@
                 interactiveProblem.style.display = 'block';
                 const num1 = parseInt(document.getElementById('num1').value) || 0;
                 const num2 = parseInt(document.getElementById('num2').value) || 0;
-                if (num1 === 0 && num2 === 0) {
-                    interactiveProblem.innerHTML = '<p style="text-align:center; font-size: 1.2rem; color: var(--text-secondary);">Lütfen toplanacak sayıları girin.</p>';
-                    return;
-                }
+                if (num1 === 0 && num2 === 0) { interactiveProblem.innerHTML = '<p style="text-align:center; font-size: 1.2rem; color: var(--text-secondary);">Lütfen toplanacak sayıları girin.</p>'; return; }
                 const numbersToSum = [num1, num2];
                 const answerLength = String(num1 + num2).length + 1;
                 interactiveProblem.innerHTML = ''; 
@@ -381,7 +365,40 @@
                 interactiveProblem.appendChild(numbersWrapper);
                 interactiveProblem.appendChild(answerRow);
                 await delay(100);
-                await runAnimatedAddition(numbersWrapper, carryRow, answerRow, visualizeBtn, false);
+                await runAnimatedAdditionForMachine(numbersToSum, carryRow, answerRow, visualizeBtn);
+            }
+            async function runAnimatedAdditionForMachine(numbersToSum, carryRow, answerRow, button) {
+                const answerElements = Array.from(answerRow.children);
+                const carryPlaceholders = Array.from(carryRow.children);
+                const answerLength = answerElements.length;
+                button.disabled = true;
+                answerElements.forEach(el => { el.textContent = ''; el.classList.remove('highlight'); });
+                carryPlaceholders.forEach(p => p.innerHTML = '');
+                const sum = numbersToSum.reduce((acc, curr) => acc + curr, 0);
+                let carry = 0;
+                for (let i = 0; i < answerLength; i++) {
+                    const colIndex = answerLength - 1 - i;
+                    let columnSum = carry;
+                    for (const num of numbersToSum) {
+                        const numStr = String(num);
+                        const digit = parseInt(numStr[numStr.length - 1 - i] || '0');
+                        columnSum += digit;
+                    }
+                    const resultDigit = columnSum % 10;
+                    const newCarry = Math.floor(columnSum / 10);
+                    await delay(400);
+                    const currentAnswerEl = answerElements[colIndex];
+                    if (i < String(sum).length || (sum === 0 && i === 0)) { currentAnswerEl.textContent = resultDigit; }
+                    currentAnswerEl.classList.add('highlight');
+                    await delay(400);
+                    if (newCarry > 0 && colIndex > 0) {
+                        const carryPlaceholder = carryPlaceholders[colIndex - 1];
+                        if(carryPlaceholder) { const carryEl = document.createElement('div'); carryEl.className = 'carry-digit'; carryEl.textContent = newCarry; carryPlaceholder.appendChild(carryEl); }
+                    }
+                    carry = newCarry;
+                    setTimeout(() => currentAnswerEl.classList.remove('highlight'), 500);
+                }
+                button.disabled = false;
             }
             visualizeBtn.addEventListener('click', setupAndRunInteractiveProblem);
         });
