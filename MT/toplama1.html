@@ -41,7 +41,7 @@
         .controls select, .controls button, .machine-controls input { font-family: 'Kalam', cursive; font-size: 1.1rem; padding: 8px 12px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--box-bg); color: var(--text-primary); }
         .controls button, .machine-controls button { font-family: 'Cinzel Decorative', cursive; font-weight: 700; background-color: var(--accent-color); color: var(--papyrus-bg); cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .controls button:hover, .machine-controls button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px var(--shadow-color); }
-        .controls button:disabled, .machine-controls button:disabled { background-color: var(--text-secondary); cursor: not-allowed; transform: none; box-shadow: none;}
+        .controls button:disabled, .machine-controls button:disabled, .show-answer-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; transform: none; box-shadow: none;}
 
         #problems-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
         .problem { background-color: var(--box-bg); padding: 20px; border-radius: 8px; border: 2px solid var(--border-color); box-shadow: 0 3px 6px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: flex-end; animation: fadeIn 0.6s ease-out forwards; position: relative; padding-top: 40px; }
@@ -55,8 +55,11 @@
         .operator { font-size: 2rem; font-weight: bold; position: absolute; left: -5px; top: 50%; transform: translateY(-50%); padding-right: 10px; }
         .digit-box { width: 45px; height: 45px; border: 1px solid var(--border-color); display: flex; justify-content: center; align-items: center; font-size: 1.8rem; margin: 2px; background-color: #fff; border-radius: 4px; user-select: none; }
         .answer-row { display: flex; justify-content: flex-end; }
-        .answer-row .digit-box { background-color: #e8f5e9; font-weight: bold; color: var(--accent-color); padding: 0; text-align: center; }
-        .answer-row .digit-box:focus { outline: 2px solid var(--accent-color); background-color: #fff; }
+        .answer-row .digit-box { background-color: #e8f5e9; font-weight: bold; color: var(--accent-color); padding: 0; text-align: center; transition: background-color 0.3s; }
+        .answer-row .digit-box.highlight { background-color: #c8e6c9; animation: pop-in 0.3s; }
+        .carry-row { display: flex; justify-content: flex-end; height: 35px; margin-bottom: 5px; }
+        .carry-placeholder { width: 45px; height: 35px; margin: 2px; display: flex; justify-content: center; align-items: center; }
+        .carry-digit { width: 30px; height: 30px; background: linear-gradient(145deg, #ffff8d, #fdd835); color: #8c6c46; border: 2px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.4); animation: pop-in 0.4s ease-out; }
         
         @media (min-width: 1024px) { #problems-container { grid-template-columns: repeat(3, 1fr); } }
         @media (min-width: 600px) and (max-width: 1023px) { #problems-container { grid-template-columns: repeat(2, 1fr); } }
@@ -68,12 +71,11 @@
         .machine-grid { display: flex; flex-direction: row-reverse; }
         .machine-place-value-col { flex: 1; min-width: 80px; padding: 0 5px; display: flex; flex-direction: column; align-items: center; position: relative; }
         .machine-place-value-col h4 { font-family: 'Cinzel Decorative', cursive; color: var(--box-bg); text-shadow: 1px 1px #5a452d; height: 30px; }
-        .carry-area, .digit-area, .result-area { width: 100%; display: flex; flex-direction: column; align-items: center; }
-        .carry-area { height: 50px; }
+        .machine-carry-area, .digit-area, .result-area { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .machine-carry-area { height: 50px; }
         .digit-area { min-height: 150px; gap: 5px; padding: 10px 0; }
         .result-area { min-height: 70px; border-top: 5px solid #6d5537; padding-top: 10px; }
         .machine-digit { width: 50px; height: 50px; background: var(--box-bg); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 2rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3); animation: drop-digit 0.5s ease-out; }
-        .carry-digit { width: 35px; height: 35px; background: linear-gradient(145deg, #ffff8d, #fdd835); color: #8c6c46; border: 2px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.4); animation: pop-in 0.4s ease-out; }
         .result-digit { width: 60px; height: 60px; font-size: 2.5rem; background: #4caf50; color: white; animation: pop-in 0.3s ease-out; }
     </style>
 </head>
@@ -110,13 +112,15 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- TOPLAMA ALIŞTIRMALARI BÖLÜMÜ ---
+            const delay = (ms) => new Promise(res => setTimeout(res, ms));
+            
             const digitCountSelect = document.getElementById('digit-count');
             const numberCountSelect = document.getElementById('number-count');
             const generateBtn = document.getElementById('generate-btn');
             const problemsContainer = document.getElementById('problems-container');
             function getRandomNumber(digits) { const min = Math.pow(10, digits - 1); const max = Math.pow(10, digits) - 1; return Math.floor(Math.random() * (max - min + 1)) + min; }
-            function generateProblems() {
+            
+            async function generateProblems() {
                 const digitCount = parseInt(digitCountSelect.value);
                 const numberCount = parseInt(numberCountSelect.value);
                 const problemLabels = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -128,6 +132,12 @@
                     label.className = 'problem-label';
                     label.textContent = problemLabels[i];
                     problemDiv.appendChild(label);
+                    
+                    const answerLength = digitCount + 2;
+                    const carryRow = document.createElement('div');
+                    carryRow.className = 'carry-row';
+                    for(let k=0; k < answerLength; k++) { carryRow.appendChild(document.createElement('div')); carryRow.lastChild.className = 'carry-placeholder';}
+                    
                     const numbersToSum = [];
                     const numbersWrapper = document.createElement('div');
                     numbersWrapper.className = 'numbers-wrapper';
@@ -137,12 +147,17 @@
                         const numberRow = document.createElement('div');
                         numberRow.className = 'number-row';
                         if (j === numberCount - 1) { const operator = document.createElement('span'); operator.className = 'operator'; operator.textContent = '+'; numberRow.appendChild(operator); }
-                        String(number).split('').forEach(digit => { const digitBox = document.createElement('div'); digitBox.className = 'digit-box'; digitBox.textContent = digit; numberRow.appendChild(digitBox); });
+                        String(number).padStart(answerLength, ' ').split('').forEach(digit => { 
+                            const digitBox = document.createElement('div'); 
+                            digitBox.className = 'digit-box'; 
+                            digitBox.innerHTML = digit === ' ' ? '&nbsp;' : digit; 
+                            numberRow.appendChild(digitBox); 
+                        });
                         numbersWrapper.appendChild(numberRow);
                     }
+                    
                     const answerRow = document.createElement('div');
                     answerRow.className = 'answer-row';
-                    const answerLength = digitCount + 2;
                     for (let k = 0; k < answerLength; k++) {
                         const answerBox = document.createElement('input');
                         answerBox.type = 'text'; answerBox.className = 'digit-box answer'; answerBox.maxLength = 1; answerBox.pattern = "\\d*"; 
@@ -150,26 +165,67 @@
                         answerBox.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !e.target.value && e.target.previousElementSibling) e.target.previousElementSibling.focus(); });
                         answerRow.appendChild(answerBox);
                     }
+                    
                     const problemFooter = document.createElement('div');
                     problemFooter.className = 'problem-footer';
                     const quickAnswerInput = document.createElement('input');
                     quickAnswerInput.type = 'number'; quickAnswerInput.className = 'quick-answer'; quickAnswerInput.placeholder = 'Cevap';
                     const showAnswerBtn = document.createElement('button');
                     showAnswerBtn.className = 'show-answer-btn'; showAnswerBtn.textContent = 'Cevabı Göster';
-                    showAnswerBtn.addEventListener('click', () => {
-                        const answerInputs = answerRow.querySelectorAll('.answer');
+                    
+                    showAnswerBtn.addEventListener('click', async () => {
+                        const answerInputs = Array.from(answerRow.querySelectorAll('.answer'));
+                        const carryPlaceholders = Array.from(carryRow.querySelectorAll('.carry-placeholder'));
+                        
                         if (showAnswerBtn.textContent === 'Cevabı Göster') {
-                            const sum = numbersToSum.reduce((acc, curr) => acc + curr, 0);
-                            const sumStr = String(sum).padStart(answerLength, '0');
-                            for(let k = 0; k < answerLength; k++) { answerInputs[k].value = sumStr[k] || ''; }
+                            showAnswerBtn.disabled = true;
+                            answerInputs.forEach(input => {input.value = ''; input.classList.remove('highlight');});
+                            carryPlaceholders.forEach(p => p.innerHTML = '');
+                            
+                            let carry = 0;
+                            for (let i = 0; i < answerLength; i++) {
+                                const colIndex = answerLength - 1 - i;
+                                let columnSum = carry;
+                                
+                                for (const num of numbersToSum) {
+                                    const numStr = String(num);
+                                    const digit = parseInt(numStr[numStr.length - 1 - i] || '0');
+                                    columnSum += digit;
+                                }
+                                
+                                const resultDigit = columnSum % 10;
+                                const newCarry = Math.floor(columnSum / 10);
+                                
+                                await delay(400);
+                                const currentAnswerInput = answerInputs[colIndex];
+                                currentAnswerInput.value = resultDigit;
+                                currentAnswerInput.classList.add('highlight');
+
+                                await delay(400);
+
+                                if (newCarry > 0) {
+                                    const carryPlaceholder = carryPlaceholders[colIndex - 1];
+                                    if(carryPlaceholder) {
+                                        const carryEl = document.createElement('div');
+                                        carryEl.className = 'carry-digit';
+                                        carryEl.textContent = newCarry;
+                                        carryPlaceholder.appendChild(carryEl);
+                                    }
+                                }
+                                carry = newCarry;
+                                setTimeout(() => currentAnswerInput.classList.remove('highlight'), 500);
+                            }
+                            
                             showAnswerBtn.textContent = 'Cevabı Gizle';
+                            showAnswerBtn.disabled = false;
                         } else {
                             answerInputs.forEach(input => input.value = '');
+                            carryPlaceholders.forEach(p => p.innerHTML = '');
                             showAnswerBtn.textContent = 'Cevabı Göster';
                         }
                     });
-                    problemFooter.appendChild(showAnswerBtn);
-                    problemFooter.appendChild(quickAnswerInput);
+                    
+                    problemDiv.appendChild(carryRow);
                     problemDiv.appendChild(numbersWrapper);
                     problemDiv.appendChild(answerRow);
                     problemDiv.appendChild(problemFooter);
@@ -182,102 +238,69 @@
             // --- SAYI TOPLAMA MAKİNESİ BÖLÜMÜ ---
             const visualizeBtn = document.getElementById('visualize-btn');
             const machineGrid = document.getElementById('machine-grid');
-            const placeValueNames = ['Birler', 'Onlar', 'Yüzler', 'Binler', 'On Binler', 'Yüz Binler'];
-            const delay = (ms) => new Promise(res => setTimeout(res, ms));
-
+            const machinePlaceValueNames = ['Birler', 'Onlar', 'Yüzler', 'Binler', 'On Binler', 'Yüz Binler'];
+            
             async function runMachine() {
                 visualizeBtn.disabled = true;
                 const num1Str = document.getElementById('num1').value || '0';
                 const num2Str = document.getElementById('num2').value || '0';
-
                 machineGrid.innerHTML = '';
-
                 const maxDigits = Math.max(num1Str.length, num2Str.length, 1);
-                
                 for (let i = 0; i < maxDigits; i++) {
                     const col = document.createElement('div');
                     col.className = 'machine-place-value-col';
                     col.dataset.place = i;
-                    col.innerHTML = `
-                        <h4>${placeValueNames[i] || ''}</h4>
-                        <div class="carry-area"></div>
-                        <div class="digit-area"></div>
-                        <div class="result-area"></div>
-                    `;
+                    col.innerHTML = `<h4>${machinePlaceValueNames[i] || ''}</h4><div class="machine-carry-area"></div><div class="digit-area"></div><div class="result-area"></div>`;
                     machineGrid.appendChild(col);
                 }
-
                 const paddedNum1 = num1Str.padStart(maxDigits, '0').split('').reverse();
                 const paddedNum2 = num2Str.padStart(maxDigits, '0').split('').reverse();
-
                 for (let i = 0; i < maxDigits; i++) {
                     const digitArea = machineGrid.querySelector(`[data-place="${i}"] .digit-area`);
-                    if (parseInt(num1Str) > 0) {
-                        const digitEl1 = document.createElement('div');
-                        digitEl1.className = 'machine-digit';
-                        digitEl1.textContent = paddedNum1[i];
-                        digitArea.appendChild(digitEl1);
-                    }
-                    if (parseInt(num2Str) > 0) {
-                        const digitEl2 = document.createElement('div');
-                        digitEl2.className = 'machine-digit';
-                        digitEl2.textContent = paddedNum2[i];
-                        digitArea.appendChild(digitEl2);
-                    }
+                    if (parseInt(num1Str) > 0) { const digitEl1 = document.createElement('div'); digitEl1.className = 'machine-digit'; digitEl1.textContent = paddedNum1[i]; digitArea.appendChild(digitEl1); }
+                    if (parseInt(num2Str) > 0) { const digitEl2 = document.createElement('div'); digitEl2.className = 'machine-digit'; digitEl2.textContent = paddedNum2[i]; digitArea.appendChild(digitEl2); }
                     await delay(100);
                 }
-                
                 await delay(800);
-
                 let carry = 0;
                 for (let i = 0; i < maxDigits + 1; i++) {
                     const col = machineGrid.querySelector(`[data-place="${i}"]`);
                     if (!col) continue;
-
                     const digitArea = col.querySelector('.digit-area');
                     const resultArea = col.querySelector('.result-area');
                     const digitsInCol = digitArea.querySelectorAll('.machine-digit');
-                    
                     let sum = carry;
                     digitsInCol.forEach(d => sum += parseInt(d.textContent));
-
                     const resultDigit = sum % 10;
                     const newCarry = Math.floor(sum / 10);
-
                     await delay(500);
                     digitsInCol.forEach(d => { d.style.opacity = '0.3'; d.style.transform = 'scale(0.8)'; });
-                    
                     const resultEl = document.createElement('div');
                     resultEl.className = 'machine-digit result-digit';
                     resultEl.textContent = resultDigit;
                     resultArea.appendChild(resultEl);
-                    
                     await delay(800);
-
                     if (newCarry > 0) {
                         const nextCol = machineGrid.querySelector(`[data-place="${i + 1}"]`);
                         if (nextCol) {
-                            const carryArea = nextCol.querySelector('.carry-area');
+                            const carryArea = nextCol.querySelector('.machine-carry-area');
                             const carryEl = document.createElement('div');
-                            carryEl.className = 'carry-digit';
-                            carryEl.textContent = newCarry;
+                            carryEl.className = 'carry-digit'; carryEl.textContent = newCarry;
                             carryArea.appendChild(carryEl);
-                        } else { // En son basamakta hala elde varsa yeni sütun oluştur
+                        } else {
                             const newCol = document.createElement('div');
                             newCol.className = 'machine-place-value-col';
                             newCol.dataset.place = i + 1;
-                            newCol.innerHTML = `<h4>${placeValueNames[i+1] || ''}</h4><div class="carry-area"></div><div class="digit-area"></div><div class="result-area"></div>`;
-                            machineGrid.prepend(newCol); // En başa (sola) ekle
-                            const carryArea = newCol.querySelector('.carry-area');
+                            newCol.innerHTML = `<h4>${machinePlaceValueNames[i+1] || ''}</h4><div class="machine-carry-area"></div><div class="digit-area"></div><div class="result-area"></div>`;
+                            machineGrid.prepend(newCol);
+                            const carryArea = newCol.querySelector('.machine-carry-area');
                             const carryEl = document.createElement('div');
-                            carryEl.className = 'carry-digit';
-                            carryEl.textContent = newCarry;
+                            carryEl.className = 'carry-digit'; carryEl.textContent = newCarry;
                             carryArea.appendChild(carryEl);
                         }
                     }
                     carry = newCarry;
                 }
-                
                 visualizeBtn.disabled = false;
             }
             visualizeBtn.addEventListener('click', runMachine);
