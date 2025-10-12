@@ -122,8 +122,24 @@
             <div class="section-header"><h2>Verilmeyen Rakamları Bul</h2></div>
             <div class="missing-digit-tool">
                 <div class="missing-digit-setup-controls">
-                    <div class="control-group"><label for="missing-digit-count">Basamak:</label><select id="missing-digit-count"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div>
-                    <div class="control-group"><label for="missing-mode-select">Eksik Rakam Yeri:</label><select id="missing-mode-select"><option value="mixed" selected>Karışık</option><option value="minuend">Eksilende</option><option value="subtrahend">Çıkanda</option></select></div>
+                    <div class="control-group">
+                        <label for="missing-digit-count">Basamak:</label>
+                        <select id="missing-digit-count">
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="missing-mode-select">Eksik Rakam Yeri:</label>
+                        <select id="missing-mode-select">
+                            <option value="mixed" selected>Karışık</option>
+                            <option value="minuend">Eksilende</option>
+                            <option value="subtrahend">Çıkanda</option>
+                        </select>
+                    </div>
                 </div>
                 <div id="missing-digit-problem"></div>
                 <div id="missing-digit-feedback"></div>
@@ -140,6 +156,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const delay = (ms) => new Promise(res => setTimeout(res, ms));
             
+            // --- BÖLÜM 1: ÇIKARMA ALIŞTIRMALARI ---
             const digitCountSelect = document.getElementById('digit-count');
             const generateBtn = document.getElementById('generate-btn');
             const problemsContainer = document.getElementById('problems-container');
@@ -219,33 +236,30 @@
 
                     if (minuendDigit < subtrahendDigit) {
                         let borrowFromIndex = i - 1;
-                        while(borrowFromIndex >= 0) {
-                             if (minuendArr[borrowFromIndex] > 0) {
-                                await delay(500);
-                                const animDiv = document.createElement('div');
-                                animDiv.className = 'borrow-animation';
-                                animDiv.innerHTML = `<span class="old">${minuendArr[borrowFromIndex]}</span><strong>${minuendArr[borrowFromIndex] - 1}</strong>`;
-                                minuendInputs[borrowFromIndex].appendChild(animDiv);
-                                minuendArr[borrowFromIndex]--;
+                        while(borrowFromIndex >= 0 && minuendArr[borrowFromIndex] === 0) { borrowFromIndex--; }
+                        if (borrowFromIndex >= 0) {
+                            await delay(500);
+                            const animDiv = document.createElement('div');
+                            animDiv.className = 'borrow-animation';
+                            animDiv.innerHTML = `<span class="old">${minuendArr[borrowFromIndex]}</span><strong>${minuendArr[borrowFromIndex] - 1}</strong>`;
+                            minuendInputs[borrowFromIndex].appendChild(animDiv);
+                            minuendArr[borrowFromIndex]--;
 
-                                for(let j = borrowFromIndex + 1; j < i; j++) {
-                                     await delay(300);
-                                     const animDivJ = document.createElement('div');
-                                     animDivJ.className = 'borrow-animation';
-                                     animDivJ.innerHTML = `<span class="old">${minuendArr[j]}</span><strong>9</strong>`;
-                                     minuendInputs[j].appendChild(animDivJ);
-                                     minuendArr[j] = 9;
-                                }
-                                
-                                await delay(300);
-                                const finalAnimDiv = document.createElement('div');
-                                finalAnimDiv.className = 'borrow-animation';
-                                finalAnimDiv.innerHTML = `<span class="old">${minuendDigit}</span><strong>${minuendDigit + 10}</strong>`;
-                                minuendInputs[i].appendChild(finalAnimDiv);
-                                minuendDigit += 10;
-                                break;
+                            for(let j = borrowFromIndex + 1; j < i; j++) {
+                                 await delay(300);
+                                 const animDivJ = document.createElement('div');
+                                 animDivJ.className = 'borrow-animation';
+                                 animDivJ.innerHTML = `<span class="old">0</span><strong>9</strong>`;
+                                 minuendInputs[j].appendChild(animDivJ);
+                                 minuendArr[j] = 9;
                             }
-                            borrowFromIndex--;
+                            
+                            await delay(300);
+                            const finalAnimDiv = document.createElement('div');
+                            finalAnimDiv.className = 'borrow-animation';
+                            finalAnimDiv.innerHTML = `<span class="old">${minuendDigit}</span><strong>${minuendDigit + 10}</strong>`;
+                            minuendInputs[i].appendChild(finalAnimDiv);
+                            minuendDigit += 10;
                         }
                     }
 
@@ -260,7 +274,6 @@
                         setTimeout(() => currentAnswerEl.classList.remove('highlight'), 500);
                     }
                 }
-                
                 button.textContent = 'Cevabı Gizle';
                 button.disabled = false;
             }
@@ -274,33 +287,26 @@
             const dynamicResult = document.getElementById('dynamic-result');
             const dynamicExplanation = document.getElementById('dynamic-explanation');
             let lastChanged = '';
-
             function updateDynamicSubtraction() {
                 let eksilen = parseInt(eksilenSlider.value);
                 let cikan = parseInt(cikanSlider.value);
                 cikanSlider.max = eksilen -1;
                 if (cikan >= eksilen) { cikan = eksilen - 1; cikanSlider.value = cikan; }
                 const fark = eksilen - cikan;
-                
                 eksilenValue.textContent = eksilen;
                 cikanValue.textContent = cikan;
                 dynamicResult.textContent = `${eksilen} - ${cikan} = ${fark}`;
-                
                 if (lastChanged === 'eksilen') { dynamicExplanation.textContent = "Eksilen sayı değiştiğinde, fark da aynı yönde değişir."; } 
                 else if (lastChanged === 'cikan') { dynamicExplanation.textContent = "Çıkan sayı değiştiğinde, fark zıt yönde değişir."; }
-
                 const max = eksilenSlider.max;
-                const cikanStartPercent = (cikan / max) * 100;
+                const cikanPercent = (cikan / max) * 100;
                 const eksilenPercent = (eksilen / max) * 100;
-                eksilenSlider.style.setProperty('--slider-track-bg', 
-                    `linear-gradient(to right, #ddd 0%, #ddd ${cikanStartPercent}%, #81c784 ${cikanStartPercent}%, #81c784 ${eksilenPercent}%, #ddd ${eksilenPercent}%, #ddd 100%)`
-                );
+                eksilenSlider.style.setProperty('--slider-track-bg', `linear-gradient(to right, #f44336 ${cikanPercent}%, #81c784 ${cikanPercent}%, #81c784 ${eksilenPercent}%, #ddd ${eksilenPercent}%)`);
             }
             eksilenSlider.addEventListener('input', () => { lastChanged = 'eksilen'; updateDynamicSubtraction(); });
             cikanSlider.addEventListener('input', () => { lastChanged = 'cikan'; updateDynamicSubtraction(); });
             updateDynamicSubtraction();
             
-            // --- BÖLÜM 3: VERİLMEYEN RAKAMLARI BULMA ---
             const missingDigitProblemDiv = document.getElementById('missing-digit-problem');
             const checkMissingBtn = document.getElementById('check-missing-btn');
             const newMissingBtn = document.getElementById('new-missing-btn');
@@ -309,87 +315,68 @@
             const missingModeSelect = document.getElementById('missing-mode-select');
             let correctMissingMinuend = 0;
             let correctMissingSubtrahend = 0;
-
             function generateMissingDigitProblem() {
                 missingDigitProblemDiv.innerHTML = '';
                 missingDigitFeedback.innerHTML = '';
                 const digitCount = parseInt(missingDigitCountSelect.value);
-                
                 const num1 = getRandomNumber(digitCount);
                 const num2 = getRandomNumber(digitCount);
                 correctMissingMinuend = Math.max(num1, num2);
                 correctMissingSubtrahend = Math.min(num1, num2);
-                
-                let minuendStr = String(correctMissingMinuend).split('');
-                let subtrahendStr = String(correctMissingSubtrahend).split('');
-                
+                let minuendStr = String(correctMissingMinuend).padStart(digitCount, '0').split('');
+                let subtrahendStr = String(correctMissingSubtrahend).padStart(digitCount, '0').split('');
                 const mode = missingModeSelect.value;
-                const positionsToHide = Array.from({length: digitCount}, (_, i) => i).sort(() => 0.5 - Math.random()).slice(0, Math.floor(digitCount / 2) || 1);
+                let availablePositions = Array.from({length: digitCount}, (_, i) => i);
+                let hideCount = Math.max(1, Math.floor(digitCount / 2));
 
-                positionsToHide.forEach(pos => {
-                    if (mode === 'minuend') {
-                        minuendStr[pos] = '?';
-                    } else if (mode === 'subtrahend') {
-                        subtrahendStr[pos] = '?';
-                    } else { // mixed
-                        if (Math.random() < 0.5) minuendStr[pos] = '?';
-                        else subtrahendStr[pos] = '?';
-                    }
-                });
+                for(let i=0; i < hideCount; i++){
+                    if(availablePositions.length === 0) break;
+                    let posIndex = Math.floor(Math.random() * availablePositions.length);
+                    let posToHide = availablePositions.splice(posIndex, 1)[0];
 
+                    let rowToHide = Math.floor(Math.random() * 2); // 0 for minuend, 1 for subtrahend
+                    if(mode === 'minuend') rowToHide = 0;
+                    if(mode === 'subtrahend') rowToHide = 1;
+
+                    if(rowToHide === 0) minuendStr[posToHide] = '?';
+                    else subtrahendStr[posToHide] = '?';
+                }
                 const numbersWrapper = document.createElement('div');
                 numbersWrapper.className = 'numbers-wrapper';
                 [minuendStr, subtrahendStr].forEach((numArr, index) => {
                     const numberRow = document.createElement('div');
                     numberRow.className = 'number-row';
                     if (index === 1) { numberRow.innerHTML = `<span class="operator">-</span>`; }
-                    String(numArr.join('')).padStart(digitCount + 1, ' ').split('').forEach(digit => {
+                    numArr.forEach(digit => {
                         let box;
-                        if (digit === '?') {
-                            box = document.createElement('input');
-                            box.type = 'text'; box.className = 'digit-box missing-input'; box.maxLength = 1; box.pattern = "\\d*";
-                        } else {
-                            box = document.createElement('div');
-                            box.className = 'digit-box static'; box.innerHTML = digit === ' ' ? '&nbsp;' : digit;
-                        }
+                        if (digit === '?') { box = document.createElement('input'); box.type = 'text'; box.className = 'digit-box missing-input'; box.maxLength = 1; box.pattern = "\\d*"; } 
+                        else { box = document.createElement('div'); box.className = 'digit-box static'; box.textContent = digit; }
                         numberRow.appendChild(box);
                     });
                     numbersWrapper.appendChild(numberRow);
                 });
-
                 const answerRow = document.createElement('div');
                 answerRow.className = 'answer-row';
-                String(correctMissingMinuend - correctMissingSubtrahend).padStart(digitCount + 1, ' ').split('').forEach(digit => {
-                    const box = document.createElement('div');
-                    box.className = 'digit-box static'; box.innerHTML = digit === ' ' ? '&nbsp;' : digit;
-                    answerRow.appendChild(box);
+                String(correctMissingMinuend - correctMissingSubtrahend).padStart(digitCount, ' ').split('').forEach(digit => {
+                    const box = document.createElement('div'); box.className = 'digit-box static'; box.innerHTML = digit === ' ' ? '&nbsp;' : digit; answerRow.appendChild(box);
                 });
-                
                 missingDigitProblemDiv.appendChild(numbersWrapper);
                 missingDigitProblemDiv.appendChild(answerRow);
             }
-
             checkMissingBtn.addEventListener('click', () => {
                 const rows = missingDigitProblemDiv.querySelectorAll('.number-row');
                 let userNumbers = [];
                 rows.forEach(row => {
                     let numStr = '';
-                    Array.from(row.children).forEach(node => {
-                        if (node.classList.contains('digit-box')) {
-                            numStr += node.tagName === 'INPUT' ? (node.value || '0') : node.textContent;
-                        }
-                    });
-                    userNumbers.push(parseInt(numStr.trim(), 10) || 0);
+                    Array.from(row.children).forEach(node => { if (node.classList.contains('digit-box')) { numStr += (node.tagName === 'INPUT' ? (node.value || '0') : node.textContent).trim(); } });
+                    userNumbers.push(parseInt(numStr, 10) || 0);
                 });
                 if (userNumbers[0] === correctMissingMinuend && userNumbers[1] === correctMissingSubtrahend) {
-                    missingDigitFeedback.textContent = "Tebrikler, Doğru!";
-                    missingDigitFeedback.className = 'feedback-correct';
+                    missingDigitFeedback.textContent = "Tebrikler, Doğru!"; missingDigitFeedback.className = 'feedback-correct';
                 } else {
-                    missingDigitFeedback.textContent = "Tekrar Deneyin.";
-                    missingDigitFeedback.className = 'feedback-incorrect';
+                    missingDigitFeedback.textContent = "Tekrar Deneyin."; missingDigitFeedback.className = 'feedback-incorrect';
                 }
             });
-
             newMissingBtn.addEventListener('click', generateMissingDigitProblem);
             missingDigitCountSelect.addEventListener('change', generateMissingDigitProblem);
             missingModeSelect.addEventListener('change', generateMissingDigitProblem);
