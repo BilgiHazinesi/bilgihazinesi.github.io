@@ -59,21 +59,23 @@
         .digit-box.number-input:focus, .digit-box.answer:focus, .digit-box.missing-input:focus { outline: 2px solid var(--accent-color); background-color: #fffde7; }
         .answer-row .digit-box { background-color: #e8f5e9; font-weight: bold; color: var(--accent-color); }
         .answer-row .digit-box.highlight { background-color: #a5d6a7; animation: pop-in 0.3s; }
-        .borrow-animation { position: absolute; top: -20px; left: -15px; font-size: 1.5rem; color: #f44336; animation: pop-in 0.4s; }
+        .borrow-animation { position: absolute; top: -20px; left: -15px; font-size: 1.5rem; color: #f44336; animation: pop-in 0.4s; display: flex; gap: 4px; align-items: center; background: rgba(255, 255, 255, 0.8); padding: 0 4px; border-radius: 4px;}
         .borrow-animation .old { text-decoration: line-through; }
-        
-        /* YENİ: DİNAMİK ÇIKARMA ARACI STİLLERİ */
+
         .dynamic-subtraction-tool { padding: 20px; background-color: var(--box-bg); border: 2px solid var(--border-color); border-radius: 8px; }
         .dynamic-controls { display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; }
         .slider-group { display: grid; grid-template-columns: 100px 1fr 80px; align-items: center; gap: 10px; }
         .slider-group label { font-size: 1.2rem; font-weight: bold; }
-        .slider-group input[type=range] { width: 100%; }
+        .slider-group input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; height: 25px; background: transparent; outline: none; }
+        .slider-group input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 25px; cursor: pointer; background: var(--slider-track-bg, #ddd); border-radius: 5px; border: 1px solid var(--border-color); }
+        .slider-group input[type=range]::-moz-range-track { width: 100%; height: 25px; cursor: pointer; background: var(--slider-track-bg, #ddd); border-radius: 5px; border: 1px solid var(--border-color); }
         .slider-group span { font-size: 1.5rem; font-weight: bold; text-align: center; background: #fff; padding: 5px; border-radius: 5px; border: 1px solid var(--border-color); }
         #dynamic-result { text-align: center; margin-top: 20px; font-size: 2rem; }
         #dynamic-explanation { text-align: center; font-size: 1.2rem; color: var(--text-secondary); min-height: 25px; margin-top: 10px; font-style: italic;}
 
-        /* YENİ: EKSİK RAKAM BULMA ARACI STİLLERİ */
         .missing-digit-tool { padding: 20px; background-color: var(--box-bg); border: 2px solid var(--border-color); border-radius: 8px; }
+        .missing-digit-setup-controls { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+        .missing-digit-setup-controls label { font-size: 1.1rem; font-weight: bold; }
         #missing-digit-problem { max-width: 500px; margin: 0 auto; }
         .missing-digit-controls { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
         #missing-digit-feedback { text-align: center; margin-top: 15px; font-size: 1.5rem; font-weight: bold; min-height: 30px; }
@@ -146,18 +148,12 @@
                     const problemDiv = document.createElement('div');
                     problemDiv.className = 'problem';
                     problemDiv.innerHTML = `<div class="problem-label">${problemLabels[i]}</div>`;
-                    
                     const answerLength = digitCount + 1;
-                    
                     const numbersWrapper = document.createElement('div');
                     numbersWrapper.className = 'numbers-wrapper';
-                    
                     const num1 = getRandomNumber(digitCount);
                     const num2 = getRandomNumber(digitCount);
-                    const minuend = Math.max(num1, num2);
-                    const subtrahend = Math.min(num1, num2);
-
-                    [minuend, subtrahend].forEach((num, index) => {
+                    [Math.max(num1, num2), Math.min(num1, num2)].forEach((num, index) => {
                         const numberRow = document.createElement('div');
                         numberRow.className = 'number-row';
                         if (index === 1) { numberRow.innerHTML = `<span class="operator">-</span>`; }
@@ -169,7 +165,6 @@
                         });
                         numbersWrapper.appendChild(numberRow);
                     });
-                    
                     const answerRow = document.createElement('div');
                     answerRow.className = 'answer-row';
                     for (let k = 0; k < answerLength; k++) {
@@ -177,7 +172,6 @@
                         answerBox.type = 'text'; answerBox.className = 'digit-box answer'; answerBox.maxLength = 1; answerBox.pattern = "\\d*"; 
                         answerRow.appendChild(answerBox);
                     }
-                    
                     const problemFooter = document.createElement('div');
                     problemFooter.className = 'problem-footer';
                     const quickAnswerInput = document.createElement('input');
@@ -185,7 +179,6 @@
                     const showAnswerBtn = document.createElement('button');
                     showAnswerBtn.className = 'show-answer-btn'; showAnswerBtn.textContent = 'Cevabı Göster';
                     showAnswerBtn.addEventListener('click', () => { animateSubtraction(numbersWrapper, answerRow, showAnswerBtn); });
-                    
                     problemFooter.appendChild(showAnswerBtn);
                     problemFooter.appendChild(quickAnswerInput);
                     problemDiv.appendChild(numbersWrapper);
@@ -199,22 +192,19 @@
                 const numberRows = numbersWrapper.querySelectorAll('.number-row');
                 const minuendInputs = Array.from(numberRows[0].querySelectorAll('.number-input'));
                 
+                minuendInputs.forEach(input => {
+                    const oldAnim = input.querySelector('.borrow-animation');
+                    if (oldAnim) oldAnim.remove();
+                });
+
                 if (button.textContent === 'Cevabı Gizle') {
                     answerInputs.forEach(el => el.value = '');
-                    minuendInputs.forEach(input => {
-                        const oldAnim = input.querySelector('.borrow-animation');
-                        if (oldAnim) oldAnim.remove();
-                    });
                     button.textContent = 'Cevabı Göster';
                     return;
                 }
                 
                 button.disabled = true;
                 answerInputs.forEach(el => { el.value = ''; el.classList.remove('highlight'); });
-                minuendInputs.forEach(input => {
-                    const oldAnim = input.querySelector('.borrow-animation');
-                    if (oldAnim) oldAnim.remove();
-                });
 
                 let minuendArr = minuendInputs.map(input => parseInt(input.value) || 0);
                 const subtrahendArr = Array.from(numberRows[1].querySelectorAll('.number-input')).map(input => parseInt(input.value) || 0);
@@ -228,23 +218,28 @@
                         let borrowIndex = i - 1;
                         while(borrowIndex >= 0) {
                             if (minuendArr[borrowIndex] > 0) {
+                                await delay(500);
                                 const animDiv = document.createElement('div');
                                 animDiv.className = 'borrow-animation';
-                                animDiv.innerHTML = `<span class="old">${minuendArr[borrowIndex]}</span> ${minuendArr[borrowIndex] - 1}`;
+                                animDiv.innerHTML = `<span class="old">${minuendArr[borrowIndex]}</span> <strong>${minuendArr[borrowIndex] - 1}</strong>`;
                                 minuendInputs[borrowIndex].appendChild(animDiv);
                                 minuendArr[borrowIndex]--;
+
                                 for(let j = borrowIndex + 1; j < i; j++) {
+                                     await delay(300);
                                      const animDivJ = document.createElement('div');
                                      animDivJ.className = 'borrow-animation';
-                                     animDivJ.innerHTML = `<span class="old">${minuendArr[j]}</span> ${9}`;
+                                     animDivJ.innerHTML = `<span class="old">${minuendArr[j]}</span> <strong>${9}</strong>`;
                                      minuendInputs[j].appendChild(animDivJ);
                                      minuendArr[j] = 9;
                                 }
-                                minuendDigit += 10;
+                                
+                                await delay(300);
                                 const finalAnimDiv = document.createElement('div');
                                 finalAnimDiv.className = 'borrow-animation';
-                                finalAnimDiv.innerHTML = `<strong>${minuendDigit}</strong>`;
+                                finalAnimDiv.innerHTML = `<span class="old">${minuendDigit}</span> <strong>${minuendDigit+10}</strong>`;
                                 minuendInputs[i].appendChild(finalAnimDiv);
+                                minuendDigit += 10;
                                 break;
                             }
                             borrowIndex--;
@@ -277,23 +272,23 @@
             function updateDynamicSubtraction() {
                 let eksilen = parseInt(eksilenSlider.value);
                 let cikan = parseInt(cikanSlider.value);
-
                 cikanSlider.max = eksilen -1;
-                if (cikan >= eksilen) {
-                    cikan = eksilen - 1;
-                    cikanSlider.value = cikan;
-                }
+                if (cikan >= eksilen) { cikan = eksilen - 1; cikanSlider.value = cikan; }
+                const fark = eksilen - cikan;
                 
                 eksilenValue.textContent = eksilen;
                 cikanValue.textContent = cikan;
-                const fark = eksilen - cikan;
                 dynamicResult.textContent = `${eksilen} - ${cikan} = ${fark}`;
                 
-                if (lastChanged === 'eksilen') {
-                    dynamicExplanation.textContent = "Eksilen sayı arttığında, fark da artar.";
-                } else if (lastChanged === 'cikan') {
-                    dynamicExplanation.textContent = "Çıkan sayı arttığında, fark azalır.";
-                }
+                if (lastChanged === 'eksilen') { dynamicExplanation.textContent = "Eksilen sayı değiştiğinde, fark da aynı yönde değişir."; } 
+                else if (lastChanged === 'cikan') { dynamicExplanation.textContent = "Çıkan sayı değiştiğinde, fark zıt yönde değişir."; }
+
+                const max = eksilenSlider.max;
+                const farkPercent = (fark / max) * 100;
+                const cikanPercent = ((fark + cikan) / max) * 100;
+                eksilenSlider.style.setProperty('--slider-track-bg', 
+                    `linear-gradient(to right, #81c784 0%, #81c784 ${farkPercent}%, #f44336 ${farkPercent}%, #f44336 ${cikanPercent}%, #ddd ${cikanPercent}%, #ddd 100%)`
+                );
             }
             eksilenSlider.addEventListener('input', () => { lastChanged = 'eksilen'; updateDynamicSubtraction(); });
             cikanSlider.addEventListener('input', () => { lastChanged = 'cikan'; updateDynamicSubtraction(); });
@@ -304,62 +299,46 @@
             const checkMissingBtn = document.getElementById('check-missing-btn');
             const newMissingBtn = document.getElementById('new-missing-btn');
             const missingDigitFeedback = document.getElementById('missing-digit-feedback');
-            let correctMissingSum = 0;
-            
-            function generateMissingDigitProblem() { /* Bu bölüm bir sonraki kod bloğunda yer alıyor */ }
-            checkMissingBtn.addEventListener('click', () => { /* Bu bölüm bir sonraki kod bloğunda yer alıyor */ });
-            newMissingBtn.addEventListener('click', generateMissingDigitProblem);
-            generateMissingDigitProblem();
-        });
+            let correctMissingDifference = 0;
 
-        // Verilmeyen Rakamlar bölümünün script'i ayrı bir blokta
-        document.addEventListener('DOMContentLoaded', () => {
-            const problemDiv = document.getElementById('missing-digit-problem');
-            const checkBtn = document.getElementById('check-missing-btn');
-            const newBtn = document.getElementById('new-missing-btn');
-            const feedbackDiv = document.getElementById('missing-digit-feedback');
-            const digitSelect = document.getElementById('missing-digit-count');
-            const addendSelect = document.getElementById('missing-addend-count');
-            let correctNumbers = [];
+            function generateMissingDigitProblem() {
+                missingDigitProblemDiv.innerHTML = '';
+                missingDigitFeedback.innerHTML = '';
+                const num1 = getRandomNumber(3);
+                const num2 = getRandomNumber(3);
+                const minuend = Math.max(num1, num2);
+                const subtrahend = Math.min(num1, num2);
+                correctMissingDifference = minuend - subtrahend;
 
-            function generate() {
-                problemDiv.innerHTML = '';
-                feedbackDiv.innerHTML = '';
-                const digits = parseInt(digitSelect.value);
-                const addends = parseInt(addendSelect.value);
-                const answerLength = digits + 1;
+                let minuendStr = String(minuend).split('');
+                let subtrahendStr = String(subtrahend).split('');
+                let hiddenIndices = new Set();
 
-                let nums = Array.from({length: addends}, () => getRandomNumber(digits));
-                const sum = nums.reduce((a, b) => a + b, 0);
-                correctNumbers = [...nums];
-
-                let allDigits = [];
-                for(let i=0; i<addends; i++) { for(let j=0; j<digits; j++) { allDigits.push({row: i, col: j}); } }
-                for (let i = allDigits.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [allDigits[i], allDigits[j]] = [allDigits[j], allDigits[i]]; }
-                
-                const toHideCount = Math.floor(allDigits.length / 2.5) || 1;
-                let hiddenPositions = [];
-                for(let i=0; i<toHideCount; i++){
-                    if(!hiddenPositions.some(p => p.col === allDigits[i].col)) {
-                        hiddenPositions.push(allDigits[i]);
+                while(hiddenIndices.size < 3) {
+                    const rowIndex = Math.floor(Math.random() * 2); // 0 for minuend, 1 for subtrahend
+                    const colIndex = Math.floor(Math.random() * 3);
+                    const key = `${rowIndex}-${colIndex}`;
+                    if(!hiddenIndices.has(key)) {
+                        hiddenIndices.add(key);
+                        if(rowIndex === 0) minuendStr[colIndex] = '?';
+                        else subtrahendStr[colIndex] = '?';
                     }
                 }
 
                 const numbersWrapper = document.createElement('div');
                 numbersWrapper.className = 'numbers-wrapper';
-                nums.forEach((num, rowIndex) => {
+                [minuendStr, subtrahendStr].forEach((numArr, index) => {
                     const numberRow = document.createElement('div');
                     numberRow.className = 'number-row';
-                    if (rowIndex === nums.length - 1) { numberRow.innerHTML = `<span class="operator">+</span>`; }
-                    String(num).padStart(answerLength, ' ').split('').forEach((digit, colIndex) => {
+                    if (index === 1) { numberRow.innerHTML = `<span class="operator">-</span>`; }
+                    numArr.forEach(digit => {
                         let box;
-                        const isHidden = hiddenPositions.some(p => p.row === rowIndex && p.col === colIndex - (answerLength - digits));
-                        if (isHidden) {
+                        if (digit === '?') {
                             box = document.createElement('input');
                             box.type = 'text'; box.className = 'digit-box missing-input'; box.maxLength = 1; box.pattern = "\\d*";
                         } else {
                             box = document.createElement('div');
-                            box.className = 'digit-box static'; box.innerHTML = digit === ' ' ? '&nbsp;' : digit;
+                            box.className = 'digit-box static'; box.textContent = digit;
                         }
                         numberRow.appendChild(box);
                     });
@@ -368,44 +347,39 @@
 
                 const answerRow = document.createElement('div');
                 answerRow.className = 'answer-row';
-                String(sum).padStart(answerLength, ' ').split('').forEach(digit => {
+                String(correctMissingDifference).padStart(4, ' ').split('').forEach(digit => {
                     const box = document.createElement('div');
                     box.className = 'digit-box static'; box.innerHTML = digit === ' ' ? '&nbsp;' : digit;
                     answerRow.appendChild(box);
                 });
                 
-                problemDiv.appendChild(numbersWrapper);
-                problemDiv.appendChild(answerRow);
+                missingDigitProblemDiv.appendChild(numbersWrapper);
+                missingDigitProblemDiv.appendChild(answerRow);
             }
-
-            checkBtn.addEventListener('click', () => {
-                const rows = problemDiv.querySelectorAll('.number-row');
+            checkMissingBtn.addEventListener('click', () => {
+                const rows = missingDigitProblemDiv.querySelectorAll('.number-row');
                 let userNumbers = [];
                 rows.forEach(row => {
                     let numStr = '';
                     Array.from(row.children).forEach(node => {
                         if (node.classList.contains('digit-box')) {
-                            numStr += (node.tagName === 'INPUT' ? node.value : node.textContent).trim() || '0';
+                            numStr += node.tagName === 'INPUT' ? (node.value || '0') : node.textContent;
                         }
                     });
-                    userNumbers.push(parseInt(numStr, 10));
+                    userNumbers.push(parseInt(numStr.trim(), 10) || 0);
                 });
 
-                if (userNumbers.reduce((a, b) => a + b, 0) === correctNumbers.reduce((a, b) => a + b, 0)) {
-                    feedbackDiv.textContent = "Tebrikler, Doğru!";
-                    feedbackDiv.className = 'feedback-correct';
+                if (userNumbers[0] - userNumbers[1] === correctMissingDifference) {
+                    missingDigitFeedback.textContent = "Tebrikler, Doğru!";
+                    missingDigitFeedback.className = 'feedback-correct';
                 } else {
-                    feedbackDiv.textContent = "Tekrar Deneyin.";
-                    feedbackDiv.className = 'feedback-incorrect';
+                    missingDigitFeedback.textContent = "Tekrar Deneyin.";
+                    missingDigitFeedback.className = 'feedback-incorrect';
                 }
             });
-
-            newBtn.addEventListener('click', generate);
-            digitSelect.addEventListener('change', generate);
-            addendSelect.addEventListener('change', generate);
-            generate();
+            newMissingBtn.addEventListener('click', generateMissingDigitProblem);
+            generateMissingDigitProblem();
         });
     </script>
-
 </body>
 </html>
