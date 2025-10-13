@@ -147,26 +147,40 @@
 
         /* TAB 3: VISUAL BOARD (GÜNCELLENDİ) */
         .visual-controls input { width: 150px; text-align: center; font-size: 1.3rem; }
-        #board-columns { position: relative; display: flex; flex-direction: row-reverse; justify-content: center; gap: 10px; padding: 20px; background: #a58860; border: 2px solid #6d5537; border-radius: 10px; min-height: 400px; overflow-x: auto; }
-        .place-value-column { display:flex; flex-direction:column; align-items:center; width:120px; flex-shrink:0; }
+        #board-columns { 
+            position: relative; display: flex; flex-direction: row-reverse; 
+            justify-content: center; gap: 10px; padding: 20px; 
+            background: #a58860; border: 2px solid #6d5537; border-radius: 10px; 
+            min-height: 400px; overflow-x: auto; 
+            align-items: flex-end; /* Sütunları alta hizala */
+        }
+        .place-value-column { 
+            display:flex; flex-direction:column; align-items:center; 
+            width:120px; flex-shrink:0; 
+            min-height: 350px; /* Görsel alan için minimum yükseklik */
+            justify-content: flex-end; /* Pulları altta biriktir */
+        }
         .chips-container { 
-            position:relative; margin-top:10px; width:100%; min-height:350px; 
+            position:relative; margin-top:10px; width:100%; 
             display:flex; 
-            flex-direction: column-reverse; /* Yığınları alttan yukarı dizer */
-            flex-wrap: wrap; /* Yığınlar dolunca yana geçer */
-            align-content: flex-end; /* Yığınları tabana hizalar */
-            justify-content: center; /* Yığınları yatayda ortalar */
+            flex-wrap: wrap-reverse; /* Pulları alttan yukarı ve sağdan sola sarar */
+            justify-content: center; /* Pulları yatayda ortalar */
+            align-content: flex-end; /* İçerik alttan başlar */
             gap: 5px; padding:5px; background:rgba(0,0,0,0.1); border-radius:5px;
-            max-height: 150px; /* Yaklaşık 10 puldan sonra sarmayı zorlar */
+            min-height: 250px; /* Pulların yerleşimi için yeterli alan */
+            max-height: 300px; /* Pullar üst üste binmesin diye max yükseklik */
+            overflow: auto; /* Çok fazla pul olursa kaydırma çubuğu */
         }
         .chip { 
             width:18px; height:18px; border-radius:50%; 
             box-shadow:inset 1px 1px 3px rgba(0,0,0,0.5); 
             border:1px solid rgba(0,0,0,0.3); 
             animation: pop-in 0.3s ease-out; 
-            margin-bottom: -14px; /* Pulları üst üste bindirir */
-            margin-left: 2px;
-            margin-right: 2px;
+            flex-shrink: 0; /* Pulların küçülmesini engelle */
+            margin: 2px; /* Pullar arasında boşluk */
+            /* Pul gruplarını 5'li yapmak için özel stil */
+            flex-basis: calc((100% / 5) - 4px); /* 5 pul yan yana sığacak şekilde genişlik */
+            max-width: 18px; /* Sabit genişlik */
         }
         .chip.chip-ones { background-color: #f4d03f; } .chip.chip-tens { background-color: #4caf50; } .chip.chip-hundreds { background-color: #29b6f6; } .chip.chip-thousands { background-color: #e91e63; }
         .chip.chip-ten-thousands { background-color: #ff9800; } .chip.chip-hundred-thousands { background-color: #9c27b0; }
@@ -450,67 +464,138 @@
                 const num2Input = document.getElementById('visual-num2'); const digitCountSelect = document.getElementById('board-digit-count');
                 const placeValueNames = ['Birler', 'Onlar', 'Yüzler', 'Binler', 'On Binler', 'Yüz Binler'];
                 const chipClasses = ['chip-ones', 'chip-tens', 'chip-hundreds', 'chip-thousands', 'chip-ten-thousands', 'chip-hundred-thousands'];
+                
                 function generateNewProblem() {
                     const digitCount = parseInt(digitCountSelect.value); const num1 = getRandomNumber(digitCount); const num2 = getRandomNumber(digitCount);
                     num1Input.value = Math.max(num1, num2); num2Input.value = Math.min(num1, num2); boardContainer.innerHTML = '';
                 }
+
                 async function animateSolution() {
                     solveBtn.disabled = true; newBtn.disabled = true;
-                    const minuend = parseInt(num1Input.value) || 0; const subtrahend = parseInt(num2Input.value) || 0;
-                    if (minuend < subtrahend) { alert("Eksilen, çıkandan küçük olamaz!"); solveBtn.disabled = false; newBtn.disabled = false; return; }
+
+                    const minuend = parseInt(num1Input.value) || 0;
+                    const subtrahend = parseInt(num2Input.value) || 0;
+
+                    if (minuend < subtrahend) {
+                        alert("Eksilen, çıkandan küçük olamaz!");
+                        solveBtn.disabled = false;
+                        newBtn.disabled = false;
+                        return;
+                    }
+
                     const digitCount = Math.max(String(minuend).length, 1);
                     let minuendDigits = String(minuend).padStart(digitCount, '0').split('').reverse().map(Number);
                     let subtrahendDigits = String(subtrahend).padStart(digitCount, '0').split('').reverse().map(Number);
+
                     boardContainer.innerHTML = '';
-                    for (let i = 0; i < digitCount; i++) { const col = document.createElement('div'); col.className = 'place-value-column'; col.innerHTML = `<h4>${placeValueNames[i]}</h4><div class="chips-container" data-place="${i}"></div>`; boardContainer.appendChild(col); }
-                    minuendDigits.forEach((digit, i) => { const container = boardContainer.querySelector(`[data-place='${i}']`); for (let j = 0; j < digit; j++) container.innerHTML += `<div class="chip ${chipClasses[i]}"></div>`; });
-                    subtrahendDigits.forEach((digit, i) => { const container = boardContainer.querySelector(`[data-place='${i}']`); for (let j = 0; j < digit; j++) container.innerHTML += `<div class="chip ${chipClasses[i]} subtrahend"></div>`; });
-                    await delay(1000);
+                    for (let i = 0; i < digitCount; i++) {
+                        const col = document.createElement('div');
+                        col.className = 'place-value-column';
+                        col.innerHTML = `<h4>${placeValueNames[i]}</h4><div class="chips-container" data-place="${i}"></div>`;
+                        boardContainer.appendChild(col);
+                    }
+
+                    // Başlangıç pullarını yerleştir
+                    minuendDigits.forEach((digit, i) => {
+                        const container = boardContainer.querySelector(`[data-place='${i}']`);
+                        for (let j = 0; j < digit; j++) {
+                            container.innerHTML += `<div class="chip ${chipClasses[i]}"></div>`;
+                        }
+                    });
+                    // Çıkarılacak pulları yerleştir
+                    subtrahendDigits.forEach((digit, i) => {
+                        const container = boardContainer.querySelector(`[data-place='${i}']`);
+                        for (let j = 0; j < digit; j++) {
+                            container.innerHTML += `<div class="chip ${chipClasses[i]} subtrahend"></div>`;
+                        }
+                    });
+                    await delay(1000); // Başlangıç durumunu göstermek için kısa bekleme
+
+                    // Onluk bozma işlemleri
                     for (let i = 0; i < digitCount; i++) {
                         if (minuendDigits[i] < subtrahendDigits[i]) {
                             let borrowFromIndex = i + 1;
-                            while (borrowFromIndex < digitCount && minuendDigits[borrowFromIndex] === 0) { borrowFromIndex++; }
+                            while (borrowFromIndex < digitCount && minuendDigits[borrowFromIndex] === 0) {
+                                borrowFromIndex++;
+                            }
+
                             if (borrowFromIndex < digitCount) {
                                 for (let k = borrowFromIndex; k > i; k--) {
-                                    minuendDigits[k]--; minuendDigits[k - 1] += 10;
-                                    const sourceContainer = boardContainer.querySelector(`[data-place='${k}']`); const targetContainer = boardContainer.querySelector(`[data-place='${k - 1}']`);
+                                    minuendDigits[k]--;
+                                    minuendDigits[k - 1] += 10;
+
+                                    const sourceContainer = boardContainer.querySelector(`[data-place='${k}']`);
+                                    const targetContainer = boardContainer.querySelector(`[data-place='${k - 1}']`);
+
                                     const chipToMove = sourceContainer.querySelector('.chip:not(.subtrahend)');
                                     if(chipToMove) {
-                                        const startRect = chipToMove.getBoundingClientRect(); chipToMove.classList.add('moving'); boardContainer.appendChild(chipToMove);
-                                        chipToMove.style.top = `${startRect.top - boardContainer.getBoundingClientRect().top}px`; chipToMove.style.left = `${startRect.left - boardContainer.getBoundingClientRect().left}px`;
-                                        await delay(50); const endRect = targetContainer.getBoundingClientRect();
-                                        chipToMove.style.transform = `translate(${endRect.left - startRect.left + (endRect.width/2)}px, ${endRect.top - startRect.top + 10}px) scale(0.5)`;
-                                        await delay(800); chipToMove.remove();
-                                        for (let n = 0; n < 10; n++) { 
-                                            targetContainer.innerHTML += `<div class="chip ${chipClasses[k - 1]}"></div>`;
-                                            await delay(100); // Onluk bozarken her bir pul arasında bekle
+                                        // Pulun başlangıç pozisyonunu al
+                                        const startRect = chipToMove.getBoundingClientRect();
+                                        
+                                        // Pulun container dışına çıkıp animasyon yapması için body'ye ekle
+                                        chipToMove.classList.add('moving');
+                                        document.body.appendChild(chipToMove); // Body'ye ekle
+                                        chipToMove.style.top = `${startRect.top}px`;
+                                        chipToMove.style.left = `${startRect.left}px`;
+                                        
+                                        await delay(50); // Tarayıcının stil değişikliğini algılaması için kısa bekleme
+
+                                        // Hedef konumu hesapla (merkeze doğru)
+                                        const targetRect = targetContainer.getBoundingClientRect();
+                                        const targetX = targetRect.left + (targetRect.width / 2) - (chipToMove.offsetWidth / 2);
+                                        const targetY = targetRect.top + (targetRect.height / 2) - (chipToMove.offsetHeight / 2); // Ortaya gelmesi için
+                                        
+                                        // Animasyon için transform kullan
+                                        chipToMove.style.transition = 'transform 0.8s ease-in-out, opacity 0.8s ease-in-out';
+                                        chipToMove.style.transform = `translate(${targetX - startRect.left}px, ${targetY - startRect.top}px) scale(0.5)`;
+                                        chipToMove.style.opacity = '0'; // Hedefe varınca kaybolsun
+
+                                        await delay(800); // Animasyon süresi kadar bekle
+
+                                        chipToMove.remove(); // Pulun animasyon sonrası kaldırılması
+
+                                        // Yeni 10 pulu hedef container'a tek tek ekle
+                                        for (let n = 0; n < 10; n++) {
+                                            const newChip = document.createElement('div');
+                                            newChip.className = `chip ${chipClasses[k - 1]}`;
+                                            targetContainer.appendChild(newChip);
+                                            await delay(100); // Her bir pulun eklenmesi arasında bekleme
                                         }
-                                        await delay(500);
+                                        await delay(500); // 10 pul eklendikten sonra kısa bekleme
                                     }
                                 }
                             }
                         }
                     }
+
+                    // Patlatma işlemleri
                     for (let i = 0; i < digitCount; i++) {
                         const container = boardContainer.querySelector(`[data-place='${i}']`);
                         const minuendChips = Array.from(container.querySelectorAll('.chip:not(.subtrahend)'));
                         const subtrahendChips = Array.from(container.querySelectorAll('.chip.subtrahend'));
                         const chipsToRemoveCount = Math.min(minuendChips.length, subtrahendChips.length);
+
                         if (chipsToRemoveCount > 0) {
                             for(let j = 0; j < chipsToRemoveCount; j++) {
+                                // Patlayacak pullara sınıf ekle
                                 if (minuendChips[j]) minuendChips[j].classList.add('exploding');
                                 if (subtrahendChips[j]) subtrahendChips[j].classList.add('exploding');
-                                await delay(1000); // Her patlama arasında 1 saniye bekle
+                                await delay(1000); // Her çift patlama arasında 1 saniye bekle
                             }
                         }
                     }
-                    await delay(600);
+
+                    await delay(600); // Tüm patlamalar bittikten sonra kısa bekleme
                     boardContainer.querySelectorAll('.exploding').forEach(chip => chip.remove());
-                    solveBtn.disabled = false; newBtn.disabled = false;
+
+                    solveBtn.disabled = false;
+                    newBtn.disabled = false;
                 }
+
                 solveBtn.addEventListener('click', animateSolution);
                 newBtn.addEventListener('click', generateNewProblem);
-                generateNewProblem();
+                digitCountSelect.addEventListener('change', generateNewProblem); // Basamak değiştiğinde yeni problem oluştur
+                generateNewProblem(); // Sayfa yüklendiğinde ilk problemi oluştur
             })();
 
             (function() {
