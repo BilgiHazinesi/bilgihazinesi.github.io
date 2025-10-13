@@ -116,12 +116,12 @@
         #proverb-pagination { margin-top: 20px; text-align: center; }
         #proverb-pagination button { margin: 0 5px; font-size: 1rem; padding: 6px 12px; }
 
-        /* Anlamını Bul */
-        .find-meaning-game { text-align: center; max-width: 800px; margin: 0 auto; }
+        /* Anlamını Bul & Zorlu Anlam Bulma */
+        .find-meaning-game { text-align: center; max-width: 900px; margin: 0 auto; }
         .meaning-question { background: var(--box-bg); padding: 20px; border-radius: 8px; border: 2px dashed var(--border-color); font-size: 1.2rem; margin-bottom: 20px; line-height: 1.6; }
         .meaning-options { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 600px) { .meaning-options { grid-template-columns: 1fr 1fr; } }
-        .meaning-option { padding: 15px; font-size: 1.1rem; border-radius: 8px; border: 2px solid var(--border-color); background: #fff; cursor: pointer; transition: all 0.3s ease; }
+        .meaning-option { padding: 15px; font-size: 1.1rem; border-radius: 8px; border: 2px solid var(--border-color); background: #fff; cursor: pointer; transition: all 0.3s ease; min-height: 80px; display: flex; align-items: center; justify-content: center; }
         .meaning-option:hover { transform: translateY(-3px); box-shadow: 0 4px 8px var(--shadow-color); }
         .meaning-option.correct { background: var(--correct-bg); border-color: var(--correct-border); color: #155724; }
         .meaning-option.incorrect { background: var(--incorrect-bg); border-color: var(--incorrect-border); color: #721c24; }
@@ -132,10 +132,6 @@
         .fill-blank-input { font-family: 'Kalam', cursive; font-size: 1.5rem; border: none; border-bottom: 3px dotted var(--accent-color); background: transparent; text-align: center; width: 150px; color: var(--text-primary); }
         .fill-blank-input:focus { outline: none; border-bottom-color: var(--accent-color); }
         #fill-blank-feedback { min-height: 24px; margin-top: 15px; font-weight: bold; font-size: 1.2rem; }
-
-        /* Resimli Atasözü */
-        .find-image-proverb-game { text-align: center; max-width: 800px; margin: 0 auto; }
-        .image-placeholder { width: 100%; max-width: 400px; height: 250px; background-color: #e0e0e0; border: 2px dashed var(--border-color); border-radius: 8px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-secondary); }
     </style>
 </head>
 <body>
@@ -147,7 +143,7 @@
             <button class="sub-tab-link active" data-sub-tab="sub-tab-1">Atasözü Kartları</button>
             <button class="sub-tab-link" data-sub-tab="sub-tab-2">Anlamını Bul</button>
             <button class="sub-tab-link" data-sub-tab="sub-tab-3">Boşluk Doldurma</button>
-            <button class="sub-tab-link" data-sub-tab="sub-tab-4">Resimli Atasözü</button>
+            <button class="sub-tab-link" data-sub-tab="sub-tab-4">Zorlu Anlam Bulma</button>
         </div>
 
         <div class="sub-tab-content-container">
@@ -175,11 +171,11 @@
                 </div>
             </div>
             <div id="sub-tab-4" class="sub-tab-content">
-                 <div class="find-image-proverb-game">
-                    <div class="image-placeholder">Burada atasözünü anlatan bir resim olacak.</div>
-                    <div id="image-options-container" class="meaning-options"></div>
+                 <div class="find-meaning-game">
+                    <div id="challenging-question-container" class="meaning-question"></div>
+                    <div id="challenging-options-container" class="meaning-options"></div>
                     <div class="controls" style="margin-top: 20px;">
-                        <button id="new-image-question-btn">Yeni Soru</button>
+                        <button id="new-challenging-question-btn">Yeni Soru</button>
                     </div>
                 </div>
             </div>
@@ -258,7 +254,7 @@
                 const meaningQuestionContainer = document.getElementById('meaning-question-container');
                 const meaningOptionsContainer = document.getElementById('meaning-options-container');
                 const newMeaningQuestionBtn = document.getElementById('new-meaning-question-btn');
-                let correctAnswerId;
+                let correctMeaningAnswerId;
 
                 function generateMeaningQuestion() {
                     meaningOptionsContainer.innerHTML = ''; let options = [];
@@ -266,7 +262,7 @@
                         const randomProverb = proverbsData[Math.floor(Math.random() * proverbsData.length)];
                         if (!options.some(opt => opt.id === randomProverb.id)) { options.push(randomProverb); }
                     }
-                    const correctOption = options[0]; correctAnswerId = correctOption.id;
+                    const correctOption = options[0]; correctMeaningAnswerId = correctOption.id;
                     meaningQuestionContainer.textContent = correctOption.anlam;
                     options.sort(() => Math.random() - 0.5);
                     options.forEach(option => {
@@ -282,9 +278,9 @@
                     const allOptions = meaningOptionsContainer.querySelectorAll('.meaning-option');
                     allOptions.forEach(opt => {
                         opt.removeEventListener('click', checkMeaningAnswer);
-                        if (parseInt(opt.dataset.id, 10) === correctAnswerId) { opt.classList.add('correct'); }
+                        if (parseInt(opt.dataset.id, 10) === correctMeaningAnswerId) { opt.classList.add('correct'); }
                     });
-                    if (selectedId !== correctAnswerId) { e.target.classList.add('incorrect'); }
+                    if (selectedId !== correctMeaningAnswerId) { e.target.classList.add('incorrect'); }
                 }
                 newMeaningQuestionBtn.addEventListener('click', generateMeaningQuestion);
 
@@ -316,41 +312,46 @@
                 });
                 newFillBlankBtn.addEventListener('click', generateFillBlankProblem);
                 
-                // --- 4. Alıştırma: Resimli Atasözü ---
-                const imageOptionsContainer = document.getElementById('image-options-container');
-                const newImageQuestionBtn = document.getElementById('new-image-question-btn');
-                
-                function generateImageQuestion() {
-                    // Bu fonksiyon, resimler olmadığı için Anlamını Bul ile aynı mantıkta çalışır.
-                    // Sadece soru metni farklıdır.
-                    imageOptionsContainer.innerHTML = ''; let options = [];
-                    while (options.length < 4) {
+                // --- 4. Alıştırma: Zorlu Anlam Bulma ---
+                const challengingQuestionContainer = document.getElementById('challenging-question-container');
+                const challengingOptionsContainer = document.getElementById('challenging-options-container');
+                const newChallengingQuestionBtn = document.getElementById('new-challenging-question-btn');
+                let correctChallengingAnswerId;
+
+                function generateChallengingQuestion() {
+                    challengingOptionsContainer.innerHTML = ''; let options = [];
+                    while (options.length < 6) { // 6 seçenek oluştur
                         const randomProverb = proverbsData[Math.floor(Math.random() * proverbsData.length)];
                         if (!options.some(opt => opt.id === randomProverb.id)) { options.push(randomProverb); }
                     }
-                    const correctImageOption = options[0];
+                    const correctOption = options[0]; correctChallengingAnswerId = correctOption.id;
+                    challengingQuestionContainer.textContent = correctOption.anlam;
                     options.sort(() => Math.random() - 0.5);
                     options.forEach(option => {
                         const optionBtn = document.createElement('button'); optionBtn.className = 'meaning-option';
-                        optionBtn.textContent = option.söz;
-                        optionBtn.onclick = () => {
-                            imageOptionsContainer.querySelectorAll('.meaning-option').forEach(btn => {
-                                btn.onclick = null;
-                                if (btn.textContent === correctImageOption.söz) btn.classList.add('correct');
-                            });
-                            if (option.id !== correctImageOption.id) optionBtn.classList.add('incorrect');
-                        };
-                        imageOptionsContainer.appendChild(optionBtn);
+                        optionBtn.textContent = option.söz; optionBtn.dataset.id = option.id;
+                        optionBtn.addEventListener('click', checkChallengingAnswer);
+                        challengingOptionsContainer.appendChild(optionBtn);
                     });
                 }
-                newImageQuestionBtn.addEventListener('click', generateImageQuestion);
+
+                function checkChallengingAnswer(e) {
+                    const selectedId = parseInt(e.target.dataset.id, 10);
+                    const allOptions = challengingOptionsContainer.querySelectorAll('.meaning-option');
+                    allOptions.forEach(opt => {
+                        opt.removeEventListener('click', checkChallengingAnswer);
+                        if (parseInt(opt.dataset.id, 10) === correctChallengingAnswerId) { opt.classList.add('correct'); }
+                    });
+                    if (selectedId !== correctChallengingAnswerId) { e.target.classList.add('incorrect'); }
+                }
+                newChallengingQuestionBtn.addEventListener('click', generateChallengingQuestion);
                 
                 // --- İlk Yüklemeler ---
                 displayCards(currentPage);
                 setupPagination();
                 generateMeaningQuestion();
                 generateFillBlankProblem();
-                generateImageQuestion();
+                generateChallengingQuestion();
             }
 
             initializeProverbsApp();
