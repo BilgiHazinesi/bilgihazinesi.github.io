@@ -24,7 +24,7 @@
         header h1 { font-family: 'Cinzel Decorative', cursive; font-size: clamp(2rem, 5vw, 3.2rem); color: var(--accent-color); text-shadow: 1px 1px 2px var(--shadow-color); }
         .section-header h2 { font-family: 'Cinzel Decorative', cursive; font-size: clamp(1.6rem, 4vw, 2.5rem); color: var(--accent-color); text-align: center; margin-bottom: 25px; }
 
-        /* YENİ SEKMELİ YAPI STİLLERİ */
+        /* SEKMELİ YAPI STİLLERİ */
         .tab-container { display: flex; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 3px solid var(--border-color); }
         .tab-link { font-family: 'Cinzel Decorative', cursive; font-weight: 700; padding: 12px 18px; cursor: pointer; border: none; background-color: transparent; border-bottom: 3px solid transparent; font-size: clamp(0.9rem, 2vw, 1.1rem); color: var(--text-secondary); transition: all 0.3s ease; }
         .tab-link.active { color: var(--accent-color); border-bottom-color: var(--accent-color); background-color: rgba(0,0,0,0.03); }
@@ -85,9 +85,11 @@
         #missing-digit-problem { max-width: 500px; margin: 0 auto; }
         .number-row, .answer-row { display:flex; justify-content:flex-end; align-items:center; }
         .number-row { position:relative; } .answer-row { padding-top:10px; }
+        .operator { font-size:2rem; font-weight:bold; position:absolute; left:-5px; top:50%; transform:translateY(-50%); padding-right:10px; }
         .digit-box { width: 45px; height: 45px; border: 1px solid var(--border-color); font-size: 1.8rem; margin: 2px; border-radius: 4px; text-align: center; }
         .digit-box.static { display:flex; justify-content:center; align-items:center; background-color:#fff; user-select:none; }
         .digit-box.missing-input { padding:0; background-color:#fff; }
+        .feedback-correct { color: #4CAF50; } .feedback-incorrect { color: #f44336; }
     </style>
 </head>
 <body>
@@ -113,7 +115,6 @@
                 </div>
                 <div id="column-problems-container"></div>
             </div>
-
             <div id="tab-2" class="tab-content">
                 <div class="section-header"><h2>Zihinden Çıkarma Alıştırmaları</h2></div>
                 <div class="controls practice-controls">
@@ -122,7 +123,6 @@
                 </div>
                 <div id="practice-problems-container"></div>
             </div>
-            
             <div id="tab-3" class="tab-content">
                 <div class="section-header"><h2>Görsel Çıkarma Tahtası</h2></div>
                 <div class="abacus-tool">
@@ -135,7 +135,6 @@
                     <div id="board-columns"></div>
                 </div>
             </div>
-
             <div id="tab-4" class="tab-content">
                 <div class="section-header"><h2>Çıkarma İşleminin Dinamikleri</h2></div>
                 <div class="dynamic-subtraction-tool">
@@ -146,7 +145,6 @@
                     <div id="dynamic-result">500 - 250 = 250</div>
                 </div>
             </div>
-
             <div id="tab-5" class="tab-content">
                 <div class="section-header"><h2>Verilmeyen Rakamları Bul</h2></div>
                 <div class="missing-digit-tool">
@@ -191,79 +189,77 @@
 
             // --- HER BÖLÜMÜN KODU KENDİ ALANINDA GÜVENLİ BİR ŞEKİLDE ÇALIŞACAK ---
             
-            // BÖLÜM 1: ALT ALTA ÇIKARMA
-            (function() {
-                const columnDigitSelect = document.getElementById('column-digit-select');
-                const newColumnProblemsBtn = document.getElementById('new-column-problems-btn');
-                const columnProblemsContainer = document.getElementById('column-problems-container');
-                function generateColumnProblems() {
-                    columnProblemsContainer.innerHTML = '';
-                    const digitCount = parseInt(columnDigitSelect.value);
+            (function() { // BÖLÜM 1: ALT ALTA ÇIKARMA
+                const digitSelect = document.getElementById('column-digit-select');
+                const newProblemsBtn = document.getElementById('new-column-problems-btn');
+                const problemsContainer = document.getElementById('column-problems-container');
+                function generateProblems() {
+                    problemsContainer.innerHTML = '';
+                    const digitCount = parseInt(digitSelect.value);
                     const labels = ['A', 'B', 'C'];
                     for (let i = 0; i < 3; i++) {
                         const num1 = getRandomNumber(digitCount), num2 = getRandomNumber(digitCount);
                         const minuend = Math.max(num1, num2), subtrahend = Math.min(num1, num2);
                         const difference = String(minuend - subtrahend).padStart(digitCount, '0');
-                        const minuendHTML = String(minuend).split('').map(d => `<span class="digit-cell">${d}</span>`).join('');
+                        const minuendHTML = String(minuend).padStart(digitCount, '0').split('').map(d => `<span class="digit-cell">${d}</span>`).join('');
                         const subtrahendHTML = String(subtrahend).padStart(digitCount, '0').split('').map(d => `<span class="digit-cell">${d}</span>`).join('');
                         const answerInputsHTML = Array(digitCount).fill('<input type="text" class="answer-input" maxlength="1" pattern="\\d*">').join('');
                         const problemBox = document.createElement('div');
                         problemBox.className = 'column-problem-box';
                         problemBox.dataset.answer = difference;
                         problemBox.innerHTML = `<div class="problem-label">${labels[i]}</div><div class="column-problem-area"><div class="column-number-row">${minuendHTML}</div><div class="column-number-row subtrahend"><span class="operator">-</span>${subtrahendHTML}</div><hr><div class="column-answer-row">${answerInputsHTML}</div></div><div class="column-feedback"></div><div class="controls column-problem-controls"><button class="show-answer-btn">Cevabı Göster</button><button class="check-answer-btn">Kontrol Et</button></div>`;
-                        columnProblemsContainer.appendChild(problemBox);
+                        problemsContainer.appendChild(problemBox);
                     }
                 }
-                columnProblemsContainer.addEventListener('click', function(e) {
-                    const problemBox = e.target.closest('.column-problem-box');
-                    if (!problemBox) return;
-                    const answer = problemBox.dataset.answer, answerInputs = problemBox.querySelectorAll('.answer-input'), feedbackDiv = problemBox.querySelector('.column-feedback');
+                problemsContainer.addEventListener('click', function(e) {
+                    const box = e.target.closest('.column-problem-box');
+                    if (!box) return;
+                    const answer = box.dataset.answer, inputs = box.querySelectorAll('.answer-input'), feedback = box.querySelector('.column-feedback');
                     if (e.target.classList.contains('check-answer-btn')) {
                         let allCorrect = true;
-                        answerInputs.forEach((input, index) => { (input.value != answer[index]) ? (allCorrect = false, input.classList.add('incorrect'), input.classList.remove('correct')) : (input.classList.add('correct'), input.classList.remove('incorrect')); });
-                        feedbackDiv.textContent = allCorrect ? 'Tebrikler, Doğru!' : 'Tekrar Deneyin.';
-                        feedbackDiv.style.color = allCorrect ? 'var(--correct-border)' : 'var(--incorrect-border)';
+                        inputs.forEach((input, i) => { (input.value != answer[i]) ? (allCorrect = false, input.classList.add('incorrect'), input.classList.remove('correct')) : (input.classList.add('correct'), input.classList.remove('incorrect')); });
+                        feedback.textContent = allCorrect ? 'Tebrikler, Doğru!' : 'Tekrar Deneyin.';
+                        feedback.style.color = allCorrect ? 'var(--correct-border)' : 'var(--incorrect-border)';
                     }
                     if (e.target.classList.contains('show-answer-btn')) {
-                        answerInputs.forEach((input, index) => { input.value = answer[index]; input.className = 'answer-input'; });
-                        feedbackDiv.textContent = '';
+                        inputs.forEach((input, i) => { input.value = answer[i]; input.className = 'answer-input'; });
+                        feedback.textContent = '';
                     }
                 });
-                columnProblemsContainer.addEventListener('input', function(e) { if (e.target.classList.contains('answer-input') && e.target.value) { const next = e.target.nextElementSibling; if (next) next.focus(); } });
-                newColumnProblemsBtn.addEventListener('click', generateColumnProblems);
-                columnDigitSelect.addEventListener('change', generateColumnProblems);
-                generateColumnProblems();
+                problemsContainer.addEventListener('input', function(e) { if (e.target.classList.contains('answer-input') && e.target.value) { const next = e.target.nextElementSibling; if (next) next.focus(); } });
+                newProblemsBtn.addEventListener('click', generateProblems);
+                digitSelect.addEventListener('change', generateProblems);
+                generateProblems();
             })();
 
-            // BÖLÜM 2: ZİHİNDEN ÇIKARMA
-            (function() {
+            (function() { // BÖLÜM 2: ZİHİNDEN ÇIKARMA
                 const digitSelect = document.getElementById('digit-select');
                 const newProblemsBtn = document.getElementById('new-problems-btn');
                 const practiceContainer = document.getElementById('practice-problems-container');
-                function createExplanationHTML(min,sub){const mS=String(min),sS=String(sub).padStart(mS.length,'0');let mP=[],sP=[],dP=[],rP=[];for(let i=0;i<mS.length;i++){const p=Math.pow(10,mS.length-1-i),m=parseInt(mS[i]),s=parseInt(sS[i]);if(m>0||mS.length===1)mP.push(m*p);if(s>0||sS.length===1)sP.push(s*p);const d=(m*p)-(s*p);dP.push(`<p>(${m*p} - ${s*p}) = ${d}</p>`);rP.push(d);}const fR=min-sub;return `<p><strong>Eksilen:</strong> ${mP.join(' + ')}</p><p><strong>Çıkan:</strong> &nbsp;&nbsp;${sP.join(' + ')}</p><hr><strong>İşlem:</strong>${dP.join('')}<strong>Sonuç:</strong><p>${rP.join(' + ')} = ${fR}</p>`;}
-                function updateProblem(p){const m=p.querySelector('.minuend-input'),s=p.querySelector('.subtrahend-input'),f=p.querySelector('.final-answer'),e=p.querySelector('.explanation-box');let n1=parseInt(m.value)||0,n2=parseInt(s.value)||0;const min=Math.max(n1,n2),sub=Math.min(n1,n2);m.value=min;s.value=sub;e.innerHTML=createExplanationHTML(min,sub);if(!e.classList.contains('hidden'))f.textContent=min-sub;}
+                function createExplanation(min,sub){const mS=String(min),sS=String(sub).padStart(mS.length,'0');let mP=[],sP=[],dP=[],rP=[];for(let i=0;i<mS.length;i++){const p=Math.pow(10,mS.length-1-i),m=parseInt(mS[i]),s=parseInt(sS[i]);if(m>0||mS.length===1)mP.push(m*p);if(s>0||sS.length===1)sP.push(s*p);const d=(m*p)-(s*p);dP.push(`<p>(${m*p} - ${s*p}) = ${d}</p>`);rP.push(d);}const fR=min-sub;return `<p><strong>Eksilen:</strong> ${mP.join(' + ')}</p><p><strong>Çıkan:</strong> &nbsp;&nbsp;${sP.join(' + ')}</p><hr><strong>İşlem:</strong>${dP.join('')}<strong>Sonuç:</strong><p>${rP.join(' + ')} = ${fR}</p>`;}
+                function updateProblem(p){const m=p.querySelector('.minuend-input'),s=p.querySelector('.subtrahend-input'),f=p.querySelector('.final-answer'),e=p.querySelector('.explanation-box');let n1=parseInt(m.value)||0,n2=parseInt(s.value)||0;const min=Math.max(n1,n2),sub=Math.min(n1,n2);m.value=min;s.value=sub;e.innerHTML=createExplanation(min,sub);if(!e.classList.contains('hidden'))f.textContent=min-sub;}
                 function generateProblems(){practiceContainer.innerHTML='';const d=parseInt(digitSelect.value);for(let i=0;i<3;i++){const pD=document.createElement('div');pD.className='practice-problem';const n1=getRandomNumber(d),n2=getRandomNumber(d);pD.innerHTML=`<div class="problem-numbers"><input type="number" class="number-input minuend-input" value="${Math.max(n1,n2)}"><div class="subtrahend-row"><span class="operator">-</span><input type="number" class="number-input subtrahend-input" value="${Math.min(n1,n2)}"></div></div><hr><div class="result-area"><div class="final-answer">[ Cevabı Gör ]</div></div><div class="explanation-box hidden"></div>`;practiceContainer.appendChild(pD);const m=pD.querySelector('.minuend-input'),s=pD.querySelector('.subtrahend-input'),f=pD.querySelector('.final-answer'),e=pD.querySelector('.explanation-box');[m,s].forEach(inp=>inp.addEventListener('input',()=>updateProblem(pD)));f.addEventListener('click',()=>{e.classList.toggle('hidden');f.textContent=e.classList.contains('hidden')?'[ Cevabı Gör ]':(m.value-s.value);if(!e.classList.contains('hidden'))updateProblem(pD);});updateProblem(pD);}}
                 newProblemsBtn.addEventListener('click', generateProblems);
                 digitSelect.addEventListener('change', generateProblems);
                 generateProblems();
             })();
             
-            // BÖLÜM 3: GÖRSEL ÇIKARMA TAHTASI
-            (function() {
+            (function() { // BÖLÜM 3: GÖRSEL ÇIKARMA TAHTASI
                 const boardSolveBtn=document.getElementById('board-solve-btn'),boardNewBtn=document.getElementById('board-new-btn'),boardColumnsDiv=document.getElementById('board-columns'),placeValueNames=['Birler','Onlar','Yüzler','Binler','On Binler','Yüz Binler'],chipClasses=['ones','tens','hundreds','thousands','ten_thousands','hundred_thousands'];
                 async function animateBoardSolution(){boardSolveBtn.disabled=!0;boardNewBtn.disabled=!0;const minuend=parseInt(document.getElementById('visual-num1').value)||0,subtrahend=parseInt(document.getElementById('visual-num2').value)||0;if(minuend<subtrahend){alert("Eksilen, çıkandan küçük olamaz!");boardSolveBtn.disabled=!1;boardNewBtn.disabled=!1;return}boardColumnsDiv.innerHTML='';const digitCount=String(minuend).length;for(let i=0;i<digitCount;i++){const col=document.createElement('div');col.className='place-value-column';col.innerHTML=`<h4>${placeValueNames[i]}</h4>`;const chipsContainer=document.createElement('div');chipsContainer.className='chips-container';chipsContainer.dataset.place=i;col.appendChild(chipsContainer);boardColumnsDiv.appendChild(col)}String(minuend).split('').reverse().forEach((digit,i)=>{const container=boardColumnsDiv.querySelector(`[data-place='${i}']`);if(container)for(let j=0;j<parseInt(digit);j++){const chip=document.createElement('div');chip.className=`chip ${chipClasses[i]}`;container.appendChild(chip)}});String(subtrahend).split('').reverse().forEach((digit,i)=>{const container=boardColumnsDiv.querySelector(`[data-place='${i}']`);if(container)for(let j=0;j<parseInt(digit);j++){const chip=document.createElement('div');chip.className=`chip ${chipClasses[i]} subtrahend`;container.appendChild(chip)}});await delay(500);for(let i=0;i<digitCount;i++){const container=boardColumnsDiv.querySelector(`[data-place='${i}']`);let minuendChips=container.querySelectorAll('.chip:not(.subtrahend)');const subtrahendChips=container.querySelectorAll('.chip.subtrahend');if(minuendChips.length<subtrahendChips.length){let borrowFromIndex=i+1;while(borrowFromIndex<digitCount){const borrowSourceContainer=boardColumnsDiv.querySelector(`[data-place='${borrowFromIndex}']`);if(borrowSourceContainer.querySelectorAll('.chip:not(.subtrahend)').length>0){for(let k=borrowFromIndex;k>i;k--){await delay(500);const source=boardColumnsDiv.querySelector(`[data-place='${k}']`),target=boardColumnsDiv.querySelector(`[data-place='${k-1}']`),chipToMove=source.querySelector('.chip:not(.subtrahend)');chipToMove.classList.add('moving');const startRect=chipToMove.getBoundingClientRect(),endRect=target.getBoundingClientRect();boardColumnsDiv.appendChild(chipToMove);chipToMove.style.top=`${startRect.top-boardColumnsDiv.getBoundingClientRect().top}px`;chipToMove.style.left=`${startRect.left-boardColumnsDiv.getBoundingClientRect().left}px`;await delay(50);chipToMove.style.transform=`translate(${endRect.left-startRect.left+50}px, ${endRect.top-startRect.top+30}px) scale(0.5)`;await delay(800);chipToMove.remove();for(let n=0;n<10;n++){const newChip=document.createElement('div');newChip.className=`chip ${chipClasses[k-1]}`;newChip.style.animation='pop-in 0.3s ease-out';target.appendChild(newChip)}}break}borrowFromIndex++}}await delay(800);minuendChips=container.querySelectorAll('.chip:not(.subtrahend)');const chipsToRemove=Math.min(minuendChips.length,subtrahendChips.length);for(let j=0;j<chipsToRemove;j++){minuendChips[j].style.opacity='0';subtrahendChips[j].style.opacity='0'}await delay(500);for(let j=0;j<chipsToRemove;j++){if(minuendChips[j])minuendChips[j].remove();if(subtrahendChips[j])subtrahendChips[j].remove()}}boardSolveBtn.disabled=!1;boardNewBtn.disabled=!1}
                 boardSolveBtn.addEventListener('click',animateBoardSolution);boardNewBtn.addEventListener('click',()=>{const d=parseInt(document.getElementById('board-digit-count').value),n1=getRandomNumber(d),n2=getRandomNumber(d);document.getElementById('visual-num1').value=Math.max(n1,n2);document.getElementById('visual-num2').value=Math.min(n1,n2);boardColumnsDiv.innerHTML='';});
             })();
             
-            // BÖLÜM 4: DİNAMİK ÇIKARMA ARACI
+            // BÖLÜM 4: DİNAMİK ÇUBUK
             (function() {
                 const track=document.querySelector('.number-line-track'),handleEksilen=document.getElementById('handle-eksilen'),handleCikan=document.getElementById('handle-cikan'),barFark=document.getElementById('bar-fark'),labelEksilen=document.getElementById('label-eksilen'),labelCikan=document.getElementById('label-cikan'),dynamicResult=document.getElementById('dynamic-result');
-                function updateDynamicDisplay(){const ePos=parseFloat(handleEksilen.style.left),cPos=parseFloat(handleCikan.style.left),e=Math.round((ePos/100)*1000);let c=Math.round((cPos/100)*1000);if(c>e){handleCikan.style.left=ePos+'%';c=e;}const f=e-c;labelEksilen.textContent=`Eksilen: ${e}`;labelCikan.textContent=`Çıkan: ${c}`;dynamicResult.textContent=`${e} - ${c} = ${f}`;barFark.style.left=`${parseFloat(handleCikan.style.left)}%`;barFark.style.width=`${ePos-parseFloat(handleCikan.style.left)}%`;}
+                const maxVal = 1000;
+                function updateDynamicDisplay(){const ePos=parseFloat(handleEksilen.style.left),cPos=parseFloat(handleCikan.style.left),e=Math.round((ePos/100)*maxVal);let c=Math.round((cPos/100)*maxVal);if(c>e){handleCikan.style.left=ePos+'%';c=e;}const f=e-c;labelEksilen.textContent=`Eksilen: ${e}`;labelCikan.textContent=`Çıkan: ${c}`;dynamicResult.textContent=`${e} - ${c} = ${f}`;barFark.style.left=`${parseFloat(handleCikan.style.left)}%`;barFark.style.width=`${ePos-parseFloat(handleCikan.style.left)}%`;}
                 function makeDraggable(h,o,i){h.addEventListener('mousedown',(e)=>{e.preventDefault();const t=track.getBoundingClientRect();function onMove(m){let n=m.clientX-t.left,p=(n/t.width)*100;p=Math.max(0,Math.min(100,p));const oP=parseFloat(o.style.left);if(i){if(p<oP)p=oP;}else{if(p>oP)p=oP;}h.style.left=`${p}%`;updateDynamicDisplay();}function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);});}
                 makeDraggable(handleEksilen,handleCikan,true);makeDraggable(handleCikan,handleEksilen,false);handleEksilen.style.left='50%';handleCikan.style.left='25%';updateDynamicDisplay();
             })();
 
-            // BÖLÜM 5: VERİLMEYEN RAKAMLARI BULMA
+            // BÖLÜM 5: VERİLMEYEN RAKAM
             (function() {
                 const mProblemDiv=document.getElementById('missing-digit-problem'),checkMissingBtn=document.getElementById('check-missing-btn'),newMissingBtn=document.getElementById('new-missing-btn'),mFeedback=document.getElementById('missing-digit-feedback'),mDigitCount=document.getElementById('missing-digit-count'),mModeSelect=document.getElementById('missing-mode-select');let correctMin=0,correctSub=0;
                 function generateMissingDigitProblem(){mProblemDiv.innerHTML='';mFeedback.innerHTML='';const d=parseInt(mDigitCount.value),n1=getRandomNumber(d),n2=getRandomNumber(d);correctMin=Math.max(n1,n2);correctSub=Math.min(n1,n2);let minStr=String(correctMin).padStart(d,'0').split(''),subStr=String(correctSub).padStart(d,'0').split('');const mode=mModeSelect.value;let availPos=Array.from({length:d},(_,i)=>i).sort(()=>0.5-Math.random());let hideCount=Math.max(1,Math.floor(d/2));for(let i=0;i<hideCount;i++){if(availPos.length===0)break;let pos=availPos.pop();let row=(mode==='minuend')?0:(mode==='subtrahend')?1:Math.floor(Math.random()*2);if(row===0)minStr[pos]='?';else subStr[pos]='?';}const wrapper=document.createElement('div');wrapper.className='numbers-wrapper';[minStr,subStr].forEach((numArr,idx)=>{const numRow=document.createElement('div');numRow.className='number-row';if(idx===1)numRow.innerHTML=`<span class="operator">-</span>`;numArr.forEach(digit=>{let box;if(digit==='?'){box=document.createElement('input');box.type='text';box.className='digit-box missing-input';box.maxLength=1;box.pattern="\\d*"}else{box=document.createElement('div');box.className='digit-box static';box.textContent=digit}numRow.appendChild(box)});wrapper.appendChild(numRow)});const ansRow=document.createElement('div');ansRow.className='answer-row';const res=correctMin-correctSub;String(res).padStart(d,'0').split('').forEach(digit=>{const box=document.createElement('div');box.className='digit-box static';box.textContent=digit;ansRow.appendChild(box)});mProblemDiv.appendChild(wrapper);mProblemDiv.appendChild(ansRow);}
