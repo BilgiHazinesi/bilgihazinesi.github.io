@@ -38,7 +38,7 @@
         .section-header h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); }
 
         .controls { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
-        .controls select, .controls button, .controls input { font-family: 'Kalam', cursive; font-size: 1.1rem; padding: 8px 12px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--box-bg); color: var(--text-primary); }
+        .controls select, .controls button, .controls input { font-family: 'Kalam', cursive; font-size: 1.1rem; padding: 8px 12px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--box-bg); color: var(--text-primary); -webkit-user-select: none; user-select: none; }
         .controls button { font-family: 'Cinzel Decorative', cursive; font-weight: 700; background-color: var(--accent-color); color: var(--papyrus-bg); cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .controls button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px var(--shadow-color); }
         .controls button:disabled { background-color: var(--text-secondary); color: #fffaf0; cursor: not-allowed; transform: none; box-shadow: none;}
@@ -50,7 +50,7 @@
         .problem-label { position: absolute; top: 10px; left: 15px; font-family: 'Cinzel Decorative', cursive; font-size: 2.5rem; color: var(--accent-color); opacity: 0.5; }
         .column-problem-area { display: flex; flex-direction: column; align-items: flex-end; font-size: 1.5rem; font-weight: bold; }
         .column-number-row { display: flex; align-items: center; gap: 2px; }
-        .column-number-row.subtrahend { position: relative; right: -25px; }
+        .column-number-row.subtrahend { position: relative; }
         .column-number-row .operator { position: absolute; left: -25px; font-size: 1.8rem; }
         .digit-cell { display: flex; justify-content: center; align-items: center; width: 38px; height: 38px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; background: white; }
         .column-problem-area hr { width: 100%; border: 1.5px solid var(--text-primary); margin: 5px 0; }
@@ -77,15 +77,32 @@
         /* DİĞER BÖLÜMLER */
         .visual-controls input { width: 150px; text-align: center; font-size: 1.3rem; }
         #board-columns { display: flex; flex-direction: row-reverse; justify-content: center; gap: 10px; padding: 20px; background: #a58860; border: 2px solid #6d5537; border-radius: 10px; min-height: 400px; overflow-x: auto; position: relative; }
+        .place-value-column { display:flex; flex-direction:column; align-items:center; width:120px; flex-shrink:0; }
+        .chips-container { position:relative; margin-top:10px; width:100%; min-height:350px; display:flex; flex-wrap:wrap; align-content:flex-start; gap:5px; padding:5px; background:rgba(0,0,0,0.1); border-radius:5px; }
+        .chip { width:18px; height:18px; border-radius:50%; box-shadow:inset 1px 1px 3px rgba(0,0,0,0.5); border:1px solid rgba(0,0,0,0.3); transition:all 0.5s ease; }
+        .chip.ones { background-color: #f4d03f; } .chip.tens { background-color: #4caf50; } .chip.hundreds { background-color: #29b6f6; } .chip.thousands { background-color: #e91e63; } .chip.ten_thousands { background-color: #ff9800; } .chip.hundred_thousands { background-color: #9c27b0; }
+        .chip.subtrahend { opacity:0.4; border-style:dashed; box-shadow:none; }
+        .chip.moving { position:absolute; z-index:10; transform:scale(1.2); box-shadow:0 0 10px 5px #fff; }
+        
         .number-line-track { width: 100%; height: 10px; background-color: var(--border-color); border-radius: 5px; position: relative; }
         .number-line-handle { width: 30px; height: 30px; border-radius: 50%; position: absolute; top: 50%; transform: translate(-50%, -50%); cursor: grab; user-select: none;}
         #handle-eksilen { background: #4caf50; border: 3px solid #388e3c; }
         #handle-cikan { background: #f44336; border: 3px solid #d32f2f; }
+        #bar-fark { position: absolute; height: 100%; background: rgba(244, 67, 54, 0.5); }
         .slider-labels { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; padding: 0 10px; }
         #dynamic-result { text-align: center; margin-top: 10px; font-size: 2rem; }
+        
         .missing-digit-setup-controls { border: none; background: transparent; padding: 0; }
         #missing-digit-problem { max-width: 500px; margin: 0 auto; }
+        .number-row, .answer-row { display:flex; justify-content:flex-end; align-items:center; }
+        .number-row { position:relative; }
+        .answer-row { padding-top:10px; }
+        .operator { font-size:2rem; font-weight:bold; position:absolute; left:-5px; top:50%; transform:translateY(-50%); padding-right:10px; }
         .digit-box { width: 45px; height: 45px; border: 1px solid var(--border-color); font-size: 1.8rem; margin: 2px; border-radius: 4px; text-align: center; }
+        .digit-box.static { display:flex; justify-content:center; align-items:center; background-color:#fff; user-select:none; }
+        .digit-box.missing-input { padding:0; background-color:#fff; }
+        .digit-box.missing-input:focus { outline:2px solid var(--accent-color); background-color:#fffde7; }
+        .feedback-correct { color: #4CAF50; } .feedback-incorrect { color: #f44336; }
         
     </style>
 </head>
@@ -112,7 +129,7 @@
             <div class="section-header"><h2>Zihinden Çıkarma Alıştırmaları</h2></div>
              <div class="controls practice-controls">
                 <select id="digit-select">
-                    <option value="2">2 Basamaklı</option><option value="3" selected>3 Basamaklı</option><option value="4">4 Basamaklı</option><option value="5">5 Basamaklı</option>
+                    <option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
                 </select>
                 <button id="new-problems-btn">Yeni İşlemler</button>
             </div>
@@ -139,7 +156,7 @@
             <div class="dynamic-subtraction-tool">
                  <div class="controls dynamic-controls">
                     <div class="slider-labels"><span id="label-cikan">Çıkan: 250</span><span id="label-eksilen">Eksilen: 500</span></div>
-                    <div class="number-line-container"><div class="number-line-track"><div id="bar-fark"></div><div id="handle-cikan"></div><div id="handle-eksilen"></div></div></div>
+                    <div class="number-line-container"><div class="number-line-track"><div id="bar-fark"></div><div id="handle-cikan" class="number-line-handle"></div><div id="handle-eksilen" class="number-line-handle"></div></div></div>
                 </div>
                 <div id="dynamic-result">500 - 250 = 250</div>
             </div>
@@ -153,7 +170,7 @@
                     <div><label for="missing-mode-select">Eksik Rakam:</label><select id="missing-mode-select"><option value="mixed" selected>Karışık</option><option value="minuend">Eksilende</option><option value="subtrahend">Çıkanda</option></select></div>
                 </div>
                 <div id="missing-digit-problem"></div>
-                <div id="missing-digit-feedback"></div>
+                <div id="missing-digit-feedback" class="column-feedback"></div>
                 <div class="controls missing-digit-controls"><button id="check-missing-btn">Kontrol Et</button><button id="new-missing-btn">Yeni Soru</button></div>
             </div>
         </section>
@@ -163,16 +180,17 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const getRandomNumber = (digits) => {
+                if (digits < 1) return 0;
                 const min = Math.pow(10, digits - 1);
                 const max = Math.pow(10, digits) - 1;
                 return Math.floor(Math.random() * (max - min + 1)) + min;
             };
+            const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
-            // --- BÖLÜM 1: ALT ALTA ÇIKARMA (TÜM KOD YENİLENDİ) ---
+            // --- BÖLÜM 1: ALT ALTA ÇIKARMA ---
             const columnDigitSelect = document.getElementById('column-digit-select');
             const newColumnProblemsBtn = document.getElementById('new-column-problems-btn');
             const columnProblemsContainer = document.getElementById('column-problems-container');
-
             function generateColumnProblems() {
                 columnProblemsContainer.innerHTML = '';
                 const digitCount = parseInt(columnDigitSelect.value);
@@ -183,26 +201,13 @@
                     const minuend = Math.max(num1, num2);
                     const subtrahend = Math.min(num1, num2);
                     const difference = String(minuend - subtrahend).padStart(digitCount, '0');
-                    let minuendHTML = String(minuend).split('').map(d => `<span class="digit-cell">${d}</span>`).join('');
-                    let subtrahendHTML = String(subtrahend).padStart(digitCount, '0').split('').map(d => `<span class="digit-cell">${d}</span>`).join('');
-                    let answerInputsHTML = Array(digitCount).fill('<input type="text" class="answer-input" maxlength="1" pattern="\\d*">').join('');
+                    const minuendHTML = String(minuend).split('').map(d => `<span class="digit-cell">${d}</span>`).join('');
+                    const subtrahendHTML = String(subtrahend).padStart(digitCount, '0').split('').map(d => `<span class="digit-cell">${d}</span>`).join('');
+                    const answerInputsHTML = Array(digitCount).fill('<input type="text" class="answer-input" maxlength="1" pattern="\\d*">').join('');
                     const problemBox = document.createElement('div');
                     problemBox.className = 'column-problem-box';
                     problemBox.dataset.answer = difference;
-                    problemBox.innerHTML = `
-                        <div class="problem-label">${labels[i]}</div>
-                        <div class="column-problem-area">
-                            <div class="column-number-row">${minuendHTML}</div>
-                            <div class="column-number-row subtrahend"><span class="operator">-</span>${subtrahendHTML}</div>
-                            <hr>
-                            <div class="column-answer-row">${answerInputsHTML}</div>
-                        </div>
-                        <div class="column-feedback"></div>
-                        <div class="controls column-problem-controls">
-                            <button class="show-answer-btn">Cevabı Göster</button>
-                            <button class="check-answer-btn">Kontrol Et</button>
-                        </div>
-                    `;
+                    problemBox.innerHTML = `<div class="problem-label">${labels[i]}</div><div class="column-problem-area"><div class="column-number-row">${minuendHTML}</div><div class="column-number-row subtrahend"><span class="operator">-</span>${subtrahendHTML}</div><hr><div class="column-answer-row">${answerInputsHTML}</div></div><div class="column-feedback"></div><div class="controls column-problem-controls"><button class="show-answer-btn">Cevabı Göster</button><button class="check-answer-btn">Kontrol Et</button></div>`;
                     columnProblemsContainer.appendChild(problemBox);
                 }
             }
@@ -216,8 +221,7 @@
                     let allCorrect = true;
                     answerInputs.forEach((input, index) => {
                         if (input.value != answer[index]) {
-                            allCorrect = false;
-                            input.classList.add('incorrect'); input.classList.remove('correct');
+                            allCorrect = false; input.classList.add('incorrect'); input.classList.remove('correct');
                         } else {
                             input.classList.add('correct'); input.classList.remove('incorrect');
                         }
@@ -226,10 +230,7 @@
                     feedbackDiv.style.color = allCorrect ? 'var(--correct-border)' : 'var(--incorrect-border)';
                 }
                 if (e.target.classList.contains('show-answer-btn')) {
-                    answerInputs.forEach((input, index) => {
-                        input.value = answer[index];
-                        input.className = 'answer-input';
-                    });
+                    answerInputs.forEach((input, index) => { input.value = answer[index]; input.className = 'answer-input'; });
                     feedbackDiv.textContent = '';
                 }
             });
@@ -244,19 +245,19 @@
             generateColumnProblems();
 
             // --- BÖLÜM 2: ZİHİNDEN ÇIKARMA ---
-            const digitSelect = document.getElementById('digit-select');
-            const newProblemsBtn = document.getElementById('new-problems-btn');
+            const practiceDigitSelect = document.getElementById('digit-select');
+            const newPracticeProblemsBtn = document.getElementById('new-problems-btn');
             const practiceContainer = document.getElementById('practice-problems-container');
             function createExplanationHTML(min,sub){const mS=String(min),sS=String(sub).padStart(mS.length,'0');let mP=[],sP=[],dP=[],rP=[];for(let i=0;i<mS.length;i++){const p=Math.pow(10,mS.length-1-i),m=parseInt(mS[i]),s=parseInt(sS[i]);if(m>0||mS.length===1)mP.push(m*p);if(s>0||sS.length===1)sP.push(s*p);const d=(m*p)-(s*p);dP.push(`<p>(${m*p} - ${s*p}) = ${d}</p>`);rP.push(d);}const fR=min-sub;return `<p><strong>Eksilen:</strong> ${mP.join(' + ')}</p><p><strong>Çıkan:</strong> &nbsp;&nbsp;${sP.join(' + ')}</p><hr><strong>İşlem:</strong>${dP.join('')}<strong>Sonuç:</strong><p>${rP.join(' + ')} = ${fR}</p>`;}
-            function updateProblem(p){const m=p.querySelector('.minuend-input'),s=p.querySelector('.subtrahend-input'),f=p.querySelector('.final-answer'),e=p.querySelector('.explanation-box');let n1=parseInt(m.value)||0,n2=parseInt(s.value)||0;const min=Math.max(n1,n2),sub=Math.min(n1,n2);m.value=min;s.value=sub;e.innerHTML=createExplanationHTML(min,sub);if(!e.classList.contains('hidden'))f.textContent=min-sub;}
-            function generateProblems(){practiceContainer.innerHTML='';const d=parseInt(digitSelect.value);for(let i=0;i<3;i++){const pD=document.createElement('div');pD.className='practice-problem';const n1=getRandomNumber(d),n2=getRandomNumber(d);pD.innerHTML=`<div class="problem-numbers"><input type="number" class="number-input minuend-input" value="${Math.max(n1,n2)}"><div class="subtrahend-row"><span class="operator">-</span><input type="number" class="number-input subtrahend-input" value="${Math.min(n1,n2)}"></div></div><hr><div class="result-area"><div class="final-answer">[ Cevabı Gör ]</div></div><div class="explanation-box hidden"></div>`;practiceContainer.appendChild(pD);const m=pD.querySelector('.minuend-input'),s=pD.querySelector('.subtrahend-input'),f=pD.querySelector('.final-answer'),e=pD.querySelector('.explanation-box');[m,s].forEach(inp=>inp.addEventListener('input',()=>updateProblem(pD)));f.addEventListener('click',()=>{e.classList.toggle('hidden');f.textContent=e.classList.contains('hidden')?'[ Cevabı Gör ]':(m.value-s.value);if(!e.classList.contains('hidden'))updateProblem(pD);});updateProblem(pD);}}
-            newProblemsBtn.addEventListener('click', generateProblems);
-            digitSelect.addEventListener('change', generateProblems);
-            generateProblems();
+            function updatePracticeProblem(p){const m=p.querySelector('.minuend-input'),s=p.querySelector('.subtrahend-input'),f=p.querySelector('.final-answer'),e=p.querySelector('.explanation-box');let n1=parseInt(m.value)||0,n2=parseInt(s.value)||0;const min=Math.max(n1,n2),sub=Math.min(n1,n2);m.value=min;s.value=sub;e.innerHTML=createExplanationHTML(min,sub);if(!e.classList.contains('hidden'))f.textContent=min-sub;}
+            function generatePracticeProblems(){practiceContainer.innerHTML='';const d=parseInt(practiceDigitSelect.value);for(let i=0;i<3;i++){const pD=document.createElement('div');pD.className='practice-problem';const n1=getRandomNumber(d),n2=getRandomNumber(d);pD.innerHTML=`<div class="problem-numbers"><input type="number" class="number-input minuend-input" value="${Math.max(n1,n2)}"><div class="subtrahend-row"><span class="operator">-</span><input type="number" class="number-input subtrahend-input" value="${Math.min(n1,n2)}"></div></div><hr><div class="result-area"><div class="final-answer">[ Cevabı Gör ]</div></div><div class="explanation-box hidden"></div>`;practiceContainer.appendChild(pD);const m=pD.querySelector('.minuend-input'),s=pD.querySelector('.subtrahend-input'),f=pD.querySelector('.final-answer'),e=pD.querySelector('.explanation-box');[m,s].forEach(inp=>inp.addEventListener('input',()=>updatePracticeProblem(pD)));f.addEventListener('click',()=>{e.classList.toggle('hidden');f.textContent=e.classList.contains('hidden')?'[ Cevabı Gör ]':(m.value-s.value);if(!e.classList.contains('hidden'))updatePracticeProblem(pD);});updatePracticeProblem(pD);}}
+            newPracticeProblemsBtn.addEventListener('click', generatePracticeProblems);
+            practiceDigitSelect.addEventListener('change', generatePracticeProblems);
+            generatePracticeProblems();
             
             // --- BÖLÜM 3: GÖRSEL ÇIKARMA TAHTASI ---
-            const boardSolveBtn=document.getElementById('board-solve-btn'),boardNewBtn=document.getElementById('board-new-btn'),boardColumnsDiv=document.getElementById('board-columns'),pValNames=['Birler','Onlar','Yüzler','Binler','On Binler','Yüz Binler'],chipClasses=['ones','tens','hundreds','thousands','ten_thousands','hundred_thousands'];
-            async function animateBoardSolution(){/* Code is omitted for brevity but is fully functional in the final output */}
+            const boardSolveBtn=document.getElementById('board-solve-btn'),boardNewBtn=document.getElementById('board-new-btn'),boardColumnsDiv=document.getElementById('board-columns'),placeValueNames=['Birler','Onlar','Yüzler','Binler','On Binler','Yüz Binler'],chipClasses=['ones','tens','hundreds','thousands','ten_thousands','hundred_thousands'];
+            async function animateBoardSolution(){boardSolveBtn.disabled=!0;boardNewBtn.disabled=!0;const minuend=parseInt(document.getElementById('visual-num1').value)||0,subtrahend=parseInt(document.getElementById('visual-num2').value)||0;if(minuend<subtrahend){alert("Eksilen, çıkandan küçük olamaz!");boardSolveBtn.disabled=!1;boardNewBtn.disabled=!1;return}boardColumnsDiv.innerHTML='';const digitCount=String(minuend).length;for(let i=0;i<digitCount;i++){const col=document.createElement('div');col.className='place-value-column';col.innerHTML=`<h4>${placeValueNames[i]}</h4>`;const chipsContainer=document.createElement('div');chipsContainer.className='chips-container';chipsContainer.dataset.place=i;col.appendChild(chipsContainer);boardColumnsDiv.appendChild(col)}String(minuend).split('').reverse().forEach((digit,i)=>{const container=boardColumnsDiv.querySelector(`[data-place='${i}']`);if(container)for(let j=0;j<parseInt(digit);j++){const chip=document.createElement('div');chip.className=`chip ${chipClasses[i]}`;container.appendChild(chip)}});String(subtrahend).split('').reverse().forEach((digit,i)=>{const container=boardColumnsDiv.querySelector(`[data-place='${i}']`);if(container)for(let j=0;j<parseInt(digit);j++){const chip=document.createElement('div');chip.className=`chip ${chipClasses[i]} subtrahend`;container.appendChild(chip)}});await delay(500);for(let i=0;i<digitCount;i++){const container=boardColumnsDiv.querySelector(`[data-place='${i}']`);let minuendChips=container.querySelectorAll('.chip:not(.subtrahend)');const subtrahendChips=container.querySelectorAll('.chip.subtrahend');if(minuendChips.length<subtrahendChips.length){let borrowFromIndex=i+1;while(borrowFromIndex<digitCount){const borrowSourceContainer=boardColumnsDiv.querySelector(`[data-place='${borrowFromIndex}']`);if(borrowSourceContainer.querySelectorAll('.chip:not(.subtrahend)').length>0){for(let k=borrowFromIndex;k>i;k--){await delay(500);const source=boardColumnsDiv.querySelector(`[data-place='${k}']`),target=boardColumnsDiv.querySelector(`[data-place='${k-1}']`),chipToMove=source.querySelector('.chip:not(.subtrahend)');chipToMove.classList.add('moving');const startRect=chipToMove.getBoundingClientRect(),endRect=target.getBoundingClientRect();boardColumnsDiv.appendChild(chipToMove);chipToMove.style.top=`${startRect.top-boardColumnsDiv.getBoundingClientRect().top}px`;chipToMove.style.left=`${startRect.left-boardColumnsDiv.getBoundingClientRect().left}px`;await delay(50);chipToMove.style.transform=`translate(${endRect.left-startRect.left+50}px, ${endRect.top-startRect.top+30}px) scale(0.5)`;await delay(800);chipToMove.remove();for(let n=0;n<10;n++){const newChip=document.createElement('div');newChip.className=`chip ${chipClasses[k-1]}`;newChip.style.animation='pop-in 0.3s ease-out';target.appendChild(newChip)}}break}borrowFromIndex++}}await delay(800);minuendChips=container.querySelectorAll('.chip:not(.subtrahend)');const chipsToRemove=Math.min(minuendChips.length,subtrahendChips.length);for(let j=0;j<chipsToRemove;j++){minuendChips[j].style.opacity='0';subtrahendChips[j].style.opacity='0'}await delay(500);for(let j=0;j<chipsToRemove;j++){if(minuendChips[j])minuendChips[j].remove();if(subtrahendChips[j])subtrahendChips[j].remove()}}boardSolveBtn.disabled=!1;boardNewBtn.disabled=!1}
             boardSolveBtn.addEventListener('click',animateBoardSolution);boardNewBtn.addEventListener('click',()=>{const d=parseInt(document.getElementById('board-digit-count').value),n1=getRandomNumber(d),n2=getRandomNumber(d);document.getElementById('visual-num1').value=Math.max(n1,n2);document.getElementById('visual-num2').value=Math.min(n1,n2);boardColumnsDiv.innerHTML='';});
             
             // --- BÖLÜM 4: DİNAMİK ÇIKARMA ARACI ---
@@ -267,9 +268,9 @@
             
             // --- BÖLÜM 5: VERİLMEYEN RAKAMLARI BULMA ---
             const mProblemDiv=document.getElementById('missing-digit-problem'),checkMissingBtn=document.getElementById('check-missing-btn'),newMissingBtn=document.getElementById('new-missing-btn'),mFeedback=document.getElementById('missing-digit-feedback'),mDigitCount=document.getElementById('missing-digit-count'),mModeSelect=document.getElementById('missing-mode-select');let correctMin=0,correctSub=0;
-            function generateMissingDigitProblem(){/* Code is omitted for brevity but is fully functional in the final output */}
-            checkMissingBtn.addEventListener('click',()=>{/* Code is omitted for brevity but is fully functional in the final output */});
-            newMissingBtn.addEventListener('click',generateMissingDigitProblem);mDigitCount.addEventListener('change',generateMissingDigitProblem);mModeSelect.addEventListener('change',generateMissingDigitrimary);generateMissingDigitProblem();
+            function generateMissingDigitProblem(){mProblemDiv.innerHTML='';mFeedback.innerHTML='';const d=parseInt(mDigitCount.value),n1=getRandomNumber(d),n2=getRandomNumber(d);correctMin=Math.max(n1,n2);correctSub=Math.min(n1,n2);let minStr=String(correctMin).padStart(d,'0').split(''),subStr=String(correctSub).padStart(d,'0').split('');const mode=mModeSelect.value;let availPos=Array.from({length:d},(_,i)=>i).sort(()=>0.5-Math.random());let hideCount=Math.max(1,Math.floor(d/2));for(let i=0;i<hideCount;i++){if(availPos.length===0)break;let pos=availPos.pop();let row=(mode==='minuend')?0:(mode==='subtrahend')?1:Math.floor(Math.random()*2);if(row===0)minStr[pos]='?';else subStr[pos]='?';}const wrapper=document.createElement('div');wrapper.className='numbers-wrapper';[minStr,subStr].forEach((numArr,idx)=>{const numRow=document.createElement('div');numRow.className='number-row';if(idx===1)numRow.innerHTML=`<span class="operator">-</span>`;numArr.forEach(digit=>{let box;if(digit==='?'){box=document.createElement('input');box.type='text';box.className='digit-box missing-input';box.maxLength=1;box.pattern="\\d*"}else{box=document.createElement('div');box.className='digit-box static';box.textContent=digit}numRow.appendChild(box)});wrapper.appendChild(numRow)});const ansRow=document.createElement('div');ansRow.className='answer-row';const res=correctMin-correctSub;String(res).padStart(d,'0').split('').forEach(digit=>{const box=document.createElement('div');box.className='digit-box static';box.textContent=digit;ansRow.appendChild(box)});mProblemDiv.appendChild(wrapper);mProblemDiv.appendChild(ansRow);}
+            checkMissingBtn.addEventListener('click',()=>{const rows=mProblemDiv.querySelectorAll('.number-row');let userNums=[];rows.forEach(row=>{let numStr='';row.querySelectorAll('.digit-box').forEach(node=>{numStr+=(node.tagName==='INPUT'?(node.value||'0'):node.textContent)});userNums.push(parseInt(numStr,10)||0)});if(userNums[0]===correctMin&&userNums[1]===correctSub){mFeedback.textContent="Tebrikler, Doğru! 🥳";mFeedback.className='column-feedback feedback-correct'}else{mFeedback.textContent="Tekrar Deneyin. 🤔";mFeedback.className='column-feedback feedback-incorrect'}});
+            newMissingBtn.addEventListener('click',generateMissingDigitProblem);mDigitCount.addEventListener('change',generateMissingDigitProblem);mModeSelect.addEventListener('change',generateMissingDigitProblem);generateMissingDigitProblem();
         });
     </script>
 </body>
