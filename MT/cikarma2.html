@@ -22,7 +22,7 @@
             --incorrect-border: #f44336;
             --color-teal: #4db6ac;
             --color-orange: #ffb74d;
-            --color-pink: #f06292;
+            --color-purple: #ba68c8;
         }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -193,17 +193,17 @@
         .estimate-box-header { padding: 10px 15px; font-size: 1.5rem; color: white; font-weight: bold; text-align: center; }
         .box-operation .estimate-box-header { background-color: var(--color-teal); }
         .box-estimate .estimate-box-header { background-color: var(--color-orange); }
-        .box-result .estimate-box-header { background-color: var(--color-pink); }
+        .box-fark .estimate-box-header { background-color: var(--color-purple); }
         .estimate-problem-area { padding: 20px; border: 2px dashed var(--border-color); border-top: none; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; }
-        .estimate-number-row { font-size: 2rem; font-weight: bold; display: flex; justify-content: flex-end; align-items: center; position: relative; letter-spacing: 2px; }
+        .estimate-number-row, .fark-calculation-row { font-size: 2rem; font-weight: bold; display: flex; justify-content: flex-end; align-items: center; position: relative; letter-spacing: 2px; }
         .estimate-number-row .operator { position: absolute; left: 0; }
         .estimate-number-row .arrow { color: var(--text-secondary); margin-right: 10px; }
         .estimate-problem-area hr { width: 100%; border: 1.5px solid var(--text-primary); margin: 8px 0; }
         .estimate-answer-row { font-size: 2rem; font-weight: bold; text-align: right; }
-        .estimate-answer-row input { font-family: 'Kalam', cursive; font-size: 2rem; font-weight: bold; text-align: right; border: none; background: transparent; width: 100%; letter-spacing: 2px; border-bottom: 2px dotted var(--border-color); }
-        .estimate-answer-row input.correct { color: var(--correct-border); }
-        .estimate-answer-row input.incorrect { color: var(--incorrect-border); }
-        .hidden-answer { visibility: hidden; }
+        .estimate-input { font-family: 'Kalam', cursive; font-size: 2rem; font-weight: bold; text-align: right; border: none; background: transparent; width: 100%; letter-spacing: 2px; border-bottom: 2px dotted var(--border-color); }
+        .estimate-input.correct { color: var(--correct-border); border-bottom-color: var(--correct-border); }
+        .estimate-input.incorrect { color: var(--incorrect-border); border-bottom-color: var(--incorrect-border); }
+        .fark-value { display: inline-block; min-width: 60px; text-align: right; }
         .estimate-controls { text-align: center; margin-top: 20px; }
         .estimate-feedback { min-height: 24px; font-weight: bold; text-align: center; margin-bottom: 10px; }
     </style>
@@ -223,18 +223,12 @@
         </div>
 
         <div class="tab-content-container">
-            <div id="tab-1" class="tab-content active">
-                </div>
-            <div id="tab-2" class="tab-content">
-                </div>
-            <div id="tab-3" class="tab-content">
-                </div>
-            <div id="tab-4" class="tab-content">
-                </div>
-            <div id="tab-5" class="tab-content">
-                </div>
-            <div id="tab-6" class="tab-content">
-                </div>
+            <div id="tab-1" class="tab-content active"></div>
+            <div id="tab-2" class="tab-content"></div>
+            <div id="tab-3" class="tab-content"></div>
+            <div id="tab-4" class="tab-content"></div>
+            <div id="tab-5" class="tab-content"></div>
+            <div id="tab-6" class="tab-content"></div>
         </div>
     </div>
 
@@ -444,7 +438,7 @@
                                     const chipToMove = sourceContainer.querySelector('.chip:not(.subtrahend)');
                                     if(chipToMove) {
                                         const startRect = chipToMove.getBoundingClientRect(); chipToMove.classList.add('moving'); document.body.appendChild(chipToMove);
-                                        chipToMove.style.position = 'absolute'; // Make sure it's absolute for positioning
+                                        chipToMove.style.position = 'absolute';
                                         chipToMove.style.top = `${startRect.top}px`; chipToMove.style.left = `${startRect.left}px`;
                                         await delay(50);
                                         const targetRect = targetContainer.getBoundingClientRect();
@@ -590,7 +584,7 @@
             (function() {
                 const tab = document.getElementById('tab-6');
                 if (!tab) return;
-                tab.innerHTML = `<div class="section-header"><h2>Tahmin Et & Karşılaştır</h2></div><div class="controls"><label for="estimate-digit-select">Basamak:</label><select id="estimate-digit-select"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select><label for="estimate-rounding-select">Yuvarla:</label><select id="estimate-rounding-select"><option value="tens">En Yakın Onluğa</option><option value="hundreds">En Yakın Yüzlüğe</option></select><button id="new-estimate-problem-btn">Yeni İşlem</button></div><div id="estimate-feedback" class="estimate-feedback"></div><div id="estimate-container"></div><div class="controls estimate-controls"><button id="estimate-check-btn">Kontrol Et</button><button id="estimate-show-answer-btn">Sonucu Göster</button></div>`;
+                tab.innerHTML = `<div class="section-header"><h2>Tahmin Et & Karşılaştır</h2></div><div class="controls"><label for="estimate-digit-select">Basamak:</label><select id="estimate-digit-select"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select><label for="estimate-rounding-select">Yuvarla:</label><select id="estimate-rounding-select"><option value="tens">En Yakın Onluğa</option><option value="hundreds">En Yakın Yüzlüğe</option></select><button id="new-estimate-problem-btn">Yeni İşlem</button></div><div id="estimate-feedback" class="estimate-feedback"></div><div id="estimate-container"></div><div class="controls estimate-controls"><button id="estimate-check-btn">Kontrol Et</button><button id="estimate-show-answer-btn">Sonuçları Göster</button></div>`;
 
                 const digitSelect = document.getElementById('estimate-digit-select');
                 const roundingSelect = document.getElementById('estimate-rounding-select');
@@ -599,11 +593,9 @@
                 const checkBtn = document.getElementById('estimate-check-btn');
                 const showAnswerBtn = document.getElementById('estimate-show-answer-btn');
                 const feedbackDiv = document.getElementById('estimate-feedback');
-
+                
                 function roundNumber(num, mode, digits) {
-                    if (mode === 'hundreds' && digits < 3) {
-                        mode = 'tens';
-                    }
+                    if (mode === 'hundreds' && digits < 3) { mode = 'tens'; }
                     if (mode === 'tens') { return Math.round(num / 10) * 10; }
                     if (mode === 'hundreds') { return Math.round(num / 100) * 100; }
                     return num;
@@ -613,53 +605,93 @@
                     const digits = parseInt(digitSelect.value);
                     const roundingMode = roundingSelect.value;
                     feedbackDiv.textContent = '';
-
                     const num1 = getRandomNumber(digits); const num2 = getRandomNumber(digits);
                     const minuend = Math.max(num1, num2); const subtrahend = Math.min(num1, num2);
                     const realDifference = minuend - subtrahend;
-                    const estimatedMinuend = roundNumber(minuend, roundingMode, digits);
-                    const estimatedSubtrahend = roundNumber(subtrahend, roundingMode, digits);
-                    const estimatedDifference = estimatedMinuend - estimatedSubtrahend;
+                    const correctEstMinuend = roundNumber(minuend, roundingMode, digits);
+                    const correctEstSubtrahend = roundNumber(subtrahend, roundingMode, digits);
+                    const correctEstDifference = correctEstMinuend - correctEstSubtrahend;
+                    const correctFinalFark = Math.abs(realDifference - correctEstDifference);
 
                     container.dataset.realAnswer = realDifference;
+                    container.dataset.estMinuend = correctEstMinuend;
+                    container.dataset.estSubtrahend = correctEstSubtrahend;
+                    container.dataset.estDiff = correctEstDifference;
+                    container.dataset.finalFark = correctFinalFark;
                     
-                    container.innerHTML = `<div class="estimate-box box-operation"><div class="estimate-box-header">İşlem</div><div class="estimate-problem-area"><div class="estimate-number-row">${minuend}</div><div class="estimate-number-row"><span class="operator">-</span>${subtrahend}</div><hr><div class="estimate-answer-row"><input type="number" id="user-estimate-input" placeholder="?"></div></div></div><div class="estimate-box box-estimate"><div class="estimate-box-header">Tahminî Sonuç</div><div class="estimate-problem-area"><div class="estimate-number-row"><span class="arrow">→</span>${estimatedMinuend}</div><div class="estimate-number-row"><span class="operator">-</span><span class="arrow">→</span>${estimatedSubtrahend}</div><hr><div class="estimate-answer-row">${estimatedDifference}</div></div></div><div class="estimate-box box-result"><div class="estimate-box-header">İşlem Sonucu</div><div class="estimate-problem-area"><div class="estimate-number-row">${minuend}</div><div class="estimate-number-row"><span class="operator">-</span>${subtrahend}</div><hr><div class="estimate-answer-row"><span class="hidden-answer">${realDifference}</span></div></div></div>`;
-                    showAnswerBtn.textContent = 'Sonucu Göster';
+                    container.innerHTML = `
+                        <div class="estimate-box box-operation"><div class="estimate-box-header">İşlem</div><div class="estimate-problem-area"><div class="estimate-number-row">${minuend}</div><div class="estimate-number-row"><span class="operator">-</span>${subtrahend}</div><hr><div class="estimate-answer-row"><input type="number" id="user-real-answer-input" class="estimate-input" placeholder="?"></div></div></div>
+                        <div class="estimate-box box-estimate"><div class="estimate-box-header">Tahminî Sonuç</div><div class="estimate-problem-area"><div class="estimate-number-row"><span class="arrow">→</span><input type="number" id="user-est-minuend-input" class="estimate-input" placeholder="Sayı"></div><div class="estimate-number-row"><span class="operator">-</span><span class="arrow">→</span><input type="number" id="user-est-subtrahend-input" class="estimate-input" placeholder="Sayı"></div><hr><div class="estimate-answer-row"><input type="number" id="user-est-diff-input" class="estimate-input" placeholder="?"></div></div></div>
+                        <div class="estimate-box box-fark"><div class="estimate-box-header">Fark</div><div class="estimate-problem-area"><div class="fark-calculation-row"><span class="fark-value" id="fark-real-val">...</span></div><div class="fark-calculation-row"><span class="operator">-</span><span class="fark-value" id="fark-est-val">...</span></div><hr><div class="estimate-answer-row"><input type="number" id="user-final-fark-input" class="estimate-input" placeholder="?"></div></div></div>
+                    `;
+                    showAnswerBtn.textContent = 'Sonuçları Göster';
                 }
 
                 checkBtn.addEventListener('click', () => {
-                    const userInput = document.getElementById('user-estimate-input');
-                    const userAnswer = parseInt(userInput.value, 10);
-                    const realAnswer = parseInt(container.dataset.realAnswer, 10);
+                    const inputs = {
+                        realAnswer: document.getElementById('user-real-answer-input'),
+                        estMinuend: document.getElementById('user-est-minuend-input'),
+                        estSubtrahend: document.getElementById('user-est-subtrahend-input'),
+                        estDiff: document.getElementById('user-est-diff-input'),
+                        finalFark: document.getElementById('user-final-fark-input')
+                    };
 
-                    userInput.classList.remove('correct', 'incorrect');
+                    const correctAnswers = container.dataset;
+                    let allCorrect = true;
 
-                    if (isNaN(userAnswer)) {
-                        feedbackDiv.textContent = 'Lütfen bir sonuç girin.';
-                        feedbackDiv.style.color = 'var(--incorrect-border)';
-                        return;
+                    for (const key in inputs) {
+                        const input = inputs[key];
+                        const userAnswer = parseInt(input.value, 10);
+                        const correctAnswer = parseInt(correctAnswers[key], 10);
+                        
+                        input.classList.remove('correct', 'incorrect');
+                        
+                        if (isNaN(userAnswer) || userAnswer !== correctAnswer) {
+                            allCorrect = false;
+                            input.classList.add('incorrect');
+                        } else {
+                            input.classList.add('correct');
+                        }
                     }
 
-                    if (userAnswer === realAnswer) {
-                        feedbackDiv.textContent = 'Tebrikler, doğru sonuç!';
+                    if (allCorrect) {
+                        feedbackDiv.textContent = 'Tebrikler! Tüm cevapların doğru! 🥳';
                         feedbackDiv.style.color = 'var(--correct-border)';
-                        userInput.classList.add('correct');
                     } else {
-                        feedbackDiv.textContent = `Tekrar deneyin. Girdiğiniz sonuç (${userAnswer}), doğru sonuç olan ${realAnswer}'den farklı.`;
+                        feedbackDiv.textContent = 'Hatalı alanlar var, lütfen tekrar kontrol et. 🤔';
                         feedbackDiv.style.color = 'var(--incorrect-border)';
-                        userInput.classList.add('incorrect');
                     }
                 });
 
                 showAnswerBtn.addEventListener('click', () => {
-                    const answerSpan = container.querySelector('.hidden-answer');
-                    if (answerSpan.style.visibility === 'visible') {
-                        answerSpan.style.visibility = 'hidden';
-                        showAnswerBtn.textContent = 'Sonucu Göster';
-                    } else {
-                        answerSpan.style.visibility = 'visible';
-                        showAnswerBtn.textContent = 'Sonucu Gizle';
+                    const isHidden = showAnswerBtn.textContent === 'Sonuçları Göster';
+                    const correctAnswers = container.dataset;
+
+                    const inputs = {
+                        realAnswer: document.getElementById('user-real-answer-input'),
+                        estMinuend: document.getElementById('user-est-minuend-input'),
+                        estSubtrahend: document.getElementById('user-est-subtrahend-input'),
+                        estDiff: document.getElementById('user-est-diff-input'),
+                        finalFark: document.getElementById('user-final-fark-input')
+                    };
+                    
+                    const farkSpans = {
+                        realVal: document.getElementById('fark-real-val'),
+                        estVal: document.getElementById('fark-est-val')
+                    };
+
+                    for (const key in inputs) {
+                        const input = inputs[key];
+                        input.classList.remove('correct', 'incorrect');
+                        input.value = isHidden ? correctAnswers[key] : '';
                     }
+
+                    farkSpans.realVal.textContent = isHidden ? correctAnswers.realAnswer : '...';
+                    farkSpans.estVal.textContent = isHidden ? correctAnswers.estDiff : '...';
+                    
+                    showAnswerBtn.textContent = isHidden ? 'Sonuçları Gizle' : 'Sonuçları Göster';
+                    if (!isHidden) feedbackDiv.textContent = '';
+
                 });
 
                 newProblemBtn.addEventListener('click', generateProblem);
