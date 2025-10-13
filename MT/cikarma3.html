@@ -16,7 +16,6 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        /* YENİ: Patlama animasyonu */
         @keyframes explode {
             0% { transform: scale(1); opacity: 1; }
             50% { box-shadow: 0 0 25px 15px rgba(255, 255, 100, 0.8); }
@@ -84,7 +83,6 @@
         .chip.chip-ten-thousands { background-color: #ff9800; } .chip.chip-hundred-thousands { background-color: #9c27b0; }
         .chip.subtrahend { opacity:0.4; border-style:dashed; box-shadow:none; }
         .chip.moving { position:absolute; z-index:10; transform:scale(1.2); box-shadow:0 0 10px 5px #fff; }
-        /* YENİ: Patlama animasyonunu tetikleyen sınıf */
         .chip.exploding { animation: explode 0.5s ease-out forwards; }
 
         /* TAB 4: DYNAMIC BAR */
@@ -129,9 +127,23 @@
 
         <div class="tab-content-container">
             <div id="tab-1" class="tab-content active">
+                <div class="section-header"><h2>Alt Alta Çıkarma Alıştırmaları</h2></div>
+                <div class="controls column-controls">
+                    <label for="column-digit-select">Basamak:</label>
+                    <select id="column-digit-select"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option></select>
+                    <button id="new-column-problems-btn">YENİ ALIŞTIRMALAR OLUŞTUR</button>
                 </div>
+                <div id="column-problems-container"></div>
+            </div>
             <div id="tab-2" class="tab-content">
+                <div class="section-header"><h2>Zihinden Çıkarma Alıştırmaları</h2></div>
+                <div class="controls practice-controls">
+                    <label for="practice-digit-select">Basamak:</label>
+                    <select id="practice-digit-select"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select>
+                    <button id="new-practice-problems-btn">Yeni İşlemler</button>
                 </div>
+                <div id="practice-problems-container"></div>
+            </div>
             <div id="tab-3" class="tab-content">
                 <div class="section-header"><h2>Görsel Çıkarma Tahtası</h2></div>
                 <div class="abacus-tool">
@@ -144,7 +156,27 @@
                     <div id="board-columns"></div>
                 </div>
             </div>
-             </div>
+            <div id="tab-4" class="tab-content">
+                <div class="section-header"><h2>Çıkarma İşleminin Dinamikleri</h2></div>
+                <div class="dynamic-subtraction-tool">
+                    <div class="slider-labels"><span id="label-cikan">Çıkan: 250</span><span id="label-eksilen">Eksilen: 500</span></div>
+                    <div class="number-line-container"><div class="number-line-track"><div id="bar-fark"></div><div id="handle-cikan" class="number-line-handle"></div><div id="handle-eksilen" class="number-line-handle"></div></div></div>
+                    <div id="dynamic-result">500 - 250 = 250</div>
+                </div>
+            </div>
+            <div id="tab-5" class="tab-content">
+                <div class="section-header"><h2>Verilmeyen Rakamları Bul</h2></div>
+                <div class="missing-digit-tool">
+                    <div class="controls missing-digit-setup-controls">
+                        <div><label for="missing-digit-count">Basamak:</label><select id="missing-digit-count"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
+                        <div><label for="missing-mode-select">Eksik Rakam:</label><select id="missing-mode-select"><option value="mixed" selected>Karışık</option><option value="minuend">Eksilende</option><option value="subtrahend">Çıkanda</option></select></div>
+                    </div>
+                    <div id="missing-digit-problem"></div>
+                    <div id="missing-digit-feedback" class="column-feedback"></div>
+                    <div class="controls missing-digit-controls"><button id="check-missing-btn">Kontrol Et</button><button id="new-missing-btn">Yeni Soru</button></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -158,29 +190,198 @@
             const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
             // --- TAB MANAGEMENT ---
-            // ... (Tab management script is unchanged)
+            const tabs = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(item => item.classList.remove('active'));
+                    tab.classList.add('active');
+                    const targetId = tab.getAttribute('data-tab');
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === targetId) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
 
             // --- Scoped Tab Functions ---
             
-            // TAB 1: COLUMN SUBTRACTION 
-            // ... (Tab 1 script is unchanged)
+            // TAB 1: COLUMN SUBTRACTION
+            (function() { 
+                const digitSelect = document.getElementById('column-digit-select');
+                const newProblemsBtn = document.getElementById('new-column-problems-btn');
+                const problemsContainer = document.getElementById('column-problems-container');
+
+                function createDigitInput(value) {
+                    return `<input type="text" class="digit-cell digit-input" maxlength="1" pattern="\\d*" value="${value}">`;
+                }
+
+                function generateProblems() {
+                    problemsContainer.innerHTML = '';
+                    const digitCount = parseInt(digitSelect.value);
+                    const labels = ['A', 'B', 'C'];
+                    for (let i = 0; i < 3; i++) {
+                        const num1 = getRandomNumber(digitCount);
+                        const num2 = getRandomNumber(digitCount);
+                        const minuend = Math.max(num1, num2);
+                        const subtrahend = Math.min(num1, num2);
+                        const minuendHTML = String(minuend).padStart(digitCount, '0').split('').map(createDigitInput).join('');
+                        const subtrahendHTML = String(subtrahend).padStart(digitCount, '0').split('').map(createDigitInput).join('');
+                        const answerInputsHTML = Array(digitCount).fill('<input type="text" class="answer-input" maxlength="1" pattern="\\d*">').join('');
+                        const problemBox = document.createElement('div');
+                        problemBox.className = 'column-problem-box';
+                        problemBox.innerHTML = `
+                            <div class="problem-label">${labels[i]}</div>
+                            <div class="column-problem-area">
+                                <div class="column-number-row minuend-row">${minuendHTML}</div>
+                                <div class="column-number-row subtrahend-row"><span class="operator">-</span>${subtrahendHTML}</div>
+                                <hr>
+                                <div class="column-answer-row">${answerInputsHTML}</div>
+                            </div>
+                            <div class="column-feedback"></div>
+                            <div class="controls column-problem-controls">
+                                <button class="toggle-answer-btn">Cevabı Göster</button>
+                                <button class="check-answer-btn">Kontrol Et</button>
+                            </div>`;
+                        problemsContainer.appendChild(problemBox);
+                        updateAndRecalculate(problemBox); // Set initial answer
+                    }
+                }
+
+                function updateAndRecalculate(box) {
+                    const digitCount = box.querySelectorAll('.minuend-row .digit-input').length;
+                    let minuendStr = '', subtrahendStr = '';
+                    box.querySelectorAll('.minuend-row .digit-input').forEach(input => minuendStr += input.value || '0');
+                    box.querySelectorAll('.subtrahend-row .digit-input').forEach(input => subtrahendStr += input.value || '0');
+                    let num1 = parseInt(minuendStr, 10);
+                    let num2 = parseInt(subtrahendStr, 10);
+                    if (num1 < num2) {
+                        [num1, num2] = [num2, num1];
+                        const newMinuendStr = String(num1).padStart(digitCount, '0');
+                        const newSubtrahendStr = String(num2).padStart(digitCount, '0');
+                        box.querySelectorAll('.minuend-row .digit-input').forEach((input, i) => input.value = newMinuendStr[i]);
+                        box.querySelectorAll('.subtrahend-row .digit-input').forEach((input, i) => input.value = newSubtrahendStr[i]);
+                    }
+                    const newDifference = String(num1 - num2).padStart(digitCount, ' ');
+                    box.dataset.answer = newDifference;
+                    box.querySelectorAll('.answer-input').forEach(input => { input.value = ''; input.classList.remove('correct', 'incorrect'); });
+                    box.querySelector('.column-feedback').textContent = '';
+                    box.querySelector('.toggle-answer-btn').textContent = 'Cevabı Göster';
+                }
+
+                problemsContainer.addEventListener('click', function(e) {
+                    const box = e.target.closest('.column-problem-box');
+                    if (!box) return;
+                    if (e.target.classList.contains('check-answer-btn')) {
+                        const answer = box.dataset.answer;
+                        const inputs = box.querySelectorAll('.answer-input');
+                        const feedback = box.querySelector('.column-feedback');
+                        let userAnswer = '';
+                        inputs.forEach(input => userAnswer += (input.value || ' '));
+                        if (userAnswer === answer) {
+                            inputs.forEach(input => { input.classList.add('correct'); input.classList.remove('incorrect'); });
+                            feedback.textContent = 'Tebrikler, Doğru!';
+                            feedback.style.color = 'var(--correct-border)';
+                        } else {
+                            inputs.forEach((input, i) => { (input.value != answer[i].trim()) ? (input.classList.add('incorrect'), input.classList.remove('correct')) : (input.classList.add('correct'), input.classList.remove('incorrect')); });
+                            feedback.textContent = 'Tekrar Deneyin.';
+                            feedback.style.color = 'var(--incorrect-border)';
+                        }
+                    }
+                    if (e.target.classList.contains('toggle-answer-btn')) {
+                        const answer = box.dataset.answer;
+                        const inputs = box.querySelectorAll('.answer-input');
+                        const btn = e.target;
+                        if (btn.textContent === 'Cevabı Göster') {
+                             inputs.forEach((input, i) => { input.value = answer[i].trim(); input.className = 'answer-input'; });
+                            btn.textContent = 'Cevabı Gizle';
+                        } else {
+                            inputs.forEach(input => { input.value = ''; input.className = 'answer-input'; });
+                            btn.textContent = 'Cevabı Göster';
+                        }
+                    }
+                });
+                
+                problemsContainer.addEventListener('input', function(e) { 
+                    const target = e.target;
+                    if ((target.classList.contains('answer-input') || target.classList.contains('digit-input')) && target.value) { 
+                        const allInputs = Array.from(target.closest('.column-problem-area').querySelectorAll('.digit-input, .answer-input'));
+                        const currentIndex = allInputs.indexOf(target);
+                        if (currentIndex > -1 && currentIndex < allInputs.length - 1) { allInputs[currentIndex + 1].focus(); }
+                    }
+                    if(target.classList.contains('digit-input')) { updateAndRecalculate(target.closest('.column-problem-box')); }
+                });
+
+                newProblemsBtn.addEventListener('click', generateProblems);
+                digitSelect.addEventListener('change', generateProblems);
+                generateProblems();
+            })();
 
             // TAB 2: MENTAL SUBTRACTION
-            // ... (Tab 2 script is unchanged)
+            (function() {
+                const digitSelect = document.getElementById('practice-digit-select');
+                const newProblemsBtn = document.getElementById('new-practice-problems-btn');
+                const practiceContainer = document.getElementById('practice-problems-container');
+                function createExplanation(min, sub) {
+                    const minStr = String(min); const subStr = String(sub).padStart(minStr.length, '0');
+                    let minParts = [], subParts = [], diffParts = [], resultParts = [];
+                    for (let i = 0; i < minStr.length; i++) {
+                        const placeValue = Math.pow(10, minStr.length - 1 - i);
+                        const minDigit = parseInt(minStr[i]); const subDigit = parseInt(subStr[i]);
+                        if (minDigit > 0 || minStr.length === 1) minParts.push(minDigit * placeValue);
+                        if (subDigit > 0 || subStr.length === 1) subParts.push(subDigit * placeValue);
+                        const diff = (minDigit * placeValue) - (subDigit * placeValue);
+                        diffParts.push(`<p>(${minDigit * placeValue} - ${subDigit * placeValue}) = ${diff}</p>`);
+                        resultParts.push(diff);
+                    }
+                    const finalResult = min - sub;
+                    return `<p><strong>Eksilen:</strong> ${minParts.join(' + ')}</p><p><strong>Çıkan:</strong> &nbsp;&nbsp;${subParts.join(' + ')}</p><hr><strong>İşlem:</strong>${diffParts.join('')}<strong>Sonuç:</strong><p>${resultParts.join(' + ')} = ${finalResult}</p>`;
+                }
+                function updateProblem(problemDiv) {
+                    const minuendInput = problemDiv.querySelector('.minuend-input'); const subtrahendInput = problemDiv.querySelector('.subtrahend-input');
+                    const finalAnswerDiv = problemDiv.querySelector('.final-answer'); const explanationBox = problemDiv.querySelector('.explanation-box');
+                    let n1 = parseInt(minuendInput.value) || 0; let n2 = parseInt(subtrahendInput.value) || 0;
+                    const minuend = Math.max(n1, n2); const subtrahend = Math.min(n1, n2);
+                    minuendInput.value = minuend; subtrahendInput.value = subtrahend;
+                    const difference = minuend - subtrahend;
+                    explanationBox.innerHTML = createExplanation(minuend, subtrahend);
+                    if (explanationBox.classList.contains('visible')) { finalAnswerDiv.textContent = difference; }
+                }
+                function generateProblems() {
+                    practiceContainer.innerHTML = ''; const digitCount = parseInt(digitSelect.value);
+                    for (let i = 0; i < 3; i++) {
+                        const problemDiv = document.createElement('div'); problemDiv.className = 'practice-problem';
+                        const n1 = getRandomNumber(digitCount), n2 = getRandomNumber(digitCount);
+                        problemDiv.innerHTML = `<div class="problem-numbers"><input type="number" class="number-input minuend-input" value="${Math.max(n1, n2)}"><div class="subtrahend-row"><span class="operator">-</span><input type="number" class="number-input subtrahend-input" value="${Math.min(n1, n2)}"></div></div><hr><div class="result-area"><div class="final-answer">[ Cevabı Gör ]</div></div><div class="explanation-box"></div>`;
+                        practiceContainer.appendChild(problemDiv);
+                        const minuendInput = problemDiv.querySelector('.minuend-input'); const subtrahendInput = problemDiv.querySelector('.subtrahend-input');
+                        const finalAnswerDiv = problemDiv.querySelector('.final-answer'); const explanationBox = problemDiv.querySelector('.explanation-box');
+                        [minuendInput, subtrahendInput].forEach(input => input.addEventListener('input', () => updateProblem(problemDiv)));
+                        finalAnswerDiv.addEventListener('click', () => {
+                            explanationBox.classList.toggle('visible');
+                            if (explanationBox.classList.contains('visible')) { updateProblem(problemDiv); } 
+                            else { finalAnswerDiv.textContent = '[ Cevabı Gör ]'; }
+                        });
+                    }
+                }
+                newProblemsBtn.addEventListener('click', generateProblems);
+                digitSelect.addEventListener('change', generateProblems);
+                generateProblems();
+            })();
             
-            // TAB 3: VISUAL BOARD (UPDATED SCRIPT with EXPLOSION)
+            // TAB 3: VISUAL BOARD
             (function() {
                 const solveBtn = document.getElementById('board-solve-btn'); const newBtn = document.getElementById('board-new-btn');
                 const boardContainer = document.getElementById('board-columns'); const num1Input = document.getElementById('visual-num1');
                 const num2Input = document.getElementById('visual-num2'); const digitCountSelect = document.getElementById('board-digit-count');
                 const placeValueNames = ['Birler', 'Onlar', 'Yüzler', 'Binler', 'On Binler', 'Yüz Binler'];
                 const chipClasses = ['chip-ones', 'chip-tens', 'chip-hundreds', 'chip-thousands', 'chip-ten-thousands', 'chip-hundred-thousands'];
-
                 function generateNewProblem() {
                     const digitCount = parseInt(digitCountSelect.value); const num1 = getRandomNumber(digitCount); const num2 = getRandomNumber(digitCount);
                     num1Input.value = Math.max(num1, num2); num2Input.value = Math.min(num1, num2); boardContainer.innerHTML = '';
                 }
-
                 async function animateSolution() {
                     solveBtn.disabled = true; newBtn.disabled = true;
                     const minuend = parseInt(num1Input.value) || 0; const subtrahend = parseInt(num2Input.value) || 0;
@@ -188,16 +389,11 @@
                     const digitCount = Math.max(String(minuend).length, 1);
                     let minuendDigits = String(minuend).padStart(digitCount, '0').split('').reverse().map(Number);
                     let subtrahendDigits = String(subtrahend).padStart(digitCount, '0').split('').reverse().map(Number);
-                    
-                    // 1. Draw initial state
                     boardContainer.innerHTML = '';
                     for (let i = 0; i < digitCount; i++) { const col = document.createElement('div'); col.className = 'place-value-column'; col.innerHTML = `<h4>${placeValueNames[i]}</h4><div class="chips-container" data-place="${i}"></div>`; boardContainer.appendChild(col); }
                     minuendDigits.forEach((digit, i) => { const container = boardContainer.querySelector(`[data-place='${i}']`); for (let j = 0; j < digit; j++) container.innerHTML += `<div class="chip ${chipClasses[i]}"></div>`; });
                     subtrahendDigits.forEach((digit, i) => { const container = boardContainer.querySelector(`[data-place='${i}']`); for (let j = 0; j < digit; j++) container.innerHTML += `<div class="chip ${chipClasses[i]} subtrahend"></div>`; });
-                    
                     await delay(1000);
-
-                    // 2. Perform borrowing logic and animations
                     for (let i = 0; i < digitCount; i++) {
                         if (minuendDigits[i] < subtrahendDigits[i]) {
                             let borrowFromIndex = i + 1;
@@ -220,40 +416,116 @@
                             }
                         }
                     }
-
-                    // 3. Perform subtraction with EXPLOSION animation
                     for (let i = 0; i < digitCount; i++) {
                         const container = boardContainer.querySelector(`[data-place='${i}']`);
-                        const minuendChips = container.querySelectorAll('.chip:not(.subtrahend)');
-                        const subtrahendChips = container.querySelectorAll('.chip.subtrahend');
+                        const minuendChips = Array.from(container.querySelectorAll('.chip:not(.subtrahend)'));
+                        const subtrahendChips = Array.from(container.querySelectorAll('.chip.subtrahend'));
                         const chipsToRemoveCount = Math.min(minuendChips.length, subtrahendChips.length);
-
                         if (chipsToRemoveCount > 0) {
                             for(let j = 0; j < chipsToRemoveCount; j++) {
                                 if (minuendChips[j]) minuendChips[j].classList.add('exploding');
                                 if (subtrahendChips[j]) subtrahendChips[j].classList.add('exploding');
-                                await delay(150); // Stagger the explosions for a "one by one" effect
+                                await delay(150);
                             }
                         }
                     }
-
-                    // Wait for the last animation to finish before cleaning up the DOM
-                    await delay(600); // 500ms animation + 100ms buffer
+                    await delay(600);
                     boardContainer.querySelectorAll('.exploding').forEach(chip => chip.remove());
-                    
                     solveBtn.disabled = false; newBtn.disabled = false;
                 }
-
                 solveBtn.addEventListener('click', animateSolution);
                 newBtn.addEventListener('click', generateNewProblem);
                 generateNewProblem();
             })();
 
             // TAB 4: DYNAMIC BAR
-            // ... (Tab 4 script is unchanged)
+            (function() {
+                const track = document.querySelector('.number-line-track'); const handleEksilen = document.getElementById('handle-eksilen');
+                const handleCikan = document.getElementById('handle-cikan'); const barFark = document.getElementById('bar-fark');
+                const labelEksilen = document.getElementById('label-eksilen'); const labelCikan = document.getElementById('label-cikan');
+                const dynamicResult = document.getElementById('dynamic-result'); const maxVal = 1000;
+                function updateDynamicDisplay() {
+                    const ePos = parseFloat(handleEksilen.style.left); let cPos = parseFloat(handleCikan.style.left);
+                    if (cPos > ePos) { cPos = ePos; handleCikan.style.left = ePos + '%'; }
+                    const e = Math.round((ePos / 100) * maxVal); const c = Math.round((cPos / 100) * maxVal);
+                    const f = e - c;
+                    labelEksilen.textContent = `Eksilen: ${e}`; labelCikan.textContent = `Çıkan: ${c}`;
+                    dynamicResult.textContent = `${e} - ${c} = ${f}`;
+                    barFark.style.left = `${cPos}%`; barFark.style.width = `${ePos - cPos}%`;
+                }
+                function makeDraggable(handle, otherHandle, isMinuend) {
+                    let isDragging = false;
+                    function onMove(clientX) {
+                        if (!isDragging) return;
+                        const trackRect = track.getBoundingClientRect(); let newX = clientX - trackRect.left;
+                        let percent = (newX / trackRect.width) * 100; percent = Math.max(0, Math.min(100, percent));
+                        const otherPercent = parseFloat(otherHandle.style.left);
+                        if (isMinuend) { if (percent < otherPercent) percent = otherPercent; } 
+                        else { if (percent > otherPercent) percent = otherPercent; }
+                        handle.style.left = `${percent}%`; updateDynamicDisplay();
+                    }
+                    function onStart(e) { e.preventDefault(); isDragging = true; document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onEnd); document.addEventListener('touchmove', onTouchMove); document.addEventListener('touchend', onEnd); }
+                    function onEnd() { isDragging = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onEnd); document.removeEventListener('touchmove', onTouchMove); document.removeEventListener('touchend', onEnd); }
+                    function onMouseMove(e) { onMove(e.clientX); }
+                    function onTouchMove(e) { onMove(e.touches[0].clientX); }
+                    handle.addEventListener('mousedown', onStart); handle.addEventListener('touchstart', onStart, { passive: false });
+                }
+                makeDraggable(handleEksilen, handleCikan, true); makeDraggable(handleCikan, handleEksilen, false);
+                handleEksilen.style.left = '50%'; handleCikan.style.left = '25%'; updateDynamicDisplay();
+            })();
 
             // TAB 5: MISSING DIGIT
-            // ... (Tab 5 script is unchanged)
+            (function() {
+                const problemDiv = document.getElementById('missing-digit-problem'); const checkBtn = document.getElementById('check-missing-btn');
+                const newBtn = document.getElementById('new-missing-btn'); const feedbackDiv = document.getElementById('missing-digit-feedback');
+                const digitCountSelect = document.getElementById('missing-digit-count'); const modeSelect = document.getElementById('missing-mode-select');
+                let correctMinuend = 0, correctSubtrahend = 0;
+                function generateProblem() {
+                    problemDiv.innerHTML = ''; feedbackDiv.innerHTML = '';
+                    const digitCount = parseInt(digitCountSelect.value); const num1 = getRandomNumber(digitCount), num2 = getRandomNumber(digitCount);
+                    correctMinuend = Math.max(num1, num2); correctSubtrahend = Math.min(num1, num2);
+                    let minuendStr = String(correctMinuend).padStart(digitCount, '0').split('');
+                    let subtrahendStr = String(correctSubtrahend).padStart(digitCount, '0').split('');
+                    const mode = modeSelect.value;
+                    let availablePositions = Array.from({ length: digitCount }, (_, i) => i).sort(() => 0.5 - Math.random());
+                    let hideCount = Math.max(1, Math.floor(digitCount / 2));
+                    for (let i = 0; i < hideCount; i++) {
+                        if (availablePositions.length === 0) break;
+                        let pos = availablePositions.pop();
+                        let row = (mode === 'minuend') ? 0 : (mode === 'subtrahend') ? 1 : Math.floor(Math.random() * 2);
+                        if (row === 0) minuendStr[pos] = '?'; else subtrahendStr[pos] = '?';
+                    }
+                    const wrapper = document.createElement('div'); wrapper.className = 'numbers-wrapper';
+                    [minuendStr, subtrahendStr].forEach((numArr, idx) => {
+                        const numRow = document.createElement('div'); numRow.className = 'number-row';
+                        if (idx === 1) numRow.innerHTML = `<span class="operator">-</span>`;
+                        numArr.forEach(digit => {
+                            let box;
+                            if (digit === '?') { box = document.createElement('input'); box.type = 'text'; box.className = 'digit-box missing-input'; box.maxLength = 1; box.pattern = "\\d*"; } 
+                            else { box = document.createElement('div'); box.className = 'digit-box static'; box.textContent = digit; }
+                            numRow.appendChild(box);
+                        });
+                        wrapper.appendChild(numRow);
+                    });
+                    const answerRow = document.createElement('div'); answerRow.className = 'answer-row';
+                    const difference = correctMinuend - correctSubtrahend;
+                    String(difference).padStart(digitCount, '0').split('').forEach(digit => { const box = document.createElement('div'); box.className = 'digit-box static'; box.textContent = digit; answerRow.appendChild(box); });
+                    problemDiv.appendChild(wrapper); problemDiv.appendChild(answerRow);
+                }
+                checkBtn.addEventListener('click', () => {
+                    const rows = problemDiv.querySelectorAll('.number-row');
+                    let userMinuendStr = '', userSubtrahendStr = ''; let isAnyInputEmpty = false;
+                    rows[0].querySelectorAll('.digit-box').forEach(node => { const val = node.tagName === 'INPUT' ? node.value : node.textContent; if (val === '') isAnyInputEmpty = true; userMinuendStr += val || '0'; });
+                    rows[1].querySelectorAll('.digit-box').forEach(node => { const val = node.tagName === 'INPUT' ? node.value : node.textContent; if (val === '') isAnyInputEmpty = true; userSubtrahendStr += val || '0'; });
+                    if (isAnyInputEmpty) { feedbackDiv.textContent = "Lütfen tüm eksik rakamları doldurun. 🤔"; feedbackDiv.className = 'column-feedback feedback-incorrect'; return; }
+                    const userMinuend = parseInt(userMinuendStr, 10); const userSubtrahend = parseInt(userSubtrahendStr, 10);
+                    const correctDifference = correctMinuend - correctSubtrahend;
+                    if (userMinuend - userSubtrahend === correctDifference) { feedbackDiv.textContent = "Tebrikler, Doğru! 🥳"; feedbackDiv.className = 'column-feedback feedback-correct'; } 
+                    else { const userResult = userMinuend - userSubtrahend; feedbackDiv.textContent = `Girdiğiniz rakamlarla yapılan işlem sonucu (${userResult}) doğru farkı (${correctDifference}) vermiyor. Tekrar deneyin.`; feedbackDiv.className = 'column-feedback feedback-incorrect'; }
+                });
+                newBtn.addEventListener('click', generateProblem); digitCountSelect.addEventListener('change', generateProblem); modeSelect.addEventListener('change', generateProblem);
+                generateProblem();
+            })();
         });
     </script>
 </body>
