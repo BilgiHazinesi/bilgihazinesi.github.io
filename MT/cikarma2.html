@@ -21,7 +21,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body { font-family: 'Kalam', cursive; background-color: var(--papyrus-bg); color: var(--text-primary); background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png'); background-attachment: fixed; padding: 15px; }
 
@@ -59,16 +59,17 @@
 
         /* DİNAMİK ÇIKARMA ARACI STİLLERİ */
         .dynamic-subtraction-tool { padding: 20px; background-color: var(--box-bg); border: 2px solid var(--border-color); border-radius: 8px; }
-        .dynamic-controls { display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; }
-        .slider-group { display: grid; grid-template-columns: 100px 1fr 80px; align-items: center; gap: 10px; }
-        .slider-group label { font-size: 1.2rem; font-weight: bold; }
-        .slider-group input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; height: 25px; background: transparent; outline: none; }
-        .slider-group span { font-size: 1.5rem; font-weight: bold; text-align: center; background: #fff; padding: 5px; border-radius: 5px; border: 1px solid var(--border-color); }
-        .bar-container { width: 100%; height: 30px; background: #ddd; border-radius: 5px; border: 1px solid var(--border-color); display: flex; margin-top: 5px; }
-        .bar-cikan { background-color: #f44336; height: 100%; border-radius: 5px 0 0 5px; transition: width 0.2s ease-out; }
-        .bar-fark { background-color: #81c784; height: 100%; border-radius: 0 5px 5px 0; transition: width 0.2s ease-out; }
-        #dynamic-result { text-align: center; margin-top: 20px; font-size: 2rem; }
-        #dynamic-explanation { text-align: center; font-size: 1.2rem; color: var(--text-secondary); min-height: 25px; margin-top: 10px; font-style: italic;}
+        .dynamic-controls { display: flex; flex-direction: column; gap: 20px; max-width: 700px; margin: 0 auto; }
+        .number-line-container { width: 100%; height: 50px; display: flex; align-items: center; padding: 0 20px; }
+        .number-line-track { width: 100%; height: 10px; background-color: var(--border-color); border-radius: 5px; position: relative; }
+        .number-line-handle { width: 30px; height: 30px; border-radius: 50%; position: absolute; top: 50%; transform: translate(-50%, -50%); cursor: grab; }
+        .number-line-handle:active { cursor: grabbing; }
+        #handle-eksilen { background: #4caf50; border: 3px solid #388e3c; }
+        #handle-cikan { background: #f44336; border: 3px solid #d32f2f; }
+        #bar-fark { position: absolute; height: 100%; background: rgba(244, 67, 54, 0.5); }
+        .slider-labels { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; padding: 0 10px; }
+        #dynamic-result { text-align: center; margin-top: 10px; font-size: 2rem; }
+        #dynamic-explanation { text-align: center; font-size: 1.2rem; color: var(--text-secondary); min-height: 25px; margin-top: 5px; font-style: italic;}
 
         /* VERİLMEYEN RAKAM ARACI STİLLERİ */
         .missing-digit-tool { padding: 20px; background-color: var(--box-bg); border: 2px solid var(--border-color); border-radius: 8px; }
@@ -80,6 +81,7 @@
         #missing-digit-feedback { text-align: center; margin-top: 15px; font-size: 1.5rem; font-weight: bold; min-height: 30px; }
         .feedback-correct { color: #4CAF50; }
         .feedback-incorrect { color: #f44336; }
+        .numbers-wrapper { width: 100%; border-bottom: 2px solid var(--text-primary); padding-bottom: 10px; margin-bottom: 10px; }
         .number-row, .answer-row { display: flex; justify-content: flex-end; align-items: center; }
         .answer-row { padding-top: 10px; }
         .number-row { position: relative; }
@@ -99,12 +101,13 @@
 
         <section>
             <div class="section-header"><h2>Görsel Çıkarma Tahtası</h2></div>
-             <div class="abacus-tool">
+            <div class="abacus-tool">
                 <div class="visual-controls">
                     <input type="number" id="visual-num1" placeholder="Eksilen" min="0" max="999999">
                     <span>-</span>
                     <input type="number" id="visual-num2" placeholder="Çıkan" min="0" max="999999">
                     <button id="board-solve-btn">Çözümü Canlandır</button>
+                    <button id="board-new-btn">Rastgele İşlem</button>
                 </div>
                 <div id="board-columns"></div>
             </div>
@@ -113,19 +116,17 @@
         <section>
             <div class="section-header"><h2>Çıkarma İşleminin Dinamikleri</h2></div>
             <div class="dynamic-subtraction-tool">
-                <div class="dynamic-controls">
-                    <div class="slider-group">
-                        <label for="eksilen-slider">Eksilen:</label>
-                        <div>
-                            <input type="range" id="eksilen-slider" min="100" max="999" value="500">
-                            <div class="bar-container"><div class="bar-cikan"></div><div class="bar-fark"></div></div>
-                        </div>
-                        <span id="eksilen-value">500</span>
+                 <div class="dynamic-controls">
+                    <div class="slider-labels">
+                        <span id="label-cikan">Çıkan: 250</span>
+                        <span id="label-eksilen">Eksilen: 500</span>
                     </div>
-                    <div class="slider-group">
-                        <label for="cikan-slider">Çıkan:</label>
-                        <input type="range" id="cikan-slider" min="1" max="500" value="250">
-                        <span id="cikan-value">250</span>
+                    <div class="number-line-container">
+                        <div class="number-line-track">
+                            <div id="bar-fark"></div>
+                            <div id="handle-cikan" class="number-line-handle"></div>
+                            <div id="handle-eksilen" class="number-line-handle"></div>
+                        </div>
                     </div>
                 </div>
                 <div id="dynamic-result">500 - 250 = 250</div>
@@ -158,20 +159,18 @@
             
             // --- BÖLÜM 1: GÖRSEL ÇIKARMA TAHTASI ---
             const boardSolveBtn = document.getElementById('board-solve-btn');
+            const boardNewBtn = document.getElementById('board-new-btn');
             const boardColumnsDiv = document.getElementById('board-columns');
             const placeValueNames = ['Birler', 'Onlar', 'Yüzler', 'Binler', 'On Binler', 'Yüz Binler'];
             const chipClasses = ['ones', 'tens', 'hundreds', 'thousands', 'ten_thousands', 'hundred_thousands'];
 
             async function animateBoardSolution() {
                 boardSolveBtn.disabled = true;
+                boardNewBtn.disabled = true;
                 const minuend = parseInt(document.getElementById('visual-num1').value) || 0;
                 const subtrahend = parseInt(document.getElementById('visual-num2').value) || 0;
 
-                if (minuend < subtrahend) {
-                    alert("Eksilen, çıkandan küçük olamaz!");
-                    boardSolveBtn.disabled = false;
-                    return;
-                }
+                if (minuend < subtrahend) { alert("Eksilen, çıkandan küçük olamaz!"); boardSolveBtn.disabled = false; boardNewBtn.disabled = false; return; }
 
                 boardColumnsDiv.innerHTML = '';
                 const digitCount = String(minuend).length;
@@ -189,11 +188,11 @@
 
                 String(minuend).split('').reverse().forEach((digit, i) => {
                     const container = boardColumnsDiv.querySelector(`[data-place='${i}']`);
-                    for(let j=0; j < parseInt(digit); j++) { const chip = document.createElement('div'); chip.className = `chip ${chipClasses[i]}`; container.appendChild(chip); }
+                    if(container) for(let j=0; j < parseInt(digit); j++) { const chip = document.createElement('div'); chip.className = `chip ${chipClasses[i]}`; container.appendChild(chip); }
                 });
                 String(subtrahend).split('').reverse().forEach((digit, i) => {
                     const container = boardColumnsDiv.querySelector(`[data-place='${i}']`);
-                    for(let j=0; j < parseInt(digit); j++) { const chip = document.createElement('div'); chip.className = `chip ${chipClasses[i]} subtrahend`; container.appendChild(chip); }
+                    if(container) for(let j=0; j < parseInt(digit); j++) { const chip = document.createElement('div'); chip.className = `chip ${chipClasses[i]} subtrahend`; container.appendChild(chip); }
                 });
 
                 await delay(500);
@@ -253,11 +252,11 @@
                     }
                 }
                 boardSolveBtn.disabled = false;
+                boardNewBtn.disabled = false;
             }
-
             boardSolveBtn.addEventListener('click', animateBoardSolution);
-            document.getElementById('board-new-btn').addEventListener('click', () => {
-                const digitCount = parseInt(document.getElementById('board-digit-count').value);
+            boardNewBtn.addEventListener('click', () => {
+                const digitCount = parseInt(document.getElementById('board-digit-count').value || 3);
                 const num1 = getRandomNumber(digitCount);
                 const num2 = getRandomNumber(digitCount);
                 document.getElementById('visual-num1').value = Math.max(num1, num2);
@@ -265,42 +264,71 @@
                 boardColumnsDiv.innerHTML = '';
             });
 
-
             // --- BÖLÜM 2: DİNAMİK ÇIKARMA ARACI ---
-            const eksilenSlider = document.getElementById('eksilen-slider');
-            const cikanSlider = document.getElementById('cikan-slider');
-            const eksilenValue = document.getElementById('eksilen-value');
-            const cikanValue = document.getElementById('cikan-value');
+            const track = document.querySelector('.number-line-track');
+            const handleEksilen = document.getElementById('handle-eksilen');
+            const handleCikan = document.getElementById('handle-cikan');
+            const barFark = document.getElementById('bar-fark');
+            const labelEksilen = document.getElementById('label-eksilen');
+            const labelCikan = document.getElementById('label-cikan');
             const dynamicResult = document.getElementById('dynamic-result');
-            const dynamicExplanation = document.getElementById('dynamic-explanation');
-            const barCikan = document.querySelector('.bar-cikan');
-            const barFark = document.querySelector('.bar-fark');
-            let lastChanged = '';
-            function updateDynamicSubtraction() {
-                let eksilen = parseInt(eksilenSlider.value);
-                let cikan = parseInt(cikanSlider.value);
-                cikanSlider.max = eksilen;
-                if (cikan > eksilen) { cikan = eksilen; cikanSlider.value = cikan; }
+            const maxVal = 1000;
+
+            function updateDynamicDisplay() {
+                const eksilenPos = parseFloat(handleEksilen.style.left);
+                const cikanPos = parseFloat(handleCikan.style.left);
+                const eksilen = Math.round((eksilenPos / 100) * maxVal);
+                const cikan = Math.round((cikanPos / 100) * maxVal);
                 const fark = eksilen - cikan;
-                eksilenValue.textContent = eksilen;
-                cikanValue.textContent = cikan;
+                
+                labelEksilen.textContent = `Eksilen: ${eksilen}`;
+                labelCikan.textContent = `Çıkan: ${cikan}`;
                 dynamicResult.textContent = `${eksilen} - ${cikan} = ${fark}`;
-                if (lastChanged === 'eksilen') { dynamicExplanation.textContent = "Eksilen sayı değiştiğinde, fark da aynı yönde değişir."; } 
-                else if (lastChanged === 'cikan') { dynamicExplanation.textContent = "Çıkan sayı değiştiğinde, fark zıt yönde değişir."; }
                 
-                const totalWidth = eksilenSlider.clientWidth;
-                const max = parseInt(eksilenSlider.max);
-                const eksilenPercent = (eksilen / max) * 100;
-                const cikanPercentOfEksilen = (cikan / eksilen) * 100;
-                
-                document.querySelector('.bar-container').style.width = `${eksilenPercent}%`;
-                barCikan.style.width = `${cikanPercentOfEksilen}%`;
-                barFark.style.width = `${100 - cikanPercentOfEksilen}%`;
+                barFark.style.left = `${cikanPos}%`;
+                barFark.style.width = `${eksilenPos - cikanPos}%`;
             }
-            eksilenSlider.addEventListener('input', () => { lastChanged = 'eksilen'; updateDynamicSubtraction(); });
-            cikanSlider.addEventListener('input', () => { lastChanged = 'cikan'; updateDynamicSubtraction(); });
-            updateDynamicSubtraction();
+
+            function makeDraggable(handle, otherHandle, isEksilen) {
+                handle.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const trackRect = track.getBoundingClientRect();
+                    
+                    function onMouseMove(moveEvent) {
+                        let newX = moveEvent.clientX - trackRect.left;
+                        let percent = (newX / trackRect.width) * 100;
+                        percent = Math.max(0, Math.min(100, percent));
+                        
+                        if(isEksilen) {
+                           const cikanPercent = parseFloat(otherHandle.style.left);
+                           if (percent < cikanPercent) percent = cikanPercent;
+                        } else {
+                           const eksilenPercent = parseFloat(otherHandle.style.left);
+                           if(percent > eksilenPercent) percent = eksilenPercent;
+                        }
+                        
+                        handle.style.left = `${percent}%`;
+                        updateDynamicDisplay();
+                    }
+
+                    function onMouseUp() {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    }
+                    
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            }
+
+            makeDraggable(handleEksilen, handleCikan, true);
+            makeDraggable(handleCikan, handleEksilen, false);
             
+            // Initial setup
+            handleEksilen.style.left = '50%';
+            handleCikan.style.left = '25%';
+            updateDynamicDisplay();
+
             // --- BÖLÜM 3: VERİLMEYEN RAKAMLARI BULMA ---
             const missingDigitProblemDiv = document.getElementById('missing-digit-problem');
             const checkMissingBtn = document.getElementById('check-missing-btn');
@@ -324,7 +352,6 @@
                 const mode = missingModeSelect.value;
                 let availablePositions = Array.from({length: digitCount}, (_, i) => i).sort(() => 0.5 - Math.random());
                 let hideCount = Math.max(1, Math.floor(digitCount / 2));
-
                 for(let i=0; i < hideCount; i++){
                     if(availablePositions.length === 0) break;
                     let posToHide = availablePositions.pop();
@@ -332,7 +359,6 @@
                     if(rowToHide === 0) minuendStr[posToHide] = '?';
                     else subtrahendStr[posToHide] = '?';
                 }
-
                 const numbersWrapper = document.createElement('div');
                 numbersWrapper.className = 'numbers-wrapper';
                 [minuendStr, subtrahendStr].forEach((numArr, index) => {
@@ -347,7 +373,6 @@
                     });
                     numbersWrapper.appendChild(numberRow);
                 });
-
                 const answerRow = document.createElement('div');
                 answerRow.className = 'answer-row';
                 String(correctMissingMinuend - correctMissingSubtrahend).padStart(digitCount + 1, ' ').split('').forEach(digit => {
