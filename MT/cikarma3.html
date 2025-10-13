@@ -39,6 +39,13 @@
         .controls button:hover, .dynamic-controls button:hover, .missing-digit-controls button:hover, .visual-controls button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px var(--shadow-color); }
         .controls button:disabled, .show-answer-btn:disabled, .visual-controls button:disabled { background-color: var(--text-secondary); color: #fffaf0; cursor: not-allowed; transform: none; box-shadow: none;}
         
+        /* YENİ EKLENEN BÖLÜM İÇİN STİLLER */
+        .practice-controls { display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; }
+        .practice-problems-container { display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .practice-problem { background-color: var(--box-bg); border: 2px solid var(--border-color); border-radius: 8px; padding: 20px; font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 700; text-align: center; min-width: 300px; box-shadow: 0 2px 5px var(--shadow-color); animation: fadeIn 0.5s ease-out; }
+        .practice-problem .answer-box { display: inline-block; transition: all 0.3s ease; border-bottom: 2px solid var(--text-primary); }
+        .practice-problem .answer-box.hidden { color: transparent; background-color: var(--text-secondary); border-radius: 5px; cursor: pointer; padding: 0 10px; border-bottom: none; }
+        
         /* GÖRSEL ÇIKARMA TAHTASI STİLLERİ */
         #visual-subtraction-board { padding: 20px; background-color: var(--box-bg); border: 2px solid var(--border-color); border-radius: 8px; }
         .visual-controls { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -99,6 +106,21 @@
     <div class="container">
         <header><h1>Çıkarma Alıştırmaları</h1></header>
 
+        <section id="practice-section">
+            <div class="section-header"><h2>Zihinden Çıkarma Alıştırmaları</h2></div>
+            <div class="practice-controls">
+                <select id="digit-select">
+                    <option value="2">2 Basamaklı</option>
+                    <option value="3" selected>3 Basamaklı</option>
+                    <option value="4">4 Basamaklı</option>
+                    <option value="5">5 Basamaklı</option>
+                    <option value="6">6 Basamaklı</option>
+                </select>
+                <button id="new-problems-btn">Yeni İşlemler</button>
+                <button id="toggle-answers-btn">Cevapları Göster</button>
+            </div>
+            <div id="practice-problems-container"></div>
+        </section>
         <section>
             <div class="section-header"><h2>Görsel Çıkarma Tahtası</h2></div>
             <div class="abacus-tool">
@@ -106,7 +128,7 @@
                     <input type="number" id="visual-num1" placeholder="Eksilen" min="0" max="999999">
                     <span>-</span>
                     <input type="number" id="visual-num2" placeholder="Çıkan" min="0" max="999999">
-                     <select id="board-digit-count">
+                    <select id="board-digit-count">
                         <option value="2">2 Basamaklı</option>
                         <option value="3" selected>3 Basamaklı</option>
                         <option value="4">4 Basamaklı</option>
@@ -164,7 +186,52 @@
             const delay = (ms) => new Promise(res => setTimeout(res, ms));
             function getRandomNumber(digits) { const min = Math.pow(10, digits - 1); const max = Math.pow(10, digits) - 1; return Math.floor(Math.random() * (max - min + 1)) + min; }
             
-            // --- BÖLÜM 1: GÖRSEL ÇIKARMA TAHTASI ---
+            // --- YENİ BÖLÜM 1: ZİHİNDEN ÇIKARMA ALIŞTIRMALARI ---
+            const digitSelect = document.getElementById('digit-select');
+            const newProblemsBtn = document.getElementById('new-problems-btn');
+            const toggleAnswersBtn = document.getElementById('toggle-answers-btn');
+            const problemsContainer = document.getElementById('practice-problems-container');
+
+            function generateProblems() {
+                problemsContainer.innerHTML = '';
+                const digitCount = parseInt(digitSelect.value);
+                const areAnswersHidden = toggleAnswersBtn.textContent === 'Cevapları Göster';
+
+                for (let i = 0; i < 3; i++) {
+                    const num1 = getRandomNumber(digitCount);
+                    const num2 = getRandomNumber(digitCount);
+                    const minuend = Math.max(num1, num2);
+                    const subtrahend = Math.min(num1, num2);
+                    const difference = minuend - subtrahend;
+
+                    const problemDiv = document.createElement('div');
+                    problemDiv.className = 'practice-problem';
+                    problemDiv.innerHTML = `
+                        <span>${minuend}</span> - <span>${subtrahend}</span> = 
+                        <span class="answer-box ${areAnswersHidden ? 'hidden' : ''}">${difference}</span>
+                    `;
+                    problemsContainer.appendChild(problemDiv);
+                }
+            }
+
+            function toggleAnswers() {
+                const answerBoxes = document.querySelectorAll('.practice-problem .answer-box');
+                const isCurrentlyHidden = toggleAnswersBtn.textContent === 'Cevapları Göster';
+                
+                answerBoxes.forEach(box => {
+                    box.classList.toggle('hidden', isCurrentlyHidden);
+                });
+                
+                toggleAnswersBtn.textContent = isCurrentlyHidden ? 'Cevapları Gizle' : 'Cevapları Göster';
+            }
+
+            newProblemsBtn.addEventListener('click', generateProblems);
+            digitSelect.addEventListener('change', generateProblems);
+            toggleAnswersBtn.addEventListener('click', toggleAnswers);
+            generateProblems(); // Sayfa yüklendiğinde ilk problemleri oluştur
+
+
+            // --- BÖLÜM 2: GÖRSEL ÇIKARMA TAHTASI ---
             const boardSolveBtn = document.getElementById('board-solve-btn');
             const boardNewBtn = document.getElementById('board-new-btn');
             const boardColumnsDiv = document.getElementById('board-columns');
@@ -271,7 +338,7 @@
                 boardColumnsDiv.innerHTML = '';
             });
 
-            // --- BÖLÜM 2: DİNAMİK ÇIKARMA ARACI ---
+            // --- BÖLÜM 3: DİNAMİK ÇIKARMA ARACI ---
             const track = document.querySelector('.number-line-track');
             const handleEksilen = document.getElementById('handle-eksilen');
             const handleCikan = document.getElementById('handle-cikan');
@@ -331,12 +398,11 @@
             makeDraggable(handleEksilen, handleCikan, true);
             makeDraggable(handleCikan, handleEksilen, false);
             
-            // Initial setup
             handleEksilen.style.left = '50%';
             handleCikan.style.left = '25%';
             updateDynamicDisplay();
 
-            // --- BÖLÜM 3: VERİLMEYEN RAKAMLARI BULMA ---
+            // --- BÖLÜM 4: VERİLMEYEN RAKAMLARI BULMA ---
             const missingDigitProblemDiv = document.getElementById('missing-digit-problem');
             const checkMissingBtn = document.getElementById('check-missing-btn');
             const newMissingBtn = document.getElementById('new-missing-btn');
@@ -372,8 +438,6 @@
                     const numberRow = document.createElement('div');
                     numberRow.className = 'number-row';
                     if (index === 1) { numberRow.innerHTML = `<span class="operator">-</span>`; }
-                    // DÜZELTME 2: Sayıların başına fazladan boşluk ekleyen .padStart() ve .split() kombinasyonu kaldırıldı.
-                    // Artık sadece mevcut rakam dizisi (numArr) kullanılarak kutular oluşturuluyor.
                     numArr.forEach(digit => {
                         let box;
                         if (digit === '?') { box = document.createElement('input'); box.type = 'text'; box.className = 'digit-box missing-input'; box.maxLength = 1; box.pattern = "\\d*"; } 
@@ -384,7 +448,6 @@
                 });
                 const answerRow = document.createElement('div');
                 answerRow.className = 'answer-row';
-                // DÜZELTME 2 (Devamı): Sonuç satırında da fazladan boşluk kaldırıldı ve doğru sayıda basamak için '0' ile doldurma yapıldı.
                 const result = correctMissingMinuend - correctMissingSubtrahend;
                 String(result).padStart(digitCount, '0').split('').forEach(digit => {
                     const box = document.createElement('div'); box.className = 'digit-box static'; box.textContent = digit; answerRow.appendChild(box);
