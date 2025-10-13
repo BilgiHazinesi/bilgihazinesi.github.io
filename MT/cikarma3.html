@@ -34,7 +34,7 @@
         header h1, .section-header h2 { font-family: 'Cinzel Decorative', cursive; font-size: clamp(2rem, 5vw, 3.2rem); color: var(--accent-color); text-shadow: 1px 1px 2px var(--shadow-color); }
         .section-header h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); }
 
-        .controls select, .controls button, .dynamic-controls input, .dynamic-controls button, .missing-digit-controls button, .missing-digit-setup-controls select, .visual-controls input, .visual-controls button { font-family: 'Kalam', cursive; font-size: 1.1rem; padding: 8px 12px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--box-bg); color: var(--text-primary); }
+        .controls select, .controls button, .dynamic-controls input, .dynamic-controls button, .missing-digit-controls button, .missing-digit-setup-controls select, .visual-controls input, .visual-controls button, .visual-controls select { font-family: 'Kalam', cursive; font-size: 1.1rem; padding: 8px 12px; border-radius: 6px; border: 2px solid var(--border-color); background-color: var(--box-bg); color: var(--text-primary); }
         .controls button, .dynamic-controls button, .missing-digit-controls button, .visual-controls button { font-family: 'Cinzel Decorative', cursive; font-weight: 700; background-color: var(--accent-color); color: var(--papyrus-bg); cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .controls button:hover, .dynamic-controls button:hover, .missing-digit-controls button:hover, .visual-controls button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px var(--shadow-color); }
         .controls button:disabled, .show-answer-btn:disabled, .visual-controls button:disabled { background-color: var(--text-secondary); color: #fffaf0; cursor: not-allowed; transform: none; box-shadow: none;}
@@ -106,6 +106,13 @@
                     <input type="number" id="visual-num1" placeholder="Eksilen" min="0" max="999999">
                     <span>-</span>
                     <input type="number" id="visual-num2" placeholder="Çıkan" min="0" max="999999">
+                     <select id="board-digit-count">
+                        <option value="2">2 Basamaklı</option>
+                        <option value="3" selected>3 Basamaklı</option>
+                        <option value="4">4 Basamaklı</option>
+                        <option value="5">5 Basamaklı</option>
+                        <option value="6">6 Basamaklı</option>
+                    </select>
                     <button id="board-solve-btn">Çözümü Canlandır</button>
                     <button id="board-new-btn">Rastgele İşlem</button>
                 </div>
@@ -256,7 +263,7 @@
             }
             boardSolveBtn.addEventListener('click', animateBoardSolution);
             boardNewBtn.addEventListener('click', () => {
-                const digitCount = parseInt(document.getElementById('board-digit-count').value || 3);
+                const digitCount = parseInt(document.getElementById('board-digit-count').value);
                 const num1 = getRandomNumber(digitCount);
                 const num2 = getRandomNumber(digitCount);
                 document.getElementById('visual-num1').value = Math.max(num1, num2);
@@ -365,18 +372,22 @@
                     const numberRow = document.createElement('div');
                     numberRow.className = 'number-row';
                     if (index === 1) { numberRow.innerHTML = `<span class="operator">-</span>`; }
-                    String(numArr.join('')).padStart(digitCount + 1, ' ').split('').forEach(digit => {
+                    // DÜZELTME 2: Sayıların başına fazladan boşluk ekleyen .padStart() ve .split() kombinasyonu kaldırıldı.
+                    // Artık sadece mevcut rakam dizisi (numArr) kullanılarak kutular oluşturuluyor.
+                    numArr.forEach(digit => {
                         let box;
                         if (digit === '?') { box = document.createElement('input'); box.type = 'text'; box.className = 'digit-box missing-input'; box.maxLength = 1; box.pattern = "\\d*"; } 
-                        else { box = document.createElement('div'); box.className = 'digit-box static'; box.innerHTML = digit === ' ' ? '&nbsp;' : digit; }
+                        else { box = document.createElement('div'); box.className = 'digit-box static'; box.textContent = digit; }
                         numberRow.appendChild(box);
                     });
                     numbersWrapper.appendChild(numberRow);
                 });
                 const answerRow = document.createElement('div');
                 answerRow.className = 'answer-row';
-                String(correctMissingMinuend - correctMissingSubtrahend).padStart(digitCount + 1, ' ').split('').forEach(digit => {
-                    const box = document.createElement('div'); box.className = 'digit-box static'; box.innerHTML = digit === ' ' ? '&nbsp;' : digit; answerRow.appendChild(box);
+                // DÜZELTME 2 (Devamı): Sonuç satırında da fazladan boşluk kaldırıldı ve doğru sayıda basamak için '0' ile doldurma yapıldı.
+                const result = correctMissingMinuend - correctMissingSubtrahend;
+                String(result).padStart(digitCount, '0').split('').forEach(digit => {
+                    const box = document.createElement('div'); box.className = 'digit-box static'; box.textContent = digit; answerRow.appendChild(box);
                 });
                 missingDigitProblemDiv.appendChild(numbersWrapper);
                 missingDigitProblemDiv.appendChild(answerRow);
@@ -387,17 +398,15 @@
                 let userNumbers = [];
                 rows.forEach(row => {
                     let numStr = '';
-                    Array.from(row.children).forEach(node => {
-                        if (node.classList.contains('digit-box')) {
-                            numStr += (node.tagName === 'INPUT' ? (node.value || '0') : node.textContent).trim();
-                        }
+                    row.querySelectorAll('.digit-box').forEach(node => {
+                       numStr += (node.tagName === 'INPUT' ? (node.value || '0') : node.textContent);
                     });
                     userNumbers.push(parseInt(numStr, 10) || 0);
                 });
                 if (userNumbers[0] === correctMissingMinuend && userNumbers[1] === correctMissingSubtrahend) {
-                    missingDigitFeedback.textContent = "Tebrikler, Doğru!"; missingDigitFeedback.className = 'feedback-correct';
+                    missingDigitFeedback.textContent = "Tebrikler, Doğru! 🥳"; missingDigitFeedback.className = 'feedback-correct';
                 } else {
-                    missingDigitFeedback.textContent = "Tekrar Deneyin."; missingDigitFeedback.className = 'feedback-incorrect';
+                    missingDigitFeedback.textContent = "Tekrar Deneyin. 🤔"; missingDigitFeedback.className = 'feedback-incorrect';
                 }
             });
 
