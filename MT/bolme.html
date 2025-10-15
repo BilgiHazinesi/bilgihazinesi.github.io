@@ -11,14 +11,18 @@
             --papyrus-border: #d3c0a5;
             --papyrus-text: #5a4a35;
             --papyrus-header: #8b4513;
-            --box-size: 45px;
+            /* Responisve kutu boyutu: Min 35px, Max 50px, ideal olarak ekran genişliğinin %8'i */
+            --box-size: clamp(35px, 8vw, 50px);
+        }
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
         body {
             font-family: 'Georgia', serif;
             background-color: var(--papyrus-bg);
             color: var(--papyrus-text);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             justify-content: center;
         }
@@ -26,7 +30,7 @@
             width: 100%;
             max-width: 800px;
             background-color: var(--papyrus-inner-bg);
-            padding: 25px;
+            padding: 20px;
             border: 2px solid var(--papyrus-border);
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
         }
@@ -35,6 +39,7 @@
             color: var(--papyrus-header);
             border-bottom: 2px solid var(--papyrus-border);
             padding-bottom: 10px;
+            margin-top: 0;
         }
         .tab {
             overflow: hidden;
@@ -43,57 +48,67 @@
         }
         .tab button {
             background-color: inherit; float: left; border: none; outline: none;
-            cursor: pointer; padding: 14px 16px; transition: 0.3s; font-size: 17px;
+            cursor: pointer; padding: 14px 16px; transition: 0.3s;
+            font-size: clamp(14px, 2.5vw, 17px); /* Responsive font size */
             font-family: 'Georgia', serif; color: var(--papyrus-header);
+            width: 50%;
         }
         .tab button:hover { background-color: var(--papyrus-border); }
         .tab button.active { background-color: #c4ae8a; font-weight: bold; }
-        .tabcontent { display: none; padding: 20px 12px; border: 1px solid var(--papyrus-border); border-top: none; animation: fadeEffect 1s; }
+        .tabcontent { display: none; padding: 15px 10px; border: 1px solid var(--papyrus-border); border-top: none; animation: fadeEffect 0.8s; }
         @keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
 
         .setup-area, .controls {
             display: flex;
+            flex-wrap: wrap; /* Mobil için satıra sığmazsa alt satıra geç */
             justify-content: center;
             align-items: center;
             gap: 10px;
-            margin: 20px 0;
+            margin-bottom: 20px;
         }
         input[type="number"] {
-            width: 100px;
+            width: 140px;
             padding: 8px;
             border: 1px solid var(--papyrus-border);
             font-size: 1em;
+            text-align: center;
         }
         .action-btn {
-            padding: 10px 20px; font-size: 1.1em; cursor: pointer;
+            padding: 10px 20px; font-size: 1em; cursor: pointer;
             background-color: var(--papyrus-header); color: white;
-            border: none; border-radius: 5px;
+            border: none; border-radius: 5px; transition: background-color 0.3s;
         }
+        .action-btn:hover:not(:disabled) { background-color: #a0522d; }
         .action-btn:disabled { background-color: #a9a9a9; cursor: not-allowed; }
 
         .explanation {
             min-height: 40px;
-            margin-top: 15px;
-            padding: 10px;
+            margin-top: 25px;
+            padding: 12px;
             background-color: #fdf5e6;
             border-left: 4px solid var(--papyrus-header);
             text-align: center;
             font-style: italic;
+            line-height: 1.5;
         }
         
-        /* Görselleştirme Alanları */
         .visual-container {
             display: flex;
             justify-content: center;
             margin-top: 20px;
             font-family: 'Courier New', Courier, monospace;
             font-size: 1.5em;
+            overflow-x: auto; /* Çok büyük sayılar için taşmayı engelle */
+            padding: 10px 0;
         }
         .num-box {
             width: var(--box-size); height: var(--box-size);
             display: flex; justify-content: center; align-items: center;
             border: 1px solid var(--papyrus-border);
             background-color: white;
+            padding: 0;
+            text-align: center;
+            font-size: inherit; /* Parent font size'ını al */
         }
         
         /* Paylaştırma Stilleri */
@@ -101,21 +116,31 @@
             display: grid;
             grid-template-columns: auto auto 1fr;
             gap: 5px;
+            align-items: start;
+        }
+        .line { border-right: 2px solid var(--papyrus-header); grid-row: 1 / span 20; }
+        
+        /* Uzun Bölme Stilleri (Yeniden Yapılandırıldı) */
+        #uzun-bolme-grid {
+            display: grid;
+            /* 6 basamak bölünen, 1 çizgi, 4 basamak bölüm için sütunlar */
+            grid-template-columns: repeat(11, var(--box-size));
+            grid-auto-rows: var(--box-size);
             align-items: center;
         }
-        #paylastirma-bolen { grid-column: 1; grid-row: 1 / span 10; }
-        #paylastirma-bolunen { grid-column: 3; grid-row: 1; }
-        .line { border-right: 2px solid var(--papyrus-header); height: 100%; grid-column: 2; grid-row: 1 / span 10; }
-        #paylastirma-adimlari { grid-column: 3; }
-        #paylastirma-bolum { grid-column: 1; }
-        
-        /* Uzun Bölme Stilleri */
-        #uzun-bolme-grid { position: relative; }
-        #uzun-bolme-bolunen { display: flex; }
-        #uzun-bolme-bolen { position: absolute; left: 105%; top: 0; }
-        #uzun-bolme-bolum { position: absolute; left: 105%; top: var(--box-size); border-top: 2px solid var(--papyrus-header); display: flex; }
-        #uzun-bolme-cizgi { position: absolute; top: 0; left: 100%; height: calc(var(--box-size) * 2); border-left: 2px solid var(--papyrus-header); }
-        #uzun-bolme-islemler { position: absolute; top: var(--box-size); left: 0; }
+        .grid-bolen-cizgi {
+            grid-column: 7;
+            grid-row: 1 / span 2;
+            border-left: 2px solid var(--papyrus-header);
+            height: 100%;
+        }
+        .grid-bolum-cizgi {
+            grid-column: 8 / span 4;
+            grid-row: 1;
+            border-bottom: 2px solid var(--papyrus-header);
+            height: 100%;
+        }
+
     </style>
 </head>
 <body>
@@ -124,49 +149,43 @@
     <h1>Bölme İşlemi Yöntemleri</h1>
 
     <div class="tab">
-        <button class="tablinks" onclick="openTab(event, 'Paylastirma')" id="defaultOpen">1. Paylaştırma Yöntemi (Avrupa)</button>
-        <button class="tablinks" onclick="openTab(event, 'UzunBolme')">2. Klasik Uzun Bölme (Türkiye)</button>
+        <button class="tablinks" onclick="openTab(event, 'Paylastirma')" id="defaultOpen">Paylaştırma Yöntemi</button>
+        <button class="tablinks" onclick="openTab(event, 'UzunBolme')">Klasik Uzun Bölme</button>
     </div>
 
     <div id="Paylastirma" class="tabcontent">
-        <h2>Paylaştırma Yöntemi</h2>
+        <h2>Paylaştırma Yöntemi (Avrupa)</h2>
         <div class="setup-area">
             <input type="number" id="p_bolunen_input" placeholder="Bölünen (Örn: 158)">
             <span>÷</span>
             <input type="number" id="p_bolen_input" placeholder="Bölen (Örn: 3)">
             <button class="action-btn" onclick="setupPaylastirma()">Başlat</button>
         </div>
+        <div class="controls" id="paylastirma-controls" style="display:none;">
+            <input type="number" id="p_kismi_bolum_input" placeholder="Kaçar dağıtacaksın?">
+            <button class="action-btn" id="p_next_step_btn" onclick="handlePaylastirmaAdim()">Dağıt</button>
+        </div>
         <div class="visual-container" id="paylastirma-visual" style="display:none;">
              <div id="paylastirma-grid"></div>
         </div>
-        <div class="controls" id="paylastirma-controls" style="display:none;">
-            <input type="number" id="p_kısmi_bolum_input" placeholder="Kaçar dağıtacaksın?">
-            <button class="action-btn" id="p_next_step_btn" onclick="handlePaylastirmaAdim()">Dağıt</button>
-        </div>
-        <div class="explanation" id="paylastirma-aciklama"></div>
+        <div class="explanation" id="paylastirma-aciklama">Lütfen bölünen ve bölen sayılarını girip "Başlat" butonuna basın.</div>
     </div>
 
     <div id="UzunBolme" class="tabcontent">
-        <h2>Klasik Uzun Bölme Yöntemi</h2>
+        <h2>Klasik Uzun Bölme Yöntemi (Türkiye)</h2>
         <div class="setup-area">
             <input type="number" id="u_bolunen_input" placeholder="Bölünen (Örn: 4675)">
             <span>÷</span>
             <input type="number" id="u_bolen_input" placeholder="Bölen (Örn: 15)">
             <button class="action-btn" onclick="setupUzunBolme()">Başlat</button>
         </div>
-        <div class="visual-container" id="uzun-bolme-visual" style="display:none;">
-            <div id="uzun-bolme-grid">
-                <div id="uzun-bolme-bolunen"></div>
-                <div id="uzun-bolme-cizgi"></div>
-                <div id="uzun-bolme-bolen" class="num-box"></div>
-                <div id="uzun-bolme-bolum"></div>
-                <div id="uzun-bolme-islemler"></div>
-            </div>
-        </div>
         <div class="controls" id="uzun-bolme-controls" style="display:none;">
             <button class="action-btn" id="u_next_step_btn" onclick="handleUzunBolmeAdim()">Sonraki Adım</button>
         </div>
-        <div class="explanation" id="uzun-bolme-aciklama"></div>
+        <div class="visual-container" id="uzun-bolme-visual" style="display:none;">
+            <div id="uzun-bolme-grid"></div>
+        </div>
+        <div class="explanation" id="uzun-bolme-aciklama">Lütfen bölünen ve bölen sayılarını girip "Başlat" butonuna basın.</div>
     </div>
 </div>
 
@@ -184,27 +203,25 @@ function openTab(evt, tabName) {
 document.getElementById("defaultOpen").click();
 
 // --- PAYLAŞTIRMA YÖNTEMİ ---
-let p_bolunen, p_bolen, p_kalan, p_toplam_bolum, p_adim_sayisi;
+let p_bolen, p_kalan, p_toplam_bolum;
 
 function setupPaylastirma() {
-    p_bolunen = parseInt(document.getElementById('p_bolunen_input').value);
+    let p_bolunen = parseInt(document.getElementById('p_bolunen_input').value);
     p_bolen = parseInt(document.getElementById('p_bolen_input').value);
-
     if (isNaN(p_bolunen) || isNaN(p_bolen) || p_bolen <= 0) {
         alert("Lütfen geçerli sayılar girin. Bölen 0'dan büyük olmalı."); return;
     }
     
     p_kalan = p_bolunen;
     p_toplam_bolum = 0;
-    p_adim_sayisi = 1;
 
     const grid = document.getElementById('paylastirma-grid');
     grid.innerHTML = `
-        <div class="num-box" id="paylastirma-bolen">${p_bolen}</div>
+        <div class="num-box" style="grid-column: 1; grid-row: 1;">${p_bolen}</div>
         <div class="line"></div>
-        <div class="num-box" id="paylastirma-bolunen">${p_bolunen}</div>
-        <div id="paylastirma-adimlari"></div>
-        <div class="num-box" id="paylastirma-bolum" style="border-top: 2px solid var(--papyrus-header); background-color: #f0e68c;"></div>
+        <div class="num-box" style="grid-column: 3; grid-row: 1;">${p_bolunen}</div>
+        <div id="paylastirma-adimlari" style="grid-column: 3; grid-row: 2;"></div>
+        <div class="num-box" id="paylastirma-bolum" style="grid-column: 1; grid-row: 2; border-top: 2px solid var(--papyrus-header); background-color: #f0e68c; align-self: end;"></div>
     `;
 
     document.getElementById('paylastirma-visual').style.display = 'flex';
@@ -214,30 +231,26 @@ function setupPaylastirma() {
 }
 
 function handlePaylastirmaAdim() {
-    const kismi_bolum = parseInt(document.getElementById('p_kısmi_bolum_input').value);
-    if (isNaN(kismi_bolum) || kismi_bolum <= 0) {
-        alert("Lütfen geçerli bir dağıtım sayısı girin."); return;
-    }
+    const kismi_bolum = parseInt(document.getElementById('p_kismi_bolum_input').value);
+    if (isNaN(kismi_bolum) || kismi_bolum <= 0) { alert("Lütfen geçerli bir dağıtım sayısı girin."); return; }
     
     const cikarilacak = kismi_bolum * p_bolen;
-    if (cikarilacak > p_kalan) {
-        alert(`${cikarilacak} sayısı, kalan ${p_kalan}'dan büyük. Daha küçük bir sayı dene.`); return;
-    }
+    if (cikarilacak > p_kalan) { alert(`${cikarilacak} sayısı, kalan ${p_kalan}'dan büyük. Daha küçük bir sayı dene.`); return; }
 
     p_kalan -= cikarilacak;
     p_toplam_bolum += kismi_bolum;
 
     const adimlarDiv = document.getElementById('paylastirma-adimlari');
     adimlarDiv.innerHTML += `
-        <div style="display: flex; align-items: center; justify-content: flex-end;">
-            <span>-</span><div class="num-box">${cikarilacak}</div> 
-            <span style="font-size: 0.7em; margin-left: 5px;">(${kismi_bolum} x ${p_bolen})</span>
+        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 5px;">
+            <span>-</span><div class="num-box" style="width: auto; min-width: var(--box-size); padding: 0 5px;">${cikarilacak}</div> 
+            <span style="font-size: 0.7em;">(${kismi_bolum} x ${p_bolen})</span>
         </div>
-        <div style="text-align: right; border-top: 1px solid black; padding-right: 5px; font-weight: bold;">${p_kalan}</div>
+        <div style="text-align: right; border-top: 1px solid black; padding-right: 5px; font-weight: bold; margin-top: 5px; padding-top: 5px;">${p_kalan}</div>
     `;
     
     document.getElementById('paylastirma-bolum').textContent = p_toplam_bolum;
-    document.getElementById('p_kısmi_bolum_input').value = '';
+    document.getElementById('p_kismi_bolum_input').value = '';
 
     if (p_kalan < p_bolen) {
         document.getElementById('paylastirma-aciklama').innerHTML = `İşlem bitti! Kalan (${p_kalan}), bölenden (${p_bolen}) küçük. <br><b>Sonuç: Bölüm = ${p_toplam_bolum}, Kalan = ${p_kalan}</b>`;
@@ -248,14 +261,14 @@ function handlePaylastirmaAdim() {
 }
 
 // --- UZUN BÖLME YÖNTEMİ ---
-let u_bolunen_dizi, u_bolen, u_adim, u_islem_sayisi_str, u_bolum_dizi, u_kalan, u_index;
+let u_bolunen_dizi, u_bolen, u_adim, u_islem_sayisi_str, u_bolum_dizi, u_kalan, u_index, u_grid_row;
 
 function setupUzunBolme() {
     const bolunen_str = document.getElementById('u_bolunen_input').value;
     u_bolen = parseInt(document.getElementById('u_bolen_input').value);
 
-    if (bolunen_str === '' || isNaN(u_bolen) || u_bolen <= 0) {
-        alert("Lütfen geçerli sayılar girin. Bölen 0'dan büyük olmalı."); return;
+    if (bolunen_str === '' || isNaN(u_bolen) || u_bolen <= 0 || bolunen_str.length > 6) {
+        alert("Lütfen geçerli sayılar girin. Bölen 0'dan büyük olmalı ve bölünen en fazla 6 basamaklı olmalıdır."); return;
     }
 
     u_bolunen_dizi = bolunen_str.split('');
@@ -264,12 +277,20 @@ function setupUzunBolme() {
     u_bolum_dizi = [];
     u_kalan = 0;
     u_index = 0;
+    u_grid_row = 1;
 
-    // Arayüzü temizle ve hazırla
-    document.getElementById('uzun-bolme-bolunen').innerHTML = u_bolunen_dizi.map(d => `<div class="num-box">${d}</div>`).join('');
-    document.getElementById('uzun-bolme-bolen').textContent = u_bolen;
-    document.getElementById('uzun-bolme-bolum').innerHTML = '';
-    document.getElementById('uzun-bolme-islemler').innerHTML = '';
+    const grid = document.getElementById('uzun-bolme-grid');
+    grid.innerHTML = ''; // Temizle
+
+    // Bölüneni yerleştir
+    u_bolunen_dizi.forEach((d, i) => {
+        grid.innerHTML += `<div class="num-box" style="grid-column: ${i + 1}; grid-row: 1;">${d}</div>`;
+    });
+    // Böleni yerleştir
+    grid.innerHTML += `<div class="num-box" style="grid-column: 8; grid-row: 1; width: auto; min-width: var(--box-size); padding: 0 5px;">${u_bolen}</div>`;
+    // Çizgileri ekle
+    grid.innerHTML += `<div class="grid-bolen-cizgi"></div><div class="grid-bolum-cizgi"></div>`;
+
     document.getElementById('uzun-bolme-visual').style.display = 'flex';
     document.getElementById('uzun-bolme-controls').style.display = 'flex';
     document.getElementById('u_next_step_btn').disabled = false;
@@ -278,7 +299,7 @@ function setupUzunBolme() {
 
 function handleUzunBolmeAdim() {
     const aciklama = document.getElementById('uzun-bolme-aciklama');
-    const islemlerDiv = document.getElementById('uzun-bolme-islemler');
+    const grid = document.getElementById('uzun-bolme-grid');
     
     if (u_adim === 'INDIR') {
         u_islem_sayisi_str += u_bolunen_dizi[u_index];
@@ -289,50 +310,58 @@ function handleUzunBolmeAdim() {
         let bolum_rakami = Math.floor(islem_sayisi / u_bolen);
         u_bolum_dizi.push(bolum_rakami);
         
-        document.getElementById('uzun-bolme-bolum').innerHTML += `<div class="num-box" style="background-color: #ffc0cb;">${bolum_rakami}</div>`;
+        grid.innerHTML += `<div class="num-box" style="grid-column: ${8 + u_bolum_dizi.length - 1}; grid-row: 2; background-color: #ffc0cb;">${bolum_rakami}</div>`;
         aciklama.textContent = `${islem_sayisi} içinde ${u_bolen}, ${bolum_rakami} defa var. Bölüme ${bolum_rakami} yazılır.`;
         u_adim = 'CARP';
     } else if (u_adim === 'CARP') {
+        u_grid_row++;
         let son_bolum_rakami = u_bolum_dizi[u_bolum_dizi.length - 1];
-        let carpim = son_bolum_rakami * u_bolen;
+        let carpim_str = String(son_bolum_rakami * u_bolen);
+        let baslangic_sutun = u_index + 1 - (carpim_str.length - 1);
         
-        let satir = document.createElement('div');
-        satir.style.cssText = `display: flex; margin-left: ${u_index * (45+1) - (String(carpim).length-1)*(45+1)}px;`;
-        satir.innerHTML = `<span style="line-height: var(--box-size); margin-right: 5px;">-</span>` + String(carpim).split('').map(d => `<div class="num-box">${d}</div>`).join('');
-        islemlerDiv.appendChild(satir);
-        
-        aciklama.textContent = `${son_bolum_rakami} ile ${u_bolen} çarpılır. Sonuç: ${carpim}.`;
+        grid.innerHTML += `<div style="grid-column: ${baslangic_sutun - 1}; grid-row: ${u_grid_row}; display:flex; align-items:center; justify-content:flex-end;">-</div>`;
+        carpim_str.split('').forEach((d, i) => {
+            grid.innerHTML += `<div class="num-box" style="grid-column: ${baslangic_sutun + i}; grid-row: ${u_grid_row};">${d}</div>`;
+        });
+        aciklama.textContent = `${son_bolum_rakami} ile ${u_bolen} çarpılır. Sonuç: ${carpim_str}.`;
         u_adim = 'CIKAR';
     } else if (u_adim === 'CIKAR') {
+        u_grid_row++;
         let islem_sayisi = parseInt(u_islem_sayisi_str);
         let son_bolum_rakami = u_bolum_dizi[u_bolum_dizi.length - 1];
-        let carpim = son_bolum_rakami * u_bolen;
-        u_kalan = islem_sayisi - carpim;
+        u_kalan = islem_sayisi - (son_bolum_rakami * u_bolen);
+        let kalan_str = String(u_kalan);
         
-        let satir = document.createElement('div');
-        satir.style.cssText = `display: flex; border-top: 2px solid black; margin-left: ${u_index * (45+1) - (String(u_kalan).length-1)*(45+1)}px;`;
-        satir.innerHTML = String(u_kalan).split('').map(d => `<div class="num-box" style="background-color: #90ee90;">${d}</div>`).join('');
-        islemlerDiv.appendChild(satir);
+        let baslangic_sutun_cizgi = u_index + 1 - (u_islem_sayisi_str.length - 1);
+        grid.innerHTML += `<div style="grid-column: ${baslangic_sutun_cizgi} / span ${u_islem_sayisi_str.length}; grid-row: ${u_grid_row - 1}; border-bottom: 2px solid black; align-self: end;"></div>`;
+
+        let baslangic_sutun_kalan = u_index + 1 - (kalan_str.length - 1);
+        kalan_str.split('').forEach((d, i) => {
+            grid.innerHTML += `<div class="num-box" style="grid-column: ${baslangic_sutun_kalan + i}; grid-row: ${u_grid_row}; background-color: #90ee90;">${d}</div>`;
+        });
 
         u_islem_sayisi_str = String(u_kalan);
-        aciklama.textContent = `${islem_sayisi} - ${carpim} = ${u_kalan}. Kalan: ${u_kalan}.`;
+        aciklama.textContent = `${islem_sayisi}'den çıkarma yapıldı. Kalan: ${u_kalan}.`;
         u_index++;
         
         if (u_index >= u_bolunen_dizi.length) {
             u_adim = 'BITTI';
         } else {
+            // İndirilen sayıyı kalanın yanına ekle
+            let indirilen_sutun = u_index + 1;
+            grid.innerHTML += `<div class="num-box" style="grid-column: ${indirilen_sutun}; grid-row: ${u_grid_row};">${u_bolunen_dizi[u_index]}</div>`;
             u_adim = 'INDIR';
         }
     }
 
     if (u_adim === 'BITTI') {
-        aciklama.innerHTML = `Bölünecek başka rakam kalmadı. İşlem bitti! <br><b>Sonuç: Bölüm = ${u_bolum_dizi.join('')}, Kalan = ${u_kalan}</b>`;
+        aciklama.innerHTML = `Bölünecek başka rakam kalmadı. İşlem bitti! <br><b>Sonuç: Bölüm = ${u_bolum_dizi.join('') || 0}, Kalan = ${u_kalan}</b>`;
         document.getElementById('u_next_step_btn').disabled = true;
     }
 }
 
 // Sayfa ilk yüklendiğinde
-window.onload = function() {
+window.onload = () => {
     openTab(null, 'Paylastirma');
     document.getElementById('defaultOpen').className += ' active';
 };
