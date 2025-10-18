@@ -15,7 +15,8 @@
         /* Bu sayfaya özel stiller, ana temanıza uyumlu */
         :root {
             --memory-card-bg: #e6dccb;
-            --memory-card-matched-bg: #c8e6c9;
+            --memory-card-matched-bg: #c8e6c9; /* Eşleşme rengi */
+            --memory-card-matched-text: #2e7d32; /* Eşleşme yazı rengi */
         }
 
         body {
@@ -184,46 +185,62 @@
         .correct { color: #2e7d32; }
         .wrong { color: #c62828; }
         
-        /* Akılda Tut Oyunu Stilleri */
+        /* Akılda Tut Oyunu Stilleri (GÜNCELLENDİ) */
         #memory-setup { margin-bottom: 30px; }
         #memory-setup h2 { font-family: 'Cinzel Decorative', cursive; }
         #memory-status { margin-bottom: 20px; font-size: 1.2rem; font-weight: 700; min-height: 30px;}
+        
         #memory-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            max-width: 700px;
+            /* grid-template-columns JS tarafından ayarlanacak */
+            gap: 10px;
+            max-width: 800px; /* Geniş ekranlar için limit */
             margin: auto;
             perspective: 1000px;
         }
         .memory-card {
-            height: 140px;
+            aspect-ratio: 4 / 5; /* Kart en-boy oranı */
+            height: auto;
             cursor: pointer;
             position: relative;
         }
         .memory-card .card-face-inner { transform: rotateY(0); }
         .memory-card.is-flipped .card-face-inner { transform: rotateY(180deg); }
-        .memory-card.is-matched .card-face-inner { transform: rotateY(0); }
         .memory-card.is-matched { cursor: default; }
+        
+        /* EŞLEŞEN KARTLARIN AÇIK KALMASINI SAĞLAYAN KURAL */
+        .memory-card.is-matched .card-face-inner {
+            transform: rotateY(180deg); /* Açık kal */
+        }
 
         .memory-card .card-front {
             background: var(--memory-card-bg);
-            font-size: 2.5rem;
+            /* Soru işareti simgesi ekranla birlikte büyüyecek */
+            font-size: clamp(2rem, 10vw, 3.5rem); 
             color: var(--accent-color);
         }
         .memory-card .card-back {
              background: var(--papyrus-bg-color-light);
-             font-size: 1.1rem;
+             /* YAZI TİPİ DİNAMİK OLARAK AYARLANDI */
+             font-size: clamp(0.9rem, 4vw, 1.5rem); /* Ekranla büyüyen yazı */
              font-weight: 700;
+             word-break: break-word; /* Uzun kelimeler için */
+             padding: 5px; /* İçeriğin sığması için */
+             line-height: 1.2;
+             display: flex;
+             justify-content: center;
+             align-items: center;
         }
+
+        /* Eşleşen kartların stilini ayarla (Hem ön hem arka yüz) */
         .memory-card.is-matched .card-back,
         .memory-card.is-matched .card-front {
             background-color: var(--memory-card-matched-bg);
             border: 2px solid var(--accent-color);
-            color: #2e7d32;
+            color: var(--memory-card-matched-text);
         }
 
-        /* MOBİL UYUMLULUK */
+        /* MOBİL UYUMLULUK GÜNCELLEMELERİ */
         @media (max-width: 768px) {
             header h1 a { font-size: 2rem; }
             header p { font-size: 1rem; }
@@ -232,10 +249,6 @@
             .card-front, .card-back { font-size: 1rem; }
             
             #sentence-quiz .options { grid-template-columns: 1fr; }
-            
-            #memory-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-            .memory-card { height: 120px; }
-            .memory-card .card-back { font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -428,7 +441,6 @@
                 this.currentIndex = (this.currentIndex + 1) % this.shuffledWords.length;
                 const word = this.shuffledWords[this.currentIndex];
                 
-                // Cümleyi __ ile göster, cevabın yabancı kelime olmasını sağla
                 document.getElementById('fill-question').innerHTML = `Aşağıdaki cümlenin boşluğuna hangi kelime gelmelidir? <br><br> "${word.cumle}"`;
                 
                 document.getElementById('fill-answer').value = '';
@@ -441,7 +453,6 @@
                 const currentWord = this.shuffledWords[this.currentIndex];
                 if (!currentWord) return;
                 
-                // Cevap, YABANCI kelimenin kendisidir. Türkçe karşılıklarını değil.
                 const correctAnswers = currentWord.turkce.map(ans => ans.toLowerCase().trim());
                 const userAnswer = document.getElementById('fill-answer').value.toLowerCase().trim();
                 const feedbackEl = document.getElementById('fill-feedback');
@@ -473,7 +484,6 @@
                 const optionsContainer = document.getElementById('sentence-options');
                 optionsContainer.innerHTML = '';
                 
-                // Kendisi dışındaki kelimelerin Türkçe karşılıklarından yanlış seçenekler oluştur
                 const wrongOptionsPool = wordsData
                     .filter(w => w.turkce[0] !== correctAnswer)
                     .map(w => w.turkce[0]);
@@ -514,26 +524,49 @@
             }
         };
 
-        // --- 4. ETKİNLİK: AKILDA TUT OYUNU ---
+        // --- 4. ETKİNLİK: AKILDA TUT OYUNU (GÜNCELLENDİ) ---
         const memoryGame = {
             gameMode: 'single',
             currentPlayer: 1,
             scores: { player1: 0, player2: 0 },
             flippedCards: [],
             matchedPairs: 0,
-            totalPairs: 6, // 4x3'lük bir tahta için 6 çift
+            totalPairs: 6, // Her zaman 6 çift (12 kart)
             isLocked: false,
             hamleSayisi: 0,
+
+            // YENİ: EKRAN BOYUTUNA GÖRE SADECE SÜTUNLARI AYARLA (KART SAYISI SABİT)
+            getResponsiveBoardSize: function() {
+                const width = window.innerWidth;
+                const pairs = 6; // SABİT: Her zaman 6 çift (12 kart)
+
+                // GENİŞ EKRAN (PC > 900px)
+                // 6 Çift (12 Kart), 6 Sütun (6x2 mizanpaj)
+                if (width > 900) { 
+                    return { pairs: pairs, columns: 6 };
+                }
+                // TABLET / YATAY MOBİL ( > 600px)
+                // 6 Çift (12 Kart), 4 Sütun (4x3 mizanpaj)
+                if (width > 600) { 
+                    return { pairs: pairs, columns: 4 };
+                }
+                // DİKEY MOBİL ( < 600px)
+                // 6 Çift (12 Kart), 3 Sütun (3x4 mizanpaj)
+                return { pairs: pairs, columns: 3 }; 
+            },
 
             init(mode) {
                 this.gameMode = mode;
                 this.resetState();
                 
+                const boardConfig = this.getResponsiveBoardSize();
+                this.totalPairs = boardConfig.pairs; // Her zaman 6 olacak
+                
                 document.getElementById('memory-setup').style.display = 'none';
                 document.getElementById('memory-game-area').style.display = 'block';
                 
                 this.updateStatus();
-                this.renderBoard();
+                this.renderBoard(boardConfig.columns);
             },
 
             resetState() {
@@ -545,21 +578,25 @@
                 this.hamleSayisi = 0;
             },
 
-            renderBoard() {
+            renderBoard(columns) {
+                // Kelime listesinden 6 çift al
                 const gameWords = shuffleArray([...wordsData]).slice(0, this.totalPairs);
                 let gameCards = gameWords.flatMap((word, index) => [
                     { type: 'yabanci', value: word.yabanci, pairId: index },
-                    { type: 'turkce', value: word.turkce[0], pairId: index } // Eşleştirme için ilk Türkçe karşılığı al
+                    { type: 'turkce', value: word.turkce[0], pairId: index } 
                 ]);
                 gameCards = shuffleArray(gameCards);
 
                 const grid = document.getElementById('memory-grid');
                 grid.innerHTML = '';
+                // Sütun sayısını dinamik ayarla
+                grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+                
                 gameCards.forEach(cardData => {
                     const cardEl = document.createElement('div');
                     cardEl.classList.add('memory-card');
                     cardEl.dataset.pairId = cardData.pairId;
-                    cardEl.dataset.value = cardData.value; // Hata ayıklama için eklendi
+                    cardEl.dataset.value = cardData.value; 
 
                     cardEl.innerHTML = `
                         <div class="card-face-inner">
@@ -582,7 +619,9 @@
 
                 if (this.flippedCards.length === 2) {
                     this.isLocked = true;
-                    this.hamleSayisi++;
+                    if (this.gameMode === 'single') {
+                        this.hamleSayisi++;
+                    }
                     this.checkForMatch();
                 }
             },
@@ -602,12 +641,16 @@
                 this.scores[`player${this.currentPlayer}`]++;
                 this.matchedPairs++;
                 
-                this.flippedCards.forEach(card => card.classList.add('is-matched'));
+                // Eşleşen kartlara 'is-matched' ekle
+                this.flippedCards.forEach(card => {
+                    card.classList.add('is-matched');
+                });
+                
                 this.flippedCards = [];
                 this.isLocked = false;
                 
                 if (this.matchedPairs === this.totalPairs) {
-                    this.endGame();
+                    setTimeout(() => this.endGame(), 500); // Kazanma mesajı için kısa bir gecikme
                 } else {
                      if (this.gameMode === 'twoPlayer') { this.updateStatus('Doğru! Tekrar oyna.'); }
                      else { this.updateStatus(); }
@@ -616,6 +659,7 @@
 
             handleMismatch() {
                 setTimeout(() => {
+                    // Sadece 'is-flipped' sınıfını kaldır
                     this.flippedCards.forEach(card => card.classList.remove('is-flipped'));
                     this.flippedCards = [];
                     this.isLocked = false;
@@ -635,7 +679,7 @@
                 if (this.gameMode === 'single') {
                     statusEl.textContent = `Hamle: ${this.hamleSayisi} | Bulunan Çift: ${this.scores.player1} / ${this.totalPairs}`;
                 } else {
-                    let statusText = `Skor: Oyuncu 1: ${this.scores.player1} - Oyuncu 2: ${this.scores.player2} | Sıra: Oyuncu ${this.currentPlayer}`;
+                    let statusText = `Skor: O1: ${this.scores.player1} - O2: ${this.scores.player2} | Sıra: Oyuncu ${this.currentPlayer}`;
                     if(message) {
                         statusText = `${message} | ${statusText}`;
                     }
@@ -658,6 +702,8 @@
                 this.resetState();
                 document.getElementById('memory-game-area').style.display = 'none';
                 document.getElementById('memory-setup').style.display = 'block';
+                // Grid stilini temizle
+                document.getElementById('memory-grid').style.gridTemplateColumns = '';
             }
         };
 
