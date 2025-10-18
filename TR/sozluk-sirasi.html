@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dil Bilgisi Çalışmaları - Bilgi Hazinesi</title>
+    
+    <base href="https://bilgihazinesi.github.io/">
+
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="stiller/stil.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        /* Bu sayfaya özel stiller, ana temanıza uyumlu */
+        body {
+            font-family: 'Crimson Pro', serif;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 20px;
+        }
+        header h1 a {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--text-primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
+        header p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            color: var(--text-secondary-color);
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .tab-button {
+            padding: 12px 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--papyrus-bg-color-dark);
+            color: var(--text-secondary-color);
+            font-size: 1rem;
+            font-family: 'Crimson Pro', serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tab-button.active, .tab-button:hover {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        .activity-content { display: none; }
+        .activity-content.active { display: block; }
+        
+        /* Quiz Kartı Stili */
+        .quiz-card {
+            background-color: var(--papyrus-bg-color-dark);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-color);
+            margin: 0 auto 20px auto;
+            max-width: 600px;
+        }
+        .question { 
+            font-size: 1.3rem; 
+            margin-bottom: 20px; 
+            line-height: 1.5;
+            font-weight: 600;
+        }
+        .question strong {
+            color: var(--accent-color);
+            font-weight: 900;
+        }
+
+        /* Çoktan Seçmeli Butonlar (Sıralama ve Satır Sonu için) */
+        .options { 
+            display: grid; 
+            grid-template-columns: 1fr; /* Mobilde her zaman tek sütun */
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        .option-btn {
+            width: 100%;
+            background-color: var(--papyrus-bg-color-dark);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1.1rem; /* Yazılar daha okunaklı */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            line-height: 1.4;
+        }
+        .option-btn:hover { background-color: var(--accent-color); color: white; }
+        .option-btn.correct { background-color: #66bb6a; color: white; border-color: #66bb6a; }
+        .option-btn.wrong { background-color: #ef5350; color: white; border-color: #ef5350; }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+        /* Hecelere Ayırma (Giriş Kutusu) Stili */
+        #heceleme-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--papyrus-bg-color-light);
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-family: 'Crimson Pro', serif;
+            text-align: center;
+            box-sizing: border-box;
+            font-weight: 700;
+        }
+
+        .quiz-buttons { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
+        .quiz-btn { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+            font-family: 'Crimson Pro', serif; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: background 0.2s; 
+        }
+        .check-btn { background-color: var(--accent-color); color: white; }
+        .next-btn { background-color: var(--text-secondary-color); color: white; }
+        .feedback { font-weight: 700; margin-top: 15px; min-height: 24px; font-size: 1.1rem; }
+        .correct { color: #2e7d32; }
+        .wrong { color: #c62828; }
+
+        /* Tablet ve PC için daha geniş mizanpaj */
+        @media (min-width: 600px) {
+            .options {
+                /* Tablette 2 sütun */
+                grid-template-columns: 1fr 1fr; 
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header h1 a { font-size: 2rem; }
+            header p { font-size: 1rem; }
+            .tab-button { padding: 10px 15px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="menu-container"></div>
+
+    <div class="container">
+        <header>
+            <h1><a href="https://bilgihazinesi.github.io/">Dil Bilgisi Çalışmaları</a></h1>
+            <p>Kelimeleri doğru sıralayalım ve hecelerine ayıralım.</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="showActivity('alfabe')">Alfabetik Sıralama</button>
+            <button class="tab-button" onclick="showActivity('heceleme')">Hecelere Ayırma</button>
+            <button class="tab-button" onclick="showActivity('satirsonu')">Satır Sonu Ayırma</button>
+        </div>
+
+        <main>
+            <div id="alfabe" class="activity-content active">
+                <div class="quiz-card">
+                    <p class="question" id="alfabe-question">Aşağıdaki listelerden hangisi alfabetik olarak <strong>doğru</strong> sıralanmıştır?</p>
+                    <div class="options" id="alfabe-options"></div>
+                    <p class="feedback" id="alfabe-feedback"></p>
+                    <div class="quiz-buttons">
+                       <button class="quiz-btn next-btn" onclick="alphabetSort.loadQuestion()">Sonraki Soru</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="heceleme" class="activity-content">
+                <div class="quiz-card">
+                    <p class="question" id="heceleme-question">"kelime" sözcüğünü hecelerine ayırın.</p>
+                    <input type="text" id="heceleme-input" placeholder="Ör: ha-nı-me-li" autocomplete="off" autocapitalize="none">
+                    <p class="feedback" id="heceleme-feedback"></p>
+                     <div class="quiz-buttons">
+                        <button class="quiz-btn check-btn" onclick="syllabify.checkAnswer()">Kontrol Et</button>
+                        <button class="quiz-btn next-btn" onclick="syllabify.loadQuestion()">Sonraki</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="satirsonu" class="activity-content">
+                 <div class="quiz-card">
+                    <p class="question" id="satirsonu-question">"kelime" sözcüğü için doğru hece ayrımı (satır sonu) hangisidir?</p>
+                    <div class="options" id="satirsonu-options"></div>
+                    <p class="feedback" id="satirsonu-feedback"></p>
+                    <div class="quiz-buttons">
+                       <button class="quiz-btn next-btn" onclick="lineBreak.loadQuestion()">Sonraki Soru</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- VERİ BANKALARI ---
+
+        // Alfabetik Sıralama için kelime listesi
+        const sortWordList = [
+            "Elma", "Armut", "Kiraz", "Çilek", "Muz", "Portakal", "Karpuz", "Kavun",
+            "Ayva", "Nar", "Kedi", "Köpek", "Kuş", "Balık", "At", "Aslan", "Kaplan", 
+            "Zürafa", "Ev", "Okul", "Araba", "Masa", "Sandalye", "Kitap", "Defter", 
+            "Kalem", "Güneş", "Ay", "Yıldız", "Bulut", "Yağmur", "Kar", "Rüzgar"
+        ];
+
+        // Hecelere Ayırma ve Satır Sonu için kelime listesi
+        const heceData = [
+            { word: "hanımeli", hece: "ha-nı-me-li" },
+            { word: "ilköğretim", hece: "il-köğ-re-tim" },
+            { word: "başöğretmen", hece: "baş-öğ-ret-men" },
+            { word: "Ankara", hece: "An-ka-ra" },
+            { word: "karakter", hece: "ka-rak-ter" },
+            { word: "otomobil", hece: "o-to-mo-bil" },
+            { word: "bilgisayar", hece: "bil-gi-sa-yar" },
+            { word: "matematik", hece: "ma-te-ma-tik" },
+            { word: "kütüphane", hece: "kü-tüp-ha-ne" },
+            { word: "cumhuriyet", hece: "cum-hu-ri-yet" },
+            { word: "aslanağzı", hece: "as-lan-ağ-zı" },
+            { word: "Türkiye", hece: "Tür-ki-ye" },
+            { word: "program", hece: "prog-ram" },
+            { word: "spor", hece: "spor" },
+            { word: "tren", hece: "tren" },
+            { word: "elektrik", hece: "e-lek-trik" },
+            { word: "İstanbul", hece: "İs-tan-bul" },
+            { word: "karnabahar", hece: "kar-na-ba-har" },
+            { word: "televizyon", hece: "te-le-viz-yon" },
+            { word: "ağaç", hece: "a-ğaç" }
+        ];
+
+        // --- GENEL FONKSİYONLAR ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            alphabetSort.loadQuestion();
+            syllabify.loadQuestion();
+            lineBreak.loadQuestion();
+        });
+        
+        // Sekme değiştirme fonksiyonu
+        function showActivity(activityId) {
+            document.querySelectorAll('.activity-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(activityId).classList.add('active');
+            
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="showActivity('${activityId}')"]`).classList.add('active');
+            
+            // Diğer sekmeye geçince soruları yenile
+            if (activityId === 'alfabe') alphabetSort.loadQuestion();
+            if (activityId === 'heceleme') syllabify.loadQuestion();
+            if (activityId === 'satirsonu') lineBreak.loadQuestion();
+        }
+        
+        // Dizi karıştırma fonksiyonu
+        function shuffleArray(array) {
+            let newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Türkçe'ye özel alfabetik sıralama
+        const trCollator = new Intl.Collator('tr', { sensitivity: 'base' });
+
+        // --- 1. ETKİNLİK: ALFABETİK SIRALAMA ---
+        const alphabetSort = {
+            correctAnswer: "",
+            
+            loadQuestion: function() {
+                // 4 kelimelik bir grup seç
+                const shuffledWords = shuffleArray(sortWordList);
+                const wordGroup = shuffledWords.slice(0, 4);
+                
+                // Doğru sıralanmış halini bul
+                const correctOrder = [...wordGroup].sort(trCollator.compare);
+                this.correctAnswer = correctOrder.join(', ');
+
+                // 3 tane yanlış sıralanmış liste oluştur
+                let options = [
+                    correctOrder,
+                    shuffleArray(wordGroup),
+                    shuffleArray(wordGroup),
+                    shuffleArray(wordGroup)
+                ];
+
+                // Oluşturulan listelerin aynı olmamasını ve doğru cevaptan farklı olmasını sağla
+                // (Basit bir benzersizleştirme)
+                const uniqueOptions = [...new Set(options.map(arr => arr.join(', ')))];
+                
+                // Eğer yeterli benzersiz seçenek yoksa (çok düşük ihtimal), tekrar yükle
+                if (uniqueOptions.length < 4 && sortWordList.length > 4) {
+                    this.loadQuestion();
+                    return;
+                }
+
+                const finalOptions = shuffleArray(uniqueOptions).slice(0, 4);
+                // Doğru cevap listede yoksa ekle
+                if (!finalOptions.includes(this.correctAnswer)) {
+                    finalOptions[0] = this.correctAnswer;
+                    shuffleArray(finalOptions); // Tekrar karıştır
+                }
+
+                const optionsContainer = document.getElementById('alfabe-options');
+                optionsContainer.innerHTML = '';
+                
+                finalOptions.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.classList.add('option-btn');
+                    button.textContent = optionText;
+                    button.onclick = () => this.checkAnswer(optionText, button);
+                    optionsContainer.appendChild(button);
+                });
+
+                document.getElementById('alfabe-feedback').textContent = '';
+            },
+
+            checkAnswer: function(selected, btn) {
+                const feedbackEl = document.getElementById('alfabe-feedback');
+                const optionButtons = document.querySelectorAll('#alfabe-options .option-btn');
+                
+                optionButtons.forEach(button => {
+                    button.disabled = true;
+                    if (button.textContent === this.correctAnswer) {
+                        button.classList.add('correct');
+                    }
+                });
+
+                if (selected === this.correctAnswer) {
+                    feedbackEl.textContent = 'Tebrikler, doğru sıralama!';
+                    feedbackEl.className = 'feedback correct';
+                } else {
+                    btn.classList.add('wrong');
+                    feedbackEl.textContent = 'Maalesef yanlış, doğru cevap işaretlendi.';
+                    feedbackEl.className = 'feedback wrong';
+                }
+            }
+        };
+
+        // --- 2. ETKİNLİK: HECELERE AYIRMA ---
+        const syllabify = {
+            currentWord: null,
+            
+            loadQuestion: function() {
+                this.currentWord = heceData[Math.floor(Math.random() * heceData.length)];
+                
+                document.getElementById('heceleme-question').innerHTML = `<strong>"${this.currentWord.word}"</strong> sözcüğünü hecelerine ayırın.`;
+                
+                const inputEl = document.getElementById('heceleme-input');
+                inputEl.value = '';
+                inputEl.disabled = false;
+                
+                const feedbackEl = document.getElementById('heceleme-feedback');
+                feedbackEl.textContent = '';
+                feedbackEl.className = 'feedback';
+            },
+            
+            checkAnswer: function() {
+                const inputEl = document.getElementById('heceleme-input');
+                const userAnswer = inputEl.value.trim().toLowerCase();
+                const correctAnswer = this.currentWord.hece.toLowerCase();
+                
+                const feedbackEl = document.getElementById('heceleme-feedback');
+                
+                if (userAnswer === correctAnswer) {
+                    feedbackEl.textContent = "Harika! Doğru bildin!";
+                    feedbackEl.className = 'feedback correct';
+                } else {
+                    feedbackEl.innerHTML = `Tekrar dene! <br>Doğru cevap: <strong>${this.currentWord.hece}</strong>`;
+                    feedbackEl.className = 'feedback wrong';
+                }
+                inputEl.disabled = true;
+            }
+        };
+
+        // --- 3. ETKİNLİK: SATIR SONU AYIRMA (Çoktan Seçmeli) ---
+        const lineBreak = {
+            currentWord: null,
+            
+            loadQuestion: function() {
+                this.currentWord = heceData[Math.floor(Math.random() * heceData.length)];
+                const correctAnswer = this.currentWord.hece;
+
+                document.getElementById('satirsonu-question').innerHTML = `<strong>"${this.currentWord.word}"</strong> sözcüğü için doğru hece ayrımı hangisidir?`;
+
+                // Yanlış seçenekler oluştur
+                let wrongOptions = [];
+                // 1. Yanlış: Heceleri birleştir
+                if (this.currentWord.word.includes('ğ') && this.currentWord.word.length > 4) {
+                     wrongOptions.push(this.currentWord.hece.replace('a-ğaç', 'ağ-aç')); // Özel durum
+                } else {
+                     wrongOptions.push(this.currentWord.hece.replace('-', '').substring(0, 3) + '-' + this.currentWord.hece.replace('-', '').substring(3));
+                }
+                
+                // 2. Yanlış: Farklı bir kelimenin hecelenmesi
+                wrongOptions.push(heceData[Math.floor(Math.random() * heceData.length)].hece);
+                
+                // 3. Yanlış: Sondan bir harfi ayır
+                wrongOptions.push(this.currentWord.hece.slice(0, -1) + '-' + this.currentWord.hece.slice(-1));
+
+                // Seçenekleri temizle ve birleştir
+                const uniqueOptions = [...new Set([correctAnswer, ...wrongOptions])];
+                let finalOptions = shuffleArray(uniqueOptions).slice(0, 4);
+
+                if (!finalOptions.includes(correctAnswer)) {
+                    finalOptions[0] = correctAnswer;
+                    finalOptions = shuffleArray(finalOptions);
+                }
+                
+                const optionsContainer = document.getElementById('satirsonu-options');
+                optionsContainer.innerHTML = '';
+                
+                finalOptions.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.classList.add('option-btn');
+                    button.textContent = optionText;
+                    button.onclick = () => this.checkAnswer(optionText, button);
+                    optionsContainer.appendChild(button);
+                });
+
+                document.getElementById('satirsonu-feedback').textContent = '';
+            },
+
+            checkAnswer: function(selected, btn) {
+                const feedbackEl = document.getElementById('satirsonu-feedback');
+                const optionButtons = document.querySelectorAll('#satirsonu-options .option-btn');
+                const correctAnswer = this.currentWord.hece;
+
+                optionButtons.forEach(button => {
+                    button.disabled = true;
+                    if (button.textContent === correctAnswer) {
+                        button.classList.add('correct');
+                    }
+                });
+
+                if (selected === correctAnswer) {
+                    feedbackEl.textContent = 'Tebrikler, doğru ayırım!';
+                    feedbackEl.className = 'feedback correct';
+                } else {
+                    btn.classList.add('wrong');
+                    feedbackEl.textContent = 'Maalesef yanlış, doğru cevap işaretlendi.';
+                    feedbackEl.className = 'feedback wrong';
+                }
+            }
+        };
+
+    </script>
+
+    <script src="bilesenler/menu.js"></script>
+
+</body>
+</html>
