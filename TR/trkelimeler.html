@@ -133,7 +133,7 @@
         }
         .question { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.5; }
         
-        /* YENİ: Cümlelerdeki yabancı kelimeyi vurgulama stili */
+        /* Cümlelerdeki yabancı kelimeyi vurgulama stili */
         .question strong {
             color: var(--accent-color);
             font-weight: 900;
@@ -329,7 +329,7 @@
     </div>
 
     <script>
-        // GÜNCELLENMİŞ KELİME LİSTESİ (Sizin verdiğiniz cümlelerle)
+        // KELİME LİSTESİ
         const wordsData = [
             { "yabanci": "Absürt", "turkce": ["Saçma", "Anlamsız"], "cumle": "Bu fikir bana çok absürt geldi." },
             { "yabanci": "Laptop", "turkce": ["Dizüstü bilgisayar"], "cumle": "İş için yeni bir laptop almam gerekiyor." },
@@ -468,7 +468,6 @@
         function setupLearnCards() {
             const container = document.getElementById('learn-cards');
             container.innerHTML = '';
-            // Kartları Öğren etkinliği için 'cumle' içermeyen kelimeleri de al
             const learnWords = shuffleArray([...wordsData]);
             
             learnWords.forEach(word => {
@@ -486,31 +485,24 @@
             });
         }
         
-        // --- 2. ETKİNLİK: BOŞLUK DOLDURMA (GÜNCELLENDİ) ---
+        // --- 2. ETKİNLİK: BOŞLUK DOLDURMA ---
         const fillBlanks = {
             currentIndex: -1,
             shuffledWords: [],
             
             loadQuestion: function() {
-                // Sadece 'cumle' özelliği olan kelimeleri filtrele
                 if (this.shuffledWords.length === 0) { 
                     this.shuffledWords = shuffleArray([...wordsData].filter(w => w.cumle)); 
                 }
-                
                 if (this.shuffledWords.length === 0) {
                     document.getElementById('fill-question').innerHTML = "Cümle listesi yüklenemedi.";
                     return;
                 }
-                
                 this.currentIndex = (this.currentIndex + 1) % this.shuffledWords.length;
                 const word = this.shuffledWords[this.currentIndex];
-                
-                // YENİ LOGİK: Cümleyi al ve yabancı kelimeyi vurgula
                 const regex = new RegExp(`(${word.yabanci})`, 'gi');
                 const highlightedSentence = word.cumle.replace(regex, `<strong>$1</strong>`);
-                
                 document.getElementById('fill-question').innerHTML = `Aşağıdaki cümlede renkli kelimenin Türkçe karşılığı nedir?<br><br>"${highlightedSentence}"`;
-                
                 document.getElementById('fill-answer').value = '';
                 document.getElementById('fill-feedback').textContent = '';
                 document.getElementById('fill-feedback').className = 'feedback';
@@ -519,14 +511,11 @@
             
             checkAnswer: function() {
                 if (this.shuffledWords.length === 0) return;
-                
                 const currentWord = this.shuffledWords[this.currentIndex];
                 if (!currentWord) return;
-                
                 const correctAnswers = currentWord.turkce.map(ans => ans.toLowerCase().trim());
                 const userAnswer = document.getElementById('fill-answer').value.toLowerCase().trim();
                 const feedbackEl = document.getElementById('fill-feedback');
-                
                 if (correctAnswers.includes(userAnswer)) {
                     feedbackEl.textContent = "Harika! Doğru bildin!";
                     feedbackEl.className = 'feedback correct';
@@ -538,37 +527,30 @@
             }
         };
         
-        // --- 3. ETKİNLİK: CÜMLE TAMAMLA (GÜNCELLENDİ) ---
+        // --- 3. ETKİNLİK: CÜMLE TAMAMLA ---
         const sentenceQuiz = {
             currentIndex: -1,
             shuffledWords: [],
             
             loadQuestion: function() {
-                // Sadece 'cumle' özelliği olan kelimeleri filtrele
                 if (this.shuffledWords.length === 0) { 
                     this.shuffledWords = shuffleArray([...wordsData].filter(w => w.cumle)); 
                 }
-                
                 if (this.shuffledWords.length === 0) {
                     document.getElementById('sentence-question').innerHTML = "Cümle listesi yüklenemedi.";
                     return;
                 }
-                
                 this.currentIndex = (this.currentIndex + 1) % this.shuffledWords.length;
                 const word = this.shuffledWords[this.currentIndex];
-                const correctAnswer = word.turkce[0]; // Cevap için ilk Türkçe karşılığı al
-                
-                // YENİ LOGİK: Cümleyi al ve yabancı kelimeyi vurgula
+                const correctAnswer = word.turkce[0]; 
                 const regex = new RegExp(`(${word.yabanci})`, 'gi');
                 const highlightedSentence = word.cumle.replace(regex, `<strong>$1</strong>`);
-                
                 const questionText = `Aşağıdaki cümlede renkli kelimenin Türkçe karşılığı hangisidir?<br><br>"${highlightedSentence}"`;
                 document.getElementById('sentence-question').innerHTML = questionText;
                 
                 const optionsContainer = document.getElementById('sentence-options');
                 optionsContainer.innerHTML = '';
                 
-                // Kendisi dışındaki kelimelerin Türkçe karşılıklarından yanlış seçenekler oluştur
                 const wrongOptionsPool = wordsData
                     .filter(w => w.turkce[0] !== correctAnswer)
                     .map(w => w.turkce[0]);
@@ -677,12 +659,15 @@
                     cardEl.dataset.pairId = cardData.pairId;
                     cardEl.dataset.value = cardData.value; 
 
+                    // **** İKON GÜNCELLEMESİ ****
                     cardEl.innerHTML = `
                         <div class="card-face-inner">
-                            <div class="card-front"><i class="bi bi-patch-question"></i></div>
+                            <div class="card-front"><i class="bi bi-search"></i></div>
                             <div class="card-back">${cardData.value}</div>
                         </div>
                     `;
+                    // **************************
+
                     cardEl.addEventListener('click', () => this.handleCardClick(cardEl));
                     grid.appendChild(cardEl);
                 });
