@@ -133,6 +133,15 @@
         }
         .question { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.5; }
         
+        /* YENİ: Cümlelerdeki yabancı kelimeyi vurgulama stili */
+        .question strong {
+            color: var(--accent-color);
+            font-weight: 900;
+            background-color: var(--active-bg-color);
+            padding: 2px 6px;
+            border-radius: 5px;
+        }
+        
         #fill-blanks input {
             width: 100%;
             padding: 10px;
@@ -185,7 +194,7 @@
         .correct { color: #2e7d32; }
         .wrong { color: #c62828; }
         
-        /* Akılda Tut Oyunu Stilleri (GÜNCELLENDİ) */
+        /* Akılda Tut Oyunu Stilleri */
         #memory-setup { margin-bottom: 30px; }
         #memory-setup h2 { font-family: 'Cinzel Decorative', cursive; }
         #memory-status { margin-bottom: 20px; font-size: 1.2rem; font-weight: 700; min-height: 30px;}
@@ -265,7 +274,7 @@
         <div class="tabs">
             <button class="tab-button active" onclick="showActivity('learn')">Kartları Öğren</button>
             <button class="tab-button" onclick="showActivity('fill')">Boşluk Doldur</button>
-            <button class="tab-button" onclick="showActivity('sentence')">Cümleyi Düzelt</button>
+            <button class="tab-button" onclick="showActivity('sentence')">Cümle Tamamla</button>
             <button class="tab-button" onclick="showActivity('memory')">Akılda Tut</button>
         </div>
 
@@ -277,7 +286,7 @@
             <div id="fill" class="activity-content">
                 <div id="fill-blanks">
                     <div class="quiz-card">
-                        <p class="question" id="fill-question"></p>
+                        <p class="question" id="fill-question">Soru yükleniyor...</p>
                         <input type="text" id="fill-answer" placeholder="Türkçesini yazın...">
                         <p class="feedback" id="fill-feedback"></p>
                          <div class="quiz-buttons">
@@ -291,7 +300,7 @@
             <div id="sentence" class="activity-content">
                 <div id="sentence-quiz">
                      <div class="quiz-card">
-                        <p class="question" id="sentence-question"></p>
+                        <p class="question" id="sentence-question">Soru yükleniyor...</p>
                         <div class="options" id="sentence-options"></div>
                         <p class="feedback" id="sentence-feedback"></p>
                         <div class="quiz-buttons">
@@ -320,64 +329,109 @@
     </div>
 
     <script>
-        // Sitedeki tüm kelimelerin tam listesi
+        // GÜNCELLENMİŞ KELİME LİSTESİ (Sizin verdiğiniz cümlelerle)
         const wordsData = [
-            { "yabanci": "Absürt", "turkce": ["Saçma", "Anlamsız"], "cumle": "Anlattığı olaylar o kadar __ geldi ki kimse inanmadı." },
-            { "yabanci": "Laptop", "turkce": ["Dizüstü bilgisayar"], "cumle": "Ödevimi yapmak için __'ımı yanıma aldım." },
-            { "yabanci": "Jenerasyon", "turkce": ["Kuşak", "Soy"], "cumle": "Yeni __ teknolojiye çok daha hâkim." },
-            { "yabanci": "Defans", "turkce": ["Savunma"], "cumle": "Takımımız maç boyunca çok iyi bir __ yaptı." },
-            { "yabanci": "Stil", "turkce": ["Üslup", "Biçem"], "cumle": "Her yazarın kendine özgü bir anlatım __'i vardır." },
-            { "yabanci": "Star", "turkce": ["Yıldız"], "cumle": "Yeni filmin __'ı çok sevilen bir oyuncuydu." },
-            { "yabanci": "Filtre", "turkce": ["Süzgeç"], "cumle": "Çayı demlerken yaprakları ayırmak için __ kullandı." },
-            { "yabanci": "Antipatik", "turkce": ["Sevimsiz"], "cumle": "Davranışları yüzünden oldukça __ birine dönüştü." },
-            { "yabanci": "Galeri", "turkce": ["Sergi"], "cumle": "Ünlü ressamın eserleri sanat __'sinde gösteriliyor." },
-            { "yabanci": "Spiker", "turkce": ["Sunucu"], "cumle": "Haberleri her akşam aynı __ sunuyordu." },
-            { "yabanci": "Anons", "turkce": ["Duyuru"], "cumle": "Okul müdürü toplantı için bir __ yaptı." },
-            { "yabanci": "Ofis", "turkce": ["İş yeri"], "cumle": "Babam her sabah __'e gitmek için erken kalkar." },
-            { "yabanci": "Dizayn", "turkce": ["Tasarım"], "cumle": "Yeni evin __'ı çok modern ve kullanışlıydı." },
-            { "yabanci": "Agresif", "turkce": ["Saldırgan", "Sinirli"], "cumle": "Oyun kaybedince __ tavırlar sergiledi." },
-            { "yabanci": "Kaos", "turkce": ["Kargaşa"], "cumle": "Elektrikler kesilince salonda bir __ ortamı oluştu." },
-            { "yabanci": "Mouse", "turkce": ["Fare"], "cumle": "Bilgisayar __'u çalışmadığı için tıklama yapamıyorum." },
-            { "yabanci": "Link", "turkce": ["Ağ", "Bağlantı"], "cumle": "Öğretmen, konuyu anlatan videonun __'ini bizimle paylaştı." },
-            { "yabanci": "Spontane", "turkce": ["Kendiliğinden"], "cumle": "Plan yapmamıştık, her şey __ gelişti." },
-            { "yabanci": "Exit", "turkce": ["Çıkış"], "cumle": "Acil durumlarda __ kapısını kullanmalısınız." },
-            { "yabanci": "Aktivite", "turkce": ["Etkinlik"], "cumle": "Hafta sonu okulda birçok sosyal __ düzenlendi." },
-            { "yabanci": "Trend", "turkce": ["Eğilim"], "cumle": "Bu yılın modasında renkli kıyafetler yeni __ oldu." },
-            { "yabanci": "Okey", "turkce": ["Tamam"], "cumle": "Ödevi yapacağımı söyledim, o da '__' dedi." },
-            { "yabanci": "Selfie", "turkce": ["Öz çekim"], "cumle": "Gezdiğimiz güzel yerlerde bol bol __ yaptık." },
-            { "yabanci": "Şov", "turkce": ["Gösteri"], "cumle": "Sirkteki palyaçonun __'u çok eğlenceliydi." },
-            { "yabanci": "Aroma", "turkce": ["Hoş koku"], "cumle": "Annemin yaptığı kekin vanilyalı __'sı tüm eve yayıldı." },
-            { "yabanci": "Abes", "turkce": ["Anlamsız"], "cumle": "Bu kadar __ bir işle uğraşmak istemiyorum." },
-            { "yabanci": "Abluka", "turkce": ["Kuşatma"], "cumle": "Şehir, düşman tarafından __ altına alındı." },
-            { "yabanci": "Adapte", "turkce": ["Uyum"], "cumle": "Yeni işine çabucak __ oldu." },
-            { "yabanci": "Aktüel", "turkce": ["Güncel"], "cumle": "__ konuları takip etmeyi severim." },
-            { "yabanci": "Alternatif", "turkce": ["Seçenek"], "cumle": "Bu sorunu çözmek için başka bir __ düşünmeliyiz." },
-            { "yabanci": "Amblem", "turkce": ["Belirtke"], "cumle": "Okulun __'i çok güzel tasarlanmış." },
-            { "yabanci": "Animasyon", "turkce": ["Canlandırma"], "cumle": "Çocuklar __ filmlerini izlemeyi çok seviyor." },
-            { "yabanci": "Bariyer", "turkce": ["Engel"], "cumle": "Yolun ortasındaki __'i fark etmedi." },
-            { "yabanci": "Biyografi", "turkce": ["Özgeçmiş"], "cumle": "Atatürk'ün __'sini okudum." },
-            { "yabanci": "Bodyguard", "turkce": ["Koruma"], "cumle": "Ünlü şarkıcının yanında hep bir __ vardı." },
-            { "yabanci": "Brifing", "turkce": ["Bilgilendirme"], "cumle": "Müdür, proje hakkında kısa bir __ verdi." },
-            { "yabanci": "Check-up", "turkce": ["Tümtanı"], "cumle": "Her yıl düzenli olarak __ yaptırırım." },
-            { "yabanci": "Data", "turkce": ["Veri"], "cumle": "Araştırma için gerekli __'ları topladık." },
-            { "yabanci": "Deforme", "turkce": ["Şekli bozulmuş"], "cumle": "Sıcakta kalan kutu __ olmuş." },
-            { "yabanci": "Dijital", "turkce": ["Sayısal"], "cumle": "__ saatimi yeni aldım." },
-            { "yabanci": "Download", "turkce": ["İndirmek"], "cumle": "Beğendiğim şarkıyı telefonuma __ yaptım." },
-            { "yabanci": "Dublaj", "turkce": ["Seslendirme"], "cumle": "Filmin Türkçe __'ı çok başarılıydı." },
-            { "yabanci": "E-mail", "turkce": ["E-posta"], "cumle": "Sana ödevle ilgili bir __ gönderdim." },
-            { "yabanci": "Efor", "turkce": ["Çaba"], "cumle": "Bu projeye çok __ harcadı." },
-            { "yabanci": "Egoist", "turkce": ["Bencil"], "cumle": "__ insanlar yalnızca kendilerini düşünür." },
-            { "yabanci": "Egzersiz", "turkce": ["Alıştırma"], "cumle": "Her sabah spor __'leri yaparım." },
-            { "yabanci": "Final", "turkce": ["Son"], "cumle": "Dizinin __ bölümü çok heyecanlıydı." },
-            { "yabanci": "Global", "turkce": ["Küresel"], "cumle": "İklim değişikliği __ bir sorundur." },
-            { "yabanci": "Gurme", "turkce": ["Tatbilir"], "cumle": "O, peynir konusunda tam bir __'dir." },
-            { "yabanci": "Hit", "turkce": ["Gözde"], "cumle": "Bu şarkı, yazın en __ parçası oldu." },
-            { "yabanci": "İskonto", "turkce": ["İndirim"], "cumle": "Mağaza, sezon sonunda büyük bir __ yaptı." },
-            { "yabanci": "Limit", "turkce": ["Sınır"], "cumle": "Hız __'ini aşmamalısın." },
-            { "yabanci": "Market", "turkce": ["Satış merkezi"], "cumle": "Akşam için __'ten alışveriş yapacağım." },
-            { "yabanci": "Mesaj", "turkce": ["Bildiri", "İleti"], "cumle": "Doğum günüm için birçok tebrik __'ı aldım." },
-            { "yabanci": "Modern", "turkce": ["Çağdaş"], "cumle": "__ sanat eserlerini inceledik." },
-            { "yabanci": "Mönü", "turkce": ["Yemek listesi"], "cumle": "Lütfen __'yü getirir misiniz?" }
+            { "yabanci": "Absürt", "turkce": ["Saçma", "Anlamsız"], "cumle": "Bu fikir bana çok absürt geldi." },
+            { "yabanci": "Laptop", "turkce": ["Dizüstü bilgisayar"], "cumle": "İş için yeni bir laptop almam gerekiyor." },
+            { "yabanci": "Jenerasyon", "turkce": ["Kuşak", "Soy"], "cumle": "Yeni jenerasyon teknolojiyle iç içe büyüyor." },
+            { "yabanci": "Defans", "turkce": ["Savunma"], "cumle": "Takımın defans hattı çok güçlü." },
+            { "yabanci": "Stil", "turkce": ["Üslup", "Biçem"], "cumle": "Onun giyim stilini çok beğeniyorum." },
+            { "yabanci": "Star", "turkce": ["Yıldız"], "cumle": "O, filmin parlayan starıydı." },
+            { "yabanci": "Filtre", "turkce": ["Süzgeç"], "cumle": "Kahve yapmak için kağıt filtre kullandı." },
+            { "yabanci": "Antipatik", "turkce": ["Sevimsiz"], "cumle": "Antipatik tavırları yüzünden kimse onu sevmiyor." },
+            { "yabanci": "Galeri", "turkce": ["Sergi"], "cumle": "Yeni sanat galerisi yarın açılıyor." },
+            { "yabanci": "Spiker", "turkce": ["Sunucu"], "cumle": "Haber spikeri olayı sakince anlattı." },
+            { "yabanci": "Anons", "turkce": ["Duyuru"], "cumle": "Kaptan uçağın kalkışı için anons yaptı." },
+            { "yabanci": "Ofis", "turkce": ["İş yeri"], "cumle": "Bu sabah ofise biraz geç kaldım." },
+            { "yabanci": "Dizayn", "turkce": ["Tasarım"], "cumle": "Evin iç dizaynı çok modern." },
+            { "yabanci": "Agresif", "turkce": ["Saldırgan", "Sinirli"], "cumle": "Trafikte bu kadar agresif olmaya gerek yok." },
+            { "yabanci": "Kaos", "turkce": ["Kargaşa"], "cumle": "Olaydan sonra şehirde tam bir kaos hakimdi." },
+            { "yabanci": "Mouse", "turkce": ["Fare"], "cumle": "Bilgisayarın mouse'u bozuldu." },
+            { "yabanci": "Link", "turkce": ["Bağlantı"], "cumle": "Sana haberin linkini gönderdim." },
+            { "yabanci": "Spontane", "turkce": ["Kendiliğinden"], "cumle": "Toplantı spontane bir şekilde gelişti." },
+            { "yabanci": "Exit", "turkce": ["Çıkış"], "cumle": "Sinema salonunun exit kapısı nerede?" },
+            { "yabanci": "Aktivite", "turkce": ["Etkinlik"], "cumle": "Hafta sonu için eğlenceli bir aktivite planladık." },
+            { "yabanci": "Trend", "turkce": ["Eğilim"], "cumle": "Bu sene yeşil renk çok trend oldu." },
+            { "yabanci": "Okey", "turkce": ["Tamam"], "cumle": "Planı anlattım, o da \"okey\" dedi." },
+            { "yabanci": "Selfie", "turkce": ["Öz çekim"], "cumle": "Manzarayı arkamıza alıp bir selfie çektik." },
+            { "yabanci": "Şov", "turkce": ["Gösteri"], "cumle": "Televizyondaki yetenek şovunu izledik." },
+            { "yabanci": "Aroma", "turkce": ["Hoş koku"], "cumle": "Bu kahvenin harika bir aroması var." },
+            { "yabanci": "Abes", "turkce": ["Anlamsız"], "cumle": "Böyle bir zamanda gülmek çok abes kaçtı." },
+            { "yabanci": "Abluka", "turkce": ["Kuşatma"], "cumle": "Polis, binayı abluka altına aldı." },
+            { "yabanci": "Adapte", "turkce": ["Uyum"], "cumle": "Yeni okuluma çabuk adapte oldum." },
+            { "yabanci": "Adi", "turkce": ["Sıradan"], "cumle": "Bu, adi bir taklit gibi duruyor." },
+            { "yabanci": "Adisyon", "turkce": ["Hesap"], "cumle": "Garson, lütfen adisyonu getirir misiniz?" },
+            { "yabanci": "Aidat", "turkce": ["Ödenti"], "cumle": "Apartman aidatını henüz ödemedim." },
+            { "yabanci": "Air bag", "turkce": ["Hava yastığı"], "cumle": "Kazada arabanın air bag'i açıldı." },
+            { "yabanci": "Ajanda", "turkce": ["Andaç"], "cumle": "Toplantı tarihini ajandama kaydettim." },
+            { "yabanci": "Aksiyon", "turkce": ["Eylem"], "cumle": "Bu film tam bir aksiyon filmiydi." },
+            { "yabanci": "Aktif", "turkce": ["Etkin"], "cumle": "Sosyal medyada çok aktif bir kullanıcı." },
+            { "yabanci": "Aktüel", "turkce": ["Güncel"], "cumle": "Aktüel haberleri takip etmeyi severim." },
+            { "yabanci": "Alfabe", "turkce": ["Abece"], "cumle": "Çocuklar alfabeyi yeni öğreniyor." },
+            { "yabanci": "Alternatif", "turkce": ["Seçenek"], "cumle": "Bu yol kapalıysa başka bir alternatif bulmalıyız." },
+            { "yabanci": "Amatör", "turkce": ["Özengen"], "cumle": "Amatör bir fotoğrafçı olmasına rağmen harika kareler yakalamış." },
+            { "yabanci": "Ambiyans", "turkce": ["Hava"], "cumle": "Restoranın ambiyansı çok romantikti." },
+            { "yabanci": "Amblem", "turkce": ["Belirtke"], "cumle": "Takımın yeni amblemi taraftarlarca beğenilmedi." },
+            { "yabanci": "Ambulans", "turkce": ["Cankurtaran"], "cumle": "Kaza yerine hemen ambulans çağrıldı." },
+            { "yabanci": "Animasyon", "turkce": ["Canlandırma"], "cumle": "Çocuklar bu yeni animasyon filmini çok sevdi." },
+            { "yabanci": "Antrenman", "turkce": ["Alıştırma"], "cumle": "Yarın sabah erken saatte antrenmanım var." },
+            { "yabanci": "Antrenör", "turkce": ["Çalıştırıcı"], "cumle": "Basketbol antrenörü takıma yeni taktikler verdi." },
+            { "yabanci": "Arkeoloji", "turkce": ["Kazıbilim"], "cumle": "Arkeoloji müzelerini gezmeyi çok severim." },
+            { "yabanci": "Artist", "turkce": ["Sanatçı"], "cumle": "O, çok ünlü bir artist olmak istiyor." },
+            { "yabanci": "Bariyer", "turkce": ["Engel"], "cumle": "Polis, kalabalığı durdurmak için bariyer kurdu." },
+            { "yabanci": "Bariz", "turkce": ["Belirgin"], "cumle": "Yalan söylediği çok barizdi." },
+            { "yabanci": "Beraat", "turkce": ["Aklanma"], "cumle": "Mahkeme sonunda beraat kararı verdi." },
+            { "yabanci": "Best seller", "turkce": ["Çok satan"], "cumle": "Yeni romanı hemen best seller listesine girdi." },
+            { "yabanci": "Billboard", "turkce": ["Duyuru tahtası"], "cumle": "Yeni reklamlar şehirdeki billboardları süslüyor." },
+            { "yabanci": "Bilhassa", "turkce": ["Özellikle"], "cumle": "Tatlıları severim, bilhassa çikolatalı olanları." },
+            { "yabanci": "Biyografi", "turkce": ["Özgeçmiş"], "cumle": "Ünlü bilim insanının biyografisini okudum." },
+            { "yabanci": "Blender", "turkce": ["Karıştırıcı"], "cumle": "Çorba yapmak için blender kullanacağım." },
+            { "yabanci": "Bodyguard", "turkce": ["Koruma"], "cumle": "Sanatçının bodyguardı kalabalığı yardı." },
+            { "yabanci": "Bone", "turkce": ["Başlık"], "cumle": "Havuza girmek için bone takmak zorunlu." },
+            { "yabanci": "Bonkör", "turkce": ["Eliaçık"], "cumle": "Çok bonkör bir adam, herkese yardım eder." },
+            { "yabanci": "Brifing", "turkce": ["Bilgilendirme"], "cumle": "Toplantıdan önce kısa bir brifing aldık." },
+            { "yabanci": "Buton", "turkce": ["Düğme"], "cumle": "Işığı açmak için şu butona basmalısın." },
+            { "yabanci": "Call center", "turkce": ["Çağrı merkezi"], "cumle": "Bankanın call centerına bir türlü ulaşamadım." },
+            { "yabanci": "Camia", "turkce": ["Topluluk"], "cumle": "Sanat camiası bu sergiye büyük ilgi gösterdi." },
+            { "yabanci": "Celse", "turkce": ["Oturum"], "cumle": "Davanın ikinci celsesi haftaya ertelendi." },
+            { "yabanci": "Center", "turkce": ["Merkez"], "cumle": "Şehrin centerında buluşalım." },
+            { "yabanci": "Cereyan", "turkce": ["Akım"], "cumle": "Cam açık kalınca odada cereyan yaptı." },
+            { "yabanci": "Cevap", "turkce": ["Yanıt"], "cumle": "Sorduğum soruya net bir cevap istiyorum." },
+            { "yabanci": "Chat", "turkce": ["Sohbet"], "cumle": "Akşam arkadaşlarımla internette chat yaptık." },
+            { "yabanci": "Check-up", "turkce": ["Tümtanı"], "cumle": "Yılda bir kez genel check-up yaptırmak önemli." },
+            { "yabanci": "Cihaz", "turkce": ["Aygıt"], "cumle": "Bu yeni cihaz mutfakta çok işe yarıyor." },
+            { "yabanci": "Data", "turkce": ["Veri"], "cumle": "Rapor için gerekli tüm dataları topladık." },
+            { "yabanci": "Deforme", "turkce": ["Bozulma"], "cumle": "Ayakkabıların kutusu taşınırken deforme olmuş." },
+            { "yabanci": "Dejenere", "turkce": ["Yozlaşma"], "cumle": "Tartışma giderek dejenere oldu." },
+            { "yabanci": "Demo", "turkce": ["Tanıtım"], "cumle": "Programın demo sürümünü ücretsiz indirebilirsiniz." },
+            { "yabanci": "Depresyon", "turkce": ["Ruhsal çöküntü"], "cumle": "Zor bir dönemden geçiyor, sanırım depresyonda." },
+            { "yabanci": "Dijital", "turkce": ["Sayısal"], "cumle": "Artık fotoğraflarımızı dijital ortamda saklıyoruz." },
+            { "yabanci": "Download", "turkce": ["İndirme"], "cumle": "İnternetten müzik download etmek eskisi kadar popüler değil." },
+            { "yabanci": "Dublaj", "turkce": ["Seslendirme"], "cumle": "Filmi orijinal dilinde mi yoksa dublajlı mı izleyelim?" },
+            { "yabanci": "E-mail", "turkce": ["E-posta"], "cumle": "Size konuyla ilgili bir e-mail gönderdim." },
+            { "yabanci": "Editör", "turkce": ["Yayımcı"], "cumle": "Kitabın editörü metinde bazı değişiklikler yaptı." },
+            { "yabanci": "Efor", "turkce": ["Çaba"], "cumle": "Bu işi başarmak için çok efor sarf etti." },
+            { "yabanci": "Egoist", "turkce": ["Bencil"], "cumle": "O kadar egoist ki sadece kendini düşünüyor." },
+            { "yabanci": "Egzersiz", "turkce": ["Alıştırma"], "cumle": "Sağlıklı kalmak için düzenli egzersiz yapmak şart." },
+            { "yabanci": "Eksper", "turkce": ["Uzman"], "cumle": "Hasarı tespit etmek için bir eksper geldi." },
+            { "yabanci": "Final", "turkce": ["Son"], "cumle": "Turnuvanın final maçı nefes kesti." },
+            { "yabanci": "Finish", "turkce": ["Bitiş"], "cumle": "Yarışmacılar finish çizgisine doğru koşuyor." },
+            { "yabanci": "Full", "turkce": ["Tam dolu"], "cumle": "Otelin odaları bayramda full doluydu." },
+            { "yabanci": "Global", "turkce": ["Küresel"], "cumle": "Salgın, global bir kriz haline geldi." },
+            { "yabanci": "Gramer", "turkce": ["Dil bilgisi"], "cumle": "İngilizce gramer kuralları biraz karmaşık." },
+            { "yabanci": "Gurme", "turkce": ["Tatbilir"], "cumle": "O, yemek konusunda tam bir gurme sayılır." },
+            { "yabanci": "Hacker", "turkce": ["Bilgisayar korsanı"], "cumle": "Bir hacker grubu bankanın sistemine girmeye çalıştı." },
+            { "yabanci": "Hit", "turkce": ["Gözde"], "cumle": "Bu şarkı, bu yazın en büyük hiti olacak." },
+            { "yabanci": "İskonto", "turkce": ["İndirim"], "cumle": "Peşin ödemede %10 iskonto yapıyorlar." },
+            { "yabanci": "Komünikasyon", "turkce": ["İletişim"], "cumle": "Ekip içi komünikasyon çok zayıftı." },
+            { "yabanci": "Limit", "turkce": ["Sınır"], "cumle": "Kredi kartımın limitini artırmak istiyorum." },
+            { "yabanci": "Market", "turkce": ["Satış merkezi"], "cumle": "Eve gitmeden önce markete uğramam lazım." },
+            { "yabanci": "Mesaj", "turkce": ["İleti"], "cumle": "Telefonuma senden bir mesaj geldi." },
+            { "yabanci": "Metot", "turkce": ["Yöntem"], "cumle": "Bu sorunu çözmek için farklı bir metot denemeliyiz." },
+            { "yabanci": "Modern", "turkce": ["Çağdaş"], "cumle": "Müzede modern sanat eserleri sergileniyor." },
+            { "yabanci": "Montaj", "turkce": ["Kurulum"], "cumle": "Yeni dolabın montajı yaklaşık bir saat sürdü." },
+            { "yabanci": "Mönü", "turkce": ["Yemek listesi"], "cumle": "Garson, lütfen mönüyü getirebilir misiniz?" },
+            { "yabanci": "Nasihat", "turkce": ["Öğüt"], "cumle": "Dedemin nasihatlerini hep hatırlarım." }
         ];
 
         // Sayfa yüklendiğinde tüm etkinlikleri başlatan kod
@@ -414,7 +468,10 @@
         function setupLearnCards() {
             const container = document.getElementById('learn-cards');
             container.innerHTML = '';
-            shuffleArray([...wordsData]).forEach(word => {
+            // Kartları Öğren etkinliği için 'cumle' içermeyen kelimeleri de al
+            const learnWords = shuffleArray([...wordsData]);
+            
+            learnWords.forEach(word => {
                 const card = document.createElement('div');
                 card.classList.add('card');
                 const turkceHtml = word.turkce.map(t => `<span>${t}</span>`).join('<br>');
@@ -429,19 +486,30 @@
             });
         }
         
-        // --- 2. ETKİNLİK: BOŞLUK DOLDURMA ---
+        // --- 2. ETKİNLİK: BOŞLUK DOLDURMA (GÜNCELLENDİ) ---
         const fillBlanks = {
             currentIndex: -1,
             shuffledWords: [],
             
             loadQuestion: function() {
+                // Sadece 'cumle' özelliği olan kelimeleri filtrele
                 if (this.shuffledWords.length === 0) { 
                     this.shuffledWords = shuffleArray([...wordsData].filter(w => w.cumle)); 
                 }
+                
+                if (this.shuffledWords.length === 0) {
+                    document.getElementById('fill-question').innerHTML = "Cümle listesi yüklenemedi.";
+                    return;
+                }
+                
                 this.currentIndex = (this.currentIndex + 1) % this.shuffledWords.length;
                 const word = this.shuffledWords[this.currentIndex];
                 
-                document.getElementById('fill-question').innerHTML = `Aşağıdaki cümlenin boşluğuna hangi kelime gelmelidir? <br><br> "${word.cumle}"`;
+                // YENİ LOGİK: Cümleyi al ve yabancı kelimeyi vurgula
+                const regex = new RegExp(`(${word.yabanci})`, 'gi');
+                const highlightedSentence = word.cumle.replace(regex, `<strong>$1</strong>`);
+                
+                document.getElementById('fill-question').innerHTML = `Aşağıdaki cümlede renkli kelimenin Türkçe karşılığı nedir?<br><br>"${highlightedSentence}"`;
                 
                 document.getElementById('fill-answer').value = '';
                 document.getElementById('fill-feedback').textContent = '';
@@ -450,6 +518,8 @@
             },
             
             checkAnswer: function() {
+                if (this.shuffledWords.length === 0) return;
+                
                 const currentWord = this.shuffledWords[this.currentIndex];
                 if (!currentWord) return;
                 
@@ -468,22 +538,37 @@
             }
         };
         
-        // --- 3. ETKİNLİK: CÜMLEYİ DÜZELT (ÇOKTAN SEÇMELİ) ---
+        // --- 3. ETKİNLİK: CÜMLE TAMAMLA (GÜNCELLENDİ) ---
         const sentenceQuiz = {
             currentIndex: -1,
             shuffledWords: [],
+            
             loadQuestion: function() {
-                if (this.shuffledWords.length === 0) { this.shuffledWords = shuffleArray([...wordsData]); }
+                // Sadece 'cumle' özelliği olan kelimeleri filtrele
+                if (this.shuffledWords.length === 0) { 
+                    this.shuffledWords = shuffleArray([...wordsData].filter(w => w.cumle)); 
+                }
+                
+                if (this.shuffledWords.length === 0) {
+                    document.getElementById('sentence-question').innerHTML = "Cümle listesi yüklenemedi.";
+                    return;
+                }
+                
                 this.currentIndex = (this.currentIndex + 1) % this.shuffledWords.length;
                 const word = this.shuffledWords[this.currentIndex];
                 const correctAnswer = word.turkce[0]; // Cevap için ilk Türkçe karşılığı al
                 
-                const questionText = `Aşağıdaki cümlede renkli yazılmış kelimenin Türkçe karşılığı hangisidir? <br><br> "Bu çok <strong>${word.yabanci}</strong> bir hareketti."`;
+                // YENİ LOGİK: Cümleyi al ve yabancı kelimeyi vurgula
+                const regex = new RegExp(`(${word.yabanci})`, 'gi');
+                const highlightedSentence = word.cumle.replace(regex, `<strong>$1</strong>`);
+                
+                const questionText = `Aşağıdaki cümlede renkli kelimenin Türkçe karşılığı hangisidir?<br><br>"${highlightedSentence}"`;
                 document.getElementById('sentence-question').innerHTML = questionText;
                 
                 const optionsContainer = document.getElementById('sentence-options');
                 optionsContainer.innerHTML = '';
                 
+                // Kendisi dışındaki kelimelerin Türkçe karşılıklarından yanlış seçenekler oluştur
                 const wrongOptionsPool = wordsData
                     .filter(w => w.turkce[0] !== correctAnswer)
                     .map(w => w.turkce[0]);
@@ -502,6 +587,7 @@
                 document.getElementById('sentence-feedback').textContent = '';
                 document.getElementById('sentence-feedback').className = 'feedback';
             },
+            
             checkAnswer: function(selected, correct) {
                 const feedbackEl = document.getElementById('sentence-feedback');
                 const optionButtons = document.querySelectorAll('#sentence-options .option-btn');
@@ -524,7 +610,7 @@
             }
         };
 
-        // --- 4. ETKİNLİK: AKILDA TUT OYUNU (GÜNCELLENDİ) ---
+        // --- 4. ETKİNLİK: AKILDA TUT OYUNU ---
         const memoryGame = {
             gameMode: 'single',
             currentPlayer: 1,
@@ -535,23 +621,16 @@
             isLocked: false,
             hamleSayisi: 0,
 
-            // YENİ: EKRAN BOYUTUNA GÖRE SADECE SÜTUNLARI AYARLA (KART SAYISI SABİT)
+            // EKRAN BOYUTUNA GÖRE SADECE SÜTUNLARI AYARLA (KART SAYISI SABİT)
             getResponsiveBoardSize: function() {
                 const width = window.innerWidth;
                 const pairs = 6; // SABİT: Her zaman 6 çift (12 kart)
 
-                // GENİŞ EKRAN (PC > 900px)
-                // 6 Çift (12 Kart), 6 Sütun (6x2 mizanpaj)
-                if (width > 900) { 
-                    return { pairs: pairs, columns: 6 };
-                }
-                // TABLET / YATAY MOBİL ( > 600px)
-                // 6 Çift (12 Kart), 4 Sütun (4x3 mizanpaj)
-                if (width > 600) { 
-                    return { pairs: pairs, columns: 4 };
-                }
-                // DİKEY MOBİL ( < 600px)
-                // 6 Çift (12 Kart), 3 Sütun (3x4 mizanpaj)
+                // GENİŞ EKRAN (PC > 900px) -> 6x2 mizanpaj
+                if (width > 900) { return { pairs: pairs, columns: 6 }; }
+                // TABLET / YATAY MOBİL ( > 600px) -> 4x3 mizanpaj
+                if (width > 600) { return { pairs: pairs, columns: 4 }; }
+                // DİKEY MOBİL ( < 600px) -> 3x4 mizanpaj
                 return { pairs: pairs, columns: 3 }; 
             },
 
@@ -613,10 +692,8 @@
                 if (this.isLocked || cardEl.classList.contains('is-flipped') || cardEl.classList.contains('is-matched')) {
                     return;
                 }
-
                 cardEl.classList.add('is-flipped');
                 this.flippedCards.push(cardEl);
-
                 if (this.flippedCards.length === 2) {
                     this.isLocked = true;
                     if (this.gameMode === 'single') {
@@ -629,7 +706,6 @@
             checkForMatch() {
                 const [card1, card2] = this.flippedCards;
                 const isMatch = card1.dataset.pairId === card2.dataset.pairId;
-                
                 if (isMatch) {
                     this.handleMatch();
                 } else {
@@ -640,17 +716,13 @@
             handleMatch() {
                 this.scores[`player${this.currentPlayer}`]++;
                 this.matchedPairs++;
-                
-                // Eşleşen kartlara 'is-matched' ekle
                 this.flippedCards.forEach(card => {
                     card.classList.add('is-matched');
                 });
-                
                 this.flippedCards = [];
                 this.isLocked = false;
-                
                 if (this.matchedPairs === this.totalPairs) {
-                    setTimeout(() => this.endGame(), 500); // Kazanma mesajı için kısa bir gecikme
+                    setTimeout(() => this.endGame(), 500);
                 } else {
                      if (this.gameMode === 'twoPlayer') { this.updateStatus('Doğru! Tekrar oyna.'); }
                      else { this.updateStatus(); }
@@ -659,7 +731,6 @@
 
             handleMismatch() {
                 setTimeout(() => {
-                    // Sadece 'is-flipped' sınıfını kaldır
                     this.flippedCards.forEach(card => card.classList.remove('is-flipped'));
                     this.flippedCards = [];
                     this.isLocked = false;
@@ -702,11 +773,9 @@
                 this.resetState();
                 document.getElementById('memory-game-area').style.display = 'none';
                 document.getElementById('memory-setup').style.display = 'block';
-                // Grid stilini temizle
                 document.getElementById('memory-grid').style.gridTemplateColumns = '';
             }
         };
-
     </script>
 
     <script src="bilesenler/menu.js"></script>
