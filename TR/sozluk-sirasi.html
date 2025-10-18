@@ -85,6 +85,12 @@
         }
 
         /* YENİ: Alfabetik Sıralama Listesi Stilleri */
+        #alfabe-level-text {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-secondary-color);
+            margin-top: -10px;
+        }
         .sortable-list {
             list-style: none;
             padding: 0;
@@ -102,6 +108,7 @@
             font-weight: 700;
             cursor: move; /* Sürükleme imleci */
             transition: all 0.2s ease;
+            user-select: none; /* Mobilde daha iyi sürükleme */
         }
         /* Sürüklenirken gölge stil */
         .sortable-ghost {
@@ -111,11 +118,7 @@
         /* Seçilen öğe */
         .sortable-chosen {
             background: var(--papyrus-bg-color-light);
-        }
-        /* Kontrol sonrası sabitlenen (disabled) liste */
-        .sortable-list:disabled li {
-            cursor: not-allowed;
-            opacity: 0.7;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
 
@@ -210,7 +213,7 @@
             <div id="alfabe" class="activity-content active">
                 <div class="quiz-card">
                     <p class="question" id="alfabe-question">Kelimeleri sürükleyerek alfabetik sıraya dizin.</p>
-                    <p id="alfabe-level" class="feedback">Seviye: 1</p>
+                    <p id="alfabe-level-text" class="feedback">Seviye: 1</p>
                     <ul id="sortable-list" class="sortable-list">
                         </ul>
                     <p class="feedback" id="alfabe-feedback"></p>
@@ -250,15 +253,37 @@
     <script>
         // --- VERİ BANKALARI ---
 
-        // Alfabetik Sıralama için kelime listesi
-        const sortWordList = [
-            "Elma", "Armut", "Kiraz", "Çilek", "Muz", "Portakal", "Karpuz", "Kavun",
-            "Ayva", "Nar", "Kedi", "Köpek", "Kuş", "Balık", "At", "Aslan", "Kaplan", 
-            "Zürafa", "Ev", "Okul", "Araba", "Masa", "Sandalye", "Kitap", "Defter", 
-            "Kalem", "Güneş", "Ay", "Yıldız", "Bulut", "Yağmur", "Kar", "Rüzgar",
-            "Çiçek", "Ağaç", "Toprak", "Su", "Hava", "Ateş", "Taş", "Dağ", "Deniz",
-            "Nehir", "Göl", "Orman", "Çöl", "Ada", "Kıta", "Ülke", "Şehir", "Köy"
-        ];
+        // YENİ: Alfabetik Sıralama için GENİŞ kelime havuzu
+        const sortWordList = {
+            // Seviye 1-2 için (ilk harf farklı)
+            easy: [
+                "Elma", "Armut", "Kiraz", "Çilek", "Muz", "Portakal", "Karpuz", "Kavun",
+                "Ayva", "Nar", "Kedi", "Köpek", "Kuş", "Balık", "At", "Aslan", "Kaplan", 
+                "Zürafa", "Ev", "Okul", "Araba", "Masa", "Sandalye", "Kitap", "Defter", 
+                "Kalem", "Güneş", "Ay", "Yıldız", "Bulut", "Yağmur", "Kar", "Rüzgar",
+                "Çiçek", "Ağaç", "Toprak", "Su", "Hava", "Ateş", "Taş", "Dağ", "Deniz",
+                "Nehir", "Göl", "Orman", "Çöl", "Ada", "Kıta", "Ülke", "Şehir", "Köy"
+            ],
+            // Seviye 3 için (ilk harf aynı, 2. farklı)
+            medium: [
+                ["Kedi", "Kuş", "Köpek", "Kaplan"],
+                ["Masa", "Muz", "Mandal", "Makas"],
+                ["Balık", "Bebek", "Bulut", "Biber"],
+                ["Ağaç", "Ayva", "Armut", "Aslan"],
+                ["Salı", "Sandalye", "Sabun", "Saat"],
+                ["Çiçek", "Çilek", "Çikolata", "Çorap"],
+                ["Tabak", "Tavuk", "Toprak", "Taş"]
+            ],
+            // Seviye 4 için (ilk 2+ harf aynı)
+            hard: [
+                ["Bakkal", "Baklava", "Bakıcı", "Bakmak"],
+                ["Karakol", "Karakter", "Karasu", "Karar"],
+                ["Sandalye", "Sandık", "Sandal", "Sanatçı"],
+                ["Kalem", "Kelebek", "Kemer", "Kereviz"],
+                ["Mandal", "Market", "Marul", "Makarna"],
+                ["Balık", "Balkon", "Balon", "Balgam"]
+            ]
+        };
 
         // Hecelere Ayırma için kelime listesi
         const heceData = [
@@ -284,7 +309,7 @@
             { word: "ağaç", hece: "a-ğaç" }
         ];
 
-        // YENİ: Satır Sonu Ayırma için cümle listesi
+        // YENİ: Satır Sonu Ayırma için GENİŞLETİLMİŞ cümle listesi
         const lineBreakData = [
             {
                 correct: "Akşam bize <strong>arkada-</strong><br><strong>şımla</strong> geleceğim.",
@@ -325,6 +350,70 @@
                     "Bahçedeki <strong>hanımel-</strong><br><strong>i</strong> çok güzel kokuyor." // Sonda tek harf
                 ],
                 word: "hanımeli" // (ha-nı-me-li)
+            },
+            {
+                correct: "Bisiklete binmeyi <strong>öğre-</strong><br><strong>niyorum</strong>.",
+                wrong: [
+                    "Bisiklete binmeyi <strong>öğ-</strong><br><strong>reniyorum</strong>.",
+                    "Bisiklete binmeyi <strong>öğr-</strong><br><strong>eniyorum</strong>."
+                ],
+                word: "öğreniyorum" // (öğ-re-ni-yo-rum)
+            },
+            {
+                correct: "Törende <strong>Ata-</strong><br><strong>türk</strong> büstüne çiçek koyduk.",
+                wrong: [
+                    "Törende <strong>Atat-</strong><br><strong>ürk</strong> büstüne çiçek koyduk.", // Özel isim kuralı
+                    "Törende <strong>At-</strong><br><strong>atürk</strong> büstüne çiçek koyduk."
+                ],
+                word: "Atatürk" // (Ata-türk)
+            },
+            {
+                correct: "Yeni bilgisayar <strong>progra-</strong><br><strong>mı</strong> öğrendim.",
+                wrong: [
+                    "Yeni bilgisayar <strong>pro-</strong><br><strong>gramı</strong> öğrendim.",
+                    "Yeni bilgisayar <strong>prog-</strong><br><strong>ramı</strong> öğrendim." // 'program' tek hece
+                ],
+                word: "programı" // (prog-ra-mı)
+            },
+            {
+                correct: "Yoldan hızlıca bir <strong>kam-</strong><br><strong>yon</strong> geçti.",
+                wrong: [
+                    "Yoldan hızlıca bir <strong>ka-</strong><br><strong>myon</strong> geçti.", // 'my' bölünmez
+                    "Yoldan hızlıca bir <strong>kamy-</strong><br><strong>on</strong> geçti."
+                ],
+                word: "kamyon" // (kam-yon)
+            },
+            {
+                correct: "Bu mahalledeki <strong>çiçek-</strong><br><strong>çi</strong> çok ünlüdür.",
+                wrong: [
+                    "Bu mahalledeki <strong>çiç-</strong><br><strong>ekçi</strong> çok ünlüdür.",
+                    "Bu mahalledeki <strong>çiçe-</strong><br><strong>kçi</strong> çok ünlüdür." // 'kç' bölünmez
+                ],
+                word: "çiçekçi" // (çi-çek-çi)
+            },
+            {
+                correct: "Odanın <strong>pen-</strong><br><strong>ceresi</strong> açıktı.",
+                wrong: [
+                    "Odanın <strong>pe-</strong><br><strong>nceresi</strong> açıktı.",
+                    "Odanın <strong>pencer-</strong><br><strong>esi</strong> açıktı."
+                ],
+                word: "penceresi" // (pen-ce-re-si)
+            },
+             {
+                correct: "Bu ne güzel bir <strong>a-</strong><br><strong>ğaç</strong> böyle!",
+                wrong: [
+                    "Bu ne güzel bir <strong>ağ-</strong><br><strong>aç</strong> böyle!",
+                    "Bu ne güzel bir <strong>ağa-</strong><br><strong>ç</strong> böyle!"
+                ],
+                word: "ağaç" // (a-ğaç)
+            },
+            {
+                correct: "Düşmana karşı <strong>müdafa-</strong><br><strong>a</strong> yapmak zorundayız.",
+                wrong: [
+                    "Düşmana karşı <strong>müdaf-</strong><br><strong>aa</strong> yapmak zorundayız.",
+                    "Düşmana karşı <strong>müdafaa-</strong><br><strong></strong> yapmak zorundayız." // Yanlış
+                ],
+                word: "müdafaa" // (mü-da-fa-a)
             }
         ];
 
@@ -337,7 +426,6 @@
             lineBreak.loadQuestion();
         });
         
-        // Sekme değiştirme fonksiyonu
         function showActivity(activityId) {
             document.querySelectorAll('.activity-content').forEach(el => el.classList.remove('active'));
             document.getElementById(activityId).classList.add('active');
@@ -345,13 +433,12 @@
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.tab-button[onclick="showActivity('${activityId}')"]`).classList.add('active');
             
-            // Diğer sekmeye geçince soruları yenile (kaldıkları yerden devam etmesinler)
+            // Sekme değiştirince seviyeyi koru ama soruyu yenile
             if (activityId === 'alfabe') alphabetSort.loadQuestion();
             if (activityId === 'heceleme') syllabify.loadQuestion();
             if (activityId === 'satirsonu') lineBreak.loadQuestion();
         }
         
-        // Dizi karıştırma fonksiyonu
         function shuffleArray(array) {
             let newArray = [...array];
             for (let i = newArray.length - 1; i > 0; i--) {
@@ -361,7 +448,6 @@
             return newArray;
         }
 
-        // Türkçe'ye özel alfabetik sıralama
         const trCollator = new Intl.Collator('tr', { sensitivity: 'base' });
 
         // --- 1. ETKİNLİK: ALFABETİK SIRALAMA (YENİLENDİ) ---
@@ -372,64 +458,76 @@
             sortableInstance: null,
             
             loadQuestion: function() {
-                // Seviyeye göre kelime sayısı
-                // Seviye 1: 3, Seviye 2: 4, Seviye 3: 5, Seviye 4: 6
-                const wordCount = Math.min(this.level + 2, 6); 
+                let wordGroup = [];
+                let levelText = "";
                 
-                document.getElementById('alfabe-level').textContent = `Seviye: ${this.level} (${wordCount} kelime)`;
+                try {
+                    if (this.level === 1) {
+                        wordGroup = shuffleArray(sortWordList.easy).slice(0, 3);
+                        levelText = "Seviye 1 (3 Kelime)";
+                    } else if (this.level === 2) {
+                        wordGroup = shuffleArray(sortWordList.easy).slice(0, 4);
+                        levelText = "Seviye 2 (4 Kelime)";
+                    } else if (this.level === 3) {
+                        wordGroup = shuffleArray(sortWordList.medium)[0]; // Bir grup seç
+                        levelText = "Seviye 3 (Zor Sıralama)";
+                    } else { // Seviye 4 ve üstü
+                        this.level = 4; // Seviyeyi 4'te kilitle
+                        wordGroup = shuffleArray(sortWordList.hard)[0]; // Bir grup seç
+                        levelText = "Seviye 4 (Uzman Sıralama)";
+                    }
+                } catch (e) {
+                     // Veri havuzunda hata olursa diye yedek
+                     wordGroup = shuffleArray(sortWordList.easy).slice(0, 4);
+                     levelText = "Seviye (Hata)";
+                }
 
-                // 4 kelimelik bir grup seç
-                const shuffledWords = shuffleArray(sortWordList);
-                const wordGroup = shuffledWords.slice(0, wordCount);
+                document.getElementById('alfabe-level-text').textContent = levelText;
                 
                 // Doğru sıralanmış halini kaydet
                 this.correctOrder = [...wordGroup].sort(trCollator.compare);
                 
                 // Karışık listeyi oluştur (doğruyla aynı olmasın)
                 let shuffledOrder = shuffleArray(wordGroup);
-                while(shuffledOrder.join(',') === this.correctOrder.join(',')) {
-                    shuffledOrder = shuffleArray(wordGroup);
+                if(shuffledOrder.length > 1) { // 1 kelimelik listede sonsuz döngü olmasın
+                    while(shuffledOrder.join(',') === this.correctOrder.join(',')) {
+                        shuffledOrder = shuffleArray(wordGroup);
+                    }
                 }
 
                 const listContainer = document.getElementById('sortable-list');
                 listContainer.innerHTML = '';
                 
-                // Listeyi DOM'a ekle
                 shuffledOrder.forEach(word => {
                     const li = document.createElement('li');
                     li.textContent = word;
                     listContainer.appendChild(li);
                 });
 
-                // Önceki Sortable örneğini yok et (varsa)
                 if (this.sortableInstance) {
                     this.sortableInstance.destroy();
                 }
 
-                // Sürükle-bırak özelliğini etkinleştir
                 this.sortableInstance = new Sortable(listContainer, {
                     animation: 150,
                     ghostClass: 'sortable-ghost',
                     chosenClass: 'sortable-chosen',
+                    forceFallback: true, // Mobilde daha iyi dokunmatik sürükleme için
                 });
 
-                // Butonları ve geri bildirimi sıfırla
                 document.getElementById('alfabe-feedback').textContent = '';
                 document.getElementById('alfabe-check-btn').style.display = 'inline-block';
                 document.getElementById('alfabe-next-btn').style.display = 'none';
-                listContainer.disabled = false;
             },
 
             checkAnswer: function() {
                 const listContainer = document.getElementById('sortable-list');
-                
-                // Kullanıcının sıralamasını al
                 const userOrder = Array.from(listContainer.children).map(li => li.textContent);
-                
                 const feedbackEl = document.getElementById('alfabe-feedback');
                 
-                // Kontrol et
-                if (userOrder.join(',') === this.correctOrder.join(',')) {
+                const isCorrect = (userOrder.join(',') === this.correctOrder.join(','));
+
+                if (isCorrect) {
                     this.streak++;
                     if (this.streak >= 2 && this.level < 4) { // 4. seviye maks
                         this.level++;
@@ -440,16 +538,17 @@
                     }
                     feedbackEl.className = 'feedback correct';
                 } else {
-                    this.streak = 0; // Yanlış yapınca seriyi sıfırla
-                    feedbackEl.innerHTML = `Maalesef yanlış.<br>Doğru sıralama: <strong>${this.correctOrder.join(', ')}</strong>`;
+                    this.streak = 0; 
+                    if (this.level > 1) {
+                        this.level--; // Hata yapınca seviye düş
+                    }
+                    feedbackEl.innerHTML = `Maalesef yanlış. Seviye korundu.<br>Doğru: <strong>${this.correctOrder.join(', ')}</strong>`;
                     feedbackEl.className = 'feedback wrong';
                 }
 
                 // Kontrol sonrası sürüklemeyi kapat
                 this.sortableInstance.option('disabled', true);
-                listContainer.disabled = true;
 
-                // Butonları ayarla
                 document.getElementById('alfabe-check-btn').style.display = 'none';
                 document.getElementById('alfabe-next-btn').style.display = 'inline-block';
             }
@@ -475,7 +574,7 @@
             
             checkAnswer: function() {
                 const inputEl = document.getElementById('heceleme-input');
-                const userAnswer = inputEl.value.trim().toLowerCase();
+                const userAnswer = inputEl.value.trim().toLowerCase().replace(/ /g, ''); // Boşlukları kaldır
                 const correctAnswer = this.currentWord.hece.toLowerCase();
                 
                 const feedbackEl = document.getElementById('heceleme-feedback');
@@ -502,7 +601,24 @@
 
                 // Tüm seçenekleri birleştir (1 doğru, 2 yanlış)
                 let options = [this.currentData.correct, ...this.currentData.wrong];
-                let finalOptions = shuffleArray(options);
+                // Seçenekleri benzersiz yap (bazı yanlışlar aynı olabilir)
+                let uniqueOptions = [...new Set(options)];
+                let finalOptions = shuffleArray(uniqueOptions);
+
+                // Eğer karıştırma sonucu doğru cevap gelmezse (çok nadir), ekle
+                if (!finalOptions.includes(this.currentData.correct)) {
+                    finalOptions[0] = this.currentData.correct;
+                    finalOptions = shuffleArray(finalOptions);
+                }
+
+                // Genelde 3 seçenek olacak (1 doğru 2 yanlış)
+                finalOptions = finalOptions.slice(0, 3);
+                // Doğru cevabın mutlaka şıklarda olmasını garantile
+                 if (!finalOptions.includes(this.currentData.correct)) {
+                    finalOptions[Math.floor(Math.random() * finalOptions.length)] = this.currentData.correct;
+                }
+                finalOptions = shuffleArray(finalOptions);
+
 
                 const optionsContainer = document.getElementById('satirsonu-options');
                 optionsContainer.innerHTML = '';
