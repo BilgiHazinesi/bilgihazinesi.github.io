@@ -3,376 +3,521 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sıralama Ustası</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Dil Bilgisi Çalışmaları - Bilgi Hazinesi</title>
+    
+    <base href="https://bilgihazinesi.github.io/">
+
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="stiller/stil.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
     <style>
-        :root {
-            --bg: #f4f7fc;
-            --card-bg: #ffffff;
-            --primary: #6a6ff2;
-            --secondary: #f5a623;
-            --correct: #2ecc71;
-            --incorrect: #e74c3c;
-            --text: #34495e;
-            --border: #e0e5f0;
-            --shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        /* Bu sayfaya özel stiller, ana temanıza uyumlu */
         body {
-            font-family: 'Nunito', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            padding: 1.5rem;
+            font-family: 'Crimson Pro', serif;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 20px;
+        }
+        header h1 a {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--text-primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
+        header p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            color: var(--text-secondary-color);
+        }
+        .tabs {
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
         }
-        .game-container {
-            width: 100%;
-            max-width: 500px;
-            background-color: var(--card-bg);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            box-shadow: var(--shadow);
-            text-align: center;
-        }
-        header h1 {
-            font-family: 'Baloo 2', sans-serif;
-            color: var(--primary);
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
-        }
-        #level-title {
-            font-family: 'Baloo 2', sans-serif;
-            font-size: 1.5rem;
-            color: var(--secondary);
-            margin-bottom: 0.5rem;
-        }
-        #instructions {
+        .tab-button {
+            padding: 12px 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--papyrus-bg-color-dark);
+            color: var(--text-secondary-color);
             font-size: 1rem;
-            margin-bottom: 2rem;
-        }
-        #word-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        .word-item {
-            font-family: 'Baloo 2', sans-serif;
-            font-size: 1.8rem;
+            font-family: 'Crimson Pro', serif;
             font-weight: 700;
-            padding: 1rem;
-            background-color: #fafbff;
-            border: 2px solid var(--border);
-            border-radius: 1rem;
-            cursor: grab;
-            transition: all 0.2s ease;
-        }
-        .word-item.dragging {
-            opacity: 0.5;
-            background-color: #e0e7ff;
-            transform: scale(1.05);
-        }
-        .word-item.over {
-            border-color: var(--primary);
-            background-color: #f0f2ff;
-        }
-        #check-button {
-            font-family: 'Baloo 2', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: white;
-            background-color: var(--primary);
-            border: none;
-            padding: 0.8rem 2rem;
-            width: 100%;
-            border-radius: 1rem;
             cursor: pointer;
-            transition: background-color 0.2s;
-            box-shadow: 0 5px 0 0 #4a4e9f;
+            transition: all 0.3s ease;
         }
-        #check-button:active {
-            transform: translateY(3px);
-            box-shadow: 0 2px 0 0 #4a4e9f;
+        .tab-button.active, .tab-button:hover {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
         }
-        #feedback-message {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-top: 1.5rem;
-            height: 30px;
+        .activity-content { display: none; }
+        .activity-content.active { display: block; }
+        
+        /* Quiz Kartı Stili */
+        .quiz-card {
+            background-color: var(--papyrus-bg-color-dark);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-color);
+            margin: 0 auto 20px auto;
+            max-width: 600px;
         }
-        .correct { color: var(--correct); }
-        .incorrect { color: var(--incorrect); }
+        .question { 
+            font-size: 1.3rem; 
+            margin-bottom: 20px; 
+            line-height: 1.5;
+            font-weight: 600;
+        }
+        .question strong {
+            color: var(--accent-color);
+            font-weight: 900;
+        }
 
-        /* Kazanan Ekranı */
-        #win-screen {
-            display: none;
-            text-align: center;
+        /* Alfabetik Sıralama Listesi Stilleri */
+        #alfabe-level-text {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-secondary-color);
+            margin-top: -10px;
         }
-        #win-screen h2 {
-            font-family: 'Baloo 2', sans-serif;
-            font-size: 2.5rem;
-            color: var(--correct);
+        .sortable-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 10px;
         }
-        #win-screen p { font-size: 1.2rem; margin-bottom: 2rem; }
-        #restart-button {
-            font-family: 'Baloo 2', sans-serif;
+        .sortable-list li {
+            background-color: var(--papyrus-bg-color-dark);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            padding: 12px;
             font-size: 1.2rem;
             font-weight: 700;
-            color: white;
-            background-color: var(--secondary);
-            border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 1rem;
+            cursor: move; /* Sürükleme imleci */
+            transition: all 0.2s ease;
+            user-select: none; /* Mobilde daha iyi sürükleme */
+        }
+        /* Sürüklenirken gölge stil */
+        .sortable-ghost {
+            opacity: 0.4;
+            background: var(--active-bg-color);
+        }
+        /* Seçilen öğe */
+        .sortable-chosen {
+            background: var(--papyrus-bg-color-light);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+
+        /* Satır Sonu & Hecelere Ayırma Stilleri */
+        .options { 
+            display: grid; 
+            grid-template-columns: 1fr; /* Mobilde her zaman tek sütun */
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        .option-btn {
+            width: 100%;
+            background-color: var(--papyrus-bg-color-dark);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1.1rem; /* Yazılar daha okunaklı */
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s ease;
+            line-height: 1.4;
+            text-align: left; /* Cümleler için sola hizalı */
+        }
+        .option-btn strong {
+             font-weight: 900;
+             color: var(--text-primary-color);
+        }
+        .option-btn.correct strong { color: white; }
+        .option-btn.wrong strong { color: white; }
+
+        .option-btn:hover { background-color: var(--accent-color); color: white; }
+        .option-btn:hover strong { color: white; }
+        .option-btn.correct { background-color: #66bb6a; color: white; border-color: #66bb6a; }
+        .option-btn.wrong { background-color: #ef5350; color: white; border-color: #ef5350; }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+        #heceleme-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--papyrus-bg-color-light);
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-family: 'Crimson Pro', serif;
+            text-align: center;
+            box-sizing: border-box;
+            font-weight: 700;
+        }
+
+        .quiz-buttons { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
+        .quiz-btn { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+            font-family: 'Crimson Pro', serif; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: background 0.2s; 
+        }
+        .check-btn { background-color: var(--accent-color); color: white; }
+        .next-btn { background-color: var(--text-secondary-color); color: white; }
+        .feedback { font-weight: 700; margin-top: 15px; min-height: 24px; font-size: 1.1rem; }
+        .correct { color: #2e7d32; }
+        .wrong { color: #c62828; }
+        
+        @media (max-width: 768px) {
+            header h1 a { font-size: 2rem; }
+            header p { font-size: 1rem; }
+            .tab-button { padding: 10px 15px; font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
 
-    <div class="game-container">
-        
-        <div id="game-active">
-            <header>
-                <h1>Sıralama Ustası</h1>
-                <h2 id="level-title">Seviye 1</h2>
-            </header>
-            <p id="instructions">Kelimeleri alfabetik sıraya koymak için&nbsp;sürükleyip bırakın.</p>
-            
-            <div id="word-list">
+    <div id="menu-container"></div>
+
+    <div class="container">
+        <header>
+            <h1><a href="https://bilgihazinesi.github.io/">Dil Bilgisi Çalışmaları</a></h1>
+            <p>Kelimeleri doğru sıralayalım ve hecelerine ayıralım.</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="showActivity('alfabe')">Alfabetik Sıralama</button>
+            <button class="tab-button" onclick="showActivity('heceleme')">Hecelere Ayırma</button>
+            <button class="tab-button" onclick="showActivity('satirsonu')">Satır Sonu Ayırma</button>
+        </div>
+
+        <main>
+            <div id="alfabe" class="activity-content active">
+                <div class="quiz-card">
+                    <p class="question" id="alfabe-question">Kelimeleri sürükleyerek alfabetik sıraya dizin.</p>
+                    <p id="alfabe-level-text" class="feedback">Seviye: 1</p>
+                    <ul id="sortable-list" class="sortable-list">
+                        </ul>
+                    <p class="feedback" id="alfabe-feedback"></p>
+                    <div class="quiz-buttons">
+                       <button id="alfabe-check-btn" class="quiz-btn check-btn" onclick="alphabetSort.checkAnswer()">Kontrol Et</button>
+                       <button id="alfabe-next-btn" class="quiz-btn next-btn" onclick="alphabetSort.loadQuestion()" style="display: none;">Sonraki</button>
+                    </div>
                 </div>
+            </div>
 
-            <button id="check-button">Kontrol Et</button>
-            <div id="feedback-message"></div>
-        </div>
-
-        <div id="win-screen">
-            <h2>Tebrikler!</h2>
-            <p>Tüm seviyeleri başarıyla tamamladınız. Sen&nbsp;bir Sıralama Ustasısın!</p>
-            <button id="restart-button">Yeniden Başla</button>
-        </div>
-
+            <div id="heceleme" class="activity-content">
+                <div class="quiz-card">
+                    <p class="question" id="heceleme-question">"kelime" sözcüğünü hecelerine ayırın.</p>
+                    <input type="text" id="heceleme-input" placeholder="Ör: ha-nı-me-li" autocomplete="off" autocapitalize="none">
+                    <p class="feedback" id="heceleme-feedback"></p>
+                     <div class="quiz-buttons">
+                        <button class="quiz-btn check-btn" onclick="syllabify.checkAnswer()">Kontrol Et</button>
+                        <button class="quiz-btn next-btn" onclick="syllabify.loadQuestion()">Sonraki</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="satirsonu" class="activity-content">
+                 <div class="quiz-card">
+                    <p class="question" id="satirsonu-question">Hangi cümlede satır sonu ayırımı <strong>doğru</strong> yapılmıştır?</p>
+                    <div class="options" id="satirsonu-options">
+                        </div>
+                    <p class="feedback" id="satirsonu-feedback"></p>
+                    <div class="quiz-buttons">
+                       <button class="quiz-btn next-btn" onclick="lineBreak.loadQuestion()">Sonraki Soru</button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+    <script>
+        // --- VERİ BANKALARI ---
 
-    // --- 1. SÖZCÜK HAVUZU ve SORU BANKASI ---
-    // Kurallarınıza göre yapılandırılmış 52 kelimelik havuz.
-    const soruBankasi = [
-        // Seviye 1: İlk harfler farklı (2 soru seti)
-        { level: 1, words: ["Armut", "Ceviz", "Elma", "Fındık"] },
-        { level: 1, words: ["Bardak", "Domates", "Gemi", "Havuç"] },
-        
-        // Seviye 2: İlk harf aynı, 2. harf farklı (3 soru seti)
-        { level: 2, words: ["Kale", "Kedi", "Kilo", "Kutu"] },
-        { level: 2, words: ["Salı", "Sema", "Sıra", "Soru"] },
-        { level: 2, words: ["Bale", "Birey", "Boru", "Büyü"] },
+        // YENİ: Alfabetik Sıralama için SEVİYELİ kelime havuzu
+        const sortWordList = {
+            // Seviye 1: İlk harfler farklı (Geniş liste, rastgele 4 seçilecek)
+            level1: [
+                "Elma", "Armut", "Kiraz", "Çilek", "Muz", "Portakal", "Karpuz", "Kavun",
+                "Ayva", "Nar", "Kedi", "Köpek", "Kuş", "Balık", "At", "Aslan", "Kaplan", 
+                "Zürafa", "Ev", "Okul", "Araba", "Masa", "Sandalye", "Kitap", "Defter", 
+                "Kalem", "Güneş", "Ay", "Yıldız", "Bulut", "Yağmur", "Kar", "Rüzgar",
+                "Çiçek", "Ağaç", "Toprak", "Su", "Hava", "Ateş", "Taş", "Dağ", "Deniz",
+                "Nehir", "Göl", "Orman", "Çöl", "Ada", "Kıta", "Ülke", "Şehir", "Köy",
+                "İnsan", "Çocuk", "Anne", "Baba", "Öğretmen", "Doktor", "Polis", "Asker"
+            ],
+            // Seviye 2: İlk harf aynı, 2. farklı (4 kelimelik gruplar)
+            level2: [
+                ["Kedi", "Kuş", "Köpek", "Kaplan"],
+                ["Masa", "Muz", "Mandal", "Makas"],
+                ["Balık", "Bebek", "Bulut", "Biber"],
+                ["Ağaç", "Ayva", "Armut", "Aslan"],
+                ["Salı", "Sandalye", "Sabun", "Saat"],
+                ["Çiçek", "Çilek", "Çikolata", "Çorap"],
+                ["Tabak", "Tavuk", "Toprak", "Taş"],
+                ["Güneş", "Göl", "Gemi", "Gözlük"],
+                ["Yıldız", "Yağmur", "Yol", "Yaprak"]
+            ],
+            // Seviye 3: İlk 2 harf aynı, 3. farklı
+            level3: [
+                ["Balık", "Balkon", "Balon", "Balta"],
+                ["Kalem", "Kelebek", "Kemer", "Kereviz"],
+                ["Mandal", "Market", "Marul", "Makarna"],
+                ["Sandal", "Sanat", "Sabır", "Salam"],
+                ["Çarşı", "Çatal", "Çanta", "Çadır"],
+                ["Kitap", "Kiraz", "Kibrit", "Kilim"],
+                ["Deniz", "Defter", "Ders", "Demir"]
+            ],
+            // Seviye 4: İlk 3 harf aynı, 4. farklı
+            level4: [
+                ["Karakter", "Karadeniz", "Karalama", "Karamsar"],
+                ["Mandolin", "Mandalina", "Mandıra", "Mantar"],
+                ["Sandviç", "Sandık", "Sandalye", "Sandalet"],
+                ["Arkadaş", "Arkalık", "Arkaik", "Arkasız"],
+                ["Bilgisayar", "Bilgin", "Bilgiç", "Bilgi"],
+                ["Öğretmen", "Öğrenci", "Öğrenim", "Öğretim"]
+            ]
+        };
 
-        // Seviye 3: İlk 2 harf aynı, 3. harf farklı (3 soru seti)
-        { level: 3, words: ["Kasa", "Kaya", "Kaba", "Kafa"] },
-        { level: 3, words: ["Masa", "Mavi", "Mayıs", "Marş"] },
-        { level: 3, words: ["Dede", "Defo", "Deri", "Deva"] },
+        // Hecelere Ayırma için kelime listesi
+        const heceData = [
+            { word: "hanımeli", hece: "ha-nı-me-li" },
+            { word: "ilköğretim", hece: "il-köğ-re-tim" },
+            { word: "başöğretmen", hece: "baş-öğ-ret-men" },
+            { word: "Ankara", hece: "An-ka-ra" },
+            { word: "karakter", hece: "ka-rak-ter" },
+            { word: "otomobil", hece: "o-to-mo-bil" },
+            { word: "bilgisayar", hece: "bil-gi-sa-yar" },
+            { word: "matematik", hece: "ma-te-ma-tik" },
+            { word: "kütüphane", hece: "kü-tüp-ha-ne" },
+            { word: "cumhuriyet", hece: "cum-hu-ri-yet" },
+            { word: "aslanağzı", hece: "as-lan-ağ-zı" },
+            { word: "Türkiye", hece: "Tür-ki-ye" },
+            { word: "program", hece: "prog-ram" },
+            { word: "spor", hece: "spor" },
+            { word: "tren", hece: "tren" },
+            { word: "elektrik", hece: "e-lek-trik" },
+            { word: "İstanbul", hece: "İs-tan-bul" },
+            { word: "karnabahar", hece: "kar-na-ba-har" },
+            { word: "televizyon", hece: "te-le-viz-yon" },
+            { word: "ağaç", hece: "a-ğaç" }
+        ];
 
-        // Seviye 4: İlk 3 harf aynı, 4. harf farklı (3 soru seti)
-        { level: 4, words: ["Kare", "Kars", "Kart", "Kargo"] },
-        { level: 4, words: ["Mandal", "Mantar", "Manav", "Mani"] },
-        { level: 4, words: ["Kalem", "Kalp", "Kalan", "Kalkan"] },
-
-        // Seviye 5: İlk 4 harf aynı, 5. harf farklı (2 soru seti)
-        // (Kural: "en fazla baştaki ilk 4 harf aynı olabilir" -> yani 5. harfi karşılaştır)
-        { level: 5, words: ["Karakol", "Karanfil", "Karar", "Karataş"] },
-        { level: 5, words: ["Mandarin", "Mandalina", "Mandacı", "Mandallı"] }
-    ];
-    
-    const seviyeBasliklari = [
-        "Seviye 1: İlk Harflere Göre Sırala",
-        "Seviye 2: İkinci Harflere Göre Sırala",
-        "Seviye 3: Üçüncü Harflere Göre Sırala",
-        "Seviye 4: Dördüncü Harflere Göre Sırala",
-        "Seviye 5: Beşinci Harflere Göre Sırala"
-    ];
-    const maxSeviye = 5;
-
-    // --- 2. OYUN DEĞİŞKENLERİ ---
-    let mevcutSeviye = 1;
-    let dogruSira = [];
-    let suruklenenOge = null;
-
-    // --- 3. DOM ELEMENTLERİ ---
-    const wordList = document.getElementById('word-list');
-    const levelTitle = document.getElementById('level-title');
-    const checkButton = document.getElementById('check-button');
-    const feedbackMessage = document.getElementById('feedback-message');
-    const gameActiveDiv = document.getElementById('game-active');
-    const winScreenDiv = document.getElementById('win-screen');
-    const restartButton = document.getElementById('restart-button');
-
-    // --- 4. TEMEL FONKSİYONLAR ---
-
-    // Fisher-Yates (Knuth) Shuffle
-    function shuffle(array) {
-        let currentIndex = array.length, randomIndex;
-        while (currentIndex != 0) {
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
-            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-        }
-        return array;
-    }
-
-    function soruGetir(seviye) {
-        // 1. O seviyeye ait soruları filtrele
-        const seviyeSorulari = soruBankasi.filter(soru => soru.level === seviye);
-        
-        // 2. Rastgele bir soru seti seç
-        const secilenSoru = seviyeSorulari[Math.floor(Math.random() * seviyeSorulari.length)];
-
-        // 3. Doğru sırayı kaydet (Türkçe karakterlere duyarlı sıralama)
-        dogruSira = [...secilenSoru.words].sort((a, b) => a.localeCompare(b, 'tr'));
-
-        // 4. Kelimeleri karıştır
-        let karisikKelimeler = shuffle([...dogruSira]);
-
-        // 5. Ekrana yerleştir
-        kelimeleriGoster(karisikKelimeler);
-
-        // 6. Başlığı güncelle
-        levelTitle.textContent = seviyeBasliklari[seviye - 1];
-        feedbackMessage.textContent = "";
-    }
-
-    function kelimeleriGoster(kelimeler) {
-        wordList.innerHTML = ""; // Listeyi temizle
-        kelimeler.forEach(kelime => {
-            const item = document.createElement('div');
-            item.classList.add('word-item');
-            item.setAttribute('draggable', true);
-            item.textContent = kelime;
-            wordList.appendChild(item);
-        });
-        dragDropOlaylariniEkle();
-    }
-
-    function kontolEt() {
-        // 1. Mevcut sırayı al
-        const mevcutSiraOge = wordList.querySelectorAll('.word-item');
-        const mevcutKullaniciSirasi = Array.from(mevcutSiraOge).map(item => item.textContent);
-
-        // 2. Doğru sıra ile karşılaştır
-        let hepsiDogru = true;
-        for (let i = 0; i < dogruSira.length; i++) {
-            if (dogruSira[i] !== mevcutKullaniciSirasi[i]) {
-                hepsiDogru = false;
-                break;
+        // YENİ: Satır Sonu Ayırma için GENİŞLETİLMİŞ ve KURALA UYGUN cümle listesi
+        const lineBreakData = [
+            // Doğru heceleme: ar-ka-da-şım-la
+            {
+                correct: "Akşam bize <strong>arkada-</strong><br><strong>şımla</strong> geleceğim.",
+                wrong: [
+                    "Akşam bize <strong>ark-</strong><br><strong>adaşımla</strong> geleceğim.",
+                    "Akşam bize <strong>arkadaşım-</strong><br><strong>la</strong> geleceğim."
+                ],
+                word: "arkadaşımla" 
+            },
+             // Doğru heceleme: kar-pu-zu-mu-zu
+            {
+                correct: "Pazardan <strong>karpu-</strong><br><strong>zumuzu</strong> aldık.",
+                wrong: [
+                    "Pazardan <strong>karpuz-</strong><br><strong>umuzu</strong> aldık.", // 'z' sonraki heceye ait
+                    "Pazardan <strong>karp-</strong><br><strong>uzumuzu</strong> aldık."
+                ],
+                word: "karpuzumuzu" 
+            },
+            // Doğru heceleme: il-köğ-re-tim
+            {
+                correct: "Yeni <strong>il-</strong><br><strong>köğretim</strong> binası açıldı.",
+                wrong: [
+                    "Yeni <strong>ilk-</strong><br><strong>öğretim</strong> binası açıldı.", // 'k' sonraki heceye ait
+                    "Yeni <strong>ilköğr-</strong><br><strong>etim</strong> binası açıldı." // 'öğreti-m' olmalıydı ama tek harf bırakılmaz
+                ],
+                word: "ilköğretim" 
+            },
+             // Doğru heceleme: o-to-mo-bil-le
+            {
+                correct: "Markete gidip <strong>otomo-</strong><br><strong>bille</strong> döneceğim.",
+                wrong: [
+                    "Markete gidip <strong>ot-</strong><br><strong>omobille</strong> döneceğim.", // 'o-' tek harf kuralı ihlali
+                    "Markete gidip <strong>otomobil-</strong><br><strong>le</strong> döneceğim." // 'l' önceki heceye ait değil
+                ],
+                word: "otomobille" 
+            },
+            // Doğru heceleme: ha-nı-me-li
+            {
+                correct: "Bahçedeki <strong>hanıme-</strong><br><strong>li</strong> çok güzel kokuyor.",
+                wrong: [
+                    "Bahçedeki <strong>hanı-</strong><br><strong>meli</strong> çok güzel kokuyor.", // Yanlış hece
+                    "Bahçedeki <strong>hanım-</strong><br><strong>eli</strong> çok güzel kokuyor." // Yanlış hece
+                ],
+                word: "hanımeli" 
+            },
+            // Doğru heceleme: öğ-re-ni-yo-rum
+            {
+                correct: "Bisiklete binmeyi <strong>öğre-</strong><br><strong>niyorum</strong>.",
+                wrong: [
+                    "Bisiklete binmeyi <strong>öğreniyo-</strong><br><strong>rum</strong>.", // Yanlış hece
+                    "Bisiklete binmeyi <strong>öğr-</strong><br><strong>eniyorum</strong>."
+                ],
+                word: "öğreniyorum" 
+            },
+             // Doğru heceleme: Ata-türk (Özel isim)
+            {
+                correct: "Törende <strong>Ata-</strong><br><strong>türk</strong> büstüne çiçek koyduk.",
+                wrong: [
+                    "Törende <strong>Atat-</strong><br><strong>ürk</strong> büstüne çiçek koyduk.", 
+                    "Törende <strong>At-</strong><br><strong>atürk</strong> büstüne çiçek koyduk."
+                ],
+                word: "Atatürk" 
+            },
+             // Doğru heceleme: prog-ra-mı
+            {
+                correct: "Yeni bilgisayar <strong>progra-</strong><br><strong>mı</strong> öğrendim.",
+                wrong: [
+                    "Yeni bilgisayar <strong>prog-</strong><br><strong>ramı</strong> öğrendim.",
+                    "Yeni bilgisayar <strong>pro-</strong><br><strong>gramı</strong> öğrendim."
+                ],
+                word: "programı" 
+            },
+             // Doğru heceleme: kam-yon
+            {
+                correct: "Yoldan hızlıca bir <strong>kam-</strong><br><strong>yon</strong> geçti.",
+                wrong: [
+                    "Yoldan hızlıca bir <strong>ka-</strong><br><strong>myon</strong> geçti.", 
+                    "Yoldan hızlıca bir <strong>kamy-</strong><br><strong>on</strong> geçti."
+                ],
+                word: "kamyon" 
+            },
+            // Doğru heceleme: çi-çek-çi
+            {
+                correct: "Bu mahalledeki <strong>çiçek-</strong><br><strong>çi</strong> çok ünlüdür.",
+                wrong: [
+                    "Bu mahalledeki <strong>çiç-</strong><br><strong>ekçi</strong> çok ünlüdür.",
+                    "Bu mahalledeki <strong>çiçe-</strong><br><strong>kçi</strong> çok ünlüdür." 
+                ],
+                word: "çiçekçi" 
+            },
+             // Doğru heceleme: pen-ce-re-si
+            {
+                correct: "Odanın <strong>pen-</strong><br><strong>ceresi</strong> açıktı.",
+                wrong: [
+                    "Odanın <strong>pence-</strong><br><strong>resi</strong> açıktı.",
+                    "Odanın <strong>pencer-</strong><br><strong>esi</strong> açıktı."
+                ],
+                word: "penceresi" 
+            },
+             // Doğru heceleme: a-ğaç
+            {
+                correct: "Bu ne güzel bir <strong>a-</strong><br><strong>ğaç</strong> böyle!",
+                wrong: [
+                    "Bu ne güzel bir <strong>ağ-</strong><br><strong>aç</strong> böyle!",
+                    "Bu ne güzel bir <strong>ağa-</strong><br><strong>ç</strong> böyle!"
+                ],
+                word: "ağaç" 
+            },
+             // Doğru heceleme: mü-da-fa-a (Bitişik yazılan kelime kuralı)
+            {
+                correct: "Düşmana karşı <strong>müdafa-</strong><br><strong>a</strong> yapmak zorundayız.",
+                wrong: [
+                    "Düşmana karşı <strong>müdaf-</strong><br><strong>aa</strong> yapmak zorundayız.",
+                     "Düşmana karşı <strong>mü-</strong><br><strong>dafaa</strong> yapmak zorundayız."
+                ],
+                word: "müdafaa" 
+            },
+            // Doğru heceleme: baş-öğ-ret-men
+             {
+                correct: "Okulun <strong>başöğret-</strong><br><strong>meni</strong> çok seviliyor.",
+                wrong: [
+                    "Okulun <strong>baş-</strong><br><strong>öğretmeni</strong> çok seviliyor.",
+                    "Okulun <strong>başöğr-</strong><br><strong>etmeni</strong> çok seviliyor."
+                ],
+                word: "başöğretmeni"
+            },
+            // Doğru heceleme: e-lek-trik
+            {
+                correct: "Salondaki <strong>elekt-</strong><br><strong>rik</strong> lambası patladı.",
+                wrong: [
+                    "Salondaki <strong>elek-</strong><br><strong>trik</strong> lambası patladı.",
+                    "Salondaki <strong>e-</strong><br><strong>lektrik</strong> lambası patladı." // Tek harf başta olmaz
+                ],
+                word: "elektrik"
             }
-        }
+        ];
 
-        // 3. Geri bildirim ver
-        if (hepsiDogru) {
-            feedbackMessage.textContent = "Harika! Doğru sıralama. 🎉";
-            feedbackMessage.className = "correct";
-            
-            setTimeout(() => {
-                mevcutSeviye++;
-                if (mevcutSeviye > maxSeviye) {
-                    oyunuBitir();
-                } else {
-                    soruGetir(mevcutSeviye);
-                }
-            }, 1500);
 
-        } else {
-            feedbackMessage.textContent = "Tam olmadı, tekrar dene. 🤔";
-            feedbackMessage.className = "incorrect";
-            // Hata efekti (sallanma)
-            wordList.style.animation = 'shake 0.5s';
-            setTimeout(() => {
-                wordList.style.animation = '';
-            }, 500);
-        }
-    }
+        // --- GENEL FONKSİYONLAR ---
 
-    function oyunuBitir() {
-        gameActiveDiv.style.display = 'none';
-        winScreenDiv.style.display = 'block';
-    }
-
-    function oyunuBaslat() {
-        mevcutSeviye = 1;
-        gameActiveDiv.style.display = 'block';
-        winScreenDiv.style.display = 'none';
-        soruGetir(mevcutSeviye);
-    }
-
-    // --- 5. DRAG & DROP FONKSİYONLARI ---
-    function dragDropOlaylariniEkle() {
-        const items = wordList.querySelectorAll('.word-item');
-        
-        items.forEach(item => {
-            item.addEventListener('dragstart', () => {
-                suruklenenOge = item;
-                setTimeout(() => item.classList.add('dragging'), 0);
-            });
-            
-            item.addEventListener('dragend', () => {
-                item.classList.remove('dragging');
-                suruklenenOge = null;
-            });
-
-            item.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                items.forEach(i => i.classList.remove('over'));
-                item.classList.add('over');
-            });
-
-            item.addEventListener('dragleave', () => {
-                item.classList.remove('over');
-            });
-
-            item.addEventListener('drop', (e) => {
-                e.preventDefault();
-                item.classList.remove('over');
-                if (item === suruklenenOge) return;
-                
-                // Öğelerin pozisyonlarını al
-                const rectSuruklenen = suruklenenOge.getBoundingClientRect();
-                const rectHedef = item.getBoundingClientRect();
-
-                // Eğer sürüklenen, hedefin altındaysa, hedeften önce ekle
-                if (rectSuruklenen.top > rectHedef.top) {
-                    wordList.insertBefore(suruklenenOge, item);
-                } else {
-                // Eğer sürüklenen, hedefin üstündeyse, hedeften sonra ekle
-                    wordList.insertBefore(suruklenenOge, item.nextSibling);
-                }
-            });
+        document.addEventListener('DOMContentLoaded', () => {
+            alphabetSort.loadQuestion();
+            syllabify.loadQuestion();
+            lineBreak.loadQuestion();
         });
-    }
+        
+        function showActivity(activityId) {
+            document.querySelectorAll('.activity-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(activityId).classList.add('active');
+            
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="showActivity('${activityId}')"]`).classList.add('active');
+            
+            // Sekme değiştirince seviyeyi koru ama soruyu yenile
+            if (activityId === 'alfabe') alphabetSort.loadQuestion();
+            if (activityId === 'heceleme') syllabify.loadQuestion();
+            if (activityId === 'satirsonu') lineBreak.loadQuestion();
+        }
+        
+        function shuffleArray(array) {
+            let newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
 
-    // --- 6. OLAY DİNLEYİCİLERİ ---
-    checkButton.addEventListener('click', kontolEt);
-    restartButton.addEventListener('click', oyunuBaslat);
+        const trCollator = new Intl.Collator('tr', { sensitivity: 'base' });
 
-    // --- OYUNU BAŞLAT ---
-    oyunuBaslat();
-});
-
-</script>
-
-<style>
-    @keyframes shake {
-        0% { transform: translateX(0); }
-        25% { transform: translateX(-5px); }
-        50% { transform: translateX(5px); }
-        75% { transform: translateX(-5px); }
-        100% { transform: translateX(0); }
-    }
-</style>
-
-</body>
-</html>
+        // --- 1. ETKİNLİK: ALFABETİK SIRALAMA (YENİLENDİ) ---
+        const alphabetSort = {
+            correctOrder: [],
+            currentLevel: 1, // Artık seviye burada tutulacak
+            sortableInstance: null,
+            
+            loadQuestion: function() {
+                let wordGroup = [];
+                let levelText = "";
+                
+                try {
+                    switch (this.currentLevel) {
+                        case 1:
+                            wordGroup = shuffleArray(sortWordList.level1).slice(0, 4);
+                            levelText = "Seviye 1: İlk harfler farklı";
+                            break;
+                        case 2:
+                             // level2'den rastgele bir grup seç
+                            wordGroup = shuffleArray([...sortWordList.level2[Math.floor(Math.random() * sortWordList.level2.length)]]);
+                            levelText = "Seviye 2: İlk harf aynı";
+                            break;
+                        case 3:
+                            wordGroup = shuffleArray([...sortWordList.level3[Math.floor(Math.random() * sortWordList.level3.length)]]);
+                            levelText = "Seviye 3: İlk 2 harf aynı";
+                            break;
+                        case 4:
+                            wordGroup = shuffleArray([...sortWordList.level4[Math
