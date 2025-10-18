@@ -1,1 +1,475 @@
-w
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birleşik Sayı Platformu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- TEMEL SAYFA VE SEKME STİLLERİ --- */
+        :root {
+            --primary: #5a67d8;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', sans-serif; background-color: var(--bg-color); padding: 1rem; }
+
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 1.5rem;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .tab-navigation {
+            display: flex;
+            background-color: #edf2f7;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 1rem;
+            font-family: 'Baloo 2', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            color: #718096;
+            border-bottom: 4px solid transparent;
+        }
+        .tab-btn:hover {
+            background-color: #e2e8f0;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .content-pane {
+            display: none;
+            padding: 2rem;
+        }
+        .content-pane.active {
+            display: block;
+        }
+
+        /* --- 1. UYGULAMA: YUVARLAMA UZMANI STİLLERİ --- */
+        #app1 .container {
+             width: 100%;
+             max-width: 700px;
+             margin: 0 auto;
+             background: var(--card-bg);
+             border-radius: 1.5rem;
+             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+             padding: 2rem;
+             display: flex;
+             flex-direction: column;
+             gap: 1.5rem;
+             text-align: center;
+        }
+        #app1 header h1 {
+             font-family: 'Baloo 2', sans-serif;
+             color: #5a67d8; /* primary */
+             font-weight: 800;
+             font-size: 2rem;
+        }
+        #app1 .settings-section, #app1 .digit-controls, #app1 .number-display { margin-bottom: 0.5rem; }
+        #app1 .settings-section { background: #fafbff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.2rem; }
+        #app1 .settings-section h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #434190; } /* primary-dark */
+        #app1 .settings-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        @media (min-width: 600px) {
+            #app1 .settings-grid { grid-template-columns: 1fr 1fr; }
+            #app1 .manual-input-container { grid-column: 1 / -1; }
+        }
+        #app1 .manual-input-group { display: flex; gap: 0.5rem; }
+        #app1 #manual-input { width: 100%; border: 2px solid #e2e8f0; border-radius: 0.5rem; padding: 0.6rem; font-size: 1.2rem; text-align: center; font-family: 'Baloo 2', sans-serif; font-weight: 700; transition: border-color 0.2s; }
+        #app1 #manual-input:focus { outline: none; border-color: #5a67d8; }
+        #app1 .toggle-switch { display: flex; justify-content: space-between; align-items: center; background: #edf2f7; padding: 0.5rem 1rem; border-radius: 0.75rem; height: 100%; }
+        #app1 .toggle-switch label { font-weight: 700; cursor: pointer; }
+        #app1 .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        #app1 .switch input { opacity: 0; width: 0; height: 0; }
+        #app1 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+        #app1 .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        #app1 input:checked + .slider { background-color: #38a169; }
+        #app1 input:checked + .slider:before { transform: translateX(22px); }
+        #app1 .digit-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+        #app1 .btn { border: none; border-radius: 0.75rem; padding: 0.6rem 1rem; font-family: 'Baloo 2', sans-serif; font-weight: 700; cursor: pointer; transition: all 0.2s ease-out; background-color: #e2e8f0; color: #2d3748; }
+        #app1 .btn:hover { transform: translateY(-3px); }
+        #app1 .btn.active { background-color: #5a67d8; color: white; box-shadow: 0 4px 15px rgba(90, 103, 216, 0.4); }
+        #app1 #new-number-btn { width: 100%; background: linear-gradient(45deg, #f6ad55, #fbd38d); color: white; font-size: 1.2rem; padding: 0.8rem; box-shadow: 0 4px 0 0 #c08729; }
+        #app1 #new-number-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 0 #c08729; }
+        #app1 .number-display { background-color: #f7f9fc; border-radius: 1rem; padding: 1rem; }
+        #app1 #current-number { font-size: clamp(3rem, 15vw, 4.5rem); font-weight: 800; color: #2d3748; letter-spacing: 2px; }
+        #app1 .green-digit { color: #38a169; }
+        #app1 .red-digit { color: #e53e3e; }
+        #app1 .results-container { transition: all 0.4s ease-in-out; max-height: 1000px; opacity: 1; overflow: hidden; display: flex; flex-direction: column; gap: 2rem; margin-top: 1rem; }
+        #app1 .results-container.hidden { max-height: 0; opacity: 0; margin-top: -1.5rem; pointer-events: none; }
+        #app1 .rounding-visualizer { background: #fafbff; border-radius: 1rem; padding: 1.5rem 1rem; border: 1px solid #e2e8f0; }
+        #app1 .visualizer-header { font-weight: 700; font-size: 1.1rem; margin-bottom: 1.5rem; }
+        #app1 .visualizer-body { display: flex; align-items: center; gap: 1rem; }
+        #app1 .endpoint-value { font-family: 'Baloo 2', sans-serif; font-size: 1.5rem; font-weight: 800; padding: 0.5rem; border-radius: 8px; background-color: #edf2f7; min-width: 70px; }
+        #app1 .road-track { flex-grow: 1; height: 12px; background-color: #edf2f7; border-radius: 12px; position: relative; border-top: 2px solid #dbe1e8; border-bottom: 2px solid #dbe1e8; }
+        #app1 .road-marker { position: absolute; top: 50%; transform: translate(-50%, -50%); width: auto; min-width: 60px; padding: 8px 12px; background-color: #5a67d8; color: white; border-radius: 8px; font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        #app1 .road-marker::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid #5a67d8; }
+        #app1 .visualizer-footer { margin-top: 1.5rem; font-weight: 600; font-size: 1rem; }
+        #app1 .visualizer-footer strong { font-family: 'Baloo 2', sans-serif; font-size: 1.2rem; padding: 2px 8px; border-radius: 6px; color: white; }
+        #app1 #tens-visualizer .visualizer-header, #app1 #tens-visualizer .endpoint-value { color: #38a169; }
+        #app1 #tens-visualizer .visualizer-footer strong { background-color: #38a169; }
+        #app1 #hundreds-visualizer .visualizer-header, #app1 #hundreds-visualizer .endpoint-value { color: #e53e3e; }
+        #app1 #hundreds-visualizer .visualizer-footer strong { background-color: #e53e3e; }
+
+        /* --- 2. UYGULAMA: SAYI KAŞİFİ STİLLERİ --- */
+        #app2 .container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
+        #app2 h1, #app2 h2, #app2 h3 { font-family: 'Baloo 2', sans-serif; text-align: center; }
+        #app2 h1 { font-size: 2.5rem; color: #4f46e5; }
+        #app2 h2 { font-size: 1.8rem; color: #4f46e5; border-top: 2px dashed #cbd5e1; padding-top: 2rem; }
+        #app2 h3 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+        #app2 .learning-module { background-color: #ffffff; border-radius: 1.5rem; padding: 2rem; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        #app2 .explorer-controls { text-align: center; margin-bottom: 1.5rem; }
+        #app2 #number-input { font-family: 'Baloo 2', sans-serif; font-size: 4rem; font-weight: 800; color: #f97316; width: 100%; border: none; text-align: center; background-color: transparent; }
+        #app2 #number-input:focus { outline: none; }
+        #app2 input::-webkit-outer-spin-button, #app2 input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        #app2 input[type=number] { -moz-appearance: textfield; }
+        #app2 .mode-selector { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; }
+        #app2 .mode-btn { font-family: 'Baloo 2', sans-serif; font-size: 1.2rem; padding: 0.7rem 1.5rem; border-radius: 0.75rem; border: 2px solid #cbd5e1; background-color: transparent; color: #334155; cursor: pointer; transition: all 0.2s ease; }
+        #app2 .mode-btn.active { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+        #app2 #random-number-btn { font-family: 'Baloo 2', sans-serif; font-size: 1.2rem; padding: 0.7rem 1.5rem; border-radius: 0.75rem; border: none; background-color: #f97316; color: white; cursor: pointer; transition: all 0.2s ease; margin-top: 1.5rem; }
+        #app2 #random-number-btn:hover { background-color: #fb923c; }
+        #app2 .path-container { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; }
+        #app2 .path-endpoint { font-family: 'Baloo 2', sans-serif; font-size: 2rem; color: #4f46e5; }
+        #app2 .path { flex-grow: 1; height: 20px; background: linear-gradient(to right, #a5b4fc, #e0e7ff); border-radius: 20px; position: relative; border: 3px solid white; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        #app2 .explorer-char { position: absolute; top: -25px; font-size: 2.5rem; transform: translateX(-50%); transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        #app2 .path-midpoint { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); font-weight: 700; color: #4f46e5; margin-top: 5px; }
+        #app2 .path-midpoint::before { content: '▲'; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); }
+        #app2 .decision-container, #app2 .adventure-container { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        @media (min-width: 768px) { #app2 .decision-container, #app2 .adventure-container { grid-template-columns: 1fr 1fr; } }
+        #app2 .decision-hill-content { text-align: center; border: 2px solid #cbd5e1; border-radius: 1rem; padding: 1.5rem; }
+        #app2 .decision-hill-content--tens { border-color: #059669; }
+        #app2 .decision-hill-content--hundreds { border-color: #db2777; }
+        #app2 .sample-number { font-size: 3rem; margin: 1rem 0; font-weight: 700; }
+        #app2 .decision-digit { font-family: 'Baloo 2', sans-serif; font-size: 4rem; padding: 0 0.5rem; border-radius: 1rem; transition: all 0.3s ease; }
+        #app2 .rule-explanation { font-size: 1.1rem; font-weight: 600; margin: 1rem 0; min-height: 50px; }
+        #app2 .new-example-btn { font-family: 'Baloo 2', sans-serif; color: white; border: none; font-size: 1rem; padding: 0.8rem 1.5rem; border-radius: 0.75rem; cursor: pointer; transition: background-color 0.2s; }
+        #app2 .new-example-btn--tens { background-color: #059669; }
+        #app2 .new-example-btn--hundreds { background-color: #db2777; }
+        #app2 .adventure-content { text-align: center; background-color: #fafbff; border-radius: 1rem; padding: 1.5rem; }
+        #app2 .adventure-question { font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; }
+        #app2 .adventure-number { font-family: 'Baloo 2', color: #f97316; font-size: 2.5rem; }
+        #app2 .adventure-choices { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+        #app2 .choice-btn { font-family: 'Baloo 2', sans-serif; font-size: 1.8rem; color: white; border: none; padding: 1rem 1.5rem; border-radius: 1rem; cursor: pointer; transition: all 0.2s ease; }
+        #app2 .choice-btn--tens { background-color: #059669; box-shadow: 0 5px 0 0 #047857; }
+        #app2 .choice-btn--tens:active { transform: translateY(3px); box-shadow: 0 2px 0 0 #047857; }
+        #app2 .choice-btn--hundreds { background-color: #db2777; box-shadow: 0 5px 0 0 #a31a5a; }
+        #app2 .choice-btn--hundreds:active { transform: translateY(3px); box-shadow: 0 2px 0 0 #a31a5a; }
+        #app2 .feedback { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; height: 30px; }
+        #app2 .correct { background-color: #16a34a !important; box-shadow: none !important; }
+        #app2 .incorrect { background-color: #dc2626 !important; box-shadow: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-target="app2">🧭 Sayı Kaşifi</button>
+            <button class="tab-btn" data-target="app1">🔢 Yuvarlama Uzmanı</button>
+        </nav>
+
+        <div id="app1" class="content-pane">
+            <div class="container">
+                <header><h1>🔢 Yuvarlama Uzmanı</h1></header>
+                <section class="settings-section">
+                    <h2>Araçlar ve Ayarlar</h2>
+                    <div class="settings-grid">
+                        <div class="manual-input-container">
+                             <div class="manual-input-group">
+                                <input type="number" id="manual-input" placeholder="Sayıyı elle girin...">
+                                <button id="submit-manual" class="btn active">Ayarla</button>
+                            </div>
+                        </div>
+                        <div class="toggle-switch">
+                            <label for="results-toggle">Sonuçları Göster</label>
+                            <label class="switch">
+                                <input type="checkbox" id="results-toggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                         <div class="toggle-switch">
+                            <label for="color-toggle">Renklendirme</label>
+                            <label class="switch">
+                                <input type="checkbox" id="color-toggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+                <div class="digit-controls">
+                    <button class="btn digit-btn" data-digits="3">3 Basamaklı</button>
+                    <button class="btn digit-btn active" data-digits="4">4 Basamaklı</button>
+                    <button class="btn digit-btn" data-digits="5">5 Basamaklı</button>
+                    <button class="btn digit-btn" data-digits="6">6 Basamaklı</button>
+                </div>
+                <div class="number-display">
+                    <span id="current-number">0</span>
+                </div>
+                <button class="btn" id="new-number-btn">🎲 Rastgele Sayı Üret</button>
+                <div class="results-container" id="results-container">
+                    <div class="rounding-visualizer" id="tens-visualizer">
+                        <div class="visualizer-header">Onluğa Yuvarlama Yolu</div>
+                        <div class="visualizer-body">
+                            <div class="endpoint-value" id="prev-ten">0</div>
+                            <div class="road-track">
+                                <div class="road-marker" id="tens-marker" style="left: 0%;">0</div>
+                            </div>
+                            <div class="endpoint-value" id="next-ten">0</div>
+                        </div>
+                        <div class="visualizer-footer">En Yakın Onluk: <strong id="nearest-ten">0</strong></div>
+                    </div>
+                    <div class="rounding-visualizer" id="hundreds-visualizer">
+                        <div class="visualizer-header">Yüzlüğe Yuvarlama Yolu</div>
+                        <div class="visualizer-body">
+                            <div class="endpoint-value" id="prev-hundred">0</div>
+                            <div class="road-track">
+                                <div class="road-marker" id="hundreds-marker" style="left: 0%;">0</div>
+                            </div>
+                            <div class="endpoint-value" id="next-hundred">0</div>
+                        </div>
+                        <div class="visualizer-footer">En Yakın Yüzlük: <strong id="nearest-hundred">0</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="app2" class="content-pane active">
+            <div class="container">
+                <h1>🧭 Sayı Kaşifi</h1>
+                <section class="learning-module">
+                    <h2>1. Adım: Mıknatıslı Sayı Yolu</h2>
+                    <div class="explorer-controls">
+                        <p>Bir sayı yazın veya rastgele bir sayı oluşturun!</p>
+                        <input type="number" value="168" id="number-input-kasifi">
+                        <div class="mode-selector">
+                            <button class="mode-btn" data-mode="tens">Onluk Yolu</button>
+                            <button class="mode-btn active" data-mode="hundreds">Yüzlük Yolu</button>
+                        </div>
+                        <button id="random-number-btn-kasifi">🎲 Rastgele Sayı</button>
+                    </div>
+                    <div class="path-container">
+                        <div class="path-endpoint" id="path-start">100</div>
+                        <div class="path">
+                            <div class="explorer-char" id="explorer">🧭</div>
+                            <div class="path-midpoint" id="path-midpoint">150</div>
+                        </div>
+                        <div class="path-endpoint" id="path-end">200</div>
+                    </div>
+                </section>
+                <section class="learning-module">
+                    <h2>2. Adım: Karar Tepesi - Kuralı Anla!</h2>
+                    <div class="decision-container">
+                        <div class="decision-hill-content decision-hill-content--tens">
+                            <h3 style="color: var(--tens-color);">Onluğa Yuvarlama</h3>
+                            <p>Kararı sondaki rakam verir!</p>
+                            <div class="sample-number" id="tens-sample-number"></div>
+                            <div class="rule-explanation" id="tens-rule-explanation"></div>
+                            <button class="new-example-btn new-example-btn--tens" id="tens-new-example-btn">Yeni Örnek</button>
+                        </div>
+                        <div class="decision-hill-content decision-hill-content--hundreds">
+                            <h3 style="color: var(--hundreds-color);">Yüzlüğe Yuvarlama</h3>
+                            <p>Kararı ortadaki rakam verir!</p>
+                            <div class="sample-number" id="hundreds-sample-number"></div>
+                            <div class="rule-explanation" id="hundreds-rule-explanation"></div>
+                            <button class="new-example-btn new-example-btn--hundreds" id="hundreds-new-example-btn">Yeni Örnek</button>
+                        </div>
+                    </div>
+                </section>
+                <section class="learning-module">
+                    <h2>3. Adım: Yuvarlama Macerası - Bilgini Test Et!</h2>
+                     <div class="adventure-container">
+                        <div class="adventure-content">
+                            <h3 style="color: var(--tens-color);">Onluk Macerası</h3>
+                            <p class="adventure-question">Sayı: <span class="adventure-number" id="tens-adventure-number"></span><br>Hangi onluğa daha yakın?</p>
+                            <div class="adventure-choices" id="tens-adventure-choices"></div>
+                            <div class="feedback" id="tens-feedback"></div>
+                        </div>
+                        <div class="adventure-content">
+                            <h3 style="color: var(--hundreds-color);">Yüzlük Macerası</h3>
+                            <p class="adventure-question">Sayı: <span class="adventure-number" id="hundreds-adventure-number"></span><br>Hangi yüzlüğe daha yakın?</p>
+                            <div class="adventure-choices" id="hundreds-adventure-choices"></div>
+                            <div class="feedback" id="hundreds-feedback"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+<script>
+// Her iki uygulamanın kodları, değişkenlerin çakışmaması için kendi fonksiyonları içine alındı.
+function initYuvarlamaUzmani() {
+    const app = document.querySelector('#app1');
+    if (!app) return;
+
+    // --- STATE ---
+    let currentNumber = 0;
+    let currentDigits = 4;
+    let isColoringEnabled = true;
+
+    // --- DOM Elements ---
+    const elements = {
+        resultsContainer: app.querySelector('#results-container'),
+        numberDisplay: app.querySelector('#current-number'),
+        newNumberBtn: app.querySelector('#new-number-btn'),
+        digitButtons: app.querySelectorAll('.digit-btn'),
+        manualInput: app.querySelector('#manual-input'),
+        submitManualBtn: app.querySelector('#submit-manual'),
+        colorToggle: app.querySelector('#color-toggle'),
+        resultsToggle: app.querySelector('#results-toggle'),
+        prevTen: app.querySelector('#prev-ten'),
+        nextTen: app.querySelector('#next-ten'),
+        tensMarker: app.querySelector('#tens-marker'),
+        nearestTen: app.querySelector('#nearest-ten'),
+        prevHundred: app.querySelector('#prev-hundred'),
+        nextHundred: app.querySelector('#next-hundred'),
+        hundredsMarker: app.querySelector('#hundreds-marker'),
+        nearestHundred: app.querySelector('#nearest-hundred'),
+    };
+
+    const generateRandom = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const formatNumber = (num) => num.toLocaleString('tr-TR');
+    const getColoredNumberHTML = (num) => {
+        if (!isColoringEnabled || num < 10) return formatNumber(num);
+        const numStr = num.toString(); let html = '';
+        for (let i = 0; i < numStr.length; i++) {
+            let char = numStr[i]; let className = '';
+            if (i === numStr.length - 1) { className = parseInt(char) < 5 ? 'green-digit' : 'red-digit'; }
+            else if (i === numStr.length - 2) { className = parseInt(char) < 5 ? 'green-digit' : 'red-digit'; }
+            html += className ? `<span class="${className}">${char}</span>` : char;
+        } return html;
+    };
+
+    function updateUI() {
+        elements.numberDisplay.innerHTML = getColoredNumberHTML(currentNumber);
+        const prevTen = Math.floor(currentNumber / 10) * 10;
+        const nextTen = prevTen + 10;
+        const nearestTen = Math.round(currentNumber / 10) * 10;
+        const tensPosition = (currentNumber % 10) * 10;
+        elements.prevTen.textContent = formatNumber(prevTen);
+        elements.nextTen.textContent = formatNumber(nextTen);
+        elements.nearestTen.textContent = formatNumber(nearestTen);
+        elements.tensMarker.textContent = formatNumber(currentNumber);
+        elements.tensMarker.style.left = `${tensPosition}%`;
+        const prevHundred = Math.floor(currentNumber / 100) * 100;
+        const nextHundred = prevHundred + 100;
+        const nearestHundred = Math.round(currentNumber / 100) * 100;
+        const hundredsPosition = currentNumber % 100;
+        elements.prevHundred.textContent = formatNumber(prevHundred);
+        elements.nextHundred.textContent = formatNumber(nextHundred);
+        elements.nearestHundred.textContent = formatNumber(nearestHundred);
+        elements.hundredsMarker.textContent = formatNumber(currentNumber);
+        elements.hundredsMarker.style.left = `${hundredsPosition}%`;
+    }
+
+    function generateNewNumber() {
+        const min = Math.pow(10, currentDigits - 1);
+        const max = Math.pow(10, currentDigits) - 1;
+        currentNumber = generateRandom(min, max);
+        elements.manualInput.value = '';
+        updateUI();
+    }
+
+    elements.digitButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            elements.digitButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            currentDigits = parseInt(button.dataset.digits);
+            generateNewNumber();
+        });
+    });
+
+    elements.newNumberBtn.addEventListener('click', generateNewNumber);
+    elements.submitManualBtn.addEventListener('click', () => {
+        const value = parseInt(elements.manualInput.value);
+        if (!isNaN(value) && value >= 0) { currentNumber = value; updateUI(); }
+    });
+    elements.manualInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') elements.submitManualBtn.click(); });
+    elements.colorToggle.addEventListener('change', (e) => { isColoringEnabled = e.target.checked; updateUI(); });
+    elements.resultsToggle.addEventListener('change', (e) => { elements.resultsContainer.classList.toggle('hidden', !e.target.checked); });
+    
+    generateNewNumber();
+}
+
+function initSayiKasifi() {
+    const app = document.querySelector('#app2');
+    if (!app) return;
+
+    let currentNumber = 168;
+    let currentMode = 'hundreds';
+    const numberInput = app.querySelector('#number-input-kasifi');
+    const explorer = app.querySelector('#explorer');
+    const pathStart = app.querySelector('#path-start');
+    const pathEnd = app.querySelector('#path-end');
+    const pathMidpoint = app.querySelector('#path-midpoint');
+    const modeButtons = app.querySelectorAll('.mode-btn');
+    const randomBtn = app.querySelector('#random-number-btn-kasifi');
+    function getMagneticPosition(percent) { const x = percent / 100; const magneticPercent = x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; return magneticPercent * 100; }
+    function updateExplorer() {
+        currentNumber = parseInt(numberInput.value) || 0;
+        let start, end, mid, linearPercent;
+        if (currentMode === 'tens') { start = Math.floor(currentNumber / 10) * 10; end = start + 10; mid = start + 5; linearPercent = (end === start) ? 0 : (currentNumber - start) / (end - start) * 100; }
+        else { start = Math.floor(currentNumber / 100) * 100; end = start + 100; mid = start + 50; linearPercent = (end === start) ? 0 : (currentNumber - start) / (end - start) * 100; }
+        pathStart.textContent = start; pathEnd.textContent = end; pathMidpoint.textContent = mid;
+        const magneticPosition = getMagneticPosition(linearPercent); explorer.style.left = `${magneticPosition}%`;
+    }
+    numberInput.addEventListener('input', updateExplorer);
+    modeButtons.forEach(button => { button.addEventListener('click', () => { modeButtons.forEach(btn => btn.classList.remove('active')); button.classList.add('active'); currentMode = button.dataset.mode; updateExplorer(); }); });
+    randomBtn.addEventListener('click', () => { const randomNumber = Math.floor(Math.random() * (999 - 11 + 1)) + 11; numberInput.value = randomNumber; updateExplorer(); });
+    
+    const tensSampleEl = app.querySelector('#tens-sample-number'), tensRuleEl = app.querySelector('#tens-rule-explanation'), tensNewBtn = app.querySelector('#tens-new-example-btn');
+    function generateTensExample() { const num = Math.floor(Math.random() * 89) + 11; const numStr = num.toString(); const decisionDigit = parseInt(numStr[1]); tensSampleEl.innerHTML = `${numStr[0]}<span class="decision-digit">${numStr[1]}</span>`; const decisionSpan = tensSampleEl.querySelector('.decision-digit'); if (decisionDigit < 5) { decisionSpan.style.backgroundColor = 'var(--green)'; decisionSpan.style.color = 'white'; tensRuleEl.textContent = `${decisionDigit}, 5'ten küçük olduğu için aşağı yuvarlanır!`; } else { decisionSpan.style.backgroundColor = 'var(--red)'; decisionSpan.style.color = 'white'; tensRuleEl.textContent = `${decisionDigit}, 5'ten büyük veya eşit olduğu için yukarı yuvarlanır!`; } }
+    tensNewBtn.addEventListener('click', generateTensExample);
+
+    const hundredsSampleEl = app.querySelector('#hundreds-sample-number'), hundredsRuleEl = app.querySelector('#hundreds-rule-explanation'), hundredsNewBtn = app.querySelector('#hundreds-new-example-btn');
+    function generateHundredsExample() { const num = Math.floor(Math.random() * 899) + 101; const numStr = num.toString(); const decisionDigit = parseInt(numStr[1]); hundredsSampleEl.innerHTML = `${numStr[0]}<span class="decision-digit">${numStr[1]}</span>${numStr[2]}`; const decisionSpan = hundredsSampleEl.querySelector('.decision-digit'); if (decisionDigit < 5) { decisionSpan.style.backgroundColor = 'var(--green)'; decisionSpan.style.color = 'white'; hundredsRuleEl.textContent = `${decisionDigit}, 5'ten küçük olduğu için aşağı yuvarlanır!`; } else { decisionSpan.style.backgroundColor = 'var(--red)'; decisionSpan.style.color = 'white'; hundredsRuleEl.textContent = `${decisionDigit}, 5'ten büyük veya eşit olduğu için yukarı yuvarlanır!`; } }
+    hundredsNewBtn.addEventListener('click', generateHundredsExample);
+
+    function AdventureGame(type, numberEl, choicesEl, feedbackEl) { this.type = type; this.numberEl = numberEl; this.choicesEl = choicesEl; this.feedbackEl = feedbackEl; this.correctAnswer = 0; this.start = () => { let num, prev, next; if (this.type === 'tens') { num = Math.floor(Math.random() * 89) + 11; prev = Math.floor(num / 10) * 10; next = prev + 10; this.correctAnswer = Math.round(num / 10) * 10; } else { num = Math.floor(Math.random() * 899) + 101; prev = Math.floor(num / 100) * 100; next = prev + 100; this.correctAnswer = Math.round(num / 100) * 100; } this.numberEl.textContent = num; this.choicesEl.innerHTML = `<button class="choice-btn choice-btn--${this.type}" data-value="${prev}">${prev}</button><button class="choice-btn choice-btn--${this.type}" data-value="${next}">${next}</button>`; this.feedbackEl.textContent = ''; this.addListeners(); }; this.handleChoice = (e) => { const chosenValue = parseInt(e.target.dataset.value); this.choicesEl.querySelectorAll('.choice-btn').forEach(btn => btn.disabled = true); if (chosenValue === this.correctAnswer) { e.target.classList.add('correct'); this.feedbackEl.textContent = 'Harika! 🎉'; this.feedbackEl.style.color = 'var(--green)'; } else { e.target.classList.add('incorrect'); this.feedbackEl.textContent = 'Tekrar Dene! 🤔'; this.feedbackEl.style.color = 'var(--red)'; const correctBtn = this.choicesEl.querySelector(`[data-value="${this.correctAnswer}"]`); if (correctBtn) correctBtn.classList.add('correct'); } setTimeout(this.start, 2000); }; this.addListeners = () => { this.choicesEl.querySelectorAll('.choice-btn').forEach(btn => { btn.addEventListener('click', this.handleChoice); }); }; }
+    const tensAdventure = new AdventureGame('tens', app.querySelector('#tens-adventure-number'), app.querySelector('#tens-adventure-choices'), app.querySelector('#tens-feedback'));
+    const hundredsAdventure = new AdventureGame('hundreds', app.querySelector('#hundreds-adventure-number'), app.querySelector('#hundreds-adventure-choices'), app.querySelector('#hundreds-feedback'));
+    
+    updateExplorer(); generateTensExample(); generateHundredsExample(); tensAdventure.start(); hundredsAdventure.start();
+}
+
+// --- SEKME KONTROLÜ VE UYGULAMALARI BAŞLATMA ---
+document.addEventListener('DOMContentLoaded', () => {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const contentPanes = document.querySelectorAll('.content-pane');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            contentPanes.forEach(pane => {
+                if (pane.id === button.dataset.target) {
+                    pane.classList.add('active');
+                } else {
+                    pane.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // Her iki uygulamayı da başlat
+    initYuvarlamaUzmani();
+    initSayiKasifi();
+});
+</script>
+</body>
+</html>
