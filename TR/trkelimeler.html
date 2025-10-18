@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
+        /* Bu sayfaya özel stiller, ana temanıza uyumlu */
         :root {
             --memory-card-bg: #e6dccb;
             --memory-card-matched-bg: #c8e6c9;
@@ -79,13 +80,6 @@
             cursor: pointer;
             position: relative;
         }
-        .card .card-face {
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
-        }
-        .card.is-flipped .card-face-inner {
-            transform: rotateY(180deg);
-        }
         .card-face-inner {
             position: relative;
             width: 100%;
@@ -93,6 +87,9 @@
             text-align: center;
             transform-style: preserve-3d;
             transition: transform 0.6s;
+        }
+        .card.is-flipped .card-face-inner {
+            transform: rotateY(180deg);
         }
         .card-front, .card-back {
             position: absolute;
@@ -121,7 +118,8 @@
             color: var(--text-primary-color);
             transform: rotateY(180deg);
         }
-        
+        .card-back span { display: block; }
+
         /* Quiz Bölümleri */
         .quiz-card {
             background-color: var(--papyrus-bg-color-dark);
@@ -132,15 +130,63 @@
             margin: 0 auto 20px auto;
             max-width: 600px;
         }
-        .question { font-size: 1.2rem; margin-bottom: 20px; }
+        .question { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.5; }
+        
+        #fill-blanks input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--papyrus-bg-color-light);
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-family: 'Crimson Pro', serif;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        
+        #sentence-quiz .options { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        #sentence-quiz .option-btn {
+            width: 100%;
+            background-color: var(--papyrus-bg-color-dark);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #sentence-quiz .option-btn:hover { background-color: var(--accent-color); color: white; }
+        #sentence-quiz .option-btn.correct { background-color: #66bb6a; color: white; border-color: #66bb6a; }
+        #sentence-quiz .option-btn.wrong { background-color: #ef5350; color: white; border-color: #ef5350; }
+        #sentence-quiz .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
         .quiz-buttons { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
-        .quiz-btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+        .quiz-btn { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+            font-family: 'Crimson Pro', serif; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: background 0.2s; 
+        }
+        .check-btn { background-color: var(--accent-color); color: white; }
+        .next-btn { background-color: var(--text-secondary-color); color: white; }
         .feedback { font-weight: 700; margin-top: 15px; min-height: 24px; }
         .correct { color: #2e7d32; }
         .wrong { color: #c62828; }
         
         /* Akılda Tut Oyunu Stilleri */
         #memory-setup { margin-bottom: 30px; }
+        #memory-setup h2 { font-family: 'Cinzel Decorative', cursive; }
         #memory-status { margin-bottom: 20px; font-size: 1.2rem; font-weight: 700; min-height: 30px;}
         #memory-grid {
             display: grid;
@@ -157,7 +203,7 @@
         }
         .memory-card .card-face-inner { transform: rotateY(0); }
         .memory-card.is-flipped .card-face-inner { transform: rotateY(180deg); }
-        .memory-card.is-matched .card-face-inner { transform: rotateY(0); } /* Eşleşince açık kal */
+        .memory-card.is-matched .card-face-inner { transform: rotateY(0); }
         .memory-card.is-matched { cursor: default; }
 
         .memory-card .card-front {
@@ -167,10 +213,14 @@
         }
         .memory-card .card-back {
              background: var(--papyrus-bg-color-light);
+             font-size: 1.1rem;
+             font-weight: 700;
         }
-        .memory-card.is-matched .card-back {
+        .memory-card.is-matched .card-back,
+        .memory-card.is-matched .card-front {
             background-color: var(--memory-card-matched-bg);
             border: 2px solid var(--accent-color);
+            color: #2e7d32;
         }
 
         /* MOBİL UYUMLULUK */
@@ -179,15 +229,20 @@
             header p { font-size: 1rem; }
             .tab-button { padding: 10px 15px; font-size: 0.9rem; }
             .card { height: 100px; }
-            .card-face { font-size: 1rem; }
+            .card-front, .card-back { font-size: 1rem; }
+            
             #sentence-quiz .options { grid-template-columns: 1fr; }
+            
             #memory-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
             .memory-card { height: 120px; }
+            .memory-card .card-back { font-size: 0.9rem; }
         }
     </style>
 </head>
 <body>
+
     <div id="menu-container"></div>
+
     <div class="container">
         <header>
             <h1><a href="https://bilgihazinesi.github.io/">Türkçesi Varken!</a></h1>
@@ -202,22 +257,49 @@
         </div>
 
         <main>
-            <div id="learn" class="activity-content active"> <div id="learn-cards"></div> </div>
-            <div id="fill" class="activity-content"> </div>
-            <div id="sentence" class="activity-content"> </div>
+            <div id="learn" class="activity-content active">
+                <div id="learn-cards"></div>
+            </div>
+
+            <div id="fill" class="activity-content">
+                <div id="fill-blanks">
+                    <div class="quiz-card">
+                        <p class="question" id="fill-question"></p>
+                        <input type="text" id="fill-answer" placeholder="Türkçesini yazın...">
+                        <p class="feedback" id="fill-feedback"></p>
+                         <div class="quiz-buttons">
+                            <button class="quiz-btn check-btn" onclick="fillBlanks.checkAnswer()">Kontrol Et</button>
+                            <button class="quiz-btn next-btn" onclick="fillBlanks.loadQuestion()">Sonraki</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="sentence" class="activity-content">
+                <div id="sentence-quiz">
+                     <div class="quiz-card">
+                        <p class="question" id="sentence-question"></p>
+                        <div class="options" id="sentence-options"></div>
+                        <p class="feedback" id="sentence-feedback"></p>
+                        <div class="quiz-buttons">
+                           <button class="quiz-btn next-btn" onclick="sentenceQuiz.loadQuestion()">Sonraki Soru</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div id="memory" class="activity-content">
                 <div id="memory-setup">
                     <h2>Oyun Modunu Seç</h2>
-                    <button class="quiz-btn" style="background-color: var(--accent-color); color:white;" onclick="memoryGame.init('single')">Tek Kişilik</button>
-                    <button class="quiz-btn" style="background-color: var(--accent-color); color:white;" onclick="memoryGame.init('twoPlayer')">İki Kişilik</button>
+                    <button class="quiz-btn check-btn" onclick="memoryGame.init('single')">Tek Kişilik</button>
+                    <button class="quiz-btn check-btn" onclick="memoryGame.init('twoPlayer')">İki Kişilik</button>
                 </div>
 
                 <div id="memory-game-area" style="display: none;">
                     <div id="memory-status"></div>
                     <div id="memory-grid"></div>
                     <div class="quiz-buttons">
-                        <button class="quiz-btn" style="background-color: var(--text-secondary-color); color:white;" onclick="memoryGame.reset()">Yeni Oyun</button>
+                        <button class="quiz-btn next-btn" onclick="memoryGame.reset()">Yeni Oyun</button>
                     </div>
                 </div>
             </div>
@@ -225,40 +307,50 @@
     </div>
 
     <script>
-        // ... (wordsData ve diğer scriptler) ...
+        // Sitedeki tüm kelimelerin tam listesi
         const wordsData = [
-            // ... (önceki tüm kelimeler burada) ...
-            { "yabanci": "Absürt", "turkce": ["Saçma"], "cumle": "Anlattığı olaylar o kadar __ geldi ki kimse inanmadı." },
-            { "yabanci": "Laptop", "turkce": ["Dizüstü"], "cumle": "Ödevimi yapmak için __'ımı yanıma aldım." },
-            { "yabanci": "Jenerasyon", "turkce": ["Kuşak"], "cumle": "Yeni __ teknolojiye çok daha hâkim." },
+            { "yabanci": "Absürt", "turkce": ["Saçma", "Anlamsız"], "cumle": "Anlattığı olaylar o kadar __ geldi ki kimse inanmadı." },
+            { "yabanci": "Laptop", "turkce": ["Dizüstü bilgisayar"], "cumle": "Ödevimi yapmak için __'ımı yanıma aldım." },
+            { "yabanci": "Jenerasyon", "turkce": ["Kuşak", "Soy"], "cumle": "Yeni __ teknolojiye çok daha hâkim." },
             { "yabanci": "Defans", "turkce": ["Savunma"], "cumle": "Takımımız maç boyunca çok iyi bir __ yaptı." },
-            { "yabanci": "Stil", "turkce": ["Üslup"], "cumle": "Her yazarın kendine özgü bir anlatım __'i vardır." },
+            { "yabanci": "Stil", "turkce": ["Üslup", "Biçem"], "cumle": "Her yazarın kendine özgü bir anlatım __'i vardır." },
             { "yabanci": "Star", "turkce": ["Yıldız"], "cumle": "Yeni filmin __'ı çok sevilen bir oyuncuydu." },
+            { "yabanci": "Filtre", "turkce": ["Süzgeç"], "cumle": "Çayı demlerken yaprakları ayırmak için __ kullandı." },
             { "yabanci": "Antipatik", "turkce": ["Sevimsiz"], "cumle": "Davranışları yüzünden oldukça __ birine dönüştü." },
             { "yabanci": "Galeri", "turkce": ["Sergi"], "cumle": "Ünlü ressamın eserleri sanat __'sinde gösteriliyor." },
             { "yabanci": "Spiker", "turkce": ["Sunucu"], "cumle": "Haberleri her akşam aynı __ sunuyordu." },
             { "yabanci": "Anons", "turkce": ["Duyuru"], "cumle": "Okul müdürü toplantı için bir __ yaptı." },
             { "yabanci": "Ofis", "turkce": ["İş yeri"], "cumle": "Babam her sabah __'e gitmek için erken kalkar." },
             { "yabanci": "Dizayn", "turkce": ["Tasarım"], "cumle": "Yeni evin __'ı çok modern ve kullanışlıydı." },
-            { "yabanci": "Agresif", "turkce": ["Saldırgan"], "cumle": "Oyun kaybedince __ tavırlar sergiledi." },
+            { "yabanci": "Agresif", "turkce": ["Saldırgan", "Sinirli"], "cumle": "Oyun kaybedince __ tavırlar sergiledi." },
             { "yabanci": "Kaos", "turkce": ["Kargaşa"], "cumle": "Elektrikler kesilince salonda bir __ ortamı oluştu." },
             { "yabanci": "Mouse", "turkce": ["Fare"], "cumle": "Bilgisayar __'u çalışmadığı için tıklama yapamıyorum." },
-            { "yabanci": "Link", "turkce": ["Bağlantı"], "cumle": "Öğretmen, konuyu anlatan videonun __'ini bizimle paylaştı." },
+            { "yabanci": "Link", "turkce": ["Ağ", "Bağlantı"], "cumle": "Öğretmen, konuyu anlatan videonun __'ini bizimle paylaştı." },
             { "yabanci": "Spontane", "turkce": ["Kendiliğinden"], "cumle": "Plan yapmamıştık, her şey __ gelişti." },
+            { "yabanci": "Exit", "turkce": ["Çıkış"], "cumle": "Acil durumlarda __ kapısını kullanmalısınız." },
             { "yabanci": "Aktivite", "turkce": ["Etkinlik"], "cumle": "Hafta sonu okulda birçok sosyal __ düzenlendi." },
             { "yabanci": "Trend", "turkce": ["Eğilim"], "cumle": "Bu yılın modasında renkli kıyafetler yeni __ oldu." },
+            { "yabanci": "Okey", "turkce": ["Tamam"], "cumle": "Ödevi yapacağımı söyledim, o da '__' dedi." },
             { "yabanci": "Selfie", "turkce": ["Öz çekim"], "cumle": "Gezdiğimiz güzel yerlerde bol bol __ yaptık." },
             { "yabanci": "Şov", "turkce": ["Gösteri"], "cumle": "Sirkteki palyaçonun __'u çok eğlenceliydi." },
+            { "yabanci": "Aroma", "turkce": ["Hoş koku"], "cumle": "Annemin yaptığı kekin vanilyalı __'sı tüm eve yayıldı." },
+            { "yabanci": "Abes", "turkce": ["Anlamsız"], "cumle": "Bu kadar __ bir işle uğraşmak istemiyorum." },
+            { "yabanci": "Abluka", "turkce": ["Kuşatma"], "cumle": "Şehir, düşman tarafından __ altına alındı." },
             { "yabanci": "Adapte", "turkce": ["Uyum"], "cumle": "Yeni işine çabucak __ oldu." },
             { "yabanci": "Aktüel", "turkce": ["Güncel"], "cumle": "__ konuları takip etmeyi severim." },
             { "yabanci": "Alternatif", "turkce": ["Seçenek"], "cumle": "Bu sorunu çözmek için başka bir __ düşünmeliyiz." },
             { "yabanci": "Amblem", "turkce": ["Belirtke"], "cumle": "Okulun __'i çok güzel tasarlanmış." },
             { "yabanci": "Animasyon", "turkce": ["Canlandırma"], "cumle": "Çocuklar __ filmlerini izlemeyi çok seviyor." },
+            { "yabanci": "Bariyer", "turkce": ["Engel"], "cumle": "Yolun ortasındaki __'i fark etmedi." },
             { "yabanci": "Biyografi", "turkce": ["Özgeçmiş"], "cumle": "Atatürk'ün __'sini okudum." },
             { "yabanci": "Bodyguard", "turkce": ["Koruma"], "cumle": "Ünlü şarkıcının yanında hep bir __ vardı." },
             { "yabanci": "Brifing", "turkce": ["Bilgilendirme"], "cumle": "Müdür, proje hakkında kısa bir __ verdi." },
             { "yabanci": "Check-up", "turkce": ["Tümtanı"], "cumle": "Her yıl düzenli olarak __ yaptırırım." },
             { "yabanci": "Data", "turkce": ["Veri"], "cumle": "Araştırma için gerekli __'ları topladık." },
+            { "yabanci": "Deforme", "turkce": ["Şekli bozulmuş"], "cumle": "Sıcakta kalan kutu __ olmuş." },
+            { "yabanci": "Dijital", "turkce": ["Sayısal"], "cumle": "__ saatimi yeni aldım." },
+            { "yabanci": "Download", "turkce": ["İndirmek"], "cumle": "Beğendiğim şarkıyı telefonuma __ yaptım." },
+            { "yabanci": "Dublaj", "turkce": ["Seslendirme"], "cumle": "Filmin Türkçe __'ı çok başarılıydı." },
             { "yabanci": "E-mail", "turkce": ["E-posta"], "cumle": "Sana ödevle ilgili bir __ gönderdim." },
             { "yabanci": "Efor", "turkce": ["Çaba"], "cumle": "Bu projeye çok __ harcadı." },
             { "yabanci": "Egoist", "turkce": ["Bencil"], "cumle": "__ insanlar yalnızca kendilerini düşünür." },
@@ -267,23 +359,171 @@
             { "yabanci": "Global", "turkce": ["Küresel"], "cumle": "İklim değişikliği __ bir sorundur." },
             { "yabanci": "Gurme", "turkce": ["Tatbilir"], "cumle": "O, peynir konusunda tam bir __'dir." },
             { "yabanci": "Hit", "turkce": ["Gözde"], "cumle": "Bu şarkı, yazın en __ parçası oldu." },
+            { "yabanci": "İskonto", "turkce": ["İndirim"], "cumle": "Mağaza, sezon sonunda büyük bir __ yaptı." },
             { "yabanci": "Limit", "turkce": ["Sınır"], "cumle": "Hız __'ini aşmamalısın." },
-            { "yabanci": "Market", "turkce": ["Çarşı"], "cumle": "Akşam için __'ten alışveriş yapacağım." },
-            { "yabanci": "Mesaj", "turkce": ["İleti"], "cumle": "Doğum günüm için birçok tebrik __'ı aldım." },
+            { "yabanci": "Market", "turkce": ["Satış merkezi"], "cumle": "Akşam için __'ten alışveriş yapacağım." },
+            { "yabanci": "Mesaj", "turkce": ["Bildiri", "İleti"], "cumle": "Doğum günüm için birçok tebrik __'ı aldım." },
             { "yabanci": "Modern", "turkce": ["Çağdaş"], "cumle": "__ sanat eserlerini inceledik." },
             { "yabanci": "Mönü", "turkce": ["Yemek listesi"], "cumle": "Lütfen __'yü getirir misiniz?" }
         ];
 
-        // ... (Mevcut script kodlarınız buraya gelecek)
+        // Sayfa yüklendiğinde tüm etkinlikleri başlatan kod
+        document.addEventListener('DOMContentLoaded', () => {
+            setupLearnCards();
+            fillBlanks.loadQuestion();
+            sentenceQuiz.loadQuestion();
+        });
+        
+        // Sekme değiştirme fonksiyonu
+        function showActivity(activityId) {
+            document.querySelectorAll('.activity-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(activityId).classList.add('active');
+            
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="showActivity('${activityId}')"]`).classList.add('active');
 
+            // Başka bir sekmeye geçildiğinde hafıza oyununu sıfırla
+            if (activityId !== 'memory') {
+                 memoryGame.reset();
+            }
+        }
+        
+        // Dizi karıştırma fonksiyonu
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // --- 1. ETKİNLİK: KARTLARI ÖĞREN ---
+        function setupLearnCards() {
+            const container = document.getElementById('learn-cards');
+            container.innerHTML = '';
+            shuffleArray([...wordsData]).forEach(word => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                const turkceHtml = word.turkce.map(t => `<span>${t}</span>`).join('<br>');
+                card.innerHTML = `
+                    <div class="card-face-inner">
+                        <div class="card-face card-front">${word.yabanci}</div>
+                        <div class="card-face card-back">${turkceHtml}</div>
+                    </div>
+                `;
+                card.addEventListener('click', () => card.classList.toggle('is-flipped'));
+                container.appendChild(card);
+            });
+        }
+        
+        // --- 2. ETKİNLİK: BOŞLUK DOLDURMA ---
+        const fillBlanks = {
+            currentIndex: -1,
+            shuffledWords: [],
+            
+            loadQuestion: function() {
+                if (this.shuffledWords.length === 0) { 
+                    this.shuffledWords = shuffleArray([...wordsData].filter(w => w.cumle)); 
+                }
+                this.currentIndex = (this.currentIndex + 1) % this.shuffledWords.length;
+                const word = this.shuffledWords[this.currentIndex];
+                
+                // Cümleyi __ ile göster, cevabın yabancı kelime olmasını sağla
+                document.getElementById('fill-question').innerHTML = `Aşağıdaki cümlenin boşluğuna hangi kelime gelmelidir? <br><br> "${word.cumle}"`;
+                
+                document.getElementById('fill-answer').value = '';
+                document.getElementById('fill-feedback').textContent = '';
+                document.getElementById('fill-feedback').className = 'feedback';
+                document.getElementById('fill-answer').disabled = false;
+            },
+            
+            checkAnswer: function() {
+                const currentWord = this.shuffledWords[this.currentIndex];
+                if (!currentWord) return;
+                
+                // Cevap, YABANCI kelimenin kendisidir. Türkçe karşılıklarını değil.
+                const correctAnswers = currentWord.turkce.map(ans => ans.toLowerCase().trim());
+                const userAnswer = document.getElementById('fill-answer').value.toLowerCase().trim();
+                const feedbackEl = document.getElementById('fill-feedback');
+                
+                if (correctAnswers.includes(userAnswer)) {
+                    feedbackEl.textContent = "Harika! Doğru bildin!";
+                    feedbackEl.className = 'feedback correct';
+                } else {
+                    feedbackEl.innerHTML = `Tekrar dene! <br>Doğru cevap: <strong>${currentWord.turkce.join(' / ')}</strong>`;
+                    feedbackEl.className = 'feedback wrong';
+                }
+                document.getElementById('fill-answer').disabled = true;
+            }
+        };
+        
+        // --- 3. ETKİNLİK: CÜMLEYİ DÜZELT (ÇOKTAN SEÇMELİ) ---
+        const sentenceQuiz = {
+            currentIndex: -1,
+            shuffledWords: [],
+            loadQuestion: function() {
+                if (this.shuffledWords.length === 0) { this.shuffledWords = shuffleArray([...wordsData]); }
+                this.currentIndex = (this.currentIndex + 1) % this.shuffledWords.length;
+                const word = this.shuffledWords[this.currentIndex];
+                const correctAnswer = word.turkce[0]; // Cevap için ilk Türkçe karşılığı al
+                
+                const questionText = `Aşağıdaki cümlede renkli yazılmış kelimenin Türkçe karşılığı hangisidir? <br><br> "Bu çok <strong>${word.yabanci}</strong> bir hareketti."`;
+                document.getElementById('sentence-question').innerHTML = questionText;
+                
+                const optionsContainer = document.getElementById('sentence-options');
+                optionsContainer.innerHTML = '';
+                
+                // Kendisi dışındaki kelimelerin Türkçe karşılıklarından yanlış seçenekler oluştur
+                const wrongOptionsPool = wordsData
+                    .filter(w => w.turkce[0] !== correctAnswer)
+                    .map(w => w.turkce[0]);
+                
+                const shuffledWrong = shuffleArray(wrongOptionsPool).slice(0, 3);
+                const options = shuffleArray([correctAnswer, ...shuffledWrong]);
+
+                options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.classList.add('option-btn');
+                    button.textContent = option;
+                    button.onclick = () => this.checkAnswer(option, correctAnswer);
+                    optionsContainer.appendChild(button);
+                });
+                
+                document.getElementById('sentence-feedback').textContent = '';
+                document.getElementById('sentence-feedback').className = 'feedback';
+            },
+            checkAnswer: function(selected, correct) {
+                const feedbackEl = document.getElementById('sentence-feedback');
+                const optionButtons = document.querySelectorAll('#sentence-options .option-btn');
+                
+                optionButtons.forEach(btn => {
+                    btn.disabled = true;
+                    if(btn.textContent === correct) {
+                        btn.classList.add('correct');
+                    } else if (btn.textContent === selected) {
+                        btn.classList.add('wrong');
+                    }
+                });
+                if (selected === correct) {
+                    feedbackEl.textContent = 'Tebrikler, doğru cevap!';
+                    feedbackEl.className = 'feedback correct';
+                } else {
+                    feedbackEl.textContent = 'Maalesef yanlış, doğru cevap işaretlendi.';
+                    feedbackEl.className = 'feedback wrong';
+                }
+            }
+        };
+
+        // --- 4. ETKİNLİK: AKILDA TUT OYUNU ---
         const memoryGame = {
             gameMode: 'single',
             currentPlayer: 1,
             scores: { player1: 0, player2: 0 },
             flippedCards: [],
             matchedPairs: 0,
-            totalPairs: 6,
+            totalPairs: 6, // 4x3'lük bir tahta için 6 çift
             isLocked: false,
+            hamleSayisi: 0,
 
             init(mode) {
                 this.gameMode = mode;
@@ -302,13 +542,14 @@
                 this.flippedCards = [];
                 this.matchedPairs = 0;
                 this.isLocked = false;
+                this.hamleSayisi = 0;
             },
 
             renderBoard() {
                 const gameWords = shuffleArray([...wordsData]).slice(0, this.totalPairs);
                 let gameCards = gameWords.flatMap((word, index) => [
                     { type: 'yabanci', value: word.yabanci, pairId: index },
-                    { type: 'turkce', value: word.turkce[0], pairId: index }
+                    { type: 'turkce', value: word.turkce[0], pairId: index } // Eşleştirme için ilk Türkçe karşılığı al
                 ]);
                 gameCards = shuffleArray(gameCards);
 
@@ -318,6 +559,7 @@
                     const cardEl = document.createElement('div');
                     cardEl.classList.add('memory-card');
                     cardEl.dataset.pairId = cardData.pairId;
+                    cardEl.dataset.value = cardData.value; // Hata ayıklama için eklendi
 
                     cardEl.innerHTML = `
                         <div class="card-face-inner">
@@ -325,7 +567,7 @@
                             <div class="card-back">${cardData.value}</div>
                         </div>
                     `;
-                    cardEl.addEventListener('click', () => this.handleCardClick(cardEl, cardData));
+                    cardEl.addEventListener('click', () => this.handleCardClick(cardEl));
                     grid.appendChild(cardEl);
                 });
             },
@@ -340,6 +582,7 @@
 
                 if (this.flippedCards.length === 2) {
                     this.isLocked = true;
+                    this.hamleSayisi++;
                     this.checkForMatch();
                 }
             },
@@ -390,20 +633,22 @@
             updateStatus(message = '') {
                 const statusEl = document.getElementById('memory-status');
                 if (this.gameMode === 'single') {
-                    statusEl.textContent = `Bulunan Çift: ${this.scores.player1} / ${this.totalPairs}`;
+                    statusEl.textContent = `Hamle: ${this.hamleSayisi} | Bulunan Çift: ${this.scores.player1} / ${this.totalPairs}`;
                 } else {
                     let statusText = `Skor: Oyuncu 1: ${this.scores.player1} - Oyuncu 2: ${this.scores.player2} | Sıra: Oyuncu ${this.currentPlayer}`;
-                    if(message) statusText = message;
+                    if(message) {
+                        statusText = `${message} | ${statusText}`;
+                    }
                     statusEl.textContent = statusText;
                 }
             },
             
             endGame(){
                  const statusEl = document.getElementById('memory-status');
-                 let endMessage = "Tebrikler, oyunu bitirdin!";
+                 let endMessage = `Tebrikler! ${this.hamleSayisi} hamlede oyunu bitirdin!`;
                  if (this.gameMode === 'twoPlayer') {
-                    if (this.scores.player1 > this.scores.player2) endMessage = "Oyuncu 1 Kazandı!";
-                    else if (this.scores.player2 > this.scores.player1) endMessage = "Oyuncu 2 Kazandı!";
+                    if (this.scores.player1 > this.scores.player2) endMessage = "Tebrikler, Oyuncu 1 Kazandı!";
+                    else if (this.scores.player2 > this.scores.player1) endMessage = "Tebrikler, Oyuncu 2 Kazandı!";
                     else endMessage = "Oyun Berabere!";
                  }
                  statusEl.textContent = endMessage;
@@ -415,36 +660,10 @@
                 document.getElementById('memory-setup').style.display = 'block';
             }
         };
-        
-        // Önceki Etkinlik Scriptleri (Örnek)
-        // setupLearnCards, fillBlanks, sentenceQuiz gibi objeleriniz burada olmalı
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            // setupLearnCards();
-            // fillBlanks.loadQuestion();
-            // sentenceQuiz.loadQuestion();
-        });
-        
-        function showActivity(activityId) {
-            document.querySelectorAll('.activity-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(activityId).classList.add('active');
-            
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.tab-button[onclick="showActivity('${activityId}')"]`).classList.add('active');
-
-            if (activityId !== 'memory') {
-                 memoryGame.reset();
-            }
-        }
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
 
     </script>
+
     <script src="bilesenler/menu.js"></script>
+
 </body>
 </html>
