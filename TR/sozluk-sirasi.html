@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="stiller/stil.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
     <style>
         /* Bu sayfaya özel stiller, ana temanıza uyumlu */
@@ -82,7 +84,42 @@
             font-weight: 900;
         }
 
-        /* Çoktan Seçmeli Butonlar (Sıralama ve Satır Sonu için) */
+        /* YENİ: Alfabetik Sıralama Listesi Stilleri */
+        .sortable-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 10px;
+        }
+        .sortable-list li {
+            background-color: var(--papyrus-bg-color-dark);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: move; /* Sürükleme imleci */
+            transition: all 0.2s ease;
+        }
+        /* Sürüklenirken gölge stil */
+        .sortable-ghost {
+            opacity: 0.4;
+            background: var(--active-bg-color);
+        }
+        /* Seçilen öğe */
+        .sortable-chosen {
+            background: var(--papyrus-bg-color-light);
+        }
+        /* Kontrol sonrası sabitlenen (disabled) liste */
+        .sortable-list:disabled li {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+
+        /* Satır Sonu & Hecelere Ayırma Stilleri */
         .options { 
             display: grid; 
             grid-template-columns: 1fr; /* Mobilde her zaman tek sütun */
@@ -101,13 +138,21 @@
             cursor: pointer;
             transition: all 0.2s ease;
             line-height: 1.4;
+            text-align: left; /* Cümleler için sola hizalı */
         }
+        .option-btn strong {
+             font-weight: 900;
+             color: var(--text-primary-color);
+        }
+        .option-btn.correct strong { color: white; }
+        .option-btn.wrong strong { color: white; }
+
         .option-btn:hover { background-color: var(--accent-color); color: white; }
+        .option-btn:hover strong { color: white; }
         .option-btn.correct { background-color: #66bb6a; color: white; border-color: #66bb6a; }
         .option-btn.wrong { background-color: #ef5350; color: white; border-color: #ef5350; }
         .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
 
-        /* Hecelere Ayırma (Giriş Kutusu) Stili */
         #heceleme-input {
             width: 100%;
             padding: 10px;
@@ -137,14 +182,6 @@
         .feedback { font-weight: 700; margin-top: 15px; min-height: 24px; font-size: 1.1rem; }
         .correct { color: #2e7d32; }
         .wrong { color: #c62828; }
-
-        /* Tablet ve PC için daha geniş mizanpaj */
-        @media (min-width: 600px) {
-            .options {
-                /* Tablette 2 sütun */
-                grid-template-columns: 1fr 1fr; 
-            }
-        }
         
         @media (max-width: 768px) {
             header h1 a { font-size: 2rem; }
@@ -172,11 +209,14 @@
         <main>
             <div id="alfabe" class="activity-content active">
                 <div class="quiz-card">
-                    <p class="question" id="alfabe-question">Aşağıdaki listelerden hangisi alfabetik olarak <strong>doğru</strong> sıralanmıştır?</p>
-                    <div class="options" id="alfabe-options"></div>
+                    <p class="question" id="alfabe-question">Kelimeleri sürükleyerek alfabetik sıraya dizin.</p>
+                    <p id="alfabe-level" class="feedback">Seviye: 1</p>
+                    <ul id="sortable-list" class="sortable-list">
+                        </ul>
                     <p class="feedback" id="alfabe-feedback"></p>
                     <div class="quiz-buttons">
-                       <button class="quiz-btn next-btn" onclick="alphabetSort.loadQuestion()">Sonraki Soru</button>
+                       <button id="alfabe-check-btn" class="quiz-btn check-btn" onclick="alphabetSort.checkAnswer()">Kontrol Et</button>
+                       <button id="alfabe-next-btn" class="quiz-btn next-btn" onclick="alphabetSort.loadQuestion()" style="display: none;">Sonraki</button>
                     </div>
                 </div>
             </div>
@@ -195,8 +235,9 @@
             
             <div id="satirsonu" class="activity-content">
                  <div class="quiz-card">
-                    <p class="question" id="satirsonu-question">"kelime" sözcüğü için doğru hece ayrımı (satır sonu) hangisidir?</p>
-                    <div class="options" id="satirsonu-options"></div>
+                    <p class="question" id="satirsonu-question">Hangi cümlede satır sonu ayırımı <strong>doğru</strong> yapılmıştır?</p>
+                    <div class="options" id="satirsonu-options">
+                        </div>
                     <p class="feedback" id="satirsonu-feedback"></p>
                     <div class="quiz-buttons">
                        <button class="quiz-btn next-btn" onclick="lineBreak.loadQuestion()">Sonraki Soru</button>
@@ -214,10 +255,12 @@
             "Elma", "Armut", "Kiraz", "Çilek", "Muz", "Portakal", "Karpuz", "Kavun",
             "Ayva", "Nar", "Kedi", "Köpek", "Kuş", "Balık", "At", "Aslan", "Kaplan", 
             "Zürafa", "Ev", "Okul", "Araba", "Masa", "Sandalye", "Kitap", "Defter", 
-            "Kalem", "Güneş", "Ay", "Yıldız", "Bulut", "Yağmur", "Kar", "Rüzgar"
+            "Kalem", "Güneş", "Ay", "Yıldız", "Bulut", "Yağmur", "Kar", "Rüzgar",
+            "Çiçek", "Ağaç", "Toprak", "Su", "Hava", "Ateş", "Taş", "Dağ", "Deniz",
+            "Nehir", "Göl", "Orman", "Çöl", "Ada", "Kıta", "Ülke", "Şehir", "Köy"
         ];
 
-        // Hecelere Ayırma ve Satır Sonu için kelime listesi
+        // Hecelere Ayırma için kelime listesi
         const heceData = [
             { word: "hanımeli", hece: "ha-nı-me-li" },
             { word: "ilköğretim", hece: "il-köğ-re-tim" },
@@ -241,6 +284,51 @@
             { word: "ağaç", hece: "a-ğaç" }
         ];
 
+        // YENİ: Satır Sonu Ayırma için cümle listesi
+        const lineBreakData = [
+            {
+                correct: "Akşam bize <strong>arkada-</strong><br><strong>şımla</strong> geleceğim.",
+                wrong: [
+                    "Akşam bize <strong>ark-</strong><br><strong>adaşımla</strong> geleceğim.",
+                    "Akşam bize <strong>arkadaşım-</strong><br><strong>la</strong> geleceğim."
+                ],
+                word: "arkadaşımla" // (ar-ka-da-şım-la)
+            },
+            {
+                correct: "Pazardan <strong>karpu-</strong><br><strong>zumuzu</strong> aldık.",
+                wrong: [
+                    "Pazardan <strong>karpuz-</strong><br><strong>umuzu</strong> aldık.", // 'z' sonraki heceye ait
+                    "Pazardan <strong>karp-</strong><br><strong>uzumuzu</strong> aldık."
+                ],
+                word: "karpuzumuzu" // (kar-pu-zu-mu-zu)
+            },
+            {
+                correct: "Yeni <strong>il-</strong><br><strong>köğretim</strong> binası açıldı.",
+                wrong: [
+                    "Yeni <strong>ilk-</strong><br><strong>öğretim</strong> binası açıldı.", // 'k' sonraki heceye ait
+                    "Yeni <strong>ilköğreti-</strong><br><strong>m</strong> binası açıldı." // Sonda tek harf
+                ],
+                word: "ilköğretim" // (il-köğ-re-tim)
+            },
+            {
+                correct: "Markete gidip <strong>otomo-</strong><br><strong>bille</strong> döneceğim.",
+                wrong: [
+                    "Markete gidip <strong>o-</strong><br><strong>tomobille</strong> döneceğim.", // Başta tek harf
+                    "Markete gidip <strong>otomob-</strong><br><strong>ille</strong> döneceğim." // Yanlış heceleme
+                ],
+                word: "otomobille" // (o-to-mo-bil-le)
+            },
+            {
+                correct: "Bahçedeki <strong>hanıme-</strong><br><strong>li</strong> çok güzel kokuyor.",
+                wrong: [
+                    "Bahçedeki <strong>han-</strong><br><strong>ımeli</strong> çok güzel kokuyor.",
+                    "Bahçedeki <strong>hanımel-</strong><br><strong>i</strong> çok güzel kokuyor." // Sonda tek harf
+                ],
+                word: "hanımeli" // (ha-nı-me-li)
+            }
+        ];
+
+
         // --- GENEL FONKSİYONLAR ---
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -257,7 +345,7 @@
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.tab-button[onclick="showActivity('${activityId}')"]`).classList.add('active');
             
-            // Diğer sekmeye geçince soruları yenile
+            // Diğer sekmeye geçince soruları yenile (kaldıkları yerden devam etmesinler)
             if (activityId === 'alfabe') alphabetSort.loadQuestion();
             if (activityId === 'heceleme') syllabify.loadQuestion();
             if (activityId === 'satirsonu') lineBreak.loadQuestion();
@@ -276,77 +364,94 @@
         // Türkçe'ye özel alfabetik sıralama
         const trCollator = new Intl.Collator('tr', { sensitivity: 'base' });
 
-        // --- 1. ETKİNLİK: ALFABETİK SIRALAMA ---
+        // --- 1. ETKİNLİK: ALFABETİK SIRALAMA (YENİLENDİ) ---
         const alphabetSort = {
-            correctAnswer: "",
+            correctOrder: [],
+            level: 1,
+            streak: 0,
+            sortableInstance: null,
             
             loadQuestion: function() {
+                // Seviyeye göre kelime sayısı
+                // Seviye 1: 3, Seviye 2: 4, Seviye 3: 5, Seviye 4: 6
+                const wordCount = Math.min(this.level + 2, 6); 
+                
+                document.getElementById('alfabe-level').textContent = `Seviye: ${this.level} (${wordCount} kelime)`;
+
                 // 4 kelimelik bir grup seç
                 const shuffledWords = shuffleArray(sortWordList);
-                const wordGroup = shuffledWords.slice(0, 4);
+                const wordGroup = shuffledWords.slice(0, wordCount);
                 
-                // Doğru sıralanmış halini bul
-                const correctOrder = [...wordGroup].sort(trCollator.compare);
-                this.correctAnswer = correctOrder.join(', ');
-
-                // 3 tane yanlış sıralanmış liste oluştur
-                let options = [
-                    correctOrder,
-                    shuffleArray(wordGroup),
-                    shuffleArray(wordGroup),
-                    shuffleArray(wordGroup)
-                ];
-
-                // Oluşturulan listelerin aynı olmamasını ve doğru cevaptan farklı olmasını sağla
-                // (Basit bir benzersizleştirme)
-                const uniqueOptions = [...new Set(options.map(arr => arr.join(', ')))];
+                // Doğru sıralanmış halini kaydet
+                this.correctOrder = [...wordGroup].sort(trCollator.compare);
                 
-                // Eğer yeterli benzersiz seçenek yoksa (çok düşük ihtimal), tekrar yükle
-                if (uniqueOptions.length < 4 && sortWordList.length > 4) {
-                    this.loadQuestion();
-                    return;
+                // Karışık listeyi oluştur (doğruyla aynı olmasın)
+                let shuffledOrder = shuffleArray(wordGroup);
+                while(shuffledOrder.join(',') === this.correctOrder.join(',')) {
+                    shuffledOrder = shuffleArray(wordGroup);
                 }
 
-                const finalOptions = shuffleArray(uniqueOptions).slice(0, 4);
-                // Doğru cevap listede yoksa ekle
-                if (!finalOptions.includes(this.correctAnswer)) {
-                    finalOptions[0] = this.correctAnswer;
-                    shuffleArray(finalOptions); // Tekrar karıştır
-                }
-
-                const optionsContainer = document.getElementById('alfabe-options');
-                optionsContainer.innerHTML = '';
+                const listContainer = document.getElementById('sortable-list');
+                listContainer.innerHTML = '';
                 
-                finalOptions.forEach(optionText => {
-                    const button = document.createElement('button');
-                    button.classList.add('option-btn');
-                    button.textContent = optionText;
-                    button.onclick = () => this.checkAnswer(optionText, button);
-                    optionsContainer.appendChild(button);
+                // Listeyi DOM'a ekle
+                shuffledOrder.forEach(word => {
+                    const li = document.createElement('li');
+                    li.textContent = word;
+                    listContainer.appendChild(li);
                 });
 
+                // Önceki Sortable örneğini yok et (varsa)
+                if (this.sortableInstance) {
+                    this.sortableInstance.destroy();
+                }
+
+                // Sürükle-bırak özelliğini etkinleştir
+                this.sortableInstance = new Sortable(listContainer, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                });
+
+                // Butonları ve geri bildirimi sıfırla
                 document.getElementById('alfabe-feedback').textContent = '';
+                document.getElementById('alfabe-check-btn').style.display = 'inline-block';
+                document.getElementById('alfabe-next-btn').style.display = 'none';
+                listContainer.disabled = false;
             },
 
-            checkAnswer: function(selected, btn) {
-                const feedbackEl = document.getElementById('alfabe-feedback');
-                const optionButtons = document.querySelectorAll('#alfabe-options .option-btn');
+            checkAnswer: function() {
+                const listContainer = document.getElementById('sortable-list');
                 
-                optionButtons.forEach(button => {
-                    button.disabled = true;
-                    if (button.textContent === this.correctAnswer) {
-                        button.classList.add('correct');
+                // Kullanıcının sıralamasını al
+                const userOrder = Array.from(listContainer.children).map(li => li.textContent);
+                
+                const feedbackEl = document.getElementById('alfabe-feedback');
+                
+                // Kontrol et
+                if (userOrder.join(',') === this.correctOrder.join(',')) {
+                    this.streak++;
+                    if (this.streak >= 2 && this.level < 4) { // 4. seviye maks
+                        this.level++;
+                        this.streak = 0;
+                        feedbackEl.innerHTML = "Harika! <strong>Seviye atladın!</strong>";
+                    } else {
+                        feedbackEl.textContent = 'Tebrikler, doğru sıralama!';
                     }
-                });
-
-                if (selected === this.correctAnswer) {
-                    feedbackEl.textContent = 'Tebrikler, doğru sıralama!';
                     feedbackEl.className = 'feedback correct';
                 } else {
-                    btn.classList.add('wrong');
-                    feedbackEl.textContent = 'Maalesef yanlış, doğru cevap işaretlendi.';
+                    this.streak = 0; // Yanlış yapınca seriyi sıfırla
+                    feedbackEl.innerHTML = `Maalesef yanlış.<br>Doğru sıralama: <strong>${this.correctOrder.join(', ')}</strong>`;
                     feedbackEl.className = 'feedback wrong';
                 }
+
+                // Kontrol sonrası sürüklemeyi kapat
+                this.sortableInstance.option('disabled', true);
+                listContainer.disabled = true;
+
+                // Butonları ayarla
+                document.getElementById('alfabe-check-btn').style.display = 'none';
+                document.getElementById('alfabe-next-btn').style.display = 'inline-block';
             }
         };
 
@@ -386,67 +491,46 @@
             }
         };
 
-        // --- 3. ETKİNLİK: SATIR SONU AYIRMA (Çoktan Seçmeli) ---
+        // --- 3. ETKİNLİK: SATIR SONU AYIRMA (YENİLENDİ) ---
         const lineBreak = {
-            currentWord: null,
+            currentData: null,
             
             loadQuestion: function() {
-                this.currentWord = heceData[Math.floor(Math.random() * heceData.length)];
-                const correctAnswer = this.currentWord.hece;
-
-                document.getElementById('satirsonu-question').innerHTML = `<strong>"${this.currentWord.word}"</strong> sözcüğü için doğru hece ayrımı hangisidir?`;
-
-                // Yanlış seçenekler oluştur
-                let wrongOptions = [];
-                // 1. Yanlış: Heceleri birleştir
-                if (this.currentWord.word.includes('ğ') && this.currentWord.word.length > 4) {
-                     wrongOptions.push(this.currentWord.hece.replace('a-ğaç', 'ağ-aç')); // Özel durum
-                } else {
-                     wrongOptions.push(this.currentWord.hece.replace('-', '').substring(0, 3) + '-' + this.currentWord.hece.replace('-', '').substring(3));
-                }
+                this.currentData = lineBreakData[Math.floor(Math.random() * lineBreakData.length)];
                 
-                // 2. Yanlış: Farklı bir kelimenin hecelenmesi
-                wrongOptions.push(heceData[Math.floor(Math.random() * heceData.length)].hece);
-                
-                // 3. Yanlış: Sondan bir harfi ayır
-                wrongOptions.push(this.currentWord.hece.slice(0, -1) + '-' + this.currentWord.hece.slice(-1));
+                document.getElementById('satirsonu-question').innerHTML = `Aşağıdaki cümlelerin hangisinde <strong>"${this.currentData.word}"</strong> sözcüğünün satır sonu ayrımı <strong>doğru</strong> yapılmıştır?`;
 
-                // Seçenekleri temizle ve birleştir
-                const uniqueOptions = [...new Set([correctAnswer, ...wrongOptions])];
-                let finalOptions = shuffleArray(uniqueOptions).slice(0, 4);
+                // Tüm seçenekleri birleştir (1 doğru, 2 yanlış)
+                let options = [this.currentData.correct, ...this.currentData.wrong];
+                let finalOptions = shuffleArray(options);
 
-                if (!finalOptions.includes(correctAnswer)) {
-                    finalOptions[0] = correctAnswer;
-                    finalOptions = shuffleArray(finalOptions);
-                }
-                
                 const optionsContainer = document.getElementById('satirsonu-options');
                 optionsContainer.innerHTML = '';
                 
-                finalOptions.forEach(optionText => {
+                finalOptions.forEach(optionHtml => {
                     const button = document.createElement('button');
                     button.classList.add('option-btn');
-                    button.textContent = optionText;
-                    button.onclick = () => this.checkAnswer(optionText, button);
+                    button.innerHTML = optionHtml; // HTML olarak ekle (strong, br)
+                    button.onclick = () => this.checkAnswer(optionHtml, button);
                     optionsContainer.appendChild(button);
                 });
 
                 document.getElementById('satirsonu-feedback').textContent = '';
             },
 
-            checkAnswer: function(selected, btn) {
+            checkAnswer: function(selectedHtml, btn) {
                 const feedbackEl = document.getElementById('satirsonu-feedback');
                 const optionButtons = document.querySelectorAll('#satirsonu-options .option-btn');
-                const correctAnswer = this.currentWord.hece;
+                const correctAnswer = this.currentData.correct;
 
                 optionButtons.forEach(button => {
                     button.disabled = true;
-                    if (button.textContent === correctAnswer) {
+                    if (button.innerHTML === correctAnswer) {
                         button.classList.add('correct');
                     }
                 });
 
-                if (selected === correctAnswer) {
+                if (selectedHtml === correctAnswer) {
                     feedbackEl.textContent = 'Tebrikler, doğru ayırım!';
                     feedbackEl.className = 'feedback correct';
                 } else {
