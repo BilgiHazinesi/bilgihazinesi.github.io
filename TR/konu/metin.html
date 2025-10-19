@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metin Türleri ve Metnin Bölümleri</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --papyrus-bg: #fdf5e6;  
+            --text-primary: #5a452d; 
+            --text-secondary: #7a654d;
+            --accent-color: #8B4513; 
+            --border-color: #c8b79b; 
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --box-bg: #fffaf0; 
+            --correct-bg: #e8f5e9; 
+            --correct-border: #4CAF50;
+            --incorrect-bg: #ffebee; 
+            --incorrect-border: #f44336;
+            --color-teal: #4db6ac;
+            --color-orange: #ffb74d;
+            --color-purple: #ba68c8;
+            --color-blue: #29b6f6;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 100%; }
+        body { 
+            font-family: 'Kalam', cursive; 
+            background-color: var(--papyrus-bg); 
+            color: var(--text-primary); 
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png'); 
+            background-attachment: fixed; 
+            padding: clamp(10px, 2vw, 15px); 
+            line-height: 1.6;
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+/Edge */
+            user-select: none; /* Standart */
+        }
+        .container { 
+            max-width: 1000px; margin: 0 auto; 
+            background-color: rgba(253, 245, 230, 0.85); 
+            border: 2px solid var(--border-color); 
+            border-radius: 10px; 
+            box-shadow: 0 5px 20px var(--shadow-color); 
+            padding: clamp(15px, 3vw, 30px); 
+            overflow: hidden;
+        }
+        header { 
+            text-align: center; margin-bottom: 20px; 
+            border-bottom: 3px double var(--border-color); 
+            padding-bottom: 20px; 
+        }
+        header h1 { 
+            font-family: 'Cinzel Decorative', cursive; 
+            font-size: clamp(1.8rem, 4vw, 3rem); 
+            color: var(--accent-color); 
+            text-shadow: 1px 1px 2px var(--shadow-color); 
+        }
+        
+        /* === SLAYT SİSTEMİ === */
+        .slide-deck {
+            position: relative;
+        }
+        .slide {
+            display: none;
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        .slide.active {
+            display: block;
+        }
+        .slide-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            border-top: 2px dashed var(--border-color);
+            padding-top: 20px;
+        }
+        .nav-button {
+            font-family: 'Cinzel Decorative', cursive; 
+            font-weight: 700; 
+            background-color: var(--accent-color); 
+            color: var(--papyrus-bg); 
+            cursor: pointer; 
+            transition: transform 0.2s ease, box-shadow 0.2s ease; 
+            font-size: 1.1rem; padding: 10px 15px; border-radius: 6px; 
+            border: none;
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+        .nav-button:disabled {
+            background-color: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        #slide-counter {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+        
+        /* === İçerik Stilleri === */
+        .slide-title {
+            font-family: 'Cinzel Decorative', cursive; 
+            font-size: clamp(1.6rem, 4vw, 2.5rem); 
+            color: var(--accent-color); 
+            text-align: center; margin-bottom: 20px; 
+        }
+        .slide-content {
+            font-size: clamp(1.1rem, 1.5vw, 1.25rem);
+        }
+        .definition-box {
+            background-color: var(--box-bg);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            font-size: clamp(1.2rem, 1.6vw, 1.4rem);
+            text-align: center;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        .content-box {
+            background-color: var(--box-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: clamp(15px, 3vw, 25px);
+            margin-top: 20px;
+        }
+        .text-scroll-box {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            background: #fff;
+            border-radius: 6px;
+            font-size: 1.1rem;
+        }
+        .text-scroll-box h4 {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--accent-color);
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        .text-scroll-box p {
+            margin-bottom: 15px;
+        }
+        
+        /* === Genel Alıştırma Stilleri === */
+        .activity-instructions {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+        .feedback-message {
+            text-align: center; font-weight: bold; min-height: 24px; margin-top: 15px;
+            font-size: 1.2rem;
+            visibility: hidden; /* Başlangıçta gizli */
+        }
+        .feedback-message.visible { visibility: visible; }
+        .feedback-correct { color: var(--correct-border); }
+        .feedback-incorrect { color: var(--incorrect-border); }
+        .check-button {
+            display: block;
+            margin: 20px auto 0;
+            font-family: 'Cinzel Decorative', cursive; 
+            font-weight: 700; 
+            background-color: var(--color-teal); 
+            color: var(--papyrus-bg); 
+            cursor: pointer; 
+            font-size: 1.2rem; padding: 10px 20px; border-radius: 6px; 
+            border: none;
+            transition: transform 0.2s ease;
+        }
+        .check-button:hover { transform: scale(1.05); }
+
+        /* === Alıştırma 1: Bücür Testi === */
+        .quiz-question {
+            margin-bottom: 20px;
+            font-size: 1.15rem;
+        }
+        .quiz-question p {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .quiz-options label {
+            display: block;
+            background: #fff;
+            border: 2px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .quiz-options label:hover {
+            background-color: var(--box-bg);
+        }
+        .quiz-options input {
+            margin-right: 10px;
+        }
+        .quiz-options label.correct {
+            background-color: var(--correct-bg);
+            border-color: var(--correct-border);
+        }
+        .quiz-options label.incorrect {
+            background-color: var(--incorrect-bg);
+            border-color: var(--incorrect-border);
+        }
+
+        /* === Alıştırma 2: Görselden Hikaye === */
+        .visual-story-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+        .visual-story-container img {
+            max-width: 250px;
+            width: 100%;
+            border: 3px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px var(--shadow-color);
+            flex-shrink: 0;
+        }
+        .visual-story-prompts {
+            flex: 1;
+            min-width: 250px;
+        }
+        .visual-story-prompts h4 {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--accent-color);
+            font-size: 1.4rem;
+        }
+        .visual-story-prompts ul {
+            list-style-type: '❓';
+            padding-left: 25px;
+            font-size: 1.2rem;
+        }
+        .visual-story-prompts li {
+            margin-bottom: 10px;
+            padding-left: 10px;
+        }
+
+        /* === Alıştırma 3: Başlık Seçme === */
+        .checklist-options label {
+            display: block;
+            font-size: 1.2rem;
+            background: #fff;
+            border: 2px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .checklist-options label:hover { background-color: var(--box-bg); }
+        .checklist-options input { margin-right: 10px; transform: scale(1.2); }
+        .checklist-options label.correct { background-color: var(--correct-bg); border-color: var(--correct-border); }
+        .checklist-options label.incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); }
+
+        /* === Alıştırma 4: Tür Eşleştirme (Drag & Drop) === */
+        .match-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+        }
+        .match-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .match-item {
+            font-size: 1.1rem;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            background-color: #fff;
+            border-radius: 8px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+        .match-item.dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+        .match-target {
+            padding: 20px;
+            border: 2px dashed var(--border-color);
+            background-color: var(--box-bg);
+            border-radius: 8px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        .match-target.drag-over {
+            background-color: #f5efde;
+            border-color: var(--accent-color);
+        }
+        .match-target h4 {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+        .match-target .match-item {
+            cursor: default;
+            background-color: var(--correct-bg);
+            border-color: var(--correct-border);
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* === Alıştırma 8: Metin Sıralama === */
+        #sort-source-box {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            padding: 10px;
+            border-radius: 8px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .sort-item {
+            font-size: 1rem;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            background-color: var(--box-bg);
+            border-radius: 6px;
+            cursor: grab;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+        .sort-item.dragging { opacity: 0.5; }
+        .sort-targets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .sort-target-box {
+            flex: 1;
+            min-width: 200px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            background-color: #fff;
+            min-height: 100px;
+            padding: 10px;
+            transition: background-color 0.2s;
+        }
+        .sort-target-box.drag-over { background-color: #f5efde; }
+        .sort-target-box h4 {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+        .sort-target-box .sort-item {
+            background-color: var(--correct-bg);
+            border-color: var(--correct-border);
+            cursor: default;
+        }
+        
+        /* === Konu: Metin Özellikleri === */
+        .hirs-text {
+            font-size: 1.2rem;
+            line-height: 1.8;
+        }
+        .hirs-text .title {
+            font-family: 'Cinzel Decorative', cursive;
+            color: var(--accent-color);
+            font-size: 2.5rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        .hirs-text .bold {
+            font-weight: bold;
+            color: #d9534f;
+        }
+        .hirs-text .italic {
+            font-style: italic;
+            color: var(--color-blue);
+        }
+        
+        @media (max-width: 600px) {
+            .slide-navigation { flex-wrap: wrap; justify-content: center; gap: 15px; }
+            #slide-counter { order: -1; width: 100%; text-align: center; }
+            .visual-story-container { flex-direction: column; }
+            .text-scroll-box { max-height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <a href="https://bilgihazinesi.github.io/" class="home-button" title="Ana Sayfaya Dön">&#127968;</a>
+    <div class="container">
+        <header>
+            <h1>Metin Türleri ve Metnin Bölümleri</h1>
+        </header>
+
+        <div class="slide-deck" id="slideDeck">
+
+            <div class="slide active">
+                <h2 class="slide-title">Dersimize Hoş Geldiniz!</h2>
+                <div class="slide-content">
+                    <p>Bugün sizlerle birlikte metinlerin gizemli dünyasına bir yolculuk yapacağız.</p>
+                    <p>Metinleri okurken onların birer amacı olduğunu fark etmiş miydiniz? Bazı metinler bize bir olay anlatır, bazıları bilgi verir, bazıları ise duygularımızı harekete geçirir.</p>
+                    <p>Bu derste üç ana metin türünü ve bir metnin nasıl oluşturulduğunu öğreneceğiz:</p>
+                    <ul>
+                        <li style="font-size: 1.2rem; font-weight: bold; color: var(--color-purple);">Öyküleyici Metin (Hikaye)</li>
+                        <li style="font-size: 1.2rem; font-weight: bold; color: var(--color-orange);">Bilgilendirici Metin</li>
+                        <li style="font-size: 1.2rem; font-weight: bold; color: var(--color-teal);">Şiir</li>
+                        <li style="font-size: 1.2rem; font-weight: bold; color: var(--accent-color);">Metnin Bölümleri (Giriş, Gelişme, Sonuç)</li>
+                    </ul>
+                    <p style="text-align: center; margin-top: 20px; font-size: 1.3rem;"><strong>Hazırsanız, "İleri" tuşuna basarak başlayalım!</strong></p>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2 class="slide-title">1. Öyküleyici Metin</h2>
+                <div class="slide-content">
+                    <div class="definition-box">
+                        Olay ya da olayların <strong>nerede</strong>, <strong>ne zaman</strong> ve <strong>kimler</strong> arasında geçtiğini anlatan, okurda acaba ne olacak sorusunu sorduran metinlere <strong>öyküleyici metinler</strong> denir.<br>
+                        (Masal, fabl, öykü, roman)
+                    </div>
+                    <p>Kısacası, bu metinler bize bir hikâye anlatır!</p>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2 class="slide-title">Alıştırma: Okuduğumu Anlıyorum</h2>
+                <div class="slide-content">
+                    <p class="activity-instructions">Şimdi "Bir Haftalık Öykü" adlı metni dikkatlice okuyalım. Bir sonraki slaytta bu metinle ilgili soruları cevaplayacağız.</p>
+                    <div class="text-scroll-box" style="max-height: 450px;">
+                        <h4>Bir Haftalık Öykü</h4>
+                        <p>Pazartesi günü gittiklerinde bakkala, "Abur cubur istiyorum!" dedi Bücür. "Uzakmak için süt içmelisin!" dedi babası ve eline bir kutu süt verdi.</p>
+                        <p>Salı günü gittiklerinde pazara, "Abur cubur istiyorum!" dedi Bücür tezgâhlara bakarak. "Enerjik olmak için tahıllardan yemelisin!" dedi annesi ve eve döndüklerinde ona sebzeli bulgur pilavı verdi. Bücür de tabağındakilerin hepsini bitirdi.</p>
+                        <p>Çarşamba günü gittiklerinde kasaba, "Abur cubur istiyorum!" dedi Bücür. "Güçlü olmak için protein almalısın!" dedi dedesi ve eline bir avuç dolusu badem verdi. Akşama da çok güzel kıymalı mercimek yemeği yapmaya söz verdi.</p>
+                        <p>Perşembe günü gittiklerinde manava, "Abur cubur istiyorum!" dedi Bücür. "Hastalıklara karşı güçlü olmak için taze meyve sebze yemelisin!" dedi ağabeyi ve eline bir portakal verdi.</p>
+                        <p>Cuma günü markete gittiklerinde balıkçıya, "Abur cubur istiyorum!" dedi Bücür. "Akıllı olmak için balık yemelisin!" dedi babası ve ona balık ekmek uzattı.</p>
+                        <p>Cumartesi günü gittiklerinde markete, "Abur cubur istiyorum!" dedi Bücür. "Sağlıklı olmak için bol su içmelisin!" dedi annesi ve eline bir bardak su verdi.</p>
+                        <p>Pazar günü gittiklerinde büyükannesine, "Abur cubur istiyorum!" dedi Bücür. "Mutlu olmak için çikolata yemelisin!" dedi büyükanne ve çikolatalı bir puding verdi hemen eline.</p>
+                        <p>"Ben hâlâ abur cubur istiyorum!" dedi Bücür. "Tek bir tane seçebilirsin gittiğimizde tekrar bakkala!" dedi babası "Ya hem abur hem cubur istersem?" diye sordu Bücür. "O zaman aburu alırsın, cubur bekler haftaya!" dedi babası. Hep birlikte çok güldüler bu işe. Eh ne de olsa bir kahkaha bir pirzola, hele sağlıklı kişilere...</p>
+                        <p style="text-align: right; font-style: italic;">Aslı Gaye Capanoğlu</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2 class="slide-title">Alıştırma: Soruları Cevapla</h2>
+                <div class="slide-content" id="bucurQuiz">
+                    <div class="quiz-question">
+                        <p>1. Bu metindeki Bücür için aşağıdakilerden hangisinin doğruluğundan emin olabiliriz?</p>
+                        <div class="quiz-options" data-answer="A">
+                            <label><input type="radio" name="q1" value="A"> İsteklerini dile getiren bir çocuk.</label>
+                            <label><input type="radio" name="q1" value="B"> Ailenin en küçük erkek çocuğu.</label>
+                            <label><input type="radio" name="q1" value="C"> İstekleri yerine getirilmeyince hırçınlaşan bir çocuk.</label>
+                            <label><input type="radio" name="q1" value="D"> Ailede en çok babaannesine istediklerini yaptıran bir çocuk.</label>
+                        </div>
+                    </div>
+                    <div class="quiz-question">
+                        <p>3. Bu öyküde adı geçen bireyleri düşünerek aşağıdakilerden hangileri söylenebilir?</p>
+                        <div class="quiz-options" data-answer="C">
+                            <label><input type="radio" name="q3" value="A"> Bücür'ün en az bir ağabeyi var.</label>
+                            <label><input type="radio" name="q3" value="B"> Bücür'ün babaannesi ile Bücür'ün ailesi aynı evde yaşıyor.</label>
+                            <label><input type="radio" name="q3" value="C"> Bücür, babası ile espri yapmayı seviyor.</label>
+                            <label><input type="radio" name="q3" value="D"> Bücür'ün dedesi güzel yemek yapıyor.</label>
+                        </div>
+                    </div>
+                    <button class="check-button" id="checkBucurQuiz">Kontrol Et</button>
+                    <div class="feedback-message" id="feedbackBucurQuiz"></div>
+                </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">Alıştırma: Haydi Düşünelim!</h2>
+                <div class="slide-content">
+                    <p class="activity-instructions">Bu görsele bakarak öyküleyici bir metin yazacak olsak, hangi sorulara cevap vermemiz gerekir?</p>
+                    <div class="visual-story-container">
+                        <img src="https://i.imgur.com/g0t7QkY.png" alt="Üzgün çocuk ve annesi">
+                        <div class="visual-story-prompts">
+                            <h4>Öykü Unsurları (5N1K)</h4>
+                            <ul>
+                                <li><strong>Ne oldu?</strong> (Çocuk neye üzülmüş olabilir?)</li>
+                                <li><strong>Kimler var?</strong> (Annneso çocuğa ne söylüyor olabilir?)</li>
+                                <li><strong>Nerede?</strong> (Bu olay nerede yaşanıyor?)</li>
+                                <li><strong>Ne zaman?</strong> (Bu olay ne zaman yaşanıyor?)</li>
+                                <li><strong>Nasıl?</strong> (Olay nasıl sonuçlanabilir?)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2 class="slide-title">2. Bilgilendirici Metin</h2>
+                <div class="slide-content">
+                    <div class="definition-box">
+                        Bir gerçeği, bir düşünceyi; bir gözlem, izlenim veya deneyimin sonucunu okura <strong>iletmeyi amaçlar.</strong> Okuru bir konuda <strong>bilgilendirmek</strong> amacıyla yazılır.<br>
+                        (Kullanım kılavuzları, tarifler, ansiklopediler, haberler)
+                    </div>
+                    <p>Kısacası, bu metinler bize bir şeyler öğretir!</p>
+                </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">Alıştırma: Hangisi Bilgi Verir?</h2>
+                <div class="slide-content">
+                    <p class="activity-instructions">Aşağıdaki başlıklardan hangileri bilgilendirici metinlere ait olabilir? İşaretleyiniz.</p>
+                    <div class="checklist-options" id="informativeChecklist">
+                        <label><input type="checkbox" data-correct="true"> Kuşlar Niçin V Şeklinde Uçar?</label>
+                        <label><input type="checkbox" data-correct="true"> Göz Sağlığımızı Korumak İçin Yapabileceklerimiz</label>
+                        <label><input type="checkbox" data-correct="false"> Küçük Prens</label>
+                        <label><input type="checkbox" data-correct="true"> Kurtuluş Savaşı'ndaki Cepheler</label>
+                        <label><input type="checkbox" data-correct="false"> Kül Kedisi Sindirella</label>
+                        <label><input type="checkbox" data-correct="false"> Atatürk Şiirleri</label>
+                        <label><input type="checkbox" data-correct="true"> Yüksek Hızlı Trenlerin Tarihi</label>
+                        <label><input type="checkbox" data-correct="false"> Uçan Traktörün Maceraları</label>
+                    </div>
+                    <button class="check-button" id="checkInformativeList">Kontrol Et</button>
+                    <div class="feedback-message" id="feedbackInformativeList"></div>
+                </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">Alıştırma: Bilgi Türlerini Eşleştir</h2>
+                <div class="slide-content">
+                    <p class="activity-instructions">Soldaki bilgilendirici metin türlerini, sağdaki amaçlarıyla eşleştirmek için sürükleyip bırakın.</p>
+                    <div class="match-container" id="informativeMatchGame">
+                        <div class="match-column" id="match-source">
+                            <div class="match-item" draggable="true" data-id="tarif">
+                                <img src="https://i.imgur.com/0Fq7s9f.png" alt="Tarif" style="width: 100%; border-radius: 6px;">
+                            </div>
+                            <div class="match-item" draggable="true" data-id="sembol">
+                                <img src="https://i.imgur.com/gK9lY8E.png" alt="Semboller" style="width: 100%; border-radius: 6px;">
+                            </div>
+                            <div class="match-item" draggable="true" data-id="form">
+                                <img src="https://i.imgur.com/a9Q0c4G.png" alt="Form" style="width: 100%; border-radius: 6px;">
+                            </div>
+                        </div>
+                        <div class="match-column" id="match-target">
+                            <div class="match-target" data-id="tarif">
+                                <h4>Yemek Tarifi</h4>
+                                <small>Bir işin nasıl yapılacağını sırasıyla anlatır.</small>
+                            </div>
+                            <div class="match-target" data-id="form">
+                                <h4>Kayıt Formu</h4>
+                                <small>Kişisel bilgileri toplamak için kullanılır.</small>
+                            </div>
+                            <div class="match-target" data-id="sembol">
+                                <h4>Ambalaj Sembolleri</h4>
+                                <small>Görsel yolla hızlı bilgi verir (Kırılır, Geri Dönüşüm vb.)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feedback-message" id="feedbackInformativeMatch"></div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2 class="slide-title">3. Şiir</h2>
+                <div class="slide-content">
+                    <div class="definition-box">
+                        <strong>Duyguların</strong>, <strong>çağrışımların</strong>, izlenimlerin <strong>dizeler</strong> hâlinde dillendirildiği yazınsal türlerdir. Şiirler genellikle duygu yoğunluğu içerse de <strong>öğretici şiirler</strong> de vardır.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">Alıştırma: Şiiri Tanıyalım</h2>
+                <div class="slide-content" style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+                    <div class="text-scroll-box" style="flex: 1; min-width: 250px;">
+                        <h4>Sevdiklerim</h4>
+                        <p style="background-color: #ffffdd; padding: 5px; border-radius: 4px;">
+                            Okula gidişimi severim<br>
+                            Uçuş böceğinin elimde gezmesini<br>
+                            Karabiberlerin başıma değmesini.
+                        </p>
+                        <p style="background-color: #eeffee; padding: 5px; border-radius: 4px;">
+                            Annemin bakışını severim<br>
+                            Meyve ağaçlarının çiçek açmasını<br>
+                            Tavşanın korkup yuvasına kaçmasını.
+                        </p>
+                        <p style="background-color: #ffffdd; padding: 5px; border-radius: 4px;">
+                            Arkadaşımın gülüşünü severim<br>
+                            Bahar rüzgârının yüzümü okşamasını<br>
+                            Tırtılların dut yapraklarını yemesini.
+                        </p>
+                         <p style="background-color: #eeffee; padding: 5px; border-radius: 4px;">
+                            Babamın evde oluşunu severim<br>
+                            Çam ağaçlarının kışın da yeşil kalmasını<br>
+                            Kartalların çok yüksek yerlere yuva yapmasını.
+                        </p>
+                        <p style="text-align: right; font-style: italic;">Süreyya Berfe</p>
+                    </div>
+                    <div style="flex: 1; min-width: 250px;">
+                        <p class="activity-instructions">Bu şiir hakkında ne söyleyebiliriz?</p>
+                        <ul>
+                            <li>Bu şiir <strong>4 dizeden</strong> (kıta) oluşmaktadır.</li>
+                            <li>Şairi <strong>Süreyya Berfe</strong>'dir.</li>
+                            <li>Şair, bize duygularını ve sevdiği basit şeyleri anlatmıştır.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">Alıştırma: Metin Türünü Bul</h2>
+                <div class="slide-content" id="typeIdentifier">
+                    <p class="activity-instructions">Metinleri okuyun ve türünü yandaki kutudan seçin.</p>
+                    
+                    <div class="content-box">
+                        <h4>Yakan Top Oyunu</h4>
+                        <p>Oyuncu Sayısı: En az 4 kişilik iki grupla oynanır. [...] Oyunun Kuralları: Çocuklar iki gruba ayrılır. Grupların eşit sayıda olması tercih edilir. [...]</p>
+                        <select class="type-select" data-answer="bilgilendirici">
+                            <option value="">Türünü Seç</option>
+                            <option value="oykuleyici">Öyküleyici</option>
+                            <option value="bilgilendirici">Bilgilendirici</option>
+                            <option value="siir">Şiir</option>
+                        </select>
+                    </div>
+                    
+                     <div class="content-box">
+                        <h4>Ben ve Oyun</h4>
+                        <p>Koştum, oynadım<br>Yara bere içinde kaldım.<br>Ama en sevdiğim oyunları<br>Teker teker oynadım.</p>
+                        <select class="type-select" data-answer="siir">
+                            <option value="">Türünü Seç</option>
+                            <option value="oykuleyici">Öyküleyici</option>
+                            <option value="bilgilendirici">Bilgilendirici</option>
+                            <option value="siir">Şiir</option>
+                        </select>
+                    </div>
+                    
+                     <div class="content-box">
+                        <h4>Yakan Top Oynamak</h4>
+                        <p>Yakan top oynamak için okulun bahçesinde toplandık. Bir an önce oyun başlasın istiyordum. Herkes beni övmesin istiyordum. [...] Atılan topu yakalamak için geri geri gidiyordum. O sırada gruptan bir arkadaşıma çarptım ve topu yakaladım...</p>
+                        <select class="type-select" data-answer="oykuleyici">
+                            <option value="">Türünü Seç</option>
+                            <option value="oykuleyici">Öyküleyici</option>
+                            <option value="bilgilendirici">Bilgilendirici</option>
+                            <option value="siir">Şiir</option>
+                        </select>
+                    </div>
+                    
+                    <button class="check-button" id="checkTypeIdentifier">Kontrol Et</button>
+                    <div class="feedback-message" id="feedbackTypeIdentifier"></div>
+                </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">4. Metnin Bölümleri</h2>
+                <div class="slide-content">
+                    <p>İster öyküleyici ister bilgilendirici olsun, yazdığımız metinler 3 ana bölümden oluşur:</p>
+                    <div class="content-box">
+                        <h4 style="color: var(--color-blue);">GİRİŞ</h4>
+                        <p>Metnin ilk bölümüdür. Öyküleyici metinlerde karakterler ve yer tanıtılır. Bilgilendirici metinlerde ise hangi konu hakkında bilgi verileceği söylenir.</p>
+                    </div>
+                     <div class="content-box">
+                        <h4 style="color: var(--color-orange);">GELİŞME</h4>
+                        <p>Metnin en uzun bölümüdür. Öyküleyici metinlerde olayın başladığı, geliştiği ve merak uyandırdığı yerdir. Bilgilendirici metinlerde konunun açıklandığı, örneklerin verildiği yerdir.</p>
+                    </div>
+                     <div class="content-box">
+                        <h4 style="color: var(--color-purple);">SONUÇ</h4>
+                        <p>Metnin son bölümüdür. Öyküleyici metinlerde olayın bir sonuca bağlandığı yerdir. Bilgilendirici metinlerde ise anlatılan konunun özetlendiği veya bir sonuca varıldığı yerdir.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">Alıştırma: Metni Sırala</h2>
+                <div class="slide-content" id="storySortGame">
+                    <p class="activity-instructions">Paragrafları "Giriş, Gelişme, Sonuç" olacak şekilde doğru kutulara sürükleyin.</p>
+                    <div id="sort-source-box">
+                        <div class="sort-item" draggable="true" data-id="gelisme">
+                            Dal parçasını yerden almak için eğilirken önüne düşen gölgeyi gördü. Kalbi güm güm atmaya başladı. Doğruldu.
+                        </div>
+                        <div class="sort-item" draggable="true" data-id="sonuc">
+                            — Bak, burada bir yuva var. — Ne yuvası? Kuş yuvası mı? — Hayır, arı yuvası! ... Olsun! Arı yuvasından uzak durmaya bakarım ben.
+                        </div>
+                        <div class="sort-item" draggable="true" data-id="giris">
+                            Patikanın üstünde kuru bir dal parçası buldu. Onu, gerektiğinde baston gibi kullanabilirdi. 
+                        </div>
+                    </div>
+                    <div class="sort-targets">
+                        <div class="sort-target-box" data-id="giris">
+                            <h4>GİRİŞ</h4>
+                        </div>
+                        <div class="sort-target-box" data-id="gelisme">
+                            <h4>GELİŞME</h4>
+                        </div>
+                        <div class="sort-target-box" data-id="sonuc">
+                            <h4>SONUÇ</h4>
+                        </div>
+                    </div>
+                    <div class="feedback-message" id="feedbackStorySort"></div>
+                </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">Konu: Yazı Biçimi</h2>
+                <div class="slide-content">
+                     <p class="activity-instructions">Sizce bu metinde neden farklı yazı tipleri kullanılmış?</p>
+                     <div class="content-box hirs-text">
+                        <div class="title">Hırs: Azı karar, çoğu zarar</div>
+                        <p>Hırs için "Azı karar, çoğu zarar." diyor babam. Bir şeyi başarmayı çok istediğimiz zaman, duygularımızın yoğunlaşması, o hedefin hayatımızda önemli bir yer kaplamaya başlaması normalmiş. <span class="bold">Normal olmayan şey ise hırsın bütün diğer duyguların önüne geçmesi</span> ve kendimize kaybetme hakkı tanımıyor oluşumuzmuş.</p>
+                        <p>"İyi de kimse kaybetmek istemez ki, herkes kazanmak ister!" dedim. "Evet, herkes kazanmak ister ama hayatın kuralı bu: Birileri kazanırsa birileri kaybeder." dedi babam, <span class="italic">"Her iki taraf için ikisi de mümkün."</span></p>
+                     </div>
+                     <div class="content-box">
+                        <p><strong>Cevap:</strong> Yazar, metindeki bazı yerleri vurgulamak, okuyucunun dikkatini o noktaya çekmek veya sözün kime ait olduğunu (eğik yazı) belirtmek için farklı yazı tipleri kullanmıştır.</p>
+                     </div>
+                </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">Tebrikler! 🥳</h2>
+                <div class="slide-content">
+                    <div class="definition-box">
+                        Bu dersi başarıyla tamamladınız. Artık öyküleyici metinleri, bilgilendirici metinleri ve şiirleri kolayca tanıyabilir, bir metnin bölümlerini (giriş, gelişme, sonuç) ayırt edebilirsiniz!
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-navigation">
+            <button class="nav-button" id="prevBtn" disabled>&#171; Geri</button>
+            <span id="slide-counter">Slayt 1 / 15</span>
+            <button class="nav-button" id="nextBtn">İleri &#187;</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const counter = document.getElementById('slide-counter');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+                currentSlide = index;
+                counter.textContent = `Slayt ${index + 1} / ${totalSlides}`;
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === totalSlides - 1;
+            }
+
+            prevBtn.addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    showSlide(currentSlide - 1);
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentSlide < totalSlides - 1) {
+                    showSlide(currentSlide + 1);
+                }
+            });
+
+            showSlide(0);
+
+            // --- Etkileşimli Modüller ---
+
+            // Alıştırma 1: Bücür Testi (Slayt 4)
+            const bucurQuizBtn = document.getElementById('checkBucurQuiz');
+            if (bucurQuizBtn) {
+                bucurQuizBtn.addEventListener('click', () => {
+                    const quizContainer = document.getElementById('bucurQuiz');
+                    const feedback = document.getElementById('feedbackBucurQuiz');
+                    let allCorrect = true;
+
+                    quizContainer.querySelectorAll('.quiz-question').forEach(q => {
+                        const options = q.querySelectorAll('.quiz-options label');
+                        const selected = q.querySelector('input[type=radio]:checked');
+                        const correctAnswer = q.querySelector('.quiz-options').dataset.answer;
+                        
+                        options.forEach(opt => opt.classList.remove('correct', 'incorrect'));
+                        
+                        if (selected) {
+                            const selectedLabel = selected.parentElement;
+                            if (selected.value === correctAnswer) {
+                                selectedLabel.classList.add('correct');
+                            } else {
+                                selectedLabel.classList.add('incorrect');
+                                allCorrect = false;
+                                // Doğru cevabı da göster
+                                q.querySelector(`input[value="${correctAnswer}"]`).parentElement.classList.add('correct');
+                            }
+                        } else {
+                            allCorrect = false; // Cevap seçilmemiş
+                            q.querySelector(`input[value="${correctAnswer}"]`).parentElement.classList.add('correct');
+                        }
+                    });
+
+                    feedback.classList.add('visible');
+                    if (allCorrect) {
+                        feedback.textContent = 'Tebrikler, harika iş! 🥳';
+                        feedback.className = 'feedback-message visible feedback-correct';
+                    } else {
+                        feedback.textContent = 'Doğru cevapları yeşil renkte görebilirsin. 🤔';
+                        feedback.className = 'feedback-message visible feedback-incorrect';
+                    }
+                });
+            }
+
+            // Alıştırma 3: Bilgilendirici Başlık Seçme (Slayt 7)
+            const infoCheckBtn = document.getElementById('checkInformativeList');
+            if(infoCheckBtn) {
+                infoCheckBtn.addEventListener('click', () => {
+                    const checklist = document.getElementById('informativeChecklist');
+                    const feedback = document.getElementById('feedbackInformativeList');
+                    let allCorrect = true;
+                    
+                    checklist.querySelectorAll('label').forEach(label => {
+                        const input = label.querySelector('input');
+                        const isCorrect = input.dataset.correct === 'true';
+                        
+                        label.classList.remove('correct', 'incorrect');
+                        
+                        if ((isCorrect && input.checked) || (!isCorrect && !input.checked)) {
+                            label.classList.add('correct');
+                        } else {
+                            label.classList.add('incorrect');
+                            allCorrect = false;
+                        }
+                    });
+                    
+                    feedback.classList.add('visible');
+                    if (allCorrect) {
+                        feedback.textContent = 'Tebrikler, hepsini doğru buldun! 🥳';
+                        feedback.className = 'feedback-message visible feedback-correct';
+                    } else {
+                        feedback.textContent = 'Hatalı seçimlerin var, tekrar gözden geçir. 🤔';
+                        feedback.className = 'feedback-message visible feedback-incorrect';
+                    }
+                });
+            }
+
+            // Alıştırma 4 & 8: Sürükle Bırak (Drag & Drop) Mantığı
+            let draggedItem = null;
+
+            document.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('match-item') || e.target.classList.contains('sort-item')) {
+                    draggedItem = e.target;
+                    setTimeout(() => e.target.classList.add('dragging'), 0);
+                }
+            });
+
+            document.addEventListener('dragend', (e) => {
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                    draggedItem = null;
+                }
+            });
+
+            document.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.match-target, .sort-target-box');
+                if (target) {
+                    target.classList.add('drag-over');
+                }
+            });
+
+            document.addEventListener('dragleave', (e) => {
+                const target = e.target.closest('.match-target, .sort-target-box');
+                if (target) {
+                    target.classList.remove('drag-over');
+                }
+            });
+
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.match-target, .sort-target-box');
+                if (target && draggedItem) {
+                    target.classList.remove('drag-over');
+                    
+                    // Alıştırma 4: Tür Eşleştirme
+                    if (draggedItem.classList.contains('match-item')) {
+                        if (draggedItem.dataset.id === target.dataset.id) {
+                            target.appendChild(draggedItem);
+                            draggedItem.draggable = false;
+                            checkInformativeMatch();
+                        }
+                    }
+                    // Alıştırma 8: Metin Sıralama
+                    else if (draggedItem.classList.contains('sort-item')) {
+                        if (draggedItem.dataset.id === target.dataset.id) {
+                            target.appendChild(draggedItem);
+                            checkStorySort();
+                        } else {
+                            // Hatalıysa kaynağa geri gönder
+                            document.getElementById('sort-source-box').appendChild(draggedItem);
+                            checkStorySort(); // Feedback vermek için yine de kontrol et
+                        }
+                    }
+                }
+            });
+            
+            // Alıştırma 4: Eşleştirme Kontrolü
+            function checkInformativeMatch() {
+                const game = document.getElementById('informativeMatchGame');
+                if(!game) return;
+                const feedback = document.getElementById('feedbackInformativeMatch');
+                const source = game.querySelector('#match-source');
+                if (source.children.length === 0) {
+                    feedback.textContent = 'Tebrikler, hepsini doğru eşleştirdin! 🥳';
+                    feedback.className = 'feedback-message visible feedback-correct';
+                }
+            }
+            
+            // Alıştırma 8: Sıralama Kontrolü
+            function checkStorySort() {
+                const game = document.getElementById('storySortGame');
+                if(!game) return;
+                const feedback = document.getElementById('feedbackStorySort');
+                const source = game.querySelector('#sort-source-box');
+                if (source.children.length === 0) {
+                    feedback.textContent = 'Harika! Metni doğru sıraladın. 🥳';
+                    feedback.className = 'feedback-message visible feedback-correct';
+                } else {
+                    feedback.textContent = 'Bazı parçalar yanlış yerde. 🤔';
+                    feedback.className = 'feedback-message visible feedback-incorrect';
+                }
+            }
+
+            // Alıştırma 6: Metin Türünü Bul (Slayt 11)
+            const typeCheckBtn = document.getElementById('checkTypeIdentifier');
+            if(typeCheckBtn) {
+                typeCheckBtn.addEventListener('click', () => {
+                    const identifier = document.getElementById('typeIdentifier');
+                    const feedback = document.getElementById('feedbackTypeIdentifier');
+                    let allCorrect = true;
+                    
+                    identifier.querySelectorAll('.type-select').forEach(select => {
+                        select.classList.remove('correct', 'incorrect');
+                        if (select.value === select.dataset.answer) {
+                            select.classList.add('correct');
+                        } else {
+                            select.classList.add('incorrect');
+                            allCorrect = false;
+                        }
+                    });
+
+                    feedback.classList.add('visible');
+                    if (allCorrect) {
+                        feedback.textContent = 'Tebrikler, hepsini doğru bildin! 🥳';
+                        feedback.className = 'feedback-message visible feedback-correct';
+                    } else {
+                        feedback.textContent = 'Hatalı seçimlerin var, tekrar gözden geçir. 🤔';
+                        feedback.className = 'feedback-message visible feedback-incorrect';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
