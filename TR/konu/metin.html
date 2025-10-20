@@ -143,17 +143,20 @@
             padding: 15px;
             background: #fff;
             border-radius: 6px;
-            font-size: 1.1rem;
+            font-size: 1.15rem; /* GÜNCELLENDİ: Punto artırıldı */
+            line-height: 1.7;   /* GÜNCELLENDİ: Satır aralığı artırıldı */
         }
         .text-scroll-box h4 {
             font-family: 'Cinzel Decorative', cursive;
             color: var(--accent-color);
             text-align: center;
-            font-size: 1.3rem;
+            font-size: 1.4rem; /* GÜNCELLENDİ */
             margin-bottom: 10px;
+            text-indent: 0; /* Başlıkta girinti olmasın */
         }
         .text-scroll-box p {
             margin-bottom: 15px;
+            text-indent: 1.5em; /* Paragraf başı girintisi */
         }
         
         /* === Genel Alıştırma Stilleri === */
@@ -167,7 +170,7 @@
         .feedback-message {
             text-align: center; font-weight: bold; min-height: 24px; margin-top: 15px;
             font-size: 1.2rem;
-            visibility: hidden; /* Başlangıçta gizli */
+            visibility: hidden; 
         }
         .feedback-message.visible { visibility: visible; }
         .feedback-correct { color: var(--correct-border); }
@@ -227,13 +230,12 @@
             gap: 20px;
             align-items: center;
         }
-        /* GÜNCELLENDİ: Görsel stili */
         .visual-story-container img {
             max-width: 250px;
             width: 100%;
-            height: 300px; /* Sabit yükseklik */
-            object-fit: cover; /* Görseli kırp */
-            object-position: top center; /* Görselin üst-orta kısmını göster */
+            height: 300px; 
+            object-fit: cover; 
+            object-position: top center; 
             border: 3px solid var(--border-color);
             border-radius: 8px;
             box-shadow: 0 4px 10px var(--shadow-color);
@@ -291,7 +293,7 @@
         }
         .match-item {
             font-size: 1.1rem;
-            padding: 10px; /* Padding azaltıldı */
+            padding: 10px; 
             border: 2px solid var(--border-color);
             background-color: #fff;
             border-radius: 8px;
@@ -299,12 +301,11 @@
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px var(--shadow-color);
         }
-        /* GÜNCELLENDİ: Görselin kutuya sığması için */
         .match-item img {
             width: 100%;
             height: 150px;
             object-fit: cover;
-            object-position: top; /* Sayfanın üst kısmını göster */
+            object-position: top; 
             border-radius: 6px;
             display: block;
         }
@@ -414,11 +415,18 @@
             color: var(--color-blue);
         }
         
+        /* === Medya Sorguları === */
         @media (max-width: 600px) {
             .slide-navigation { flex-wrap: wrap; justify-content: center; gap: 15px; }
             #slide-counter { order: -1; width: 100%; text-align: center; }
             .visual-story-container { flex-direction: column; }
             .text-scroll-box { max-height: 300px; }
+            /* GÜNCELLENDİ: Eşleştirme Mobil */
+            .match-container { flex-direction: column; }
+            .match-column { min-width: 100%; }
+            .match-target { min-height: 100px; }
+            .sort-targets { flex-direction: column; }
+            .sort-target-box { min-width: 100%; }
         }
     </style>
 </head>
@@ -875,57 +883,94 @@
             let draggedItem = null;
 
             document.addEventListener('dragstart', (e) => {
+                // Sadece sürüklenmesi gereken öğeler için başlat
                 if (e.target.classList.contains('match-item') || e.target.classList.contains('sort-item')) {
+                     // Hedefte zaten bir item varsa sürüklemeyi engelle (Opsiyonel ama önerilir)
+                    if (e.target.parentElement.classList.contains('match-target') || e.target.parentElement.classList.contains('sort-target-box')) {
+                        // Eğer item zaten hedefe yerleşmişse ve tekrar sürüklenmeye çalışılıyorsa, engelle
+                        if(!e.target.parentElement.id.includes('source')){ // Kaynak kutusu hariç
+                           e.preventDefault();
+                           return;
+                        }
+                    }
                     draggedItem = e.target;
                     setTimeout(() => e.target.classList.add('dragging'), 0);
                 }
             });
 
+
             document.addEventListener('dragend', (e) => {
                 if (draggedItem) {
+                     // Sürükleme bittiğinde, eğer hala 'dragging' sınıfı varsa kaldır
                     draggedItem.classList.remove('dragging');
                     draggedItem = null;
                 }
+                 // Tüm drag-over sınıflarını temizle (bırakma hedef dışına yapılırsa)
+                document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
             });
 
             document.addEventListener('dragover', (e) => {
-                e.preventDefault();
+                e.preventDefault(); // Drop işleminin gerçekleşmesi için gerekli
                 const target = e.target.closest('.match-target, .sort-target-box');
                 if (target) {
-                    target.classList.add('drag-over');
+                     // Hedef kutuda zaten bir eleman varsa üzerine gelme efekti verme (Opsiyonel)
+                     // Bu, yalnızca bir öğe kabul eden kutular için mantıklıdır.
+                    if (!target.querySelector('.match-item:not(.dragging)') && !target.querySelector('.sort-item:not(.dragging)')) {
+                        target.classList.add('drag-over');
+                    } else {
+                        // Eğer hedef doluysa, üzerine gelme efektini kaldır
+                        target.classList.remove('drag-over');
+                    }
                 }
             });
 
-            document.addEventListener('dragleave', (e) => {
+             document.addEventListener('dragleave', (e) => {
+                // dragleave olayı, fare bir child elementten parent'a geçtiğinde de tetiklenebilir.
+                // Gerçekten hedeften ayrılıp ayrılmadığını kontrol etmek için relatedTarget kullanılabilir.
                 const target = e.target.closest('.match-target, .sort-target-box');
-                if (target) {
+                // relatedTarget, farenin girdiği yeni elementtir.
+                // Eğer fare hala target'ın içindeyse (child elemente geçmişse) veya target'tan tamamen çıkmamışsa, sınıfı kaldırma.
+                if (target && (!e.relatedTarget || !target.contains(e.relatedTarget))) {
                     target.classList.remove('drag-over');
                 }
             });
+
 
             document.addEventListener('drop', (e) => {
                 e.preventDefault();
                 const target = e.target.closest('.match-target, .sort-target-box');
-                if (target && draggedItem) {
+                // Sadece boş hedeflere bırakmaya izin ver
+                if (target && draggedItem && !target.querySelector('.match-item') && !target.querySelector('.sort-item')) {
                     target.classList.remove('drag-over');
                     
                     if (draggedItem.classList.contains('match-item')) {
                         if (draggedItem.dataset.id === target.dataset.id) {
+                            // Kaynaktan hedefi temizle (eğer varsa)
+                            const currentItemInTarget = target.querySelector('.match-item');
+                            if(currentItemInTarget) document.getElementById('match-source').appendChild(currentItemInTarget);
+
                             target.appendChild(draggedItem);
-                            draggedItem.draggable = false;
+                            // draggedItem.draggable = false; // Tekrar sürüklenmesini istemiyorsanız
                             checkInformativeMatch();
                         }
                     }
                     else if (draggedItem.classList.contains('sort-item')) {
-                        if (draggedItem.dataset.id === target.dataset.id) {
-                            target.appendChild(draggedItem);
-                            checkStorySort();
-                        } else {
-                            document.getElementById('sort-source-box').appendChild(draggedItem);
-                            checkStorySort();
-                        }
+                         // Kaynaktan hedefi temizle (eğer varsa)
+                         const currentItemInTarget = target.querySelector('.sort-item');
+                         if(currentItemInTarget) document.getElementById('sort-source-box').appendChild(currentItemInTarget);
+
+                        target.appendChild(draggedItem);
+                        checkStorySort(); // Bırakılan her durumda kontrol et
                     }
+                } else if (target) {
+                     // Hedef doluysa veya sürüklenen öğe yoksa, üzerine gelme efektini kaldır
+                     target.classList.remove('drag-over');
+                     // İsteğe bağlı: Hedef doluysa kullanıcıya bildirim verilebilir.
                 }
+
+                // Sürüklenen öğe hedefe bırakılmasa bile (örn. boş bir alana),
+                // tüm olası 'drag-over' sınıflarını temizlemek iyi bir pratiktir.
+                 document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
             });
             
             function checkInformativeMatch() {
@@ -944,12 +989,24 @@
                 if(!game) return;
                 const feedback = document.getElementById('feedbackStorySort');
                 const source = game.querySelector('#sort-source-box');
-                if (source.children.length === 0) {
+                
+                 // Hedef kutuların doğru sırada olup olmadığını kontrol et
+                 const targets = game.querySelectorAll('.sort-target-box');
+                 let isCorrectOrder = true;
+                 targets.forEach(target => {
+                     const item = target.querySelector('.sort-item');
+                     if (!item || item.dataset.id !== target.dataset.id) {
+                         isCorrectOrder = false;
+                     }
+                 });
+
+
+                if (isCorrectOrder) { // Kaynak kutusu boşsa VE hedefler doğruysa
                     feedback.textContent = 'Harika! Metni doğru sıraladın. 🥳';
                     feedback.className = 'feedback-message visible feedback-correct';
                 } else {
-                    feedback.textContent = 'Bazı parçalar yanlış yerde. 🤔';
-                    feedback.className = 'feedback-message visible feedback-incorrect';
+                     feedback.textContent = 'Bazı parçalar yanlış yerde veya eksik. 🤔';
+                     feedback.className = 'feedback-message visible feedback-incorrect';
                 }
             }
 
@@ -982,13 +1039,13 @@
                 });
             }
             
-            // GÜNCELLENDİ: Alıştırma: Hırs Metni Cevabı (Slayt 14)
+            // Alıştırma: Hırs Metni Cevabı (Slayt 14)
             const hirsAnswerBtn = document.getElementById('showHirsAnswer');
             const hirsAnswerBox = document.getElementById('hirsAnswerBox');
             if (hirsAnswerBtn) {
                 hirsAnswerBtn.addEventListener('click', () => {
-                    hirsAnswerBox.style.display = 'block'; // Cevap kutusunu göster
-                    hirsAnswerBtn.style.display = 'none'; // Butonu gizle
+                    hirsAnswerBox.style.display = 'block'; 
+                    hirsAnswerBtn.style.display = 'none'; 
                 });
             }
         });
