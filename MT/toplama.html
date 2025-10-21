@@ -221,7 +221,7 @@
         .dynamic-bars-area { display: flex; align-items: flex-end; gap: 20px; height: 410px; border-bottom: 5px solid var(--text-primary); padding-bottom: 5px; }
         .bar-stack-container { display: flex; flex-direction: column-reverse; justify-content: flex-start; align-items: center; width: 100px; height: 100%; }
         
-        /* === GÜNCELLENDİ: Senkronizasyon için transition kaldırıldı === */
+        /* === GÜNCEL: Senkronizasyon için transition kaldırıldı === */
         .dynamic-bar { 
             width: 100%; 
             /* transition: height 0.1s ease-out; */
@@ -831,7 +831,7 @@
                 generateProblem();
             })();
 
-            // TAB 6: Tahmin Et & Karşılaştır (GÜNCEL: Manuel Sayı Girişi Eklendi)
+            // TAB 6: Tahmin Et & Karşılaştır (GÜNCEL: İstenen Manuel Giriş Alanları Boş Bırakıldı)
             (function() {
                 const tab = document.getElementById('tab-6'); if (!tab) return;
                 tab.innerHTML = `<div class="section-header"><h2>Tahmin Et & Karşılaştır (Manuel Sayı Girişi)</h2></div>
@@ -909,38 +909,50 @@
                             <div class="estimate-answer-row"><input type="number" id="user-real-sum-input" class="estimate-input" placeholder="Gerçek Toplam"></div>
                         </div></div>
                         <div class="estimate-box box-estimate"><div class="estimate-box-header">Tahminî Sonuç</div><div class="estimate-problem-area">
-                            <div class="estimate-number-row"><span class="arrow">→</span><input type="number" id="user-est-num1-input" class="estimate-input" placeholder="1. Sayı Yuvarla" value="${correctEstNum1}"></div>
-                            <div class="estimate-number-row"><span class="operator">+</span><span class="arrow">→</span><input type="number" id="user-est-num2-input" class="estimate-input" placeholder="2. Sayı Yuvarla" value="${correctEstNum2}"></div><hr>
+                            <div class="estimate-number-row"><span class="arrow">→</span><input type="number" id="user-est-num1-input" class="estimate-input" placeholder="1. Sayı Yuvarla"></div>
+                            <div class="estimate-number-row"><span class="operator">+</span><span class="arrow">→</span><input type="number" id="user-est-num2-input" class="estimate-input" placeholder="2. Sayı Yuvarla"></div><hr>
                             <div class="estimate-answer-row"><input type="number" id="user-est-sum-input" class="estimate-input" placeholder="Tahminî Toplam"></div>
                         </div></div>
                         <div class="estimate-box box-fark"><div class="estimate-box-header">Fark</div><div class="estimate-problem-area">
-                            <div class="estimate-number-row"><input type="number" id="user-fark-minuend-input" class="estimate-input" placeholder="Büyük Sonuç" value="${farkMinuend}"></div>
-                            <div class="estimate-number-row"><span class="operator">-</span><input type="number" id="user-fark-subtrahend-input" class="estimate-input" placeholder="Küçük Sonuç" value="${farkSubtrahend}"></div><hr>
+                            <div class="estimate-number-row"><input type="number" id="user-fark-minuend-input" class="estimate-input" placeholder="Büyük Sonuç"></div>
+                            <div class="estimate-number-row"><span class="operator">-</span><input type="number" id="user-fark-subtrahend-input" class="estimate-input" placeholder="Küçük Sonuç"></div><hr>
                             <div class="estimate-answer-row"><input type="number" id="user-final-fark-input" class="estimate-input" placeholder="Fark"></div>
                         </div></div>
                     `;
                     showAnswerBtn.textContent = 'Sonuçları Göster';
                     
-                    document.getElementById('user-est-num1-input').disabled = true;
-                    document.getElementById('user-est-num2-input').disabled = true;
-                    document.getElementById('user-fark-minuend-input').disabled = true;
-                    document.getElementById('user-fark-subtrahend-input').disabled = true;
+                    // Önceki kodda disabled olan ve değeri dolu gelen alanlar artık manuel giriş için boş ve aktif.
                 }
 
                 checkBtn.addEventListener('click', () => {
+                    // Kontrol edilmesi gereken tüm input alanları (Gerçek Toplam, Tahmini Toplam, Yuvarlanmış Sayılar ve Fark İşlemi Sayıları)
                     const inputs = {
                         realSum: document.getElementById('user-real-sum-input'),
+                        estNum1: document.getElementById('user-est-num1-input'),
+                        estNum2: document.getElementById('user-est-num2-input'),
                         estSum: document.getElementById('user-est-sum-input'),
+                        farkMinuend: document.getElementById('user-fark-minuend-input'),
+                        farkSubtrahend: document.getElementById('user-fark-subtrahend-input'),
                         finalFark: document.getElementById('user-final-fark-input')
                     };
                     const correctAnswers = container.dataset; let allCorrect = true;
                     
                     for (const key in inputs) {
-                        const input = inputs[key]; const userAnswer = parseInt(input.value, 10);
+                        const input = inputs[key]; 
+                        const userAnswer = parseInt(input.value, 10);
+                        // farkMinuend ve farkSubtrahend için, kullanıcının sırasını kontrol etmek yerine
+                        // mutlak farkın (finalFark) doğru olup olmadığını kontrol etmek daha önemlidir.
+                        // Ancak talep, sayıların da doğru girilmesini içeriyor. Bu yüzden buradaki kontrolü bırakıyorum.
                         const correctAnswer = parseInt(correctAnswers[key], 10);
+                        
                         input.classList.remove('correct', 'incorrect');
-                        if (isNaN(userAnswer) || userAnswer !== correctAnswer) { allCorrect = false; input.classList.add('incorrect'); } 
-                        else { input.classList.add('correct'); }
+                        if (isNaN(userAnswer) || userAnswer !== correctAnswer) { 
+                            allCorrect = false; 
+                            input.classList.add('incorrect'); 
+                        } 
+                        else { 
+                            input.classList.add('correct'); 
+                        }
                     }
                     
                     if (allCorrect) { feedbackDiv.textContent = 'Tebrikler! Tüm cevapların doğru! 🥳'; feedbackDiv.style.color = 'var(--correct-border)'; } 
@@ -948,15 +960,24 @@
                 });
 
                 showAnswerBtn.addEventListener('click', () => {
-                    const isHidden = showAnswerBtn.textContent === 'Sonuçları Göster'; const correctAnswers = container.dataset;
+                    const isHidden = showAnswerBtn.textContent === 'Sonuçları Göster'; 
+                    const correctAnswers = container.dataset;
+                    
+                    // Tüm inputları seçiyoruz (Manuel olarak doldurulması gerekenler dahil)
                     const inputs = {
                         realSum: document.getElementById('user-real-sum-input'),
+                        estNum1: document.getElementById('user-est-num1-input'),
+                        estNum2: document.getElementById('user-est-num2-input'),
                         estSum: document.getElementById('user-est-sum-input'),
+                        farkMinuend: document.getElementById('user-fark-minuend-input'),
+                        farkSubtrahend: document.getElementById('user-fark-subtrahend-input'),
                         finalFark: document.getElementById('user-final-fark-input')
                     };
+
                     for (const key in inputs) {
                         const input = inputs[key];
                         input.classList.remove('correct', 'incorrect');
+                        // Gizliyse göster, açıksa gizle
                         input.value = isHidden ? correctAnswers[key] : '';
                     }
                     showAnswerBtn.textContent = isHidden ? 'Sonuçları Gizle' : 'Sonuçları Göster';
