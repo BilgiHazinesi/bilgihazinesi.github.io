@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Çarpma Egzersizi (İki Seviye) - Bilgi Hazinesi</title>
     
-    <base href="https://bilghazinesi.github.io/">
+    <base href="https://bilgihazinesi.github.io/"> 
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,16 +14,15 @@
     <link rel="stylesheet" href="stiller/stil.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
     <style>
-        /* Önceki stiller + Yeni stiller */
+        /* Stiller öncekiyle aynı... */
         body { font-family: 'Crimson Pro', serif; }
         .container { max-width: 900px; margin: 0 auto; text-align: center; padding: 15px; }
         header h1 a { font-family: 'Cinzel Decorative', cursive; color: var(--text-primary-color); font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 5px; text-decoration: none; }
         header p { font-size: clamp(0.9rem, 2.5vw, 1rem); margin-bottom: 20px; color: var(--text-secondary-color); }
-        
-        .setup-card, .quiz-card, .results-card { background-color: var(--papyrus-bg-color-dark); padding: clamp(15px, 4vw, 20px); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-color); margin: 0 auto 15px auto; max-width: 700px; position: relative; /* Animasyon için */ overflow: hidden; /* Animasyon taşmasın */}
-        
-        /* Başlangıç Ekranı */
+        .setup-card, .quiz-card, .results-card { background-color: var(--papyrus-bg-color-dark); padding: clamp(15px, 4vw, 20px); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-color); margin: 0 auto 15px auto; max-width: 700px; position: relative; overflow: hidden; }
         .setup-card h2 { font-family: 'Cinzel Decorative', cursive; color: var(--accent-color); margin-bottom: 15px; }
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; margin-bottom: 6px; font-weight: 700; color: var(--text-secondary-color); font-size: 1rem; }
@@ -32,126 +31,40 @@
         .time-options button.selected { background-color: var(--accent-color); color: white; border-color: var(--accent-color); }
         .level-selection { margin-top: 20px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
         .level-button { padding: 10px 20px; font-size: 1rem; }
-
-        /* Quiz Kartı */
-        .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; /* Üstte hizala */ margin-bottom: 5px; font-size: 1rem; font-weight: 700; color: var(--text-secondary-color); gap: 10px;}
-        
-        /* Gösterişli Skor Alanı */
-         #score-info { 
-             background-color: var(--papyrus-bg-color-light); 
-             padding: 5px 10px; 
-             border-radius: 6px; 
-             border: 1px solid var(--border-color); 
-             text-align: right; 
-             font-size: clamp(0.8rem, 2vw, 0.9rem); /* Biraz küçültüldü */
-             line-height: 1.3;
-        }
-         #score-info span { display: block; }
-         #score-info strong { color: var(--accent-color); font-size: 1.1em;}
-
+        .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; font-size: 1rem; font-weight: 700; color: var(--text-secondary-color); gap: 10px;}
+        #score-info { background-color: var(--papyrus-bg-color-light); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-color); text-align: right; font-size: clamp(0.8rem, 2vw, 0.9rem); line-height: 1.3;}
+        #score-info span { display: block; }
+        #score-info strong { color: var(--accent-color); font-size: 1.1em;}
         #timer { background-color: var(--papyrus-bg-color-light); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); min-width: 60px; text-align: center; }
         .timer-visual-container { height: 6px; background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); border-radius: 3px; overflow: hidden; margin-bottom: 10px;}
         #timer-visual-bar { height: 100%; width: 100%; background: linear-gradient(to left, var(--accent-color), #a87b4f); border-radius: 3px; transition: width 1s linear; }
-        
-        /* Model Alanları (Artık Üstte) */
         #repeated-addition { font-size: clamp(0.8rem, 2.5vw, 1rem); color: var(--text-secondary-color); margin-bottom: 8px; font-weight: 500; word-wrap: break-word; min-height: 1.3em; }
-        #visual-model { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: clamp(5px, 1vw, 8px); margin: 0 auto 10px auto; padding: 6px; border: 1px dashed var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); min-height: 40px; max-height: 80px; /* Daha da küçültüldü */ overflow-y: auto; max-width: 95%; }
-        .visual-group { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px; /* Yaklaştırıldı */ padding: 3px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--papyrus-bg-color-dark); }
-        .visual-item { font-size: clamp(0.7rem, 2vw, 0.9rem); /* Küçültüldü */ color: var(--accent-color); line-height: 1; }
-
-        /* Sorular (Modelin Altında) */
-        #multiplication-problem { 
-            font-size: clamp(2rem, 7vw, 3rem); /* Biraz daha kompakt */
-            font-weight: 900; color: var(--accent-color); 
-            margin-bottom: 8px; /* Cevap kutusuna yaklaştırıldı */
-            font-family: 'Nunito', sans-serif; line-height: 1.1;
-            min-height: 1.1em; 
-        }
-         #word-problem-question { 
-             font-size: clamp(1.1rem, 3.8vw, 1.4rem); /* Biraz daha kompakt */
-             font-weight: 700; line-height: 1.3; 
-             margin-bottom: 8px; /* Cevap kutusuna yaklaştırıldı */
-             color: var(--text-primary-color); 
-             font-family: 'Nunito', sans-serif; 
-             min-height: 2.6em; /* 2 satır için yer */
-         }
-         
-        /* Cevap Kutusu */
-         #answer-input { 
-             width: clamp(80px, 20vw, 120px); /* Daha kompakt */ 
-             padding: 6px; 
-             border: 2px solid var(--border-color); 
-             background: var(--papyrus-bg-color-light); 
-             border-radius: 8px; 
-             font-size: clamp(1.2rem, 3.8vw, 1.5rem); 
-             font-family: 'Nunito', sans-serif; 
-             text-align: center; box-sizing: border-box; font-weight: 700; 
-             margin: 0 auto 8px auto; /* Boşluk azaltıldı */ 
-             display: block; -moz-appearance: textfield; 
-         }
+        #visual-model { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: clamp(5px, 1vw, 8px); margin: 0 auto 10px auto; padding: 6px; border: 1px dashed var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); min-height: 40px; max-height: 80px; overflow-y: auto; max-width: 95%; }
+        .visual-group { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--papyrus-bg-color-dark); }
+        .visual-item { font-size: clamp(0.7rem, 2vw, 0.9rem); color: var(--accent-color); line-height: 1; }
+        #multiplication-problem { font-size: clamp(2rem, 7vw, 3rem); font-weight: 900; color: var(--accent-color); margin-bottom: 8px; font-family: 'Nunito', sans-serif; line-height: 1.1; min-height: 1.1em; }
+        #word-problem-question { font-size: clamp(1.1rem, 3.8vw, 1.4rem); font-weight: 700; line-height: 1.3; margin-bottom: 8px; color: var(--text-primary-color); font-family: 'Nunito', sans-serif; min-height: 2.6em; }
+        #answer-input { width: clamp(80px, 20vw, 120px); padding: 6px; border: 2px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 8px; font-size: clamp(1.2rem, 3.8vw, 1.5rem); font-family: 'Nunito', sans-serif; text-align: center; box-sizing: border-box; font-weight: 700; margin: 0 auto 8px auto; display: block; -moz-appearance: textfield; }
         #answer-input::-webkit-outer-spin-button, #answer-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        
-         /* Ekran Klavyesi */
-         #number-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(5px, 1.2vw, 8px); max-width: 220px; /* Daha dar */ margin: 10px auto 5px auto; }
-         .numpad-btn { padding: clamp(6px, 2vw, 10px); font-size: clamp(1rem, 3vw, 1.2rem); font-weight: 700; font-family: 'Nunito', sans-serif; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); color: var(--text-primary-color); cursor: pointer; transition: background-color 0.2s; -webkit-tap-highlight-color: transparent; display: flex; justify-content: center; align-items: center; aspect-ratio: 1.4 / 1; /* Biraz daha yassı */ }
-         .numpad-btn:active { background-color: var(--active-bg-color); }
-         .numpad-zero { grid-column: 1 / 2; } 
-         .numpad-clear { grid-column: 2 / 3; } 
-         .numpad-submit { grid-column: 3 / 4; background-color: var(--accent-color); color: white; border-color: var(--accent-color); font-size: 1.2em; } 
-         .numpad-submit:active { background-color: #a87b4f; } 
-         .numpad-btn i { font-size: 0.9em; }
-
-         /* Yatay Ekran Klavye */
-         @media (min-width: 500px) and (min-height: 300px) and (orientation: landscape) {
-              #number-pad { grid-template-columns: repeat(6, 1fr); max-width: 380px; gap: clamp(6px, 1vw, 10px); margin-top: 5px; }
-              .numpad-btn:nth-child(1) { grid-column: 1 / 2; grid-row: 1 / 2;} .numpad-btn:nth-child(2) { grid-column: 2 / 3; grid-row: 1 / 2;} .numpad-btn:nth-child(3) { grid-column: 3 / 4; grid-row: 1 / 2;}
-              .numpad-btn:nth-child(4) { grid-column: 1 / 2; grid-row: 2 / 3;} .numpad-btn:nth-child(5) { grid-column: 2 / 3; grid-row: 2 / 3;} .numpad-btn:nth-child(6) { grid-column: 3 / 4; grid-row: 2 / 3;}
-              .numpad-btn:nth-child(7) { grid-column: 4 / 5; grid-row: 1 / 2;} /* Yatayda sağa kaydı */
-              .numpad-btn:nth-child(8) { grid-column: 5 / 6; grid-row: 1 / 2;}
-              .numpad-btn:nth-child(9) { grid-column: 6 / 7; grid-row: 1 / 2;}
-              .numpad-zero { grid-column: 4 / 5; grid-row: 2 / 3; } /* 0 */
-              .numpad-clear { grid-column: 5 / 6; grid-row: 2 / 3; } /* Sil */
-              .numpad-submit { grid-column: 6 / 7; grid-row: 2 / 3; aspect-ratio: 1.4 / 1; /* Normal oran */} /* Gönder */
-         }
-
-        /* Seviye Aktifken Gizlenecekler */
+        #number-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(5px, 1.2vw, 8px); max-width: 220px; margin: 10px auto 5px auto; }
+        .numpad-btn { padding: clamp(6px, 2vw, 10px); font-size: clamp(1rem, 3vw, 1.2rem); font-weight: 700; font-family: 'Nunito', sans-serif; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); color: var(--text-primary-color); cursor: pointer; transition: background-color 0.2s; -webkit-tap-highlight-color: transparent; display: flex; justify-content: center; align-items: center; aspect-ratio: 1.4 / 1; }
+        .numpad-btn:active { background-color: var(--active-bg-color); }
+        .numpad-zero { grid-column: 1 / 2; } 
+        .numpad-clear { grid-column: 2 / 3; } 
+        .numpad-submit { grid-column: 3 / 4; background-color: var(--accent-color); color: white; border-color: var(--accent-color); font-size: 1.2em; } 
+        .numpad-submit:active { background-color: #a87b4f; } 
+        .numpad-btn i { font-size: 0.9em; }
+        @media (min-width: 500px) and (min-height: 300px) and (orientation: landscape) { #number-pad { grid-template-columns: repeat(6, 1fr); max-width: 380px; gap: clamp(6px, 1vw, 10px); margin-top: 5px; } .numpad-btn:nth-child(1){grid-column:1/2;grid-row:1/2;} .numpad-btn:nth-child(2){grid-column:2/3;grid-row:1/2;} .numpad-btn:nth-child(3){grid-column:3/4;grid-row:1/2;} .numpad-btn:nth-child(4){grid-column:1/2;grid-row:2/3;} .numpad-btn:nth-child(5){grid-column:2/3;grid-row:2/3;} .numpad-btn:nth-child(6){grid-column:3/4;grid-row:2/3;} .numpad-btn:nth-child(7){grid-column:4/5;grid-row:1/2;} .numpad-btn:nth-child(8){grid-column:5/6;grid-row:1/2;} .numpad-btn:nth-child(9){grid-column:6/7;grid-row:1/2;} .numpad-zero { grid-column: 4 / 5; grid-row: 2 / 3; } .numpad-clear { grid-column: 5 / 6; grid-row: 2 / 3; } .numpad-submit { grid-column: 6 / 7; grid-row: 2 / 3; aspect-ratio: 1.4 / 1; } }
         .level2-active #repeated-addition, .level2-active #visual-model, .level2-active #multiplication-problem { display: none; }
         .level1-active #word-problem-question { display: none; }
-
         .feedback { font-weight: 700; margin-top: 8px; min-height: 24px; font-size: 1rem; }
         .correct { color: #2e7d32; }
         .wrong { color: #c62828; }
-
-        /* Sonuç Ekranı */
         .results-card h2 { font-family: 'Cinzel Decorative', cursive; color: var(--accent-color); margin-bottom: 15px; }
         .results-card p { font-size: 1.3rem; margin-bottom: 25px; font-weight: 600; }
         .results-card strong { color: var(--accent-color); font-size: 1.5rem;}
-        
-         /* YENİ: Cevap Animasyonu Stilleri */
-         .answer-animation {
-             position: absolute;
-             top: 40%; /* Ortalamak için */
-             left: 50%;
-             transform: translate(-50%, -50%) scale(0.5); /* Başlangıç durumu */
-             background-color: rgba(46, 125, 50, 0.85); /* Yarı saydam yeşil */
-             color: white;
-             padding: 15px 30px;
-             border-radius: 10px;
-             font-size: clamp(2rem, 8vw, 4rem); /* Büyük font */
-             font-weight: 900;
-             font-family: 'Nunito', sans-serif;
-             z-index: 10;
-             opacity: 0;
-             animation: fadeInGrowFadeOut 1.4s ease-out forwards; /* Animasyon adı ve süresi */
-             pointer-events: none; /* Üzerine tıklanamasın */
-         }
-         /* Animasyon Keyframes */
-          @keyframes fadeInGrowFadeOut {
-              0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-              30% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } /* Büyüme */
-              70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }   /* Kısa bekleme */
-              100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } /* Küçülerek kaybolma */
-          }
+        .answer-animation { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5); background-color: rgba(46, 125, 50, 0.85); color: white; padding: 15px 30px; border-radius: 10px; font-size: clamp(2rem, 8vw, 4rem); font-weight: 900; font-family: 'Nunito', sans-serif; z-index: 10; opacity: 0; animation: fadeInGrowFadeOut 1.4s ease-out forwards; pointer-events: none; }
+        @keyframes fadeInGrowFadeOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 70% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }
         
     </style>
 </head>
@@ -161,7 +74,7 @@
 
     <div class="container">
         <header>
-            <h1><a href="https://bilghazinesi.github.io/">Çarpma Egzersizi</a></h1>
+            <h1><a href="https://bilgihazinesi.github.io/">Çarpma Egzersizi</a></h1>
             <p>Çarpma işlemini farklı seviyelerde tekrar edelim.</p>
         </header>
 
@@ -226,7 +139,7 @@
                 </div>
 
                 <p class="feedback" id="feedback"></p>
-                </div>
+            </div>
 
              <div id="results-screen" class="results-card" style="display: none;">
                  <h2>Süre Doldu!</h2>
@@ -241,10 +154,9 @@
         const multiplicationPractice = {
             currentProblem: { num1: 0, num2: 0, answer: 0, questionText: "", type: 0 },
             lastProblemKey: null, 
-            studentName: "Öğrenci", selectedTime: 0, selectedTimeText: "", // Süre metni eklendi
-            remainingTime: 0, timerInterval: null, score: 0, isExerciseRunning: false, currentLevel: 1, currentLevelText: "", // Seviye metni eklendi
+            studentName: "Öğrenci", selectedTime: 0, selectedTimeText: "",
+            remainingTime: 0, timerInterval: null, score: 0, isExerciseRunning: false, currentLevel: 1, currentLevelText: "",
             
-            // DOM elementleri
             setupScreenEl: null, nameInputEl: null, timeButtonsEl: null, setupFeedbackEl: null,
             quizScreenEl: null, timerEl: null, scoreInfoEl: null, levelDisplayEl: null, timeDisplayEl: null, scoreDisplayEl: null, timerVisualBarEl: null, 
             problemEl: null, additionEl: null, modelEl: null, wordProblemEl: null, 
@@ -254,40 +166,25 @@
             initialize: function() {
                 this.setupScreenEl = document.getElementById('setup-screen'); this.nameInputEl = document.getElementById('student-name'); this.timeButtonsEl = document.querySelector('.time-options'); this.setupFeedbackEl = document.getElementById('setup-feedback');
                 this.quizScreenEl = document.getElementById('quiz-screen'); this.timerEl = document.getElementById('timer'); 
-                this.scoreInfoEl = document.getElementById('score-info'); // Ana skor alanı
-                this.levelDisplayEl = document.getElementById('level-display'); // Seviye göstergesi
-                this.timeDisplayEl = document.getElementById('time-display'); // Süre göstergesi
-                this.scoreDisplayEl = document.getElementById('score').querySelector('strong'); // Skorun strong tag'i
+                this.scoreInfoEl = document.getElementById('score-info'); this.levelDisplayEl = document.getElementById('level-display'); this.timeDisplayEl = document.getElementById('time-display'); this.scoreDisplayEl = document.getElementById('score').querySelector('strong'); 
                 this.timerVisualBarEl = document.getElementById('timer-visual-bar'); 
                 this.problemEl = document.getElementById('multiplication-problem'); this.additionEl = document.getElementById('repeated-addition'); this.modelEl = document.getElementById('visual-model'); this.wordProblemEl = document.getElementById('word-problem-question'); 
                 this.inputEl = document.getElementById('answer-input'); this.feedbackEl = document.getElementById('feedback'); this.numberPadEl = document.getElementById('number-pad'); 
                 this.resultsScreenEl = document.getElementById('results-screen'); this.finalScoreEl = document.getElementById('final-score');
 
-                if (!this.setupScreenEl || !this.quizScreenEl || !this.resultsScreenEl || !this.inputEl || !this.timeButtonsEl || !this.wordProblemEl || !this.timerVisualBarEl || !this.numberPadEl || !this.scoreInfoEl) {
-                    console.error("Çarpma egzersizi için gerekli ana HTML elementleri bulunamadı!"); document.querySelector('main').innerHTML = "<p style='color:red; font-weight:bold; text-align:center;'>Etkinlik yüklenirken bir hata oluştu.</p>"; return;
-                }
+                if (!this.setupScreenEl || !this.quizScreenEl || !this.resultsScreenEl || !this.inputEl || !this.timeButtonsEl || !this.wordProblemEl || !this.timerVisualBarEl || !this.numberPadEl || !this.scoreInfoEl) { console.error("Elementler bulunamadı!"); document.querySelector('main').innerHTML = "<p style='color:red;'>Hata oluştu.</p>"; return; }
                 
                  this.inputEl.addEventListener('keypress', (event) => { if (event.key === 'Enter' && this.isExerciseRunning && !this.inputEl.disabled) { event.preventDefault(); this.checkAnswer(); } });
                  document.addEventListener('click', (event) => { if (this.inputEl && !this.quizScreenEl.contains(event.target) && event.target !== this.inputEl && !this.numberPadEl.contains(event.target)) { this.inputEl.blur(); } });
             },
 
-            selectTime: function(minutes, clickedButton) { 
-                 this.selectedTime = minutes * 60; 
-                 this.selectedTimeText = `${minutes} Dakika`; // Metni sakla
-                 this.timeButtonsEl.querySelectorAll('button').forEach(btn => btn.classList.remove('selected')); 
-                 clickedButton.classList.add('selected'); 
-                 this.setupFeedbackEl.textContent = ''; 
-            },
+            selectTime: function(minutes, clickedButton) { this.selectedTime = minutes * 60; this.selectedTimeText = `${minutes} Dakika`; this.timeButtonsEl.querySelectorAll('button').forEach(btn => btn.classList.remove('selected')); clickedButton.classList.add('selected'); this.setupFeedbackEl.textContent = ''; },
 
             startExercise: function(level) { 
                  if (this.selectedTime === 0) { this.setupFeedbackEl.textContent = 'Lütfen bir süre seçin!'; return; } 
-                 this.studentName = this.nameInputEl.value.trim() || "Öğrenci";
-                 this.currentLevel = level; 
-                 this.currentLevelText = `Seviye ${level}`; // Seviye metnini sakla
-
+                 this.studentName = this.nameInputEl.value.trim() || "Öğrenci"; this.currentLevel = level; this.currentLevelText = `Seviye ${level}`;
                  this.setupScreenEl.style.display = 'none'; this.resultsScreenEl.style.display = 'none'; this.quizScreenEl.style.display = 'block';
                  this.quizScreenEl.classList.remove('level1-active', 'level2-active'); this.quizScreenEl.classList.add(`level${level}-active`);
-
                  this.score = 0; this.remainingTime = this.selectedTime; this.isExerciseRunning = true; this.lastProblemKey = null; 
                  this.updateScoreDisplay(); this.updateTimerDisplay(); 
                  this.startTimer(); this.loadQuestion(); 
@@ -303,17 +200,14 @@
                      if (this.currentLevel === 1) this.generateQuestionLevel1();
                      else this.generateQuestionLevel2();
                       const n1 = this.currentProblem.num1; const n2 = this.currentProblem.num2;
-                      // Problem tipini de anahtara ekle
                       newProblemKey = `${Math.min(n1, n2)}x${Math.max(n1, n2)}_t${this.currentProblem.type}`; 
                      attempts++;
                  } while (newProblemKey === this.lastProblemKey && attempts < 10); 
                  this.lastProblemKey = newProblemKey; 
                  
                  this.displayQuestion();
-                 
                  this.numberPadEl.style.display = 'grid'; 
-                 // Mobil klavyenin otomatik açılmasını engellemek için focus kaldırıldı, kullanıcı inputa dokununca açılabilir.
-                 // setTimeout(() => this.inputEl.focus(), 50); 
+                 // setTimeout(() => this.inputEl.focus(), 50); // Otomatik focus kaldırıldı
             },
 
              generateQuestionLevel1: function() {
@@ -323,40 +217,31 @@
                  if (Math.random() < 0.5) { [num1, num2] = [num2, num1]; }
                  if(!useZeroOne && (num1 > 10 || num2 > 10 || num1 < 2 || num2 < 2)){ num1 = Math.floor(Math.random() * 9) + 2; num2 = Math.floor(Math.random() * 10) + 2; }
                  const answer = num1 * num2;
-                 this.currentProblem = { num1, num2, answer, questionText: `${num1} x ${num2} =`, type: 0 }; // type 0: standart çarpma
+                 this.currentProblem = { num1, num2, answer, questionText: `${num1} x ${num2} =`, type: 0 }; 
              },
               generateQuestionLevel2: function() {
                  let num1 = Math.floor(Math.random() * 10) + 1; let num2 = Math.floor(Math.random() * 11) + 1; 
                  const result = num1 * num2; 
-                 let questionText = ""; let correctAnswer = 0; let keyNum1 = num1; let keyNum2 = num2; // Anahtar için
+                 let questionText = ""; let correctAnswer = 0; let keyNum1 = num1; let keyNum2 = num2; 
                  const problemType = Math.floor(Math.random() * 4); 
-
                  switch (problemType) {
                      case 0: questionText = `${num1}'in ${num2} katı kaçtır?`; correctAnswer = result; break;
                      case 1: questionText = `Kaç tane ${num1} toplarsak ${result} eder?`; correctAnswer = num2; break;
                      case 2: questionText = `${num1}'in kaç katı ${result} eder?`; correctAnswer = num2; break;
                      case 3: 
-                          num2 = Math.floor(Math.random() * 10) + 1; // Bölen
-                          num1 = Math.floor(Math.random() * 11) + 1; // Sonuç
-                          const dividend = num1 * num2; 
-                          questionText = `Hangi sayının ${num2} katı ${dividend} eder?`; 
-                          correctAnswer = num1; 
-                          keyNum1 = num1; keyNum2 = num2; // Anahtar için orijinal çarpanları kullan
-                          break;
+                          num2 = Math.floor(Math.random() * 10) + 1; num1 = Math.floor(Math.random() * 11) + 1; 
+                          const dividend = num1 * num2; questionText = `Hangi sayının ${num2} katı ${dividend} eder?`; correctAnswer = num1; 
+                          keyNum1 = num1; keyNum2 = num2; break;
                  }
                  this.currentProblem = { num1: keyNum1, num2: keyNum2, answer: correctAnswer, questionText: questionText, type: problemType }; 
              },
 
              displayQuestion: function() {
-                 if (this.currentLevel === 1) {
-                     this.problemEl.textContent = this.currentProblem.questionText;
-                     this.displayLevel1Details(this.currentProblem.num1, this.currentProblem.num2); 
-                 } else {
-                     this.wordProblemEl.textContent = this.currentProblem.questionText;
-                 }
+                 if (this.currentLevel === 1) { this.problemEl.textContent = this.currentProblem.questionText; this.displayLevel1Details(this.currentProblem.num1, this.currentProblem.num2); } 
+                 else { this.wordProblemEl.textContent = this.currentProblem.questionText; }
              },
             
-             displayLevel1Details: function(num1, num2) { this.additionEl.textContent = ''; this.modelEl.innerHTML = ''; try { if (num1 === 0 || num2 === 0) { this.additionEl.textContent = `${num1} x ${num2} = 0`; } else if (num1 === 1) { this.additionEl.textContent = `1 tane ${num2} = ${num2}`; const groupDiv = document.createElement('div'); groupDiv.classList.add('visual-group'); for (let j = 0; j < num2 && j<20; j++) { const itemIcon = document.createElement('i'); itemIcon.classList.add('bi', 'bi-star-fill', 'visual-item'); groupDiv.appendChild(itemIcon); } if (num2>0) this.modelEl.appendChild(groupDiv); } else if (num2 === 1) { this.additionEl.textContent = `${num1} tane 1 = ${Array(num1).fill(1).join(' + ')}`; for (let i = 0; i < num1 && i<20; i++) { const groupDiv = document.createElement('div'); groupDiv.classList.add('visual-group'); const itemIcon = document.createElement('i'); itemIcon.classList.add('bi', 'bi-star-fill', 'visual-item'); groupDiv.appendChild(itemIcon); this.modelEl.appendChild(groupDiv); } } else { const additionArray = Array(num1).fill(num2); if (num1 <= 7) {this.additionEl.textContent = `${num1} tane ${num2} = ${additionArray.join(' + ')}`;} else {this.additionEl.textContent = `${num1} tane ${num2}`; } for (let i = 0; i < num1 && i < 12; i++) { const groupDiv = document.createElement('div'); groupDiv.classList.add('visual-group'); for (let j = 0; j < num2 && j < 10; j++) { const itemIcon = document.createElement('i'); itemIcon.classList.add('bi', 'bi-star-fill', 'visual-item'); groupDiv.appendChild(itemIcon); } if(num2 > 4 && window.innerWidth < 600) groupDiv.style.maxWidth = "80px"; else if(num2 > 5) groupDiv.style.maxWidth = "100px"; this.modelEl.appendChild(groupDiv); } } } catch(e){ console.error("Model oluşturulurken hata:", e); this.modelEl.innerHTML = "<small>Model yüklenemedi.</small>";} },
+             displayLevel1Details: function(num1, num2) { this.additionEl.textContent = ''; this.modelEl.innerHTML = ''; try { if (num1 === 0 || num2 === 0) { this.additionEl.textContent = `${num1} x ${num2} = 0`; } else if (num1 === 1) { this.additionEl.textContent = `1 tane ${num2} = ${num2}`; const groupDiv = document.createElement('div'); groupDiv.classList.add('visual-group'); for (let j = 0; j < num2 && j<15; j++) { const itemIcon = document.createElement('i'); itemIcon.classList.add('bi', 'bi-star-fill', 'visual-item'); groupDiv.appendChild(itemIcon); } if (num2>0) this.modelEl.appendChild(groupDiv); } else if (num2 === 1) { this.additionEl.textContent = `${num1} tane 1 = ${Array(num1).fill(1).join(' + ')}`; for (let i = 0; i < num1 && i<15; i++) { const groupDiv = document.createElement('div'); groupDiv.classList.add('visual-group'); const itemIcon = document.createElement('i'); itemIcon.classList.add('bi', 'bi-star-fill', 'visual-item'); groupDiv.appendChild(itemIcon); this.modelEl.appendChild(groupDiv); } } else { const additionArray = Array(num1).fill(num2); if (num1 <= 6) {this.additionEl.textContent = `${num1} tane ${num2} = ${additionArray.join(' + ')}`;} else {this.additionEl.textContent = `${num1} tane ${num2}`; } for (let i = 0; i < num1 && i < 10; i++) { const groupDiv = document.createElement('div'); groupDiv.classList.add('visual-group'); for (let j = 0; j < num2 && j < 8; j++) { const itemIcon = document.createElement('i'); itemIcon.classList.add('bi', 'bi-star-fill', 'visual-item'); groupDiv.appendChild(itemIcon); } if(num2 > 4 && window.innerWidth < 600) groupDiv.style.maxWidth = "70px"; else if(num2 > 5) groupDiv.style.maxWidth = "90px"; this.modelEl.appendChild(groupDiv); } } } catch(e){ console.error("Model oluşturulurken hata:", e); this.modelEl.innerHTML = "<small>Model yüklenemedi.</small>";} },
 
              appendToAnswer: function(digit) { if (this.inputEl && !this.inputEl.disabled) { if (this.inputEl.value.length < 4) { this.inputEl.value += digit; } } },
              clearAnswer: function() { if (this.inputEl) { this.inputEl.value = this.inputEl.value.slice(0, -1); } },
@@ -365,87 +250,68 @@
                  if (!this.inputEl || !this.feedbackEl || this.inputEl.disabled || !this.isExerciseRunning) return; 
                  const userAnswer = parseInt(this.inputEl.value);
                  this.inputEl.disabled = true; 
-                 // Buton gizlemeye gerek yok, klavyede
+                 // Buton gizlemeye gerek yok
 
-                 if (isNaN(userAnswer) && this.inputEl.value.trim() !== "") { // Boş değilse ama sayı değilse
+                 if (isNaN(userAnswer) && this.inputEl.value.trim() !== "") { 
                      this.feedbackEl.textContent = 'Lütfen sadece rakam girin.'; this.feedbackEl.className = 'feedback wrong';
-                      // Inputu tekrar aktif et ki düzeltebilsin
-                      this.inputEl.disabled = false; 
-                      setTimeout(() => { if(this.inputEl) this.inputEl.focus();}, 50); // Tekrar odaklan
+                      this.inputEl.disabled = false; setTimeout(() => { if(this.inputEl) this.inputEl.focus();}, 50); 
                      return; 
                  }
-                  // Eğer input boşsa uyarı ver, devam etme
                   if (this.inputEl.value.trim() === "") {
                       this.feedbackEl.textContent = 'Lütfen cevabınızı girin.'; this.feedbackEl.className = 'feedback wrong';
-                      this.inputEl.disabled = false; // Aktif kalsın
-                      setTimeout(() => { if(this.inputEl) this.inputEl.focus();}, 50);
+                      this.inputEl.disabled = false; setTimeout(() => { if(this.inputEl) this.inputEl.focus();}, 50);
                       return;
                   }
 
-
                  let feedbackText = ""; let isCorrect = (userAnswer === this.currentProblem.answer);
-                 let delay = isCorrect ? 500 : 1800; // Yanlışsa animasyon için daha uzun bekle
+                 let delay = isCorrect ? 500 : 1800; // Yanlışsa animasyon için daha uzun
 
                  if (isCorrect) {
                      this.score++; this.updateScoreDisplay();
                      feedbackText = "Doğru!"; this.feedbackEl.className = 'feedback correct';
                  } else {
                      feedbackText = `Yanlış! Cevap: <strong>${this.currentProblem.answer}</strong>`; this.feedbackEl.className = 'feedback wrong';
-                     // YANLIŞ CEVAP ANİMASYONU
                      this.showAnswerAnimation(); 
                  }
                  
                   if(this.currentLevel === 1) { 
-                      feedbackText += ` (${this.currentProblem.num1} x ${this.currentProblem.num2} = ${this.currentProblem.num1 * this.currentProblem.num2})`;
+                      const actualResult = this.currentProblem.num1 * this.currentProblem.num2; // Seviye 1'de gerçek sonucu göster
+                      feedbackText += ` (${this.currentProblem.num1} x ${this.currentProblem.num2} = ${actualResult})`;
                   }
 
                   this.feedbackEl.innerHTML = feedbackText; 
                   if (this.remainingTime > 0) { setTimeout(() => this.loadQuestion(), delay); } 
-                  else { this.endExercise(); }
+                  else { setTimeout(() => this.endExercise(), delay); } // Skor gösterildikten sonra bitir
             },
             
-            // YENİ: Cevap Animasyonu Fonksiyonu
              showAnswerAnimation: function() {
+                 // Eski animasyon varsa kaldır
+                 const oldAnimation = this.quizScreenEl.querySelector('.answer-animation');
+                 if(oldAnimation) oldAnimation.remove();
+
                  const animationEl = document.createElement('div');
                  animationEl.classList.add('answer-animation');
-                 // Seviye 1 ise X x Y = Z formatında göster
                  if (this.currentLevel === 1) {
                      animationEl.textContent = `${this.currentProblem.num1} x ${this.currentProblem.num2} = ${this.currentProblem.num1 * this.currentProblem.num2}`;
                  } else {
-                 // Seviye 2 ise sadece doğru cevabı göster
                      animationEl.textContent = this.currentProblem.answer;
                  }
-
-                 // quiz-card'ın içine ekle (position: relative olduğu için)
                  this.quizScreenEl.appendChild(animationEl);
-
-                 // Animasyon bittikten sonra elementi kaldır
-                 setTimeout(() => {
-                     if (animationEl && animationEl.parentNode) {
-                         animationEl.parentNode.removeChild(animationEl);
-                     }
-                 }, 1400); // Animasyon süresi (CSS ile aynı olmalı)
+                 setTimeout(() => { if (animationEl && animationEl.parentNode) { animationEl.remove(); } }, 1400); 
              },
 
              startTimer: function() { this.stopTimer(); this.timerInterval = setInterval(() => { this.remainingTime--; this.updateTimerDisplay(); if (this.remainingTime < 0) { this.remainingTime = 0; this.endExercise();} }, 1000); }, 
              stopTimer: function() { clearInterval(this.timerInterval); this.timerInterval = null; },
-             updateTimerDisplay: function() { 
-                  if (!this.timerEl || !this.timerVisualBarEl) return; 
-                  const minutes = Math.floor(this.remainingTime / 60); const seconds = this.remainingTime % 60; 
-                  this.timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                  const percentage = this.selectedTime > 0 ? (this.remainingTime / this.selectedTime) * 100 : 0; 
-                  this.timerVisualBarEl.style.width = `${Math.max(0, percentage)}%`; 
-                  if (percentage < 20) { this.timerVisualBarEl.style.background = '#c62828'; } else if (percentage < 50) { this.timerVisualBarEl.style.background = '#ffa000'; } else { this.timerVisualBarEl.style.background = 'linear-gradient(to left, var(--accent-color), #a87b4f)'; }
-              },
+             updateTimerDisplay: function() { if (!this.timerEl || !this.timerVisualBarEl) return; const minutes = Math.floor(this.remainingTime / 60); const seconds = this.remainingTime % 60; this.timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`; const percentage = this.selectedTime > 0 ? (this.remainingTime / this.selectedTime) * 100 : 0; this.timerVisualBarEl.style.width = `${Math.max(0, percentage)}%`; if (percentage < 20) { this.timerVisualBarEl.style.background = '#c62828'; } else if (percentage < 50) { this.timerVisualBarEl.style.background = '#ffa000'; } else { this.timerVisualBarEl.style.background = 'linear-gradient(to left, var(--accent-color), #a87b4f)'; } },
              updateScoreDisplay: function() { // Skor alanını güncelle
                   if (!this.scoreInfoEl || !this.levelDisplayEl || !this.timeDisplayEl || !this.scoreDisplayEl) return; 
                   this.levelDisplayEl.textContent = this.currentLevelText;
                   this.timeDisplayEl.textContent = `Süre: ${this.selectedTimeText}`;
-                  this.scoreDisplayEl.textContent = this.score; // Sadece skor sayısını güncelle
+                  this.scoreDisplayEl.textContent = this.score; 
              },
              
-             endExercise: function() { /*...*/ this.isExerciseRunning = false; this.stopTimer(); if(this.finalScoreEl) { this.finalScoreEl.innerHTML = `Harika iş, ${this.studentName}! ${this.selectedTimeText}'de Skorun: <strong>${this.score}</strong>`; } if(this.quizScreenEl) this.quizScreenEl.style.display = 'none'; if(this.resultsScreenEl) this.resultsScreenEl.style.display = 'block'; },
-             restartExercise: function() { /*...*/ if(this.resultsScreenEl) this.resultsScreenEl.style.display = 'none'; if(this.quizScreenEl) this.quizScreenEl.style.display = 'none'; if(this.setupScreenEl) this.setupScreenEl.style.display = 'block'; this.score = 0; this.remainingTime = 0; this.isExerciseRunning = false; this.currentLevel = 1; this.lastProblemKey = null; if(this.setupFeedbackEl) this.setupFeedbackEl.textContent = ''; if(this.timerVisualBarEl) { this.timerVisualBarEl.style.width = '100%'; this.timerVisualBarEl.style.background = 'linear-gradient(to left, var(--accent-color), #a87b4f)'; } }
+             endExercise: function() { this.isExerciseRunning = false; this.stopTimer(); if(this.finalScoreEl) { this.finalScoreEl.innerHTML = `Harika iş, ${this.studentName}! ${this.selectedTimeText}'de Skorun: <strong>${this.score}</strong>`; } if(this.quizScreenEl) this.quizScreenEl.style.display = 'none'; if(this.resultsScreenEl) this.resultsScreenEl.style.display = 'block'; },
+             restartExercise: function() { if(this.resultsScreenEl) this.resultsScreenEl.style.display = 'none'; if(this.quizScreenEl) this.quizScreenEl.style.display = 'none'; if(this.setupScreenEl) this.setupScreenEl.style.display = 'block'; this.score = 0; this.remainingTime = 0; this.isExerciseRunning = false; this.currentLevel = 1; this.lastProblemKey = null; if(this.setupFeedbackEl) this.setupFeedbackEl.textContent = ''; if(this.timerVisualBarEl) { this.timerVisualBarEl.style.width = '100%'; this.timerVisualBarEl.style.background = 'linear-gradient(to left, var(--accent-color), #a87b4f)'; } }
         };
 
         document.addEventListener('DOMContentLoaded', () => {
