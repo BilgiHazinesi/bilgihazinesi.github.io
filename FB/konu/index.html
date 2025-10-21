@@ -757,7 +757,7 @@
                 });
             }
 
-             // GÜNCELLENDİ: Slayt 5: Tıkla-Taşı Mantığı
+             // GÜNCELLENDİ: Slayt 5: Tıkla-Taşı Mantığı (Çoklu Öğe İzinli)
              let selectedMoveItem = null;
              const clickMoveContainer = document.getElementById('click-move-zarar');
              if (clickMoveContainer) {
@@ -768,7 +768,7 @@
                  clickMoveContainer.addEventListener('click', (e) => {
                      const clickedElement = e.target;
 
-                     // 1. Bir öğeye tıklama
+                     // 1. Bir öğeye tıklama (Seçme / Seçimi Kaldırma)
                      if (clickedElement.classList.contains('click-move-item')) {
                          if (selectedMoveItem === clickedElement) { // Seçimi kaldır
                              selectedMoveItem.classList.remove('selected-move');
@@ -778,65 +778,52 @@
                              selectedMoveItem = clickedElement;
                              selectedMoveItem.classList.add('selected-move');
                          }
-                         targets.forEach(t => t.classList.remove('target-error')); // Hataları temizle
-                         feedbackMove.textContent = ''; feedbackMove.className = 'feedback-message'; // Geri bildirimi temizle
+                         targets.forEach(t => t.classList.remove('target-error'));
+                         feedbackMove.textContent = ''; feedbackMove.className = 'feedback-message';
                      } 
-                     // 2. Hedef kutuya tıklama
+                     // 2. Hedef kutuya tıklama (Öğe Taşıma)
                      else if (clickedElement.classList.contains('click-move-target') && selectedMoveItem) {
                          const targetBox = clickedElement;
                          const targetId = targetBox.dataset.id;
                          const itemTargetId = selectedMoveItem.dataset.target;
-                         const currentItemInTarget = targetBox.querySelector('.click-move-item');
 
-                         if (!currentItemInTarget) { // Hedef boşsa
-                             if (itemTargetId === targetId) { // Doğru hedefse taşı
-                                 targetBox.appendChild(selectedMoveItem);
-                                 selectedMoveItem.classList.remove('selected-move');
-                                 selectedMoveItem = null;
-                                 checkClickMoveCompletion();
-                             } else { // Yanlış hedef
-                                 targetBox.classList.add('target-error');
-                                 feedbackMove.textContent = 'Bu öğe buraya ait değil! 🤔';
-                                 feedbackMove.className = 'feedback-message visible feedback-incorrect';
-                                 if(selectedMoveItem) selectedMoveItem.classList.remove('selected-move'); 
-                                 selectedMoveItem = null;
-                                 setTimeout(() => targetBox.classList.remove('target-error'), 500);
-                             }
-                         } else { // Hedef doluysa
-                              targetBox.classList.add('target-error');
-                              feedbackMove.textContent = 'Bu kutu zaten dolu! ✋';
-                              feedbackMove.className = 'feedback-message visible feedback-incorrect';
+                         // Doğru hedefe mi taşınıyor?
+                         if (itemTargetId === targetId) {
+                             targetBox.appendChild(selectedMoveItem); // Öğeyi taşı (Kutunun dolu olması önemli değil)
+                             selectedMoveItem.classList.remove('selected-move'); 
+                             selectedMoveItem = null; 
+                             checkClickMoveCompletion(); // Durumu kontrol et
+                         } else { // Yanlış hedef
+                             targetBox.classList.add('target-error');
+                             feedbackMove.textContent = 'Bu öğe buraya ait değil! 🤔';
+                             feedbackMove.className = 'feedback-message visible feedback-incorrect';
                              if(selectedMoveItem) selectedMoveItem.classList.remove('selected-move'); 
                              selectedMoveItem = null;
                              setTimeout(() => targetBox.classList.remove('target-error'), 500);
                          }
                      }
-                     // 3. Kaynak kutusuna tıklama (geri taşımak için)
-                     else if (clickedElement === sourceBox && selectedMoveItem && !sourceBox.contains(selectedMoveItem)) {
+                     // 3. Kaynak kutusuna tıklama (Öğeyi Geri Taşıma)
+                     else if ( (clickedElement === sourceBox || sourceBox.contains(clickedElement)) // Kaynağa veya içindeki boş alana tıklandıysa
+                                && selectedMoveItem && !sourceBox.contains(selectedMoveItem)) { // ve seçili öğe kaynakta değilse
                          sourceBox.appendChild(selectedMoveItem);
                          selectedMoveItem.classList.remove('selected-move');
                          selectedMoveItem = null;
                          checkClickMoveCompletion();
                          feedbackMove.textContent = ''; feedbackMove.className = 'feedback-message';
                      }
-                      // 4. Hedefteki bir öğeye tıklayıp sonra kaynağa tıklama (Geri taşıma 2. adım)
-                      else if(clickedElement === sourceBox && selectedMoveItem && selectedMoveItem.parentElement !== sourceBox) {
-                         sourceBox.appendChild(selectedMoveItem);
-                         selectedMoveItem.classList.remove('selected-move');
-                         selectedMoveItem = null;
-                         checkClickMoveCompletion();
-                         feedbackMove.textContent = ''; feedbackMove.className = 'feedback-message';
-                      }
                  });
 
                  function checkClickMoveCompletion() {
                      const sourceItems = sourceBox.querySelectorAll('.click-move-item');
-                     let allTargetsCorrect = true;
+                     let allTargetsCorrect = true; 
+
                      targets.forEach(target => {
-                         const item = target.querySelector('.click-move-item');
-                         if (!item || item.dataset.target !== target.dataset.id) {
-                             allTargetsCorrect = false;
-                         }
+                         const itemsInTarget = target.querySelectorAll('.click-move-item');
+                         itemsInTarget.forEach(item => {
+                              if (item.dataset.target !== target.dataset.id) {
+                                  allTargetsCorrect = false; 
+                              }
+                         });
                      });
 
                      if (sourceItems.length === 0 && allTargetsCorrect) {
@@ -844,8 +831,7 @@
                          feedbackMove.className = 'feedback-message visible feedback-correct';
                      } else if (sourceItems.length > 0) {
                           feedbackMove.textContent = 'Henüz tamamlanmadı... 🤔';
-                          // Tamamlanmadıysa bile görünür yap ama stil verme ya da incorrect ver
-                          feedbackMove.className = 'feedback-message visible feedback-incorrect';
+                          feedbackMove.className = 'feedback-message visible feedback-incorrect'; 
                      } else { // Kaynak boş ama hedefler yanlış
                          feedbackMove.textContent = 'Hatalı yerleştirmeler var. Düzeltmek için öğeye, sonra kaynak kutusuna tıkla. 🧐';
                          feedbackMove.className = 'feedback-message visible feedback-incorrect';
