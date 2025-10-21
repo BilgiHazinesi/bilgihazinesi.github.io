@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fen Bilimleri: Sağlıklı Yaşam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --papyrus-bg: #fdf5e6;  
+            --text-primary: #5a452d; 
+            --text-secondary: #7a654d;
+            --accent-color: #8B4513; 
+            --border-color: #c8b79b; 
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --box-bg: #fffaf0; 
+            --correct-bg: #e8f5e9; 
+            --correct-border: #4CAF50;
+            --incorrect-bg: #ffebee; 
+            --incorrect-border: #f44336;
+            --color-teal: #4db6ac;
+            --color-orange: #ffb74d;
+            --color-purple: #ba68c8;
+            --color-blue: #29b6f6;
+            --color-red: #f44336;
+            --color-green: #4CAF50; 
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 100%; }
+        body { 
+            font-family: 'Kalam', cursive; 
+            background-color: var(--papyrus-bg); 
+            color: var(--text-primary); 
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png'); 
+            background-attachment: fixed; 
+            padding: clamp(10px, 2vw, 15px); 
+            line-height: 1.6;
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+/Edge */
+            user-select: none; /* Standart */
+        }
+        .container { 
+            max-width: 1000px; margin: 10px auto; /* Üst marj eklendi */
+            background-color: rgba(253, 245, 230, 0.85); 
+            border: 2px solid var(--border-color); 
+            border-radius: 10px; 
+            box-shadow: 0 5px 20px var(--shadow-color); 
+            padding: clamp(15px, 3vw, 30px); 
+            overflow: hidden;
+        }
+        header { 
+            text-align: center; margin-bottom: 20px; 
+            border-bottom: 3px double var(--border-color); 
+            padding-bottom: 20px; 
+        }
+        header h1 { 
+            font-family: 'Cinzel Decorative', cursive; 
+            font-size: clamp(1.8rem, 4vw, 3rem); 
+            color: var(--accent-color); 
+            text-shadow: 1px 1px 2px var(--shadow-color); 
+        }
+        
+        /* === SLAYT SİSTEMİ === */
+        .slide-deck {
+            position: relative;
+        }
+        .slide {
+            display: none;
+            animation: fadeIn 0.6s ease-in-out;
+            min-height: 400px; /* İçerik az olsa bile minimum yükseklik */
+        }
+        .slide.active {
+            display: block;
+        }
+        .slide-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            border-top: 2px dashed var(--border-color);
+            padding-top: 20px;
+        }
+        .nav-button {
+            font-family: 'Cinzel Decorative', cursive; 
+            font-weight: 700; 
+            background-color: var(--accent-color); 
+            color: var(--papyrus-bg); 
+            cursor: pointer; 
+            transition: transform 0.2s ease, box-shadow 0.2s ease; 
+            font-size: 1.1rem; padding: 10px 15px; border-radius: 6px; 
+            border: none;
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+        .nav-button:hover:not(:disabled) { /* Sadece aktifken efekt */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+        .nav-button:disabled {
+            background-color: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+        #slide-counter {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+        
+        /* === İçerik Stilleri === */
+        .slide-title {
+            font-family: 'Cinzel Decorative', cursive; 
+            font-size: clamp(1.6rem, 4vw, 2.5rem); 
+            color: var(--accent-color); 
+            text-align: center; margin-bottom: 20px; 
+        }
+        .slide-content {
+            font-size: clamp(1rem, 1.5vw, 1.15rem); /* Biraz küçültüldü */
+        }
+        .definition-box {
+            background-color: var(--box-bg);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 15px; /* Biraz küçültüldü */
+            font-size: clamp(1.1rem, 1.5vw, 1.3rem); /* Biraz küçültüldü */
+            text-align: center;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        .content-box {
+            background-color: var(--box-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: clamp(15px, 3vw, 20px); /* Biraz küçültüldü */
+            margin-top: 15px; /* Biraz azaltıldı */
+        }
+        /* GÖRSEL STİLLERİ */
+        .slide-image {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 15px auto;
+            border: 3px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px var(--shadow-color);
+        }
+        .image-caption {
+            text-align: center;
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
+        .flex-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-start; /* Dikeyde başa hizala */
+        }
+        .flex-item {
+            flex: 1;
+            min-width: 250px; /* Minimum genişlik */
+        }
+        
+        /* === Genel Alıştırma Stilleri === */
+        .activity-instructions {
+            font-size: 1.15rem; /* Biraz küçültüldü */
+            font-weight: bold;
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+        .feedback-message {
+            text-align: center; font-weight: bold; min-height: 24px; margin-top: 15px;
+            font-size: 1.15rem; /* Biraz küçültüldü */
+            visibility: hidden; 
+        }
+        .feedback-message.visible { visibility: visible; }
+        .feedback-correct { color: var(--correct-border); }
+        .feedback-incorrect { color: var(--incorrect-border); }
+        .check-button {
+            display: block;
+            margin: 20px auto 0;
+            font-family: 'Cinzel Decorative', cursive; 
+            font-weight: 700; 
+            background-color: var(--color-teal); 
+            color: var(--papyrus-bg); 
+            cursor: pointer; 
+            font-size: 1.15rem; padding: 10px 20px; border-radius: 6px; 
+            border: none;
+            transition: transform 0.2s ease;
+        }
+        .check-button:hover { transform: scale(1.05); }
+
+        /* === Boşluk Doldurma (Fill-in-the-blank) === */
+        .fib-sentence { margin-bottom: 10px; font-size: 1.1rem; }
+        .fib-input {
+            font-family: 'Kalam', cursive;
+            font-size: 1.1rem;
+            width: 120px;
+            padding: 3px 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .fib-input.correct { background-color: var(--correct-bg); border-color: var(--correct-border); }
+        .fib-input.incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); }
+
+        /* === Eşleştirme (Matching List) === */
+        .matching-activity {
+             display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
+        }
+        .match-list-column { flex: 1; min-width: 250px; }
+        .match-list-column h4 { text-align: center; margin-bottom: 10px; color: var(--accent-color); }
+        .match-item-button {
+            display: block; width: 100%;
+            font-size: 1rem; text-align: left;
+            padding: 10px 15px; margin-bottom: 8px;
+            border: 2px solid var(--border-color);
+            background-color: #fff; border-radius: 6px;
+            cursor: pointer; transition: all 0.2s ease;
+            font-family: 'Kalam', cursive;
+            color: var(--text-primary);
+        }
+        .match-item-button:hover { background-color: var(--box-bg); }
+        .match-item-button.selected { border-color: var(--accent-color); background-color: #fff5e1; }
+        .match-item-button.matched { border-color: var(--correct-border); background-color: var(--correct-bg); cursor: default; opacity: 0.7; }
+        .match-item-button.incorrect { border-color: var(--incorrect-border); background-color: var(--incorrect-bg); }
+
+        /* === Çoktan Seçmeli (MCQ) === */
+        .mcq-question { margin-bottom: 20px; font-size: 1.1rem; }
+        .mcq-question p { font-weight: bold; margin-bottom: 10px; }
+        .mcq-options label {
+            display: block; background: #fff; border: 2px solid var(--border-color);
+            padding: 10px 15px; border-radius: 6px; margin-bottom: 8px;
+            cursor: pointer; transition: background-color 0.2s;
+        }
+        .mcq-options label:hover { background-color: var(--box-bg); }
+        .mcq-options input { margin-right: 10px; }
+        .mcq-options label.correct { background-color: var(--correct-bg); border-color: var(--correct-border); }
+        .mcq-options label.incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); }
+        
+        /* === Tablo İşaretleme (Table Checkbox) === */
+        .check-table { width: 100%; border-collapse: collapse; margin-top: 15px; background-color: #fff; }
+        .check-table th, .check-table td { border: 2px solid var(--border-color); padding: 10px; text-align: center; }
+        .check-table th { background-color: var(--box-bg); font-family: 'Cinzel Decorative'; color: var(--accent-color); }
+        .check-table td:first-child { text-align: left; font-weight: bold; }
+        .check-table input[type="checkbox"] { transform: scale(1.5); cursor: pointer; }
+        .check-table td.correct { background-color: var(--correct-bg); }
+        .check-table td.incorrect { background-color: var(--incorrect-bg); }
+
+        /* === Sürükle Bırak (Drag & Drop) === */
+        .drag-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+        .drag-source, .drag-target {
+            flex: 1; min-width: 250px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px; padding: 15px;
+            min-height: 150px;
+        }
+        .drag-source { background-color: #fff; }
+        .drag-target { background-color: var(--box-bg); }
+        .drag-target h4 { text-align: center; margin-bottom: 10px; color: var(--accent-color); font-family: 'Cinzel Decorative'; }
+        .drag-item {
+            padding: 8px 12px; margin-bottom: 10px;
+            background-color: var(--box-bg); border: 1px solid var(--border-color);
+            border-radius: 6px; cursor: grab; font-size: 1rem;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+        .drag-item.dragging { opacity: 0.5; }
+        .drag-target.drag-over { background-color: #f5efde; border-color: var(--accent-color); }
+        .drag-target .drag-item { cursor: default; background-color: var(--correct-bg); border-color: var(--correct-border); }
+
+        /* === Karikatür Yorumlama === */
+        .cartoon-container { text-align: center; }
+        .cartoon-image { max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 15px; }
+        .cartoon-options { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .cartoon-option {
+            width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--border-color);
+            background-color: #fff; cursor: pointer; transition: all 0.2s ease;
+        }
+        .cartoon-option:hover { background-color: var(--box-bg); }
+        .cartoon-option.correct { background-color: var(--correct-bg); border-color: var(--correct-border); }
+        .cartoon-option.incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); }
+
+        /* === Grafik Yorumlama === */
+        .graph-container img { max-width: 100%; height: auto; }
+        
+        /* === Besin Testi === */
+        .food-test-container { text-align: center; }
+        .food-test-image { max-width: 100%; height: auto; margin-bottom: 15px; border-radius: 8px; }
+        
+        /* Medya Sorguları */
+        @media (max-width: 768px) {
+            .flex-container { flex-direction: column; } /* Küçük ekranda alt alta */
+            .flex-item { min-width: 100%; }
+        }
+        @media (max-width: 600px) {
+            .slide-navigation { flex-wrap: wrap; justify-content: center; gap: 15px; }
+            #slide-counter { order: -1; width: 100%; text-align: center; }
+            .text-scroll-box { max-height: 250px; font-size: 1.1rem; line-height: 1.6;} /* Mobil için ayar */
+            .matching-activity { flex-direction: column; }
+            .drag-container { flex-direction: column; }
+        }
+
+    </style>
+</head>
+<body>
+    <a href="https://bilgihazinesi.github.io/" class="home-button" title="Ana Sayfaya Dön">&#127968;</a>
+    <div class="container">
+        <header>
+            <h1>Fen Bilimleri: Sağlıklı Yaşam</h1>
+        </header>
+
+        <div class="slide-deck" id="slideDeck">
+
+            <div class="slide active">
+                <h2 class="slide-title">Dersimize Hoş Geldiniz!</h2>
+                <div class="slide-content">
+                    <p>Bugün sağlığımız için çok önemli iki konuyu ele alacağız:</p>
+                    <ol>
+                        <li>Sağlığımıza Zarar Veren Maddeler (Sigara ve Alkol)</li>
+                        <li>Dengeli ve Düzenli Beslenme</li>
+                    </ol>
+                    <p>Bu konularda neler öğreneceğiz?</p>
+                    <ul>
+                        <li>Sigara ve alkolün vücudumuza ve çevremize zararları nelerdir?</li>
+                        <li>Dengeli beslenmek neden önemlidir?</li>
+                        <li>Besin grupları ve besin piramidi nedir?</li>
+                        <li>Obezite nedir ve nasıl önlenir?</li>
+                        <li>Besin israfını nasıl azaltabiliriz?</li>
+                    </ul>
+                    <img src="IMG_1465.jpg" alt="Sağlığa Zararlı Maddeler" class="slide-image" style="max-height: 300px; width: auto;">
+                    <p style="text-align: center; margin-top: 20px; font-size: 1.3rem;"><strong>Haydi başlayalım!</strong></p>
+                </div>
+            </div>
+
+            <div class="slide">
+                <h2 class="slide-title">1. Sağlığa Zararlı Maddeler</h2>
+                <div class="slide-content flex-container">
+                     <div class="flex-item">
+                         <img src="IMG_1465.jpg" alt="Sigara ve Alkolün Zararları" class="slide-image">
+                     </div>
+                     <div class="flex-item">
+                         <div class="definition-box">
+                             Bazı alışkanlıklar sağlığımızı <strong>olumlu</strong> etkilerken, bazıları <strong>olumsuz</strong> etkiler. Sigara ve alkol, sağlığımızı olumsuz etkileyen zararlı alışkanlıkların başında gelir. İçerdikleri <strong>bağımlılık yapan maddeler</strong> nedeniyle bırakılması zor olabilir.
+                         </div>
+                         <div class="content-box">
+                             <h4>Sigaranın Başlıca Zararları:</h4>
+                             <ul>
+                                 <li>İçindeki nikotin, katran, arsenik gibi 4000'den fazla zararlı madde bulunur.</li>
+                                 <li>Akciğer, gırtlak kanseri, astım, bronşit gibi solunum yolu hastalıklarına yol açar.</li>
+                                 <li>Kalp ve damar hastalıklarına neden olur.</li>
+                                 <li>Ağız kokusu, diş ve diş eti hastalıkları yapar.</li>
+                             </ul>
+                             <h4>Alkolün Başlıca Zararları:</h4>
+                             <ul>
+                                 <li>Beyin hücrelerine zarar verir, unutkanlık ve hafıza kaybına yol açar.</li>
+                                 <li>Karaciğer, mide, yemek borusu gibi organlara zarar verir.</li>
+                                 <li>Görme, algılama, konuşma yeteneğini olumsuz etkiler.</li>
+                                 <li>Kazalara neden olabilir.</li>
+                             </ul>
+                         </div>
+                     </div>
+                </div>
+            </div>
+            
+             <div class="slide">
+                 <h2 class="slide-title">Alıştırma: Boşlukları Dolduralım</h2>
+                 <div class="slide-content" id="fib-zararli">
+                    <p class="activity-instructions">Cümlelerdeki boşlukları uygun kelimelerle doldurun.</p>
+                    <div class="content-box">
+                        <p class="fib-sentence">1. <input type="text" class="fib-input" data-answer="karaciğer">, alkol kullananların en çok zarar gören organıdır.</p>
+                        <p class="fib-sentence">2. Sigara içmeyip olumsuz etkilerini yaşayan kişidir: <input type="text" class="fib-input" data-answer="pasif içici"></p>
+                        <p class="fib-sentence">3. Sigara ve alkol ile mücadele eden kuruluş <input type="text" class="fib-input" data-answer="Yeşilay"> olarak adlandırılır.</p>
+                        <p class="fib-sentence">4. Bir kişi sigarayı bırakmak istiyorsa <input type="text" class="fib-input" data-answer="171"> numaralı hattı arayabilir.</p>
+                        <p class="fib-sentence">5. Sigara dumanı <input type="text" class="fib-input" data-answer="akciğer"> kanserine yol açar.</p>
+                        <p class="fib-sentence">6. <input type="text" class="fib-input" data-answer="Nikotin">, sigarada bulunan bağımlılık yapan maddedir.</p>
+                    </div>
+                    <button class="check-button" id="check-fib-zararli">Kontrol Et</button>
+                    <div class="feedback-message" id="feedback-fib-zararli"></div>
+                 </div>
+            </div>
+
+            <div class="slide">
+                 <h2 class="slide-title">Alıştırma: Hastalıkları İşaretle</h2>
+                 <div class="slide-content" id="check-hastalik">
+                    <p class="activity-instructions">Verilen sağlık sorunlarının hangi zararlı alışkanlıkla ilişkisi varsa "/" koyarak belirtiniz.</p>
+                    <div style="overflow-x:auto;"> <table class="check-table">
+                             <thead>
+                                 <tr><th>HASTALIK</th><th>SİGARA</th><th>ALKOL</th></tr>
+                             </thead>
+                             <tbody>
+                                 <tr><td>Unutkanlık ve hafıza kaybı</td>
+                                     <td data-sigara="false" data-alkol="true"><input type="checkbox" data-col="alkol"></td>
+                                     <td data-sigara="false" data-alkol="true"><input type="checkbox" data-col="alkol"></td></tr>
+                                 <tr><td>Bronşit ve astım gibi rahatsızlıklar</td>
+                                     <td data-sigara="true" data-alkol="false"><input type="checkbox" data-col="sigara"></td>
+                                     <td data-sigara="true" data-alkol="false"><input type="checkbox" data-col="sigara"></td></tr>
+                                 <tr><td>Gırtlak kanseri</td>
+                                     <td data-sigara="true" data-alkol="false"><input type="checkbox" data-col="sigara"></td>
+                                     <td data-sigara="true" data-alkol="false"><input type="checkbox" data-col="sigara"></td></tr>
+                                 <tr><td>Kalp, damar hastalıkları</td>
+                                     <td data-sigara="true" data-alkol="true"><input type="checkbox" data-col="sigara"></td>
+                                     <td data-sigara="true" data-alkol="true"><input type="checkbox" data-col="alkol"></td></tr>
+                                 <tr><td>Konuşma, düşünme ve denge sorunları</td>
+                                      <td data-sigara="false" data-alkol="true"><input type="checkbox" data-col="alkol"></td>
+                                     <td data-sigara="false" data-alkol="true"><input type="checkbox" data-col="alkol"></td></tr>
+                                 <tr><td>Anne karnındaki bebeğin gelişimindeki sorunlar</td>
+                                      <td data-sigara="true" data-alkol="true"><input type="checkbox" data-col="sigara"></td>
+                                     <td data-sigara="true" data-alkol="true"><input type="checkbox" data-col="alkol"></td></tr>
+                                 <tr><td>Diş eti hastalıkları</td>
+                                      <td data-sigara="true" data-alkol="false"><input type="checkbox" data-col="sigara"></td>
+                                     <td data-sigara="true" data-alkol="false"><input type="checkbox" data-col="sigara"></td></tr>
+                             </tbody>
+                         </table>
+                    </div>
+                    <button class="check-button" id="check-hastalik-btn">Kontrol Et</button>
+                    <div class="feedback-message" id="feedback-hastalik"></div>
+                 </div>
+            </div>
+            
+            <div class="slide">
+                 <h2 class="slide-title">Alıştırma: Kime Zarar Veriyor?</h2>
+                 <div class="slide-content" id="drag-zarar">
+                    <p class="activity-instructions">Sigara ve alkolün zararlarını okuyup "Kendisine" mi yoksa "Çevreye" mi ait olduğunu belirleyerek uygun kutuya sürükleyin.</p>
+                    <div class="drag-container">
+                        <div class="drag-source" id="drag-source-zarar">
+                             <div class="drag-item" draggable="true" data-target="kendisine">1. Baş ağrısı ve yorgunluğa yol açar.</div>
+                             <div class="drag-item" draggable="true" data-target="cevreye">2. Aile düzeni ve insan ilişkilerinin bozulmasına neden olur.</div>
+                             <div class="drag-item" draggable="true" data-target="kendisine">3. İşimizi olumsuz etkiler ve performansımızı düşürür.</div>
+                             <div class="drag-item" draggable="true" data-target="cevreye">4. Çevre kirliliğine yol açar.</div>
+                             <div class="drag-item" draggable="true" data-target="kendisine">5. Akciğer kanserine yol açar.</div>
+                             <div class="drag-item" draggable="true" data-target="cevreye">6. Söndürülmeyen sigara orman yangınına yol açar.</div>
+                             <div class="drag-item" draggable="true" data-target="cevreye">7. Ekonomik gelirimizin azalmasına neden olur.</div>
+                             <div class="drag-item" draggable="true" data-target="cevreye">8. Sigaradan çıkan duman hava kirliliğine yol açar.</div>
+                        </div>
+                        <div class="drag-target" data-id="kendisine"><h4>KENDİSİNE</h4></div>
+                        <div class="drag-target" data-id="cevreye"><h4>ÇEVREYE</h4></div>
+                    </div>
+                     <div class="feedback-message" id="feedback-drag-zarar"></div>
+                 </div>
+            </div>
+
+            <div class="slide">
+                 <h2 class="slide-title">Yardım Alabilirsin!</h2>
+                 <div class="slide-content flex-container">
+                    <div class="flex-item">
+                         <h4>Yeşilay</h4>
+                         <p>Yeşilay, "insan onurunu ve saygınlığını temel alan, toplumu ve gençliği ayrım gözetmeden zararlı alışkanlıklardan korumak için çalışan" bir sivil toplum kuruluşudur.</p>
+                         <p>Alkol, sigara, uyuşturucu madde, teknoloji, kumar gibi bağımlılıklarla mücadele eder.</p>
+                         <img src="IMG_1474.jpg" alt="Yeşilay" class="slide-image" style="max-height: 150px; width: auto; margin-left: 0;">
+                    </div>
+                     <div class="flex-item">
+                         <h4>ALO 171 Sigara Bırakma Danışma Hattı</h4>
+                         <p>Sigarayı bırakmak isteyenler için destek sağlayan ücretsiz bir telefon hattıdır.</p>
+                         <p>Bu numarayı arayarak sigara bırakma konusunda yardım ve danışmanlık alabilirsiniz.</p>
+                         <img src="IMG_1465.jpg" alt="ALO 171" class="slide-image" style="max-height: 200px; width: auto; margin-left: 0;">
+                     </div>
+                 </div>
+                 <div class="content-box">
+                     <strong>Unutma!</strong> Sağlığımızı korumak için:
+                     <ul>
+                         <li>Sigara ve alkolden uzak durmalıyız.</li>
+                         <li>Sigara içilen ortamlara girmemeliyiz.</li>
+                         <li>Dengeli ve düzenli beslenmeliyiz.</li>
+                         <li>Çevremizdeki insanları bilinçlendirmeliyiz.</li>
+                     </ul>
+                 </div>
+            </div>
+            
+             <div class="slide">
+                 <h2 class="slide-title">2. Dengeli ve Düzenli Beslenme</h2>
+                 <div class="slide-content">
+                    <div class="definition-box">
+                        Vücudumuzun büyümesi, gelişmesi ve sağlıklı kalması için gerekli olan besin ögelerini (protein, karbonhidrat, yağ, vitamin, mineral ve su) <strong>yeterli miktarda</strong> ve <strong>doğru zamanlarda</strong> almaktır.
+                    </div>
+                     <img src="IMG_1474.jpg" alt="Besin Piramidi" class="slide-image" style="max-width: 300px;">
+                     <p>Besin piramidi, hangi besin grubundan ne kadar tüketmemiz gerektiğini gösteren bir rehberdir. En çok tüketmemiz gerekenler en altta, en az tüketmemiz gerekenler en üstte yer alır.</p>
+                 </div>
+            </div>
+
+            <div class="slide">
+                 <h2 class="slide-title">Alıştırma: Kavramları Eşleştir</h2>
+                 <div class="slide-content matching-activity" id="match-beslenme">
+                    <div class="match-list-column" id="match-terms">
+                         <h4>Kavramlar</h4>
+                         <button class="match-item-button" data-id="1">a) dengeli beslenme</button>
+                         <button class="match-item-button" data-id="5">b) obezite</button>
+                         <button class="match-item-button" data-id="2">c) besin israfı</button>
+                         <button class="match-item-button" data-id="4">d) besin piramidi</button>
+                         <button class="match-item-button" data-id="6">e) proteinler</button>
+                         <button class="match-item-button" data-id="11">f) vitaminler</button>
+                         <button class="match-item-button" data-id="3">g) tahıllar</button>
+                         <button class="match-item-button" data-id="10">h) pasif içici</button>
+                         <button class="match-item-button" data-id="7">i) ALO 171</button>
+                         <button class="match-item-button" data-id="8">j) sigara</button>
+                         <button class="match-item-button" data-id="9">k) alkol</button>
+                         <button class="match-item-button" data-id="12">l) karaciğer</button>
+                    </div>
+                     <div class="match-list-column" id="match-definitions">
+                         <h4>Açıklamalar</h4>
+                         <button class="match-item-button" data-id="2">1. Yemeklerimizin artan kısımlarının atılması durumu.</button>
+                         <button class="match-item-button" data-id="4">2. Dengeli beslenmek için oluşturulmuş görsel.</button>
+                         <button class="match-item-button" data-id="3">3. Besin piramidine göre en çok tüketilmesi gereken besin grubu.</button>
+                         <button class="match-item-button" data-id="9">4. Kullanıldığında kazalara yol açabilen içecek türü.</button>
+                         <button class="match-item-button" data-id="5">5. Gereğinden fazla besin tüketilince oluşan durum.</button>
+                         <button class="match-item-button" data-id="6">6. Et ve sütün içinde bolca bulunan besin içeriği.</button>
+                         <button class="match-item-button" data-id="7">7. "Sigara Bırakma Danışma Hattı" iletişim numarası.</button>
+                         <button class="match-item-button" data-id="8">8. Dünya'nın en çok kullanılan zararlı alışkanlığı.</button>
+                         <button class="match-item-button" data-id="12">9. Alkol kullanınca en çok zarar gören organ.</button>
+                         <button class="match-item-button" data-id="10">10. Sigara içmeyen ama zararlarını çeken kişi.</button>
+                         <button class="match-item-button" data-id="11">11. Besin piramidinin 2. basamağında en çok bulunan besin içeriği.</button>
+                         <button class="match-item-button" data-id="1">12. Vücudun günlük ihtiyacı olan besinlerden yeterince tüketilmesi.</button>
+                     </div>
+                 </div>
+                 <div class="feedback-message" id="feedback-match-beslenme"></div>
+            </div>
+            
+            <div class="slide">
+                 <h2 class="slide-title">Obezite Nedir?</h2>
+                 <div class="slide-content">
+                    <div class="definition-box">
+                       Besinlerle alınan enerjinin (kalori) harcanan enerjiden fazla olması ve fazla enerjinin vücutta <strong>yağ olarak depolanması</strong> sonucu ortaya çıkan, yaşam kalitesini olumsuz etkileyen bir hastalıktır.
+                    </div>
+                     <h4>Obezite Neden Artıyor?</h4>
+                     <ul>
+                         <li>Teknolojinin gelişimi ile hareketin azalması.</li>
+                         <li>Fazla yağ içeren, yoğun enerjili (fast food vb.) gıdaların tüketiminin artması.</li>
+                         <li>Ulaşımdaki değişim ve kentleşme nedeniyle fiziksel aktivitenin azalması.</li>
+                         <li>Gıdalarda besin değerlerini gösteren etiket kullanımının yaygınlaşmaması (bilinçsiz tüketim).</li>
+                         <li>Genetik özellikler ve psikolojik sorunlar da etkili olabilir.</li>
+                     </ul>
+                 </div>
+            </div>
+            
+             <div class="slide">
+                 <h2 class="slide-title">Alıştırma: Grafiği Yorumlayalım</h2>
+                 <div class="slide-content" id="mcq-obezite-yas">
+                    <p class="activity-instructions">2019 yılındaki obezite araştırmasına göre oluşturulan bu grafiği inceleyelim.</p>
+                     <div class="graph-container">
+                         <img src="IMG_1475.jpg" alt="Obezite Yaş Grafiği" class="slide-image">
+                     </div>
+                     <div class="mcq-question">
+                         <p>Bu grafiğe göre aşağıdaki seçeneklerden hangisi <strong>yanlıştır?</strong></p>
+                         <div class="mcq-options" data-answer="B">
+                             <label><input type="radio" name="q-obezite-yas" value="A"> Obez erkek ve kadın oranının birbirine en yakın olduğu yaş aralığı 25-34'tür.</label>
+                             <label><input type="radio" name="q-obezite-yas" value="B"> 45-54 ile 55-64 yaş arasında obez olan erkek birey sayısı neredeyse hiç değişmemiştir.</label>
+                             <label><input type="radio" name="q-obezite-yas" value="C"> Obez olan kadınların sayısı tüm yaş gruplarında erkeklerden fazladır.</label>
+                             <label><input type="radio" name="q-obezite-yas" value="D"> 54 yaşına kadar olan süreçte obezite olan kişi sayısı hep artma eğilimindedir.</label>
+                         </div>
+                     </div>
+                    <button class="check-button" id="check-obezite-yas">Kontrol Et</button>
+                    <div class="feedback-message" id="feedback-obezite-yas"></div>
+                 </div>
+            </div>
+
+            <div class="slide">
+                <h2 class="slide-title">Besin İçeriklerini Nasıl Anlarız?</h2>
+                <div class="slide-content">
+                    <p>Yediğimiz besinlerin içinde hangi temel maddelerin (yağ, karbonhidrat, protein) olduğunu basit testlerle anlayabiliriz:</p>
+                    <img src="IMG_1479.jpg" alt="Besin Testleri" class="slide-image" style="max-width: 600px;">
+                    <ul>
+                        <li><strong>Yağ Testi:</strong> Yağ bakımından zengin besin (örn: badem, zeytin) beyaz kağıda sürülünce <strong>parlak leke</strong> bırakır.</li>
+                        <li><strong>Karbonhidrat Testi:</strong> Karbonhidrat (nişasta) içeren besine (örn: ekmek, patates) iyot veya lügol çözeltisi damlatılınca renk <strong>mavi-mor</strong> olur.</li>
+                        <li><strong>Protein Testi:</strong> Protein içeren besine (örn: yumurta, peynir) nitrik asit damlatılınca renk <strong>sarı</strong> olur.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="slide">
+                 <h2 class="slide-title">Alıştırma: Besinleri Bulalım</h2>
+                 <div class="slide-content" id="mcq-besin-test">
+                    <p class="activity-instructions">Yandaki deney sonuçlarına göre 1, 2 ve 3 numaralı kaplardaki besinler hangileri olabilir?</p>
+                    <div class="food-test-container">
+                         <img src="IMG_1479.jpg" alt="Besin Testi Sonuçları" class="food-test-image">
+                     </div>
+                     <div class="mcq-question">
+                         <p>Bu tabloya göre kaplardaki besinler seçeneklerden hangileri olabilir?</p>
+                         <div class="mcq-options" data-answer="C">
+                             <label><input type="radio" name="q-besin-test" value="A"> 1: patates, 2: peynir, 3: ceviz</label>
+                             <label><input type="radio" name="q-besin-test" value="B"> 1: pirinç, 2: fındık, 3: yoğurt</label>
+                             <label><input type="radio" name="q-besin-test" value="C"> 1: badem, 2: buğday, 3: et</label>
+                             <label><input type="radio" name="q-besin-test" value="D"> 1: zeytin, 2: bal, 3: mercimek</label>
+                         </div>
+                     </div>
+                    <button class="check-button" id="check-besin-test">Kontrol Et</button>
+                    <div class="feedback-message" id="feedback-besin-test"></div>
+                 </div>
+            </div>
+
+            <div class="slide">
+                 <h2 class="slide-title">Besin İsrafı</h2>
+                 <div class="slide-content">
+                     <div class="definition-box">
+                         Üretilen gıdanın tüketilmeden önce atığa dönüşmesidir. Hem ekonomik kayıptır hem de çevreye zararlıdır.
+                     </div>
+                     <h4>Besin İsrafını Önlemek İçin Neler Yapabiliriz?</h4>
+                      <img src="IMG_1476.jpg" alt="Besin İsrafı" class="slide-image" style="max-width: 300px; float: right; margin-left: 15px;">
+                     <ul>
+                         <li>İhtiyacımız kadar besin almalıyız.</li>
+                         <li>Çabuk bozulan ürünleri zamanında tüketmeliyiz.</li>
+                         <li>Tabağımıza yiyebileceğimiz kadar yemek koymalıyız.</li>
+                         <li>Artan yemekleri doğru şekilde saklayıp tekrar değerlendirmeliyiz.</li>
+                         <li>Alışverişe çıkmadan önce liste yapmalıyız.</li>
+                     </ul>
+                 </div>
+             </div>
+
+            <div class="slide">
+                 <h2 class="slide-title">Alıştırma: Karikatürü Yorumla</h2>
+                 <div class="slide-content" id="cartoon-beslenme">
+                    <p class="activity-instructions">Sizce kahramanlarımızdan hangisi dengeli beslenme ile ilgili doğru bir yorum yapıyor? Doğru yorumun altındaki yuvarlağa tıklayın.</p>
+                     <div class="cartoon-container">
+                         <img src="IMG_1470.jpg" alt="Dengeli Beslenme Karikatürü" class="cartoon-image">
+                         <div class="cartoon-options">
+                             <div class="cartoon-option" data-correct="false"></div> <div class="cartoon-option" data-correct="true"></div>  <div class="cartoon-option" data-correct="false"></div> <div class="cartoon-option" data-correct="false"></div> </div>
+                     </div>
+                    <div class="feedback-message" id="feedback-cartoon"></div>
+                 </div>
+            </div>
+            
+            <div class="slide">
+                <h2 class="slide-title">Dersi Bitirdik! Harikasınız! 🌟</h2>
+                <div class="slide-content">
+                    <div class="definition-box">
+                       Bugün sigara ve alkol gibi zararlı maddelerden uzak durmanın ve dengeli beslenmenin sağlığımız için ne kadar önemli olduğunu öğrendik. Unutmayın, sağlıklı yaşam bizim elimizde!
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="slide-navigation">
+            <button class="nav-button" id="prevBtn" disabled>&#171; Geri</button>
+            <span id="slide-counter">Slayt 1 / 15</span>
+            <button class="nav-button" id="nextBtn">İleri &#187;</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const counter = document.getElementById('slide-counter');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+                currentSlide = index;
+                counter.textContent = `Slayt ${index + 1} / ${totalSlides}`;
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === totalSlides - 1;
+            }
+
+            prevBtn.addEventListener('click', () => { if (currentSlide > 0) { showSlide(currentSlide - 1); } });
+            nextBtn.addEventListener('click', () => { if (currentSlide < totalSlides - 1) { showSlide(currentSlide + 1); } });
+            showSlide(0);
+
+            // --- Etkileşimli Modüller ---
+
+            // Slayt 3: Boşluk Doldurma (Zararlı Maddeler)
+            const checkFibZararli = document.getElementById('check-fib-zararli');
+            if (checkFibZararli) {
+                checkFibZararli.addEventListener('click', () => {
+                    const inputs = document.querySelectorAll('#fib-zararli .fib-input');
+                    const feedback = document.getElementById('feedback-fib-zararli');
+                    let allCorrect = true;
+                    inputs.forEach(input => {
+                        input.classList.remove('correct', 'incorrect');
+                        // Basit boşluk ve büyük/küçük harf kontrolü
+                        if (input.value.trim().toLowerCase() === input.dataset.answer.toLowerCase()) {
+                            input.classList.add('correct');
+                        } else {
+                            input.classList.add('incorrect');
+                            allCorrect = false;
+                        }
+                    });
+                    feedback.textContent = allCorrect ? 'Tebrikler, hepsi doğru! ✅' : 'Hatalar var, tekrar kontrol et. ❌';
+                    feedback.className = `feedback-message visible ${allCorrect ? 'feedback-correct' : 'feedback-incorrect'}`;
+                });
+            }
+
+            // Slayt 4: Tablo İşaretleme (Hastalıklar)
+            const checkHastalikBtn = document.getElementById('check-hastalik-btn');
+            if (checkHastalikBtn) {
+                 checkHastalikBtn.addEventListener('click', () => {
+                    const table = document.querySelector('#check-hastalik .check-table tbody');
+                    const feedback = document.getElementById('feedback-hastalik');
+                    let allCorrect = true;
+
+                    table.querySelectorAll('tr').forEach(row => {
+                        const cells = row.querySelectorAll('td'); // İlk hücre hariç
+                        cells.forEach((cell, index) => {
+                            if (index > 0) { // Sadece checkbox olan hücreler
+                                const checkbox = cell.querySelector('input[type="checkbox"]');
+                                cell.classList.remove('correct', 'incorrect'); // Önceki stilleri temizle
+
+                                if (checkbox) {
+                                    const expectedCol = checkbox.dataset.col; // 'sigara' or 'alkol'
+                                    const shouldBeChecked = cell.dataset[expectedCol] === 'true'; // Bu hücre işaretlenmeli mi?
+
+                                    if (checkbox.checked === shouldBeChecked) {
+                                        cell.classList.add('correct');
+                                    } else {
+                                        cell.classList.add('incorrect');
+                                        allCorrect = false;
+                                    }
+                                }
+                            }
+                        });
+                    });
+
+                    feedback.textContent = allCorrect ? 'Tebrikler, tablo doğru! ✅' : 'Hatalar var, tekrar kontrol et. ❌';
+                    feedback.className = `feedback-message visible ${allCorrect ? 'feedback-correct' : 'feedback-incorrect'}`;
+                });
+            }
+
+            // Slayt 5 & 13: Sürükle Bırak Mantığı
+            let draggedItem = null;
+            document.addEventListener('dragstart', (e) => {
+                 if (e.target.classList.contains('drag-item')) {
+                    // Eğer öğe zaten doğru hedefteyse sürüklemeyi engelle
+                     const parent = e.target.parentElement;
+                     if (parent.classList.contains('drag-target') && e.target.dataset.target === parent.dataset.id) {
+                         //e.preventDefault(); // Engelleme kaldırıldı, tekrar kaynağa sürüklenebilir
+                         //return;
+                     }
+                     draggedItem = e.target;
+                     setTimeout(() => e.target.classList.add('dragging'), 0);
+                 }
+            });
+            document.addEventListener('dragend', () => {
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                }
+                draggedItem = null;
+                 document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            });
+             document.addEventListener('dragover', (e) => {
+                 e.preventDefault();
+                 const target = e.target.closest('.drag-target');
+                  if (target) {
+                     // Hedefin zaten doğru öğeyi içerip içermediğini kontrol et
+                      const existingItem = target.querySelector('.drag-item');
+                      if (!existingItem) { // Hedef boşsa
+                          target.classList.add('drag-over');
+                      } else {
+                          // Eğer hedef doluysa ve sürüklenen öğe o hedefe aitse (geri sürükleme durumu için), yine de izin ver
+                          if (draggedItem && draggedItem.dataset.target === target.dataset.id && existingItem === draggedItem) {
+                             target.classList.add('drag-over');
+                          } else {
+                             target.classList.remove('drag-over'); // Dolu ve farklı öğe sürükleniyorsa izin verme
+                          }
+                      }
+                  }
+            });
+            document.addEventListener('dragleave', (e) => {
+                const target = e.target.closest('.drag-target');
+                 if (target && (!e.relatedTarget || !target.contains(e.relatedTarget))) {
+                    target.classList.remove('drag-over');
+                }
+            });
+             document.addEventListener('drop', (e) => {
+                 e.preventDefault();
+                 const target = e.target.closest('.drag-target');
+                 const source = document.getElementById('drag-source-zarar'); // Kaynak kutusu ID'si
+
+                 if (target && draggedItem) {
+                     target.classList.remove('drag-over');
+                     const targetId = target.dataset.id;
+                     const itemId = draggedItem.dataset.target; // Öğenin ait olduğu kategori
+
+                     // Hedefin içindeki mevcut öğe (varsa)
+                     const existingItem = target.querySelector('.drag-item');
+
+                     if (itemId === targetId) { // Doğru hedefe bırakıldı
+                         // Eğer hedefte başka bir öğe varsa, onu kaynağa geri gönder
+                         if (existingItem && existingItem !== draggedItem) {
+                             source.appendChild(existingItem);
+                         }
+                         // Sürüklenen öğeyi hedefe ekle
+                         target.appendChild(draggedItem);
+                     } else { // Yanlış hedefe bırakıldı
+                         // Öğeyi kaynağa geri gönder (eğer hedeften sürüklenmiyorsa)
+                         // Veya hiçbir şey yapma, bırakıldığı yerde kalmasını sağlama (kullanıcı hatayı görsün diye)
+                         // Şu anki implementasyon: Yanlış yere bırakılamaz (dragover engelliyor gibi davranıyor)
+                         // Eğer yanlış yere bırakılıp kaynağa dönmesi istenirse: source.appendChild(draggedItem);
+                     }
+                     checkDragDropCompletion('drag-zarar', 'feedback-drag-zarar'); // Her bırakmada kontrol et
+                 }
+                  // Bırakma işlemi bittikten sonra tüm drag-over'ları temizle
+                 document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+             });
+
+             function checkDragDropCompletion(containerId, feedbackId) {
+                 const container = document.getElementById(containerId);
+                 if (!container) return;
+                 const source = container.querySelector('.drag-source');
+                 const targets = container.querySelectorAll('.drag-target');
+                 const feedback = document.getElementById(feedbackId);
+                 let allCorrect = true;
+
+                 if (source.children.length > 0) { // Kaynakta hala öğe varsa tamamlanmamış
+                     allCorrect = false;
+                 } else { // Kaynak boşsa, hedefleri kontrol et
+                     targets.forEach(target => {
+                         const item = target.querySelector('.drag-item');
+                         if (!item || item.dataset.target !== target.dataset.id) {
+                             allCorrect = false;
+                         }
+                     });
+                 }
+
+                  if (source.children.length === 0 && allCorrect) {
+                     feedback.textContent = 'Tebrikler, hepsini doğru yerleştirdin! ✅';
+                     feedback.className = 'feedback-message visible feedback-correct';
+                 } else {
+                     // Kaynakta eleman varsa veya hedeflerden en az biri yanlışsa hata mesajı
+                      feedback.textContent = 'Henüz tamamlanmadı veya hatalar var. 🤔';
+                      feedback.className = 'feedback-message visible feedback-incorrect';
+                 }
+             }
+
+            // Slayt 8: Kavram Eşleştirme
+            let selectedTerm = null;
+            let selectedDef = null;
+            let matchedCountBeslenme = 0;
+            const totalMatchesBeslenme = 12; // Eşleşecek toplam çift sayısı
+
+            const matchBeslenmeContainer = document.getElementById('match-beslenme');
+            if (matchBeslenmeContainer) {
+                const termButtons = matchBeslenmeContainer.querySelectorAll('#match-terms .match-item-button');
+                const defButtons = matchBeslenmeContainer.querySelectorAll('#match-definitions .match-item-button');
+                const feedbackMatch = document.getElementById('feedback-match-beslenme');
+
+                termButtons.forEach(btn => {
+                    btn.addEventListener('click', () => handleSelection(btn, 'term'));
+                });
+                defButtons.forEach(btn => {
+                    btn.addEventListener('click', () => handleSelection(btn, 'def'));
+                });
+
+                function handleSelection(button, type) {
+                    if (button.classList.contains('matched')) return;
+
+                    if (type === 'term') {
+                        if (selectedTerm) selectedTerm.classList.remove('selected');
+                        selectedTerm = button;
+                        button.classList.add('selected');
+                    } else {
+                        if (selectedDef) selectedDef.classList.remove('selected');
+                        selectedDef = button;
+                        button.classList.add('selected');
+                    }
+
+                    checkBeslenmeMatch();
+                }
+
+                function checkBeslenmeMatch() {
+                    if (!selectedTerm || !selectedDef) return;
+
+                    termButtons.forEach(btn => btn.classList.remove('incorrect'));
+                    defButtons.forEach(btn => btn.classList.remove('incorrect'));
+
+                    if (selectedTerm.dataset.id === selectedDef.dataset.id) {
+                        selectedTerm.classList.add('matched');
+                        selectedDef.classList.add('matched');
+                        selectedTerm.classList.remove('selected');
+                        selectedDef.classList.remove('selected');
+                        selectedTerm = null;
+                        selectedDef = null;
+                        matchedCountBeslenme++;
+                        feedbackMatch.textContent = `Doğru eşleşme! (${matchedCountBeslenme}/${totalMatchesBeslenme})`;
+                        feedbackMatch.className = 'feedback-message visible feedback-correct';
+
+                        if (matchedCountBeslenme === totalMatchesBeslenme) {
+                            feedbackMatch.textContent = 'Tebrikler, hepsini eşleştirdin! 🥳';
+                        }
+                    } else {
+                        selectedTerm.classList.add('incorrect');
+                        selectedDef.classList.add('incorrect');
+                        feedbackMatch.textContent = 'Yanlış eşleşme, tekrar dene. 🤔';
+                        feedbackMatch.className = 'feedback-message visible feedback-incorrect';
+                        // Seçimleri kısa süre sonra kaldır
+                        setTimeout(() => {
+                            if (selectedTerm) selectedTerm.classList.remove('selected', 'incorrect');
+                            if (selectedDef) selectedDef.classList.remove('selected', 'incorrect');
+                            selectedTerm = null;
+                            selectedDef = null;
+                        }, 800);
+                    }
+                }
+            }
+            
+             // Slayt 10: MCQ Obezite Yaş Grafiği
+            setupMCQ('check-obezite-yas', 'mcq-obezite-yas', 'feedback-obezite-yas');
+
+            // Slayt 12: MCQ Besin Testi
+            setupMCQ('check-besin-test', 'mcq-besin-test', 'feedback-besin-test');
+            
+            // Slayt 14: Karikatür Yorumlama
+            const cartoonOptions = document.querySelectorAll('#cartoon-beslenme .cartoon-option');
+            const feedbackCartoon = document.getElementById('feedback-cartoon');
+            if (cartoonOptions.length > 0) {
+                 cartoonOptions.forEach(opt => {
+                     opt.addEventListener('click', () => {
+                         cartoonOptions.forEach(o => o.classList.remove('correct', 'incorrect')); // Hepsini temizle
+                         const isCorrect = opt.dataset.correct === 'true';
+                         if (isCorrect) {
+                             opt.classList.add('correct');
+                             feedbackCartoon.textContent = 'Evet, Marge doğru söylüyor! Dengeli beslenmek önemlidir. ✅';
+                             feedbackCartoon.className = 'feedback-message visible feedback-correct';
+                         } else {
+                             opt.classList.add('incorrect');
+                             feedbackCartoon.textContent = 'Bu yorum pek doğru değil gibi. Tekrar düşünelim. 🤔';
+                             feedbackCartoon.className = 'feedback-message visible feedback-incorrect';
+                         }
+                     });
+                 });
+            }
+
+             // Genel MCQ Kontrol Fonksiyonu
+             function setupMCQ(buttonId, containerId, feedbackId) {
+                 const checkBtn = document.getElementById(buttonId);
+                 const container = document.getElementById(containerId);
+                 const feedback = document.getElementById(feedbackId);
+
+                 if (checkBtn && container && feedback) {
+                     checkBtn.addEventListener('click', () => {
+                         const question = container.querySelector('.mcq-question'); // Sadece bir soru varsayıyoruz
+                         if (!question) return;
+
+                         const options = question.querySelectorAll('.mcq-options label');
+                         const selected = question.querySelector('input[type=radio]:checked');
+                         const correctAnswer = question.querySelector('.mcq-options').dataset.answer;
+
+                         options.forEach(opt => opt.classList.remove('correct', 'incorrect'));
+                         let correctSelected = false;
+
+                         if (selected) {
+                             const selectedLabel = selected.parentElement;
+                             if (selected.value === correctAnswer) {
+                                 selectedLabel.classList.add('correct');
+                                 correctSelected = true;
+                             } else {
+                                 selectedLabel.classList.add('incorrect');
+                                 // Doğru cevabı göster
+                                 question.querySelector(`input[value="${correctAnswer}"]`).parentElement.classList.add('correct');
+                             }
+                         } else {
+                              // Cevap seçilmemişse doğruyu göster
+                               question.querySelector(`input[value="${correctAnswer}"]`).parentElement.classList.add('correct');
+                         }
+
+                         feedback.classList.add('visible');
+                         if (correctSelected) {
+                             feedback.textContent = 'Doğru cevap! Harika! 👍';
+                             feedback.className = 'feedback-message visible feedback-correct';
+                         } else {
+                             feedback.textContent = selected ? 'Yanlış cevap. Doğrusu yeşil ile işaretlendi. 🧐' : 'Lütfen bir cevap seçin. Doğrusu yeşil ile işaretlendi.';
+                             feedback.className = 'feedback-message visible feedback-incorrect';
+                         }
+                     });
+                 }
+             }
+
+        });
+    </script>
+</body>
+</html>
