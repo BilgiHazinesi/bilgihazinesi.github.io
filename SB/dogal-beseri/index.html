@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doğal ve Beşeri Unsurlar</title>
+    <style>
+        /* --- PAPİRÜS TEMA VE GENEL STİLLER --- */
+        html {
+            font-size: 20px; /* Okunabilirlik için temel yazı tipi boyutunu artırdık */
+        }
+
+        body {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            background-color: #f7f3e8; /* Papirüs benzeri bir arka plan rengi */
+            color: #5a4a3a; /* Koyu kahverengi metin */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1 { font-size: 2.5em; }
+        h2 { font-size: 2em; }
+        h3 { font-size: 1.5em; }
+
+        h1, h2, h3 {
+            color: #8B4513; /* Koyu kahverengi başlık */
+            border-bottom: 2px solid #D2B48C; /* Açık kahve tonunda alt çizgi */
+            padding-bottom: 5px;
+        }
+
+        p {
+            line-height: 1.6; /* Not almayı kolaylaştırmak için satır aralığı */
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1200px; /* Akıllı tahtaya yayılması için genişletildi */
+            margin: 0 auto;
+            background-color: #fffff0; /* Fildişi rengi içerik alanı */
+            border: 3px solid #D2B48C; /* Çerçeve */
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex; /* Dinamik yerleşim için */
+            flex-direction: column; /* Dinamik yerleşim için */
+            min-height: 80vh; /* Minimum yükseklik */
+        }
+
+        /* --- SUNUM SLAYT YAPISI --- */
+        .slide {
+            display: none; /* Tüm slaytları başta gizle */
+            padding: 25px 45px;
+            animation: fadeIn 0.5s;
+            flex-grow: 1; /* Slaytın mevcut alanı doldurmasını sağlar */
+            overflow-y: auto; /* Gerekirse slayt içi kaydırma */
+        }
+
+        .active-slide {
+            display: block; /* Aktif slaytı göster */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- NAVİGASYON BUTONLARI --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 45px;
+            background-color: #f0eada;
+            border-top: 2px solid #D2B48C;
+            flex-shrink: 0; /* Navigasyonun küçülmesini engeller */
+        }
+
+        .nav-button {
+            background-color: #8B4513;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em; /* Büyütüldü */
+            font-family: Georgia, serif;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .nav-button:hover {
+            background-color: #a05a2c;
+        }
+
+        .nav-button:disabled {
+            background-color: #c0c0c0;
+            cursor: not-allowed;
+        }
+        
+        /* --- GENEL ETKİNLİK STİLLERİ --- */
+        .check-button {
+            background-color: #4682B4; /* Mavi tonu */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em; /* Büyütüldü */
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .check-button:hover {
+            background-color: #5a9bd3;
+        }
+        .result-message {
+            font-size: 1.3em; /* Büyütüldü */
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .correct { background-color: #e0ffe0; }
+        .incorrect { background-color: #ffe0e0; }
+        .correct-text { color: green; }
+        .incorrect-text { color: red; }
+
+        /* --- ETKİNLİK A: GÖRSEL SEÇİMİ --- */
+        .activity-a-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Daha büyük kartlar için ayarlandı */
+            gap: 20px;
+        }
+
+        .image-card {
+            border: 2px solid #D2B48C;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fdfdf5;
+            text-align: center;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 220px; /* Büyütüldü */
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .image-card-buttons {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .choice-btn {
+            background-color: #556B2F; /* Yeşil tonu */
+            color: white;
+            border: none;
+            padding: 10px 18px; /* Büyütüldü */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em; /* Büyütüldü */
+        }
+        .choice-btn.beseri {
+            background-color: #CD853F; /* Kiremit tonu */
+        }
+        .choice-btn:hover {
+            opacity: 0.8;
+        }
+        .result-a {
+            margin-top: 8px;
+            font-weight: bold;
+            height: 25px; /* Büyütüldü */
+            font-size: 1.1em;
+        }
+
+        /* --- ETKİNLİK B: BOŞLUK DOLDURMA --- */
+        .activity-b-container p {
+            font-size: 1.2em; /* Büyütüldü */
+            line-height: 2.5; /* Seçim kutuları için aralık */
+        }
+        .activity-b-container select {
+            font-family: Georgia, serif;
+            font-size: 1em; /* Büyütüldü */
+            padding: 8px; /* Büyütüldü */
+            border: 2px solid #D2B48C;
+            border-radius: 5px;
+            background-color: #fffff0;
+        }
+        
+        /* --- ETKİNLİK C: TABLO İŞARETLEME (YENİ) --- */
+        .table-scroll-container {
+            max-height: 450px; /* Tabloya özel yükseklik */
+            overflow-y: auto; /* Dikey kaydırma çubuğu */
+            border: 1px solid #D2B48C;
+            border-top: none;
+        }
+        .activity-c-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .activity-c-table th {
+            position: sticky; /* Başlıkları sabitle */
+            top: 0; /* En üste yapıştır */
+            background-color: #f0eada;
+            font-size: 1.2em; /* Büyütüldü */
+            z-index: 1;
+            padding: 14px;
+            border: 1px solid #D2B48C;
+        }
+        .activity-c-table td {
+            border: 1px solid #D2B48C;
+            padding: 14px;
+            text-align: center;
+            font-size: 1.1em; /* Büyütüldü */
+            background-color: #fffff0; /* Kayarken başlığın altından geçeni gizler */
+        }
+        .activity-c-table td:first-child {
+            text-align: left;
+            font-weight: bold;
+            width: 60%;
+        }
+        .activity-c-table input[type="radio"] {
+            cursor: pointer;
+            width: 22px; /* Büyütüldü */
+            height: 22px; /* Büyütüldü */
+        }
+        
+        /* --- ETKİNLİK D: SÜRÜKLE BIRAK --- */
+        .activity-d-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 10px;
+            min-height: 350px;
+        }
+        .drop-zone {
+            width: 45%;
+            min-height: 300px;
+            border: 3px dashed #D2B48C;
+            border-radius: 10px;
+            padding: 15px;
+            background-color: #fdfdf5;
+        }
+        .drop-zone h3 {
+            text-align: center;
+            margin-top: 0;
+        }
+        .drag-item-container {
+            text-align: center;
+            padding: 20px;
+            background-color: #f0eada;
+            border-radius: 5px;
+        }
+        .drag-item {
+            display: inline-block;
+            background-color: #8B4513;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: grab;
+            font-weight: bold;
+            font-size: 1.1em; /* Büyütüldü */
+        }
+        
+        /* --- ETKİNLİK E: MUHAKEME (YENİ) --- */
+        .activity-e-question {
+            background-color: #fdfdf5;
+            border: 2px solid #D2B48C;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        .activity-e-question p {
+            font-size: 1.4em; /* Soru metni büyütüldü */
+            font-weight: bold;
+            margin-top: 0;
+            line-height: 1.5;
+        }
+        .activity-e-question label {
+            display: block;
+            margin: 15px 0 15px 10px; /* Artırıldı */
+            cursor: pointer;
+            font-size: 1.3em; /* Seçenekler büyütüldü */
+        }
+        .activity-e-question input[type="radio"] {
+            margin-right: 15px;
+            width: 20px; /* Büyütüldü */
+            height: 20px; /* Büyütüldü */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="slide active-slide">
+            <h1 style="font-size: 3em; text-align: center; margin-top: 100px;">Doğal ve Beşeri Unsurlar</h1>
+            <p style="font-size: 1.3em; text-align: center;">Çevremizdeki harika dünyayı keşfetmeye hazır mısınız?</p>
+            <p style="font-size: 1.3em; text-align: center;">Bu dersimizde, etrafımızda gördüğümüz nelerin "doğal" ve nelerin "insan yapımı" (beşeri) olduğunu öğreneceğiz.</p>
+            <p style="text-align:center; font-size: 1.2em; margin-top: 80px;">
+                Başlamak için klavyenizden <strong>Sağ Ok (→)</strong> tuşuna veya <strong>"İleri"</strong> butonuna tıklayın!
+            </p>
+        </div>
+
+        <div class="slide">
+            <h2>Konu Anlatımı: Deftere Not Alalım</h2>
+            <p style="font-size: 1.2em;"><strong>Çevre:</strong> İnsanların ve diğer canlıların yaşamları boyunca ilişkilerini sürdürdükleri ve karşılıklı olarak etkileşim içinde bulundukları ortamdır. İnsanların yaşadığı yerde doğal ve beşeri çok unsur vardır.</p>
+            
+            <h3 style="color: #556B2F;">Doğal Unsurlar</h3>
+            <p style="font-size: 1.2em;">İnsan eli ve etkisi olmadan kendiliğinden oluşan ortama <strong>doğal ortam</strong> denir. "Doğal unsur" ise insan eli değmeden Dünya'nın oluşumundan bu yana varlığını devam ettiren nesnelerdir.</p>
+            <p style="font-size: 1.2em;"><strong>Örnekler:</strong> Dağlar, ovalar, bitkiler, dereler, akarsular, bulutlar, denizler, göller, mağaralar, ormanlar...</p>
+
+            <h3 style="color: #CD853F;">Beşeri Unsurlar</h3>
+            <p style="font-size: 1.2em;">İnsanlar tarafından oluşturulmuş yani doğal olmayan ortama <strong>beşeri ortam</strong> denir. "Beşeri unsur", doğal unsurlar üzerinde insanların çalışmaları ve etkileri sonucunda ortaya çıkmış olan nesnelerdir.</p>
+            <p style="font-size: 1.2em;"><strong>Örnekler:</strong> Elektrik direkleri, yollar, köprüler, binalar, göletler, fabrikalar, tüneller, barajlar...</p>
+        </div>
+
+        <div class="slide">
+            <h2>Etkinlik A: Görselleri İnceleyelim</h2>
+            <p>Aşağıdaki görsellerin doğal unsur mu yoksa beşeri unsur mu olduğunu bulalım.</p>
+            <div class="activity-a-grid">
+                
+                <div class="image-card">
+                    <img src="1.png" alt="Görsel 1 (Şelale)">
+                    <div class="image-card-buttons">
+                        <button class="choice-btn" onclick="checkAnswerA('1', 'dogal')">Doğal Unsur</button>
+                        <button class="choice-btn beseri" onclick="checkAnswerA('1', 'beseri')">Beşeri Unsur</button>
+                    </div>
+                    <div class="result-a" id="result-A-1"></div>
+                </div>
+                
+                <div class="image-card">
+                    <img src="2.png" alt="Görsel 2 (Çöl)">
+                    <div class="image-card-buttons">
+                        <button class="choice-btn" onclick="checkAnswerA('2', 'dogal')">Doğal Unsur</button>
+                        <button class="choice-btn beseri" onclick="checkAnswerA('2', 'beseri')">Beşeri Unsur</button>
+                    </div>
+                    <div class="result-a" id="result-A-2"></div>
+                </div>
+
+                <div class="image-card">
+                    <img src="3.png" alt="Görsel 3 (Koyunlar)">
+                    <div class="image-card-buttons">
+                        <button class="choice-btn" onclick="checkAnswerA('3', 'dogal')">Doğal Unsur</button>
+                        <button class="choice-btn beseri" onclick="checkAnswerA('3', 'beseri')">Beşeri Unsur</button>
+                    </div>
+                    <div class="result-a" id="result-A-3"></div>
+                </div>
+
+                <div class="image-card">
+                    <img src="4.png" alt="Görsel 4 (Çocuk Parkı)">
+                    <div class="image-card-buttons">
+                        <button class="choice-btn" onclick="checkAnswerA('4', 'dogal')">Doğal Unsur</button>
+                        <button class="choice-btn beseri" onclick="checkAnswerA('4', 'beseri')">Beşeri Unsur</button>
+                    </div>
+                    <div class="result-a" id="result-A-4"></div>
+                </div>
+
+                <div class="image-card">
+                    <img src="5.png" alt="Görsel 5 (Binalar)">
+                    <div class="image-card-buttons">
+                        <button class="choice-btn" onclick="checkAnswerA('5', 'dogal')">Doğal Unsur</button>
+                        <button class="choice-btn beseri" onclick="checkAnswerA('5', 'beseri')">Beşeri Unsur</button>
+                    </div>
+                    <div class="result-a" id="result-A-5"></div>
+                </div>
+
+                <div class="image-card">
+                    <img src="6.png" alt="Görsel 6 (Köprü)">
+                    <div class="image-card-buttons">
+                        <button class="choice-btn" onclick="checkAnswerA('6', 'dogal')">Doğal Unsur</button>
+                        <button class="choice-btn beseri" onclick="checkAnswerA('6', 'beseri')">Beşeri Unsur</button>
+                    </div>
+                    <div class="result-a" id="result-A-6"></div>
+                </div>
+
+                <div class="image-card">
+                    <img src="7.png" alt="Görsel 7 (Bahçe)">
+                    <div class="image-card-buttons">
+                        <button class="choice-btn" onclick="checkAnswerA('7', 'dogal')">Doğal Unsur</button>
+                        <button class="choice-btn beseri" onclick="checkAnswerA('7', 'beseri')">Beşeri Unsur</button>
+                    </div>
+                    <div class="result-a" id="result-A-7"></div>
+                </div>
+
+                <div class="image-card">
+                    <img src="8.png" alt="Görsel 8 (Polis Aracı)">
+                    <div class="image-card-buttons">
+                        <button class="choice-btn" onclick="checkAnswerA('8', 'dogal')">Doğal Unsur</button>
+                        <button class="choice-btn beseri" onclick="checkAnswerA('8', 'beseri')">Beşeri Unsur</button>
+                    </div>
+                    <div class="result-a" id="result-A-8"></div>
+                </div>
+
+                <div class="image-card">
+                    <img src="9.png" alt="Görsel 9 (Göl/Orman)">
+                    <div class="image-card-buttons">
+                        <button class="choice-btn" onclick="checkAnswerA('9', 'dogal')">Doğal Unsur</button>
+                        <button class="choice-btn beseri" onclick="checkAnswerA('9', 'beseri')">Beşeri Unsur</button>
+                    </div>
+                    <div class="result-a" id="result-A-9"></div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="slide">
+            <h2>Etkinlik B: Boşlukları Dolduralım</h2>
+            <p>Aşağıdaki ifadelerde boş bırakılan yerleri kutucuktan seçerek tamamlayınız.</p>
+            
+            <div class="activity-b-container">
+                <p>1. İnsanların ve diğer canlıların yaşamları boyunca ilişkilerini sürdürdükleri ve karşılıklı olarak etkileşim içinde bulundukları ortama 
+                    <select id="b1">
+                        <option value="">Seçiniz...</option>
+                        <option value="çevre">çevre</option>
+                        <option value="doğal ortam">doğal ortam</option>
+                        <option value="beşeri ortam">beşeri ortam</option>
+                        <option value="doğal unsur">doğal unsur</option>
+                        <option value="beşeri unsur">beşeri unsur</option>
+                        <option value="akarsular">akarsular</option>
+                        <option value="köprüler">köprüler</option>
+                    </select> denir.
+                </p>
+                
+                <p>2. İnsan eli ve etkisi olmadan kendiliğinden oluşan ortama 
+                    <select id="b2">
+                        <option value="">Seçiniz...</option>
+                        <option value="çevre">çevre</option>
+                        <option value="doğal ortam">doğal ortam</option>
+                        <option value="beşeri ortam">beşeri ortam</option>
+                        <option value="doğal unsur">doğal unsur</option>
+                        <option value="beşeri unsur">beşeri unsur</option>
+                        <option value="akarsular">akarsular</option>
+                        <option value="köprüler">köprüler</option>
+                    </select> denir.
+                </p>
+
+                <p>3. İnsanlar tarafından oluşturulmuş yani doğal olmayan ortama 
+                    <select id="b3">
+                        <option value="">Seçiniz...</option>
+                        <option value="çevre">çevre</option>
+                        <option value="doğal ortam">doğal ortam</option>
+                        <option value="beşeri ortam">beşeri ortam</option>
+                        <option value="doğal unsur">doğal unsur</option>
+                        <option value="beşeri unsur">beşeri unsur</option>
+                        <option value="akarsular">akarsular</option>
+                        <option value="köprüler">köprüler</option>
+                    </select> denir.
+                </p>
+
+                <p>4. Dünya'nın oluşumundan bu yana varlığını devam ettiren nesnelere 
+                    <select id="b4">
+                        <option value="">Seçiniz...</option>
+                        <option value="çevre">çevre</option>
+                        <option value="doğal ortam">doğal ortam</option>
+                        <option value="beşeri ortam">beşeri ortam</option>
+                        <option value="doğal unsur">doğal unsur</option>
+                        <option value="beşeri unsur">beşeri unsur</option>
+                        <option value="akarsular">akarsular</option>
+                        <option value="köprüler">köprüler</option>
+                    </select> denir.
+                </p>
+
+                <p>5. Doğal unsurlar üzerinde insanların çalışmaları ve etkileri sonucunda ortaya çıkmış olan nesnelere 
+                    <select id="b5">
+                        <option value="">Seçiniz...</option>
+                        <option value="çevre">çevre</option>
+                        <option value="doğal ortam">doğal ortam</option>
+                        <option value="beşeri ortam">beşeri ortam</option>
+                        <option value="doğal unsur">doğal unsur</option>
+                        <option value="beşeri unsur">beşeri unsur</option>
+                        <option value="akarsular">akarsular</option>
+                        <option value="köprüler">köprüler</option>
+                    </select> denir.
+                </p>
+
+                <p>6. Dağlar, ovalar, 
+                    <select id="b6a">
+                        <option value="">Seçiniz...</option>
+                        <option value="çevre">çevre</option>
+                        <option value="doğal ortam">doğal ortam</option>
+                        <option value="beşeri ortam">beşeri ortam</option>
+                        <option value="doğal unsur">doğal unsur</option>
+                        <option value="beşeri unsur">beşeri unsur</option>
+                        <option value="akarsular">akarsular</option>
+                        <option value="köprüler">köprüler</option>
+                    </select> doğal unsurlara; yollar, binalar, 
+                    <select id="b6b">
+                        <option value="">Seçiniz...</option>
+                        <option value="çevre">çevre</option>
+                        <option value="doğal ortam">doğal ortam</option>
+                        <option value="beşeri ortam">beşeri ortam</option>
+                        <option value="doğal unsur">doğal unsur</option>
+                        <option value="beşeri unsur">beşeri unsur</option>
+                        <option value="akarsular">akarsular</option>
+                        <option value="köprüler">köprüler</option>
+                    </select> ise beşeri unsurlara örnektir.
+                </p>
+                <button class="check-button" onclick="checkActivityB()">Cevapları Kontrol Et</button>
+                <div class="result-message" id="result-B"></div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <h2>Etkinlik C: Tabloyu İşaretleyelim</h2>
+            <p>Tablodaki unsurları doğal ve beşeri unsurlar olarak işaretleyiniz. (Başlıklar sabittir, liste kaydırılabilir.)</p>
+            
+            <form id="activity-c-form">
+                <div class="table-scroll-container">
+                    <table class="activity-c-table">
+                        <thead>
+                            <tr>
+                                <th>Unsur</th>
+                                <th>Doğal Unsurlar</th>
+                                <th>Beşeri Unsurlar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-answer="beseri"><td>1. Çocuk Parkları</td><td><input type="radio" name="c1" value="dogal"></td><td><input type="radio" name="c1" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>2. Deniz</td><td><input type="radio" name="c2" value="dogal"></td><td><input type="radio" name="c2" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>3. Fabrika</td><td><input type="radio" name="c3" value="dogal"></td><td><input type="radio" name="c3" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>4. Göl</td><td><input type="radio" name="c4" value="dogal"></td><td><input type="radio" name="c4" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>5. Okyanus</td><td><input type="radio" name="c5" value="dogal"></td><td><input type="radio" name="c5" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>6. Köprü</td><td><input type="radio" name="c6" value="dogal"></td><td><input type="radio" name="c6" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>7. Mağara</td><td><input type="radio" name="c7" value="dogal"></td><td><input type="radio" name="c7" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>8. Pembe Köşk</td><td><input type="radio" name="c8" value="dogal"></td><td><input type="radio" name="c8" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>9. Orman</td><td><input type="radio" name="c9" value="dogal"></td><td><input type="radio" name="c9" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>10. Spor Tesisleri</td><td><input type="radio" name="c10" value="dogal"></td><td><input type="radio" name="c10" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>11. Hastane</td><td><input type="radio" name="c11" value="dogal"></td><td><input type="radio" name="c11" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>12. Müze</td><td><input type="radio" name="c12" value="dogal"></td><td><input type="radio" name="c12" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>13. Vadi</td><td><input type="radio" name="c13" value="dogal"></td><td><input type="radio" name="c13" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>14. Burdur Gölü</td><td><input type="radio" name="c14" value="dogal"></td><td><input type="radio" name="c14" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>15. Anıtkabir</td><td><input type="radio" name="c15" value="dogal"></td><td><input type="radio" name="c15" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>16. Otogar</td><td><input type="radio" name="c16" value="dogal"></td><td><input type="radio" name="c16" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>17. Baraj</td><td><input type="radio" name="c17" value="dogal"></td><td><input type="radio" name="c17" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>18. Ege Denizi</td><td><input type="radio" name="c18" value="dogal"></td><td><input type="radio" name="c18" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>19. Akarsu</td><td><input type="radio" name="c19" value="dogal"></td><td><input type="radio" name="c19" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>20. Tünel</td><td><input type="radio" name="c20" value="dogal"></td><td><input type="radio" name="c20" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>21. Şelale</td><td><input type="radio" name="c21" value="dogal"></td><td><input type="radio" name="c21" value="beseri"></td></tr>
+                            <tr data-answer="beseri"><td>22. Bina</td><td><input type="radio" name="c22" value="dogal"></td><td><input type="radio" name="c22" value="beseri"></td></tr>
+                            <tr data-answer="dogal"><td>23. Çöl</td><td><input type="radio" name="c23" value="dogal"></td><td><input type="radio" name="c23" value="beseri"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+            <button class="check-button" onclick="checkActivityC()">Tümünü Kontrol Et</button>
+            <div id="result-C" class="result-message"></div>
+        </div>
+
+        <div class="slide">
+            <h2>Etkinlik D: Sürükle ve Bırak</h2>
+            <p>Aşağıdaki kelimeleri ait oldukları kutulara sürükleyin. (Renk ipucu yok!)</p>
+            
+            <div class="drag-item-container">
+                <div class="drag-item" data-type="dogal" draggable="true" id="item1">Ağaç</div>
+                <div class="drag-item" data-type="beseri" draggable="true" id="item2">Okul Binası</div>
+                <div class="drag-item" data-type="dogal" draggable="true" id="item3">Nehir</div>
+                <div class="drag-item" data-type="beseri" draggable="true" id="item4">Araba</div>
+                <div class="drag-item" data-type="dogal" draggable="true" id="item5">Dağ</div>
+                <div class="drag-item" data-type="beseri" draggable="true" id="item6">Fabrika</div>
+                <div class="drag-item" data-type="dogal" draggable="true" id="item7">Bulut</div>
+                <div class="drag-item" data-type="beseri" draggable="true" id="item8">Tünel</div>
+                <div class="drag-item" data-type="beseri" draggable="true" id="item9">Tarla</div>
+                <div class="drag-item" data-type="dogal" draggable="true" id="item10">Şelale</div>
+                <div class="drag-item" data-type="beseri" draggable="true" id="item11">Çocuk Parkı</div>
+                <div class="drag-item" data-type="dogal" draggable="true" id="item12">Mağara</div>
+            </div>
+
+            <div class="activity-d-container">
+                <div class="drop-zone" id="dogal-box">
+                    <h3>Doğal Unsurlar</h3>
+                </div>
+                <div class="drop-zone" id="beseri-box">
+                    <h3>Beşeri Unsurlar</h3>
+                </div>
+            </div>
+            <div id="result-D" class="result-message" style="text-align: center;"></div>
+        </div>
+        
+        <div class="slide">
+            <h2>Etkinlik E: Muhakeme Zamanı (1/6)</h2>
+            <div class="activity-e-question" id="q-e1">
+                <p>1. Ormandaki bir ağaç kesilip fabrikada işlenerek 'Kağıt' yapılıyor. Bu durumda 'Kağıt' ne tür bir unsurdur?</p>
+                <label><input type="radio" name="e1" value="a"> Doğal Unsur (Çünkü ağaçtan yapıldı)</label>
+                <label><input type="radio" name="e1" value="b"> Beşeri Unsur (Çünkü insan tarafından işlendi)</label>
+            </div>
+            <button class="check-button" onclick="checkActivityE(1)">Kontrol Et</button>
+            <div id="result-E-1" class="result-message"></div>
+        </div>
+        
+        <div class="slide">
+            <h2>Etkinlik E: Muhakeme Zamanı (2/6)</h2>
+            <div class="activity-e-question" id="q-e2">
+                <p>2. Ayşe, tatilde bir "Göl", bir "Dağ" ve bir "Otel" gördü. Ayşe'nin gördüklerinden kaç tanesi doğal unsurdur?</p>
+                <label><input type="radio" name="e2" value="a"> 1</label>
+                <label><input type="radio" name="e2" value="b"> 2</label>
+                <label><input type="radio" name="e2" value="c"> 3</label>
+            </div>
+            <button class="check-button" onclick="checkActivityE(2)">Kontrol Et</button>
+            <div id="result-E-2" class="result-message"></div>
+        </div>
+        
+        <div class="slide">
+            <h2>Etkinlik E: Muhakeme Zamanı (3/6)</h2>
+            <div class="activity-e-question" id="q-e3">
+                <p>3. Bir akarsuyun önü kesilerek 'Baraj' yapılmıştır. Bu durumda 'Baraj' ne tür bir unsurdur?</p>
+                <label><input type="radio" name="e3" value="a"> Doğal Unsur</label>
+                <label><input type="radio" name="e3" value="b"> Beşeri Unsur</label>
+            </div>
+            <button class="check-button" onclick="checkActivityE(3)">Kontrol Et</button>
+            <div id="result-E-3" class="result-message"></div>
+        </div>
+
+        <div class="slide">
+            <h2>Etkinlik E: Muhakeme Zamanı (4/6)</h2>
+            <div class="activity-e-question" id="q-e4">
+                <p>4. "Nemrut Dağı" ve zirvesindeki "dev heykeller" için hangi ifade doğrudur?</p>
+                <label><input type="radio" name="e4" value="a"> Dağ da heykeller de doğaldır.</label>
+                <label><input type="radio" name="e4" value="b"> Dağ doğal unsurdur, heykeller beşeri unsurdur.</label>
+                <label><input type="radio" name="e4" value="c"> Dağ da heykeller de beşeridir.</label>
+            </div>
+            <button class="check-button" onclick="checkActivityE(4)">Kontrol Et</button>
+            <div id="result-E-4" class="result-message"></div>
+        </div>
+        
+        <div class="slide">
+            <h2>Etkinlik E: Muhakeme Zamanı (5/6)</h2>
+            <div class="activity-e-question" id="q-e5">
+                <p>5. "İstanbul Boğazı" ve üzerindeki "köprü" için hangi ifade doğrudur?</p>
+                <label><input type="radio" name="e5" value="a"> Boğaz doğal unsurdur, köprü beşeri unsurdur.</label>
+                <label><input type="radio" name="e5" value="b"> Boğaz da köprü de doğaldır.</label>
+                <label><input type="radio" name="e5" value="c"> Boğaz da köprü de beşeridir.</label>
+            </div>
+            <button class="check-button" onclick="checkActivityE(5)">Kontrol Et</button>
+            <div id="result-E-5" class="result-message"></div>
+        </div>
+
+        <div class="slide">
+            <h2>Etkinlik E: Muhakeme Zamanı (6/6)</h2>
+            <div class="activity-e-question" id="q-e6">
+                <p>6. Çiftçinin buğday ekmek için sürdüğü "Tarla" ne tür bir unsurdur?</p>
+                <label><input type="radio" name="e6" value="a"> Doğal Unsur (Doğa kendi yapmıştır)</label>
+                <label><input type="radio" name="e6" value="b"> Beşeri Unsur (Doğal alan insan tarafından değiştirilmiştir)</label>
+            </div>
+            <button class="check-button" onclick="checkActivityE(6)">Kontrol Et</button>
+            <div id="result-E-6" class="result-message"></div>
+        </div>
+        
+        <div class="slide">
+            <h1 style="font-size: 3em; text-align: center; margin-top: 100px;">Tebrikler!</h1>
+            <p style="font-size: 1.3em; text-align: center;">Doğal ve beşeri unsurlar konusunu başarıyla tamamladınız.</p>
+            <p style="font-size: 1.3em; text-align: center;">Çevremize baktığımızda artık hangilerinin doğanın bir parçası, hangilerinin insanlar tarafından yapıldığını daha iyi biliyorsunuz.</p>
+        </div>
+
+    </div>
+
+    <div class="navigation">
+        <button class="nav-button" id="prevBtn" onclick="prevSlide()">Geri (←)</button>
+        <button class="nav-button" id="nextBtn" onclick="nextSlide()">(→) İleri</button>
+    </div>
+
+
+    <script>
+        /* --- SLAYT NAVİGASYON SİSTEMİ --- */
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active-slide');
+                if (i === index) {
+                    slide.classList.add('active-slide');
+                }
+            });
+            // Buton durumlarını güncelle
+            prevBtn.disabled = (index === 0);
+            nextBtn.disabled = (index === slides.length - 1);
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        // Başlangıçta ilk slaytı göster
+        showSlide(currentSlide);
+        
+        /* --- YENİ: OK TUŞLARI İLE NAVİGASYON --- */
+        document.addEventListener('keydown', function(e) {
+            // Kullanıcı bir seçim kutusuyla (dropdown) etkileşimdeyse tuşları devre dışı bırak
+            if (document.activeElement.tagName === 'SELECT') {
+                return;
+            }
+            
+            if (e.key === 'ArrowRight') {
+                if (!nextBtn.disabled) {
+                    nextSlide();
+                }
+            } else if (e.key === 'ArrowLeft') {
+                if (!prevBtn.disabled) {
+                    prevSlide();
+                }
+            }
+        });
+
+        
+        /* --- ETKİNLİK A (GÖRSEL) FONKSİYONU --- */
+        const correctAnswersA = {
+            '1': 'dogal',  // Şelale
+            '2': 'dogal',  // Çöl
+            '3': 'dogal',  // Koyunlar
+            '4': 'beseri', // Çocuk Parkı
+            '5': 'beseri', // Binalar
+            '6': 'beseri', // Köprü
+            '7': 'beseri', // Düzenlenmiş bahçe
+            '8': 'beseri', // Polis Aracı
+            '9': 'dogal'   // Göl ve Orman
+        };
+
+        function checkAnswerA(id, selectedAnswer) {
+            const resultElement = document.getElementById('result-A-' + id);
+            if (correctAnswersA[id] === selectedAnswer) {
+                resultElement.textContent = 'Doğru! ✅';
+                resultElement.className = 'result-a correct-text';
+            } else {
+                resultElement.textContent = 'Tekrar Dene ❌';
+                resultElement.className = 'result-a incorrect-text';
+            }
+        }
+
+
+        /* --- ETKİNLİK B (BOŞLUK DOLDURMA) FONKSİYONU --- */
+        const correctAnswersB = {
+            'b1': 'çevre',
+            'b2': 'doğal ortam',
+            'b3': 'beşeri ortam',
+            'b4': 'doğal unsur',
+            'b5': 'beşeri unsur',
+            'b6a': 'akarsular',
+            'b6b': 'köprüler'
+        };
+
+        function checkActivityB() {
+            let correctCount = 0;
+            let total = 7; // Toplam 7 seçici var
+
+            for (const id in correctAnswersB) {
+                const selectElement = document.getElementById(id);
+                const selectedValue = selectElement.value;
+                
+                if (selectedValue === correctAnswersB[id]) {
+                    selectElement.style.borderColor = 'green';
+                    selectElement.style.backgroundColor = '#e0ffe0';
+                    if(id === 'b6a' || id === 'b6b') continue; // 6. soruyu bir kerede say
+                    correctCount++;
+                } else {
+                    selectElement.style.borderColor = 'red';
+                    selectElement.style.backgroundColor = '#ffe0e0';
+                }
+            }
+            
+            // 6. soruyu özel kontrol et
+            if (document.getElementById('b6a').value === 'akarsular' && document.getElementById('b6b').value === 'köprüler') {
+                correctCount++;
+            }
+
+            const resultElement = document.getElementById('result-B');
+            if (correctCount === 6) { // Toplam 6 ayrı cümle/soru var
+                resultElement.textContent = 'Harika! Hepsi doğru! ✅';
+                resultElement.className = 'result-message correct-text';
+            } else {
+                resultElement.textContent = `${total-1} sorudan ${correctCount} tanesi doğru. Lütfen kırmızıları kontrol et. 🧐`;
+                resultElement.className = 'result-message incorrect-text';
+            }
+        }
+
+
+        /* --- ETKİNLİK C (TABLO) FONKSİYONU --- */
+        function checkActivityC() {
+            const rows = document.querySelectorAll('#activity-c-form tbody tr');
+            let correctCount = 0;
+            
+            rows.forEach(row => {
+                const correctAnswer = row.dataset.answer;
+                const radioName = row.querySelector('input[type="radio"]').name;
+                const selectedRadio = document.querySelector(`input[name="${radioName}"]:checked`);
+                
+                if (selectedRadio) {
+                    if (selectedRadio.value === correctAnswer) {
+                        row.className = 'correct';
+                        correctCount++;
+                    } else {
+                        row.className = 'incorrect';
+                    }
+                } else {
+                    row.className = 'incorrect'; // Seçim yapılmadıysa yanlış
+                }
+            });
+
+            const resultElement = document.getElementById('result-C');
+            if (correctCount === rows.length) {
+                resultElement.textContent = `Tebrikler! ${rows.length} unsurun tamamı doğru! ✅`;
+                resultElement.className = 'result-message correct-text';
+            } else {
+                resultElement.textContent = `${rows.length} unsurdan ${correctCount} tanesi doğru. Kırmızıları tekrar gözden geçirin.`;
+                resultElement.className = 'result-message incorrect-text';
+            }
+        }
+        
+        /* --- ETKİNLİK D (SÜRÜKLE BIRAK) FONKSİYONLARI --- */
+        const dragItems = document.querySelectorAll('.drag-item');
+        const dropZones = document.querySelectorAll('.drop-zone');
+        const resultD = document.getElementById('result-D');
+
+        dragItems.forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.id);
+                e.target.style.cursor = 'grabbing';
+            });
+            item.addEventListener('dragend', (e) => {
+                e.target.style.cursor = 'grab';
+            });
+        });
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Sürüklemeye izin ver
+                zone.style.backgroundColor = '#f0eada';
+            });
+            zone.addEventListener('dragleave', (e) => {
+                zone.style.backgroundColor = '#fdfdf5';
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.style.backgroundColor = '#fdfdf5'; // Rengi sıfırla
+                const id = e.dataTransfer.getData('text/plain');
+                const draggedItem = document.getElementById(id);
+                const itemType = draggedItem.dataset.type; // 'dogal' or 'beseri'
+                
+                // Kutunun türünü ID'den al (dogal-box or beseri-box)
+                const zoneType = zone.id.split('-')[0]; 
+                
+                if (itemType === zoneType) {
+                    zone.appendChild(draggedItem);
+                    draggedItem.style.cursor = 'default';
+                    resultD.textContent = ''; // Hata mesajını temizle
+                    checkAllDropped();
+                } else {
+                    resultD.textContent = 'Hop! Yanlış kutu. ❌ Tekrar dene.';
+                    resultD.className = 'result-message incorrect-text';
+                    setTimeout(() => { resultD.textContent = ''; }, 2000);
+                }
+            });
+        });
+
+        function checkAllDropped() {
+            const container = document.querySelector('.drag-item-container');
+            if (container.children.length === 0) {
+                resultD.textContent = 'Harika! Hepsini doğru grupladın! ✅';
+                resultD.className = 'result-message correct-text';
+            }
+        }
+        
+        /* --- YENİ: ETKİNLİK E (TEKLİ SORU KONTROLÜ) --- */
+        const correctAnswersE = {
+            '1': 'b', // Kağıt (Beşeri)
+            '2': 'b', // 2 (Göl, Dağ)
+            '3': 'b', // Baraj (Beşeri)
+            '4': 'b', // Dağ doğal, heykeller beşeri
+            '5': 'a', // Boğaz doğal, köprü beşeri
+            '6': 'b'  // Tarla (Beşeri)
+        };
+        
+        function checkActivityE(questionNumber) {
+            const qName = 'e' + questionNumber;
+            const resultElement = document.getElementById('result-E-' + questionNumber);
+            const questionBox = document.getElementById('q-' + qName);
+            const selectedRadio = document.querySelector(`input[name="${qName}"]:checked`);
+            
+            questionBox.classList.remove('correct', 'incorrect'); // Önceki stilleri temizle
+            
+            if (selectedRadio) {
+                if (selectedRadio.value === correctAnswersE[questionNumber]) {
+                    questionBox.classList.add('correct');
+                    resultElement.textContent = 'Harika! Doğru cevap! ✅';
+                    resultElement.className = 'result-message correct-text';
+                } else {
+                    questionBox.classList.add('incorrect');
+                    resultElement.textContent = 'Tekrar düşünelim... 🧐';
+                    resultElement.className = 'result-message incorrect-text';
+                }
+            } else {
+                resultElement.textContent = 'Lütfen bir seçim yapın. 🤔';
+                resultElement.className = 'result-message incorrect-text';
+            }
+        }
+
+    </script>
+</body>
+</html>
