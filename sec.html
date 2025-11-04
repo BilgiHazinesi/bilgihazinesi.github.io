@@ -54,6 +54,21 @@
             align-items: center;
         }
 
+        .selected-section {
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            border: 3px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .selected-section h3 {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
         .wheel-container {
             position: relative;
             width: 350px;
@@ -122,7 +137,7 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             border-radius: 20px;
             padding: 25px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             width: 100%;
             max-width: 500px;
         }
@@ -206,38 +221,18 @@
             gap: 15px;
         }
 
-        .results {
+        .remaining-section {
             width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .result-box {
             background: white;
             border-radius: 15px;
             padding: 20px;
-            border: 3px solid #f0f0f0;
-            transition: all 0.3s ease;
+            border: 3px solid #764ba2;
+            margin-top: 20px;
         }
 
-        .result-box:hover {
-            border-color: #667eea;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
-        }
-
-        .result-box h3 {
+        .remaining-section h3 {
             font-size: 1.2em;
             margin-bottom: 15px;
-            color: #333;
-        }
-
-        .result-box.selected h3 {
-            color: #667eea;
-        }
-
-        .result-box.remaining h3 {
             color: #764ba2;
         }
 
@@ -255,7 +250,27 @@
             border-radius: 10px;
             font-weight: 600;
             font-size: 0.9em;
-            animation: popIn 0.4s ease;
+            animation: slideInFromWheel 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            opacity: 0.3;
+        }
+
+        .student-card.new {
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+            transform: scale(1.1);
+        }
+
+        .student-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .student-card.new:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.8);
         }
 
         .student-name {
@@ -267,18 +282,76 @@
             font-size: 0.9em;
         }
 
-        @keyframes popIn {
+        @keyframes slideInFromWheel {
             0% {
-                transform: scale(0);
                 opacity: 0;
+                transform: translate(0, 300px) scale(0.5);
             }
             50% {
-                transform: scale(1.1);
-            }
-            100% {
-                transform: scale(1);
                 opacity: 1;
             }
+            100% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        .student-menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            animation: menuSlideIn 0.3s ease;
+        }
+
+        @keyframes menuSlideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .menu-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            min-width: 150px;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #f5576c 0%, #ff6b9d 100%);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .return-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .return-btn:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
         }
 
         @media (max-width: 768px) {
@@ -293,10 +366,6 @@
             .wheel-container {
                 width: 280px;
                 height: 280px;
-            }
-
-            .results {
-                grid-template-columns: 1fr;
             }
 
             .button {
@@ -314,6 +383,11 @@
         </div>
 
         <div class="content">
+            <div class="selected-section">
+                <h3>✨ SEÇİLENLER ✨</h3>
+                <ul id="selected-list" class="student-list"></ul>
+            </div>
+
             <div class="controls-section">
                 <div id="initial-controls">
                     <div class="control-group">
@@ -345,16 +419,9 @@
                 </div>
             </div>
 
-            <div class="results">
-                <div class="result-box selected">
-                    <h3>✨ SEÇİLENLER ✨</h3>
-                    <ul id="selected-list" class="student-list"></ul>
-                </div>
-
-                <div class="result-box remaining">
-                    <h3>📋 KALANLAR (<span id="remaining-count">0</span>)</h3>
-                    <ul id="remaining-list" class="student-list"></ul>
-                </div>
+            <div class="remaining-section">
+                <h3>📋 KALANLAR (<span id="remaining-count">0</span>)</h3>
+                <ul id="remaining-list" class="student-list"></ul>
             </div>
         </div>
     </div>
@@ -384,6 +451,15 @@
         const initialControls = document.getElementById('initial-controls');
         const nextSteps = document.getElementById('next-steps');
 
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
         function renderLists() {
             remainingList.innerHTML = '';
             kalanOgrenciler.forEach(student => {
@@ -396,13 +472,62 @@
             checkButtons();
         }
 
-        function shuffleArray(array) {
-            const shuffled = [...array];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
+        function renderSelectedList() {
+            selectedList.innerHTML = '';
+            secilenOgrenciler.forEach((student, index) => {
+                const li = document.createElement('li');
+                li.textContent = student;
+                li.className = 'student-card';
+                
+                // Son seçilen öğrencileri belirle (en son seçilen count kadar)
+                const lastSelectedCount = parseInt(selectCount.value);
+                const isNew = index >= secilenOgrenciler.length - lastSelectedCount;
+                
+                if (isNew) {
+                    li.classList.add('new');
+                }
+                
+                li.style.animationDelay = `${index * 0.15}s`;
+                li.addEventListener('click', () => showStudentMenu(student, li));
+                selectedList.appendChild(li);
+            });
+        }
+
+        function showStudentMenu(student, element) {
+            const existingMenu = document.querySelector('.student-menu');
+            if (existingMenu) existingMenu.remove();
+
+            const menu = document.createElement('div');
+            menu.className = 'student-menu';
+            menu.innerHTML = `
+                <button class="menu-btn delete-btn">🗑️ Sil</button>
+                <button class="menu-btn return-btn">↩️ Kalanlar'a Gönder</button>
+            `;
+
+            menu.querySelector('.delete-btn').addEventListener('click', () => {
+                secilenOgrenciler = secilenOgrenciler.filter(s => s !== student);
+                element.style.opacity = '0';
+                element.style.transform = 'scale(0)';
+                setTimeout(() => {
+                    renderSelectedList();
+                    menu.remove();
+                }, 300);
+            });
+
+            menu.querySelector('.return-btn').addEventListener('click', () => {
+                secilenOgrenciler = secilenOgrenciler.filter(s => s !== student);
+                kalanOgrenciler.push(student);
+                kalanOgrenciler.sort();
+                element.style.opacity = '0';
+                element.style.transform = 'scale(0)';
+                setTimeout(() => {
+                    renderSelectedList();
+                    renderLists();
+                    menu.remove();
+                }, 300);
+            });
+
+            document.body.appendChild(menu);
         }
 
         function spinWheel() {
@@ -416,7 +541,6 @@
             isSpinning = true;
             spinButton.disabled = true;
 
-            // Rastgele rotation
             const randomSpins = Math.floor(Math.random() * 360) + 1800;
             wheel.style.transform = `rotateZ(${randomSpins}deg)`;
             wheel.classList.add('spinning');
@@ -424,13 +548,9 @@
             setTimeout(() => {
                 wheel.classList.remove('spinning');
                 
-                // Kalan öğrencileri karıştır
                 const karistirilmis = shuffleArray(kalanOgrenciler);
-                
-                // İlk actualCount öğrenciyi seç
                 const secilenBuSefer = karistirilmis.slice(0, actualCount);
                 
-                // Seçilenleri eklenen listeden çıkar
                 secilenBuSefer.forEach(ogrenci => {
                     const index = kalanOgrenciler.indexOf(ogrenci);
                     if (index > -1) {
@@ -439,14 +559,7 @@
                     secilenOgrenciler.push(ogrenci);
                 });
 
-                selectedList.innerHTML = '';
-                secilenOgrenciler.forEach(student => {
-                    const li = document.createElement('li');
-                    li.textContent = student;
-                    li.className = 'student-card';
-                    selectedList.appendChild(li);
-                });
-
+                renderSelectedList();
                 renderLists();
                 initialControls.style.display = 'none';
                 nextSteps.style.display = 'flex';
