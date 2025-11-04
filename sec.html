@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çarkıfelek Öğrenci Seçici v7</title>
+    <title>Çarkıfelek Öğrenci Seçici v9</title>
     <style>
-        /* (CSS kodları v6 ile aynı, değişiklik yok) */
+        /* (CSS kodları v8 ile aynı, değişiklik yok) */
         * {
             margin: 0;
             padding: 0;
@@ -494,6 +494,99 @@
             box-shadow: 0 5px 15px rgba(255, 217, 0, 0.5);
         }
 
+        .flexible-groups-section {
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            border: 3px solid #4facfe; /* Mavi tema */
+            margin-top: 20px;
+        }
+        .flexible-controls {
+             margin-bottom: 20px;
+             text-align: center;
+        }
+        .flexible-controls h3 {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #007bff;
+        }
+        .flexible-controls .control-group select {
+            border-color: #4facfe;
+        }
+        .flexible-controls .button {
+             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+             color: white;
+        }
+        
+        #draft-status-message {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            min-height: 1.5em;
+        }
+        
+        #draft-box-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 20px;
+            background: #f4f7f6;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .draft-box {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 2.5em; /* Emoji boyutu için ayarlandı */
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        .draft-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
+        }
+        
+        .draft-box.opened {
+            background: white;
+            color: #333;
+            font-size: 0.9em;
+            font-weight: 600;
+            padding: 5px;
+            text-align: center;
+            border: 2px solid #667eea;
+            cursor: default;
+            pointer-events: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+        
+        #draft-groups-container {
+             display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        #draft-groups-container .group-box.current-turn-draft {
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 217, 0, 0.7);
+            transform: scale(1.05);
+        }
+
 
         @media (max-width: 768px) {
             .header h1 {
@@ -513,6 +606,14 @@
             .remaining-controls {
                 flex-direction: column;
             }
+            .draft-box {
+                width: 70px;
+                height: 70px;
+                font-size: 2em;
+            }
+             .draft-box.opened {
+                font-size: 0.8em;
+             }
         }
     </style>
 </head>
@@ -554,6 +655,8 @@
                     <button id="reset-button" class="button btn-secondary">SIFIRLA</button>
                 </div>
             </div>
+
+
             <div class="wheel-container">
                 <div class="wheel-pointer"></div>
                 <div class="wheel" id="wheel">
@@ -625,6 +728,30 @@
                 </div>
                 <div id="groups-container" class="groups-container"></div>
             </div>
+            
+            <div class="flexible-groups-section">
+                <div class="flexible-controls">
+                    <h3>🎁 ESNEK GRUPLAR (KUTU SEÇİMİ)</h3>
+                    
+                    <div class="control-group">
+                        <label for="draft-group-count">Grup Sayısı:</label>
+                        <select id="draft-group-count">
+                            <option value="2">2 Grup</option>
+                            <option value="3">3 Grup</option>
+                            <option value="4">4 Grup</option>
+                            <option value="5">5 Grup</option>
+                            <option value="6">6 Grup</option>
+                            <option value="8">8 Grup</option>
+                            <option value="12">12 Grup</option>
+                        </select>
+                        <button id="start-draft-button" class="button">BAŞLAT</button>
+                    </div>
+                </div>
+                
+                <div id="draft-groups-container"></div>
+                <div id="draft-status-message"></div>
+                <div id="draft-box-container"></div>
+            </div>
 
         </div>
     </div>
@@ -638,6 +765,19 @@
             "EYLÜL MUTAF", "İPEK MİMAROĞLU", "YEKTA URAS DEMİRER", "HAMZA KAAN ÇEVEN",
             "BEYZA DAĞDELEN", "NAZ KARABAĞLI", "AYNUR BUDAK", "DURU BÜKÜN", "WAFA MAKANSSI"
         ];
+        
+        // ************************************
+        // ********* YENİ SEMBOL LİSTESİ *********
+        // ************************************
+        // 24 öğrenci için 24 benzersiz emoji
+        const draftSymbols = [
+            '🚀', '⭐', '🎈', '🎉', '🎁', '💡', '🎵', '❤️', '🍀', '🍎', 
+            '⚽', '🚗', '🥑', '🦋', '🐞', '🐢', '🔑', '💎', '☂️', '🌊', 
+            '🚲', '🌍', '💻', '🤖'
+        ];
+        // ************************************
+        // ********* GÜNCELLEME BİTTİ *********
+        // ************************************
 
         let kalanOgrenciler = [];
         let secilenOgrenciler = [];
@@ -657,7 +797,7 @@
         const remainingSelectCount = document.getElementById('remaining-select-count');
         const remainingSpinButton = document.getElementById('remaining-spin-button');
 
-        // Grup oluşturma elementleri
+        // Normal Grup oluşturma elementleri
         const groupModeRadios = document.querySelectorAll('input[name="group-mode"]');
         const controlsByCount = document.getElementById('controls-by-count');
         const controlsBySize = document.getElementById('controls-by-size');
@@ -667,12 +807,27 @@
         const redistributeButton = document.getElementById('redistribute-button');
         const groupsContainer = document.getElementById('groups-container');
 
-        // İstenmeyen eşleşme için kural
+        // Kural
         const constrainedStudent1 = "DURU BÜKÜN";
         const constrainedStudent2 = "EYLÜL MUTAF";
         
-        let currentGroups = [];
+        let currentGroups = []; 
         let firstSelectedStudent = null;
+        
+        // Esnek Grup Elementleri
+        const draftGroupCountSelect = document.getElementById('draft-group-count');
+        const startDraftButton = document.getElementById('start-draft-button');
+        const draftGroupsContainer = document.getElementById('draft-groups-container');
+        const draftStatusMessage = document.getElementById('draft-status-message');
+        const draftBoxContainer = document.getElementById('draft-box-container');
+
+        // Esnek Grup Durum Değişkenleri
+        let draftState = "IDLE"; 
+        let draftGroupCount = 0;
+        let draftCaptains = [];
+        let draftStudentsPool = [];
+        let currentDraftGroupIndex = 0;
+        let openBoxCount = 0;
         
 
         function shuffleArray(array) {
@@ -698,10 +853,6 @@
             checkButtons();
         }
 
-        // ************************************
-        // *** GÜNCELLENEN renderSelectedList FONKSİYONU ***
-        // (Vurgu düzeltmesi v6'dan)
-        // ************************************
         function renderSelectedList(lastCount = 0) {
             selectedList.innerHTML = '';
 
@@ -767,8 +918,6 @@
         function spinWheel(isFromRemainingButton = false) {
             if (isSpinning) return;
             
-            // Düzeltme: "Kalanlardan Seç" butonu 'remaining-select-count'u,
-            // diğer tüm çark çevirmeler (ilk ve yeniden) 'select-count'u kullanır.
             const countToSelect = isFromRemainingButton ? 
                                  parseInt(remainingSelectCount.value) : 
                                  parseInt(selectCount.value);
@@ -784,27 +933,24 @@
 
             const randomSpins = Math.floor(Math.random() * 360) + 1800;
             
-            // Sadece ana çark butonları (ilk ve yeniden) çarkı döndürür
             if (!isFromRemainingButton) {
                 wheel.style.transform = `rotateZ(${randomSpins}deg)`;
                 wheel.classList.add('spinning');
                 
                 setTimeout(() => {
                     performSelection(actualCount); 
-                    initialControls.style.display = 'none'; // İlk butonu gizle
-                    nextSteps.style.display = 'flex'; // Yeniden çevir/sıfırla'yı göster
+                    initialControls.style.display = 'none'; 
+                    nextSteps.style.display = 'flex'; 
                     isSpinning = false;
                     checkButtons(); 
                 }, 4000); 
             } else {
-                // "Kalanlardan Seç" butonu çarkı DÖNDÜRMEZ, anında seçer
                 performSelection(actualCount); 
                 isSpinning = false;
                 checkButtons();
             }
         }
         
-        // (Vurgu düzeltmesi v6'dan)
         function performSelection(actualCount) {
              const karistirilmis = shuffleArray(kalanOgrenciler);
             const secilenBuSefer = karistirilmis.slice(0, actualCount);
@@ -817,12 +963,12 @@
                 secilenOgrenciler.push(ogrenci);
             });
 
-            renderSelectedList(actualCount); // Seçilen sayısını yolla
+            renderSelectedList(actualCount); 
             renderLists();
         }
 
         function selectFromRemaining() {
-            spinWheel(true); // 'isFromRemainingButton' = true
+            spinWheel(true); 
         }
 
         function sistemiSifirla() {
@@ -832,9 +978,8 @@
             selectedList.innerHTML = ''; 
             renderLists();
             
-            // HTML yapısı değiştiği için JS de değişti:
-            initialControls.style.display = 'flex'; // "Çarkı Çevir" butonunu göster
-            nextSteps.style.display = 'none'; // "Yeniden Çevir" butonlarını gizle
+            initialControls.style.display = 'flex'; 
+            nextSteps.style.display = 'none'; 
             
             isSpinning = false;
             spinButton.disabled = false;
@@ -845,6 +990,14 @@
             
             currentGroups = [];
             clearSwapSelection();
+            
+            draftState = "IDLE";
+            draftGroupsContainer.innerHTML = '';
+            draftBoxContainer.innerHTML = '';
+            draftStatusMessage.textContent = '';
+            draftCaptains = [];
+            draftStudentsPool = [];
+            openBoxCount = 0;
         }
 
         function checkButtons() {
@@ -854,7 +1007,7 @@
             remainingSpinButton.disabled = !hasRemaining || isSpinning;
         }
 
-        // --- Grup Fonksiyonları ---
+        // --- Normal Grup Fonksiyonları ---
 
         function toggleGroupControls(e) {
             if (e.target.value === 'count') {
@@ -877,7 +1030,7 @@
                 groups = createGroupsBySize();
             }
             
-            renderGroups(groups); 
+            renderGroups(groups, groupsContainer, false); 
             
             createGroupsButton.style.display = 'none';
             redistributeButton.style.display = 'inline-block';
@@ -932,7 +1085,6 @@
         }
 
         
-        // (Grup Büyüklüğü hatası v5'ten düzeltildi)
         function createGroupsBySize() {
             const groupSize = parseInt(groupSizeSelect.value);
             let shuffledStudents = shuffleArray([...tumOgrenciler]);
@@ -973,14 +1125,24 @@
         }
 
 
-        function renderGroups(groups) {
-            groupsContainer.innerHTML = '';
+        // --- PAYLAŞILAN GRUP FONKSİYONLARI ---
+
+        function renderGroups(groups, targetContainer, isDraftMode = false, draftTurnIndex = -1) {
+            targetContainer.innerHTML = '';
             
-            currentGroups = groups; 
+            if (!isDraftMode) {
+                currentGroups = groups; 
+            } else {
+                // Esnek modda, 'currentGroups' zaten global olarak yönetiliyor
+            }
 
             groups.forEach((group, groupIndex) => {
                 const groupElement = document.createElement('div');
                 groupElement.className = 'group-box';
+                
+                if (isDraftMode && groupIndex === draftTurnIndex) {
+                    groupElement.classList.add('current-turn-draft');
+                }
                 
                 const h4 = document.createElement('h4');
                 h4.textContent = `Grup ${groupIndex + 1}`;
@@ -988,32 +1150,51 @@
 
                 const ul = document.createElement('ul');
                 
-                const shuffledGroupMembers = shuffleArray(group);
+                let groupMembers = [...group];
+                if (isDraftMode && groupMembers.length > 0) {
+                    const captain = groupMembers.shift();
+                    const otherMembers = shuffleArray(groupMembers);
+                    groupMembers = [captain, ...otherMembers];
+                } else {
+                    groupMembers = shuffleArray(group);
+                }
                 
-                shuffledGroupMembers.forEach(studentName => {
+                
+                groupMembers.forEach(studentName => {
                     const li = document.createElement('li');
                     li.className = 'student-in-group';
                     li.textContent = studentName;
                     
                     li.dataset.groupIndex = groupIndex;
                     li.dataset.studentName = studentName; 
+                    
+                    if (isDraftMode && studentName === group[0]) {
+                        li.style.background = "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)";
+                        li.style.color = "#333";
+                    }
 
-                    li.addEventListener('click', handleGroupStudentClick);
+                    li.addEventListener('click', (e) => handleGroupStudentClick(e, isDraftMode));
                     ul.appendChild(li);
                 });
                 
                 groupElement.appendChild(ul);
-                groupsContainer.appendChild(groupElement);
+                targetContainer.appendChild(groupElement);
             });
         }
         
-        function handleGroupStudentClick(event) {
+        function handleGroupStudentClick(event, isDraftMode = false) {
             const clickedElement = event.currentTarget;
             const studentName = clickedElement.dataset.studentName;
             const groupIndex = parseInt(clickedElement.dataset.groupIndex);
 
+            if (isDraftMode && studentName === currentGroups[groupIndex][0]) {
+                alert("Kaptanların yeri değiştirilemez!");
+                clearSwapSelection();
+                return;
+            }
+
             if (!firstSelectedStudent) {
-                firstSelectedStudent = { element: clickedElement, name: studentName, group: groupIndex };
+                firstSelectedStudent = { element: clickedElement, name: studentName, group: groupIndex, isDraft: isDraftMode };
                 clickedElement.classList.add('selected-for-swap');
             } else {
                 
@@ -1025,6 +1206,17 @@
                 if (firstSelectedStudent.group === groupIndex) {
                     clearSwapSelection();
                     return;
+                }
+                
+                if (firstSelectedStudent.isDraft !== isDraftMode) {
+                    clearSwapSelection();
+                    return;
+                }
+                
+                if (isDraftMode && studentName === currentGroups[groupIndex][0]) {
+                     alert("Kaptanların yeri değiştirilemez!");
+                     clearSwapSelection();
+                     return;
                 }
 
                 // KURAL KONTROLÜ
@@ -1054,9 +1246,13 @@
                 currentGroups[groupIndex].splice(indexInGroup2, 1);
 
                 currentGroups[firstSelectedStudent.group].push(studentName);
-                currentGroups[groupIndex].push(firstSelectedStudent.name);
+                currentGroups[groupIndex].push(studentName);
 
-                renderGroups(currentGroups);
+                if (isDraftMode) {
+                    renderGroups(currentGroups, draftGroupsContainer, true, currentDraftGroupIndex);
+                } else {
+                    renderGroups(currentGroups, groupsContainer, false);
+                }
 
                 clearSwapSelection();
             }
@@ -1076,13 +1272,99 @@
             });
         }
         
+        // --- ESNEK GRUP (DRAFT) FONKSİYONLARI ---
+        
+        // ************************************
+        // *** GÜNCELLENEN startDraft FONKSİYONU ***
+        // ************************************
+        function startDraft() {
+            sistemiSifirla(); 
+            
+            draftState = "CAPTAIN_SELECT";
+            draftGroupCount = parseInt(draftGroupCountSelect.value);
+            draftCaptains = [];
+            currentGroups = []; 
+            draftStudentsPool = shuffleArray([...tumOgrenciler]);
+            draftBoxContainer.innerHTML = '';
+            draftGroupsContainer.innerHTML = '';
+            openBoxCount = 0;
+            
+            // YENİ: Sembolleri karıştır
+            const shuffledSymbols = shuffleArray([...draftSymbols]);
+            
+            // Kutu (sembol) alanını oluştur
+            draftStudentsPool.forEach((studentName, index) => {
+                const box = document.createElement('div');
+                box.className = 'draft-box';
+                
+                // '❓' YERİNE KARIŞTIRILMIŞ SEMBOLÜ KULLAN
+                box.textContent = shuffledSymbols[index]; 
+                
+                box.dataset.index = index; // index, hem öğrenciyi hem de sembolü bağlar
+                box.addEventListener('click', handleBoxClick, { once: true }); 
+                draftBoxContainer.appendChild(box);
+            });
+            
+            draftStatusMessage.textContent = `Kaptanları seçmek için ${draftGroupCount} kutu açın.`;
+        }
+        // ************************************
+        // *** GÜNCELLEME BİTTİ ***
+        // ************************************
+        
+        function handleBoxClick(event) {
+            const clickedBox = event.currentTarget;
+            const studentIndex = parseInt(clickedBox.dataset.index);
+            const studentName = draftStudentsPool[studentIndex];
+            
+            clickedBox.textContent = studentName;
+            clickedBox.classList.add('opened');
+            openBoxCount++;
 
+            if (draftState === "CAPTAIN_SELECT") {
+                draftCaptains.push(studentName);
+                currentGroups.push([studentName]); 
+                
+                renderGroups(currentGroups, draftGroupsContainer, true, -1); 
+                
+                if (draftCaptains.length < draftGroupCount) {
+                    draftStatusMessage.textContent = `${draftGroupCount - draftCaptains.length} kaptan daha seçin.`;
+                } else {
+                    draftState = "DRAFTING";
+                    currentDraftGroupIndex = 0;
+                    draftStatusMessage.textContent = `Sıra Grup 1'de. Bir öğrenci seçin.`;
+                    renderGroups(currentGroups, draftGroupsContainer, true, currentDraftGroupIndex);
+                }
+                
+            } else if (draftState === "DRAFTING") {
+                
+                currentGroups[currentDraftGroupIndex].push(studentName);
+                
+                const currentGroup = currentGroups[currentDraftGroupIndex];
+                if ( (studentName === constrainedStudent1 && currentGroup.includes(constrainedStudent2)) ||
+                     (studentName === constrainedStudent2 && currentGroup.includes(constrainedStudent1)) )
+                {
+                    alert("🚨 UYARI: Duru Bükün ve Eylül Mutaf aynı gruba düştü! Lütfen seçim bittikten sonra birini başka grupla değiştirin.");
+                }
+
+                currentDraftGroupIndex = (currentDraftGroupIndex + 1) % draftGroupCount;
+                
+                renderGroups(currentGroups, draftGroupsContainer, true, currentDraftGroupIndex);
+                
+                if (openBoxCount < tumOgrenciler.length) {
+                    draftStatusMessage.textContent = `Sıra Grup ${currentDraftGroupIndex + 1}'de. Bir öğrenci seçin.`;
+                } else {
+                    draftState = "IDLE";
+                    draftStatusMessage.textContent = "Seçim Tamamlandı! Gerekirse öğrencileri tıklayarak değiştirebilirsiniz.";
+                    renderGroups(currentGroups, draftGroupsContainer, true, -1);
+                }
+            }
+        }
+        
         // --- Olay Dinleyicileri ---
 
-        // (HTML yapısı değiştiği için bu dinleyiciler güncellendi)
-        spinButton.addEventListener('click', () => spinWheel(false)); // İlk çevirme
-        selectRemainingButton.addEventListener('click', () => spinWheel(false)); // Yeniden çevirme
-        remainingSpinButton.addEventListener('click', selectFromRemaining); // Kalanlardan seç
+        spinButton.addEventListener('click', () => spinWheel(false)); 
+        selectRemainingButton.addEventListener('click', () => spinWheel(false)); 
+        remainingSpinButton.addEventListener('click', selectFromRemaining); 
 		resetButton.addEventListener('click', sistemiSifirla);
 
         document.addEventListener('click', (e) => {
@@ -1104,6 +1386,8 @@
         groupModeRadios.forEach(radio => radio.addEventListener('change', toggleGroupControls));
         createGroupsButton.addEventListener('click', createGroups);
         redistributeButton.addEventListener('click', createGroups);
+        
+        startDraftButton.addEventListener('click', startDraft);
 
         document.addEventListener('DOMContentLoaded', sistemiSifirla);
     </script>
