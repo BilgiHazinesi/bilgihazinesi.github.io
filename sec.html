@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çarkıfelek Öğrenci Seçici v4</title>
+    <title>Çarkıfelek Öğrenci Seçici v5</title>
     <style>
         * {
             margin: 0;
@@ -469,9 +469,6 @@
             gap: 8px;
         }
         
-        /* ************************************ */
-        /* ******** YENİ CSS     ******** */
-        /* ************************************ */
         .group-box li.student-in-group {
             background: white;
             padding: 10px;
@@ -480,7 +477,7 @@
             color: #333;
             border: 1px solid #eee;
             text-align: center;
-            cursor: pointer; /* Tıklanabilir olduğunu belirt */
+            cursor: pointer;
             transition: all 0.2s ease;
         }
         
@@ -491,14 +488,11 @@
         }
         
         .student-in-group.selected-for-swap {
-            background: #FFD700; /* Vurgu rengi (Altın) */
+            background: #FFD700;
             color: #333;
             transform: scale(1.1);
             box-shadow: 0 5px 15px rgba(255, 217, 0, 0.5);
         }
-        /* ************************************ */
-        /* ********* CSS BİTİŞ   ********* */
-        /* ************************************ */
 
 
         @media (max-width: 768px) {
@@ -676,18 +670,9 @@
         const constrainedStudent1 = "DURU BÜKÜN";
         const constrainedStudent2 = "EYLÜL MUTAF";
         
-        // ************************************
-        // ******** YENİ JS     *********
-        // ************************************
-        
-        // Grup yapısını ve değişim durumunu tutan global değişkenler
         let currentGroups = [];
         let firstSelectedStudent = null;
         
-        // ************************************
-        // ********* JS BİTİŞ   *********
-        // ************************************
-
 
         function shuffleArray(array) {
             const shuffled = [...array];
@@ -851,18 +836,12 @@
             isSpinning = false;
             spinButton.disabled = false;
             
-            // Grup bölümünü de sıfırla
             groupsContainer.innerHTML = '';
             createGroupsButton.style.display = 'inline-block';
             redistributeButton.style.display = 'none';
             
-            // ************************************
-            // ******** YENİ JS     *********
-            // ************************************
-            // Swap durumunu sıfırla
             currentGroups = [];
             clearSwapSelection();
-            // ************************************
         }
 
         function checkButtons() {
@@ -884,9 +863,8 @@
             }
         }
 
-        // Ana yönlendirici fonksiyon
         function createGroups() {
-            clearSwapSelection(); // Yeni grup oluşturulurken eski seçimi temizle
+            clearSwapSelection(); 
             const mode = document.querySelector('input[name="group-mode"]:checked').value;
             let groups = [];
 
@@ -896,13 +874,12 @@
                 groups = createGroupsBySize();
             }
             
-            renderGroups(groups); // HTML'i oluştur
+            renderGroups(groups); 
             
             createGroupsButton.style.display = 'none';
             redistributeButton.style.display = 'inline-block';
         }
 
-        // Yöntem 1: Grup Sayısına Göre
         function createGroupsByCount() {
             const groupCount = parseInt(groupCountSelect.value);
             let studentsToGroup = [...tumOgrenciler];
@@ -951,7 +928,10 @@
             return groups;
         }
 
-        // Yöntem 2: Grup Büyüklüğüne Göre
+        
+        // ************************************
+        // *** DÜZELTİLMİŞ FONKSİYON ***
+        // ************************************
         function createGroupsBySize() {
             const groupSize = parseInt(groupSizeSelect.value);
             let shuffledStudents = shuffleArray([...tumOgrenciler]);
@@ -961,40 +941,48 @@
                 groups.push(shuffledStudents.splice(0, groupSize));
             }
 
+            // Kuralı kontrol et: Duru Bükün ve Eylül Mutaf aynı grupta mı?
             const badGroupIndex = groups.findIndex(g => g.includes(constrainedStudent1) && g.includes(constrainedStudent2));
 
             if (badGroupIndex > -1) {
-                let smallestGroupIndex = -1;
-                let minSize = Infinity;
-
-                for (let i = 0; i < groups.length; i++) {
-                    if (i !== badGroupIndex && groups[i].length < minSize) {
-                        minSize = groups[i].length;
-                        smallestGroupIndex = i;
-                    }
+                // Hata bulundu! "Taşıma" DEĞİL, "Takas" (Swap) yap.
+                
+                // 1. Takas yapılacak bir grup bul (kötü grup olmayan herhangi bir grup)
+                let swapGroupIndex = 0;
+                if (badGroupIndex === 0) {
+                    swapGroupIndex = 1; // Eğer kötü grup 0'sa, 1 ile takas et
                 }
                 
-                if (smallestGroupIndex === -1) {
-                    smallestGroupIndex = (badGroupIndex === 0 && groups.length > 1) ? 1 : 0;
-                }
+                // (Eğer sadece 1 grup varsa bu kod çalışmaz, ki bu durumda 24 öğrenci 1 gruba sığmaz)
+                // Bu senaryoda (24/2), 12 grup var, bu yüzden swapGroupIndex her zaman geçerli olacak.
 
-                if (smallestGroupIndex !== badGroupIndex) {
-                    const studentToMove = groups[badGroupIndex].splice(groups[badGroupIndex].indexOf(constrainedStudent2), 1)[0];
-                    groups[smallestGroupIndex].push(studentToMove);
+                if (groups.length > 1) {
+                     // 2. Takas edilecek öğrencileri belirle
+                    const studentA_Name = constrainedStudent2; // Eylül'ü taşıyalım
+                    const indexA = groups[badGroupIndex].indexOf(studentA_Name);
+                    
+                    // Takas grubundan rastgele bir öğrenci al (ilk öğrenciyi almak en kolayı)
+                    const studentB_Name = groups[swapGroupIndex][0];
+                    const indexB = 0;
+
+                    // 3. Takası yap
+                    const studentA = groups[badGroupIndex].splice(indexA, 1)[0];
+                    const studentB = groups[swapGroupIndex].splice(indexB, 1)[0];
+                    
+                    groups[badGroupIndex].push(studentB); // Duru'nun grubuna B öğrencisini ekle
+                    groups[swapGroupIndex].push(studentA); // Takas grubuna Eylül'ü ekle
                 }
             }
             return groups;
         }
+        // ************************************
+        // *** DÜZELTME BİTİŞ ***
+        // ************************************
 
-        // ************************************
-        // ******** GÜNCELLENEN RENDER *********
-        // ************************************
-        // Grupları Ekrana Çizen Fonksiyon
-        // Artık HTML'i programatik olarak oluşturup, event listener ekliyor
+
         function renderGroups(groups) {
             groupsContainer.innerHTML = '';
             
-            // Değişim yapılabilmesi için güncel grup yapısını global değişkene ata
             currentGroups = groups; 
 
             groups.forEach((group, groupIndex) => {
@@ -1014,11 +1002,9 @@
                     li.className = 'student-in-group';
                     li.textContent = studentName;
                     
-                    // Değişim mantığı için gerekli verileri 'data' attribute olarak ekle
                     li.dataset.groupIndex = groupIndex;
                     li.dataset.studentName = studentName; 
 
-                    // Her bir öğrenciye tıklama olayı ekle
                     li.addEventListener('click', handleGroupStudentClick);
                     ul.appendChild(li);
                 });
@@ -1028,53 +1014,37 @@
             });
         }
         
-        // ************************************
-        // ******** YENİ JS     *********
-        // ************************************
-        
-        // Grup içi öğrenciye tıklandığında çalışan fonksiyon
         function handleGroupStudentClick(event) {
             const clickedElement = event.currentTarget;
             const studentName = clickedElement.dataset.studentName;
             const groupIndex = parseInt(clickedElement.dataset.groupIndex);
 
             if (!firstSelectedStudent) {
-                // Bu ilk seçim
                 firstSelectedStudent = { element: clickedElement, name: studentName, group: groupIndex };
                 clickedElement.classList.add('selected-for-swap');
             } else {
-                // Bu ikinci seçim (değişim yapılacak)
                 
-                // Aynı kişiye tıklandıysa, seçimi iptal et
                 if (firstSelectedStudent.name === studentName) {
                     clearSwapSelection();
                     return;
                 }
                 
-                // Aynı gruba tıklandıysa, seçimi iptal et (farklı gruplar arası olmalı)
                 if (firstSelectedStudent.group === groupIndex) {
                     clearSwapSelection();
                     return;
                 }
 
-                // KURAL KONTROLÜ: Duru ve Eylül'ü birleştirme denemesi var mı?
+                // KURAL KONTROLÜ
                 const firstIsConstrained = (firstSelectedStudent.name === constrainedStudent1 || firstSelectedStudent.name === constrainedStudent2);
                 const secondIsConstrained = (studentName === constrainedStudent1 || studentName === constrainedStudent2);
 
-                if (firstIsConstrained && secondIsConstrained) {
-                    // İki özel öğrenciyi birbiriyle DEĞİŞTİRMEYE çalışıyor, bu OK.
-                    // Ama birini diğerinin grubuna GÖNDERMEYE çalışıyorsa, bu YASAK.
-                } else if (firstIsConstrained) {
-                    // İlk seçilen (Duru veya Eylül), ikinci seçilenin grubuna gidiyor.
-                    // O grupta diğeri var mı?
+                if (firstIsConstrained) {
                     if (currentGroups[groupIndex].includes(constrainedStudent1) || currentGroups[groupIndex].includes(constrainedStudent2)) {
                         alert("Hata: Duru Bükün ve Eylül Mutaf aynı grupta olamaz!");
                         clearSwapSelection();
                         return;
                     }
                 } else if (secondIsConstrained) {
-                    // İkinci seçilen (Duru veya Eylül), ilk seçilenin grubuna gidiyor.
-                    // O grupta diğeri var mı?
                      if (currentGroups[firstSelectedStudent.group].includes(constrainedStudent1) || currentGroups[firstSelectedStudent.group].includes(constrainedStudent2)) {
                         alert("Hata: Duru Bükün ve Eylül Mutaf aynı grupta olamaz!");
                         clearSwapSelection();
@@ -1084,53 +1054,45 @@
 
                 // --- Değişim İşlemi ---
                 
-                // 1. Veri dizisinden (currentGroups) öğrencileri bul ve çıkar
                 const indexInGroup1 = currentGroups[firstSelectedStudent.group].indexOf(firstSelectedStudent.name);
                 currentGroups[firstSelectedStudent.group].splice(indexInGroup1, 1);
                 
                 const indexInGroup2 = currentGroups[groupIndex].indexOf(studentName);
                 currentGroups[groupIndex].splice(indexInGroup2, 1);
 
-                // 2. Öğrencileri çapraz olarak geri ekle
                 currentGroups[firstSelectedStudent.group].push(studentName);
                 currentGroups[groupIndex].push(firstSelectedStudent.name);
 
-                // 3. Grupları güncel veriyle yeniden çiz
                 renderGroups(currentGroups);
 
-                // 4. Seçim durumunu sıfırla
                 clearSwapSelection();
             }
         }
 
-        // Vurgulamayı ve seçimi temizleyen yardımcı fonksiyon
         function clearSwapSelection() {
             if (firstSelectedStudent) {
-                firstSelectedStudent.element.classList.remove('selected-for-swap');
+                // Hata kontrolü: Eğer element DOM'dan kaldırıldıysa (renderGroups sonrası)
+                const oldElement = document.querySelector(`.student-in-group[data-student-name="${firstSelectedStudent.name}"]`);
+                if(oldElement) {
+                    oldElement.classList.remove('selected-for-swap');
+                }
             }
             firstSelectedStudent = null;
             
-            // Bazen takılı kalabiliyor, hepsini temizleyelim
             document.querySelectorAll('.student-in-group.selected-for-swap').forEach(el => {
                 el.classList.remove('selected-for-swap');
             });
         }
         
-        // ************************************
-        // ********* JS BİTİŞ   *********
-        // ************************************
-
 
         // --- Olay Dinleyicileri ---
 
-        // Çark Dinleyicileri
         spinButton.addEventListener('click', () => spinWheel(false));
         selectRemainingButton.addEventListener('click', () => spinWheel(false));
         remainingSpinButton.addEventListener('click', selectFromRemaining);
 		resetButton.addEventListener('click', sistemiSifirla);
 
         document.addEventListener('click', (e) => {
-            // "Seçilenler" listesindeki menü için
             const menu = document.querySelector('.student-menu');
             const card = e.target.closest('.student-card');
             if (menu && !menu.contains(e.target) && !card) {
@@ -1140,19 +1102,16 @@
                 });
             }
             
-            // "Gruplar" listesindeki swap seçimini iptal etmek için
             const isStudentInGroup = e.target.closest('.student-in-group');
             if (firstSelectedStudent && !isStudentInGroup) {
                 clearSwapSelection();
             }
         });
         
-        // Grup Dinleyicileri
         groupModeRadios.forEach(radio => radio.addEventListener('change', toggleGroupControls));
         createGroupsButton.addEventListener('click', createGroups);
         redistributeButton.addEventListener('click', createGroups);
 
-        // Başlangıç
         document.addEventListener('DOMContentLoaded', sistemiSifirla);
     </script>
 </body>
