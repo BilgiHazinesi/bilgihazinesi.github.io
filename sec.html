@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çarkıfelek Öğrenci Seçici v5</title>
+    <title>Çarkıfelek Öğrenci Seçici v6</title>
     <style>
         * {
             margin: 0;
@@ -274,6 +274,7 @@
             gap: 10px;
         }
 
+        /* Düzeltme: .student-card varsayılan olarak soluk */
         .student-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -285,11 +286,12 @@
             cursor: pointer;
             position: relative;
             transition: all 0.3s ease;
-            opacity: 0.2;
+            opacity: 0.2; /* Varsayılan soluk görünüm */
         }
 
+        /* .new sınıfı eklendiğinde parlak ve büyük */
         .student-card.new {
-            opacity: 1;
+            opacity: 1; /* Vurgulu/parlak */
             box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
             transform: scale(1.1);
         }
@@ -391,7 +393,6 @@
             box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
         }
         
-        /* --- GRUP OLUŞTURMA STİLLERİ --- */
         .groups-section {
             width: 100%;
             background: white;
@@ -697,25 +698,21 @@
             checkButtons();
         }
 
-        function renderSelectedList() {
+        // ************************************
+        // *** GÜNCELLENEN renderSelectedList FONKSİYONU ***
+        // ************************************
+        // Artık "lastCount" parametresi alıyor
+        function renderSelectedList(lastCount = 0) {
             selectedList.innerHTML = '';
-            let lastCount = 0;
-
-            if (secilenOgrenciler.length > 0) {
-                 const lastControl = document.getElementById('remaining-select-count');
-                 const wheelControl = document.getElementById('select-count');
-                 if (document.getElementById('next-steps').style.display === 'flex') {
-                    lastCount = parseInt(lastControl.value) || parseInt(wheelControl.value);
-                 } else {
-                    lastCount = parseInt(wheelControl.value);
-                 }
-            }
+            
+            // Eski, tahmine dayalı lastCount mantığı ÇIKARILDI.
 
             secilenOgrenciler.forEach((student, index) => {
                 const li = document.createElement('li');
                 li.textContent = student;
                 li.className = 'student-card';
                 
+                // Güvenilir `lastCount` parametresine göre `isNew` belirleniyor
                 const isNew = index >= secilenOgrenciler.length - lastCount;
                 
                 if (isNew) {
@@ -731,6 +728,10 @@
                 selectedList.appendChild(li);
             });
         }
+        // ************************************
+        // *** GÜNCELLEME BİTİŞ ***
+        // ************************************
+
 
         function showStudentMenu(student, element) {
             const existingMenu = document.querySelector('.student-menu');
@@ -748,7 +749,7 @@
                 element.style.opacity = '0';
                 element.style.transform = 'scale(0)';
                 setTimeout(() => {
-                    renderSelectedList();
+                    renderSelectedList(0); // Düzeltme: 0 yolla
                     menu.remove();
                 }, 300);
             });
@@ -760,7 +761,7 @@
                 element.style.opacity = '0';
                 element.style.transform = 'scale(0)';
                 setTimeout(() => {
-                    renderSelectedList();
+                    renderSelectedList(0); // Düzeltme: 0 yolla
                     renderLists();
                     menu.remove();
                 }, 300);
@@ -792,21 +793,24 @@
                 wheel.classList.add('spinning');
                 
                 setTimeout(() => {
-                    performSelection(actualCount);
+                    performSelection(actualCount); // Düzeltme: actualCount'u yolla
                     initialControls.style.display = 'none';
                     nextSteps.style.display = 'flex';
                     isSpinning = false;
                     checkButtons(); 
                 }, 4000); 
             } else {
-                performSelection(actualCount);
+                performSelection(actualCount); // Düzeltme: actualCount'u yolla
                 isSpinning = false;
                 checkButtons();
             }
         }
         
+        // ************************************
+        // *** GÜNCELLENEN performSelection FONKSİYONU ***
+        // ************************************
         function performSelection(actualCount) {
-             const karistirilmis = shuffleArray(kalanOgrenciler);
+            const karistirilmis = shuffleArray(kalanOgrenciler);
             const secilenBuSefer = karistirilmis.slice(0, actualCount);
 
             secilenBuSefer.forEach(ogrenci => {
@@ -817,9 +821,12 @@
                 secilenOgrenciler.push(ogrenci);
             });
 
-            renderSelectedList();
+            renderSelectedList(actualCount); // Düzeltme: actualCount'u yolla
             renderLists();
         }
+        // ************************************
+        // *** GÜNCELLEME BİTİŞ ***
+        // ************************************
 
         function selectFromRemaining() {
             spinWheel(true);
@@ -829,7 +836,7 @@
             wheel.style.transform = 'rotateZ(0deg)';
             kalanOgrenciler = [...tumOgrenciler];
             secilenOgrenciler = [];
-            selectedList.innerHTML = '';
+            selectedList.innerHTML = ''; // Temizle
             renderLists();
             initialControls.style.display = 'flex';
             nextSteps.style.display = 'none';
@@ -930,7 +937,7 @@
 
         
         // ************************************
-        // *** DÜZELTİLMİŞ FONKSİYON ***
+        // *** HATA DÜZELTMELİ createGroupsBySize ***
         // ************************************
         function createGroupsBySize() {
             const groupSize = parseInt(groupSizeSelect.value);
@@ -953,17 +960,25 @@
                     swapGroupIndex = 1; // Eğer kötü grup 0'sa, 1 ile takas et
                 }
                 
-                // (Eğer sadece 1 grup varsa bu kod çalışmaz, ki bu durumda 24 öğrenci 1 gruba sığmaz)
-                // Bu senaryoda (24/2), 12 grup var, bu yüzden swapGroupIndex her zaman geçerli olacak.
-
-                if (groups.length > 1) {
+                // Eğer (24/2=12) 12 grup varsa, 0 ve 1 her zaman güvenlidir.
+                // Eğer (24/24=1) tek grup varsa, bu kod çalışmaz (ama zaten 12'ye kadar izin veriliyor)
+                
+                if (groups.length > 1 && groups[swapGroupIndex]) {
                      // 2. Takas edilecek öğrencileri belirle
                     const studentA_Name = constrainedStudent2; // Eylül'ü taşıyalım
                     const indexA = groups[badGroupIndex].indexOf(studentA_Name);
                     
                     // Takas grubundan rastgele bir öğrenci al (ilk öğrenciyi almak en kolayı)
-                    const studentB_Name = groups[swapGroupIndex][0];
-                    const indexB = 0;
+                    // Ancak o öğrencinin de kısıtlı öğrenci olmadığından emin ol (çok düşük ihtimal ama olabilir)
+                    let indexB = 0;
+                    let studentB_Name = groups[swapGroupIndex][indexB];
+                    
+                    // Eğer takas grubundaki ilk öğrenci Duru/Eylül ise (imkansız ama garantiye alalım)
+                    // ve grupta başka öğrenci varsa onu seç.
+                    if((studentB_Name === constrainedStudent1 || studentB_Name === constrainedStudent2) && groups[swapGroupIndex].length > 1) {
+                        indexB = 1;
+                        studentB_Name = groups[swapGroupIndex][indexB];
+                    }
 
                     // 3. Takası yap
                     const studentA = groups[badGroupIndex].splice(indexA, 1)[0];
@@ -1071,7 +1086,6 @@
 
         function clearSwapSelection() {
             if (firstSelectedStudent) {
-                // Hata kontrolü: Eğer element DOM'dan kaldırıldıysa (renderGroups sonrası)
                 const oldElement = document.querySelector(`.student-in-group[data-student-name="${firstSelectedStudent.name}"]`);
                 if(oldElement) {
                     oldElement.classList.remove('selected-for-swap');
@@ -1095,7 +1109,7 @@
         document.addEventListener('click', (e) => {
             const menu = document.querySelector('.student-menu');
             const card = e.target.closest('.student-card');
-            if (menu && !menu.contains(e.target) && !card) {
+            if (menu && !menu.contains(e.g.target) && !card) {
                 menu.remove();
                 document.querySelectorAll('.student-card.selected-for-action').forEach(c => {
                     c.classList.remove('selected-for-action');
