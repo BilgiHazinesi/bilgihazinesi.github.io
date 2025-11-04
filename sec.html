@@ -273,6 +273,12 @@
             box-shadow: 0 0 30px rgba(102, 126, 234, 0.8);
         }
 
+        .student-card.selected-for-action {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+            opacity: 1 !important;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8) !important;
+        }
+
         .student-name {
             background: #f0f0f0;
             color: #333;
@@ -488,7 +494,11 @@
                 }
                 
                 li.style.animationDelay = `${index * 0.15}s`;
-                li.addEventListener('click', () => showStudentMenu(student, li));
+                li.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    li.classList.add('selected-for-action');
+                    showStudentMenu(student, li);
+                });
                 selectedList.appendChild(li);
             });
         }
@@ -511,6 +521,7 @@
                 setTimeout(() => {
                     renderSelectedList();
                     menu.remove();
+                    closeMenu();
                 }, 300);
             });
 
@@ -524,8 +535,18 @@
                     renderSelectedList();
                     renderLists();
                     menu.remove();
+                    closeMenu();
                 }, 300);
             });
+
+            // Menüyü kapatma
+            const closeMenu = () => {
+                const allCards = document.querySelectorAll('.student-card');
+                allCards.forEach(card => card.classList.remove('selected-for-action'));
+            };
+
+            // Dışarıya tıklandığında menüyü kapat
+            document.addEventListener('click', closeMenu, { once: true });
 
             document.body.appendChild(menu);
         }
