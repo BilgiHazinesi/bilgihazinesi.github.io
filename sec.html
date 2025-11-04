@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rastgele Öğrenci Seçici</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .controls-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid #e8eaff;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+        }
+
+        .control-group select {
+            padding: 12px 18px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .control-group select:hover {
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .button {
+            padding: 12px 28px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-tertiary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        #initial-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        #next-steps {
+            display: none;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .lists-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .list-box {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+
+        .list-box:hover {
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+        }
+
+        .list-box h2 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .list-box.selected h2 {
+            color: #667eea;
+        }
+
+        .list-box.remaining h2 {
+            color: #764ba2;
+        }
+
+        .student-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .student-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            animation: slideIn 0.4s ease;
+            font-size: 0.95em;
+        }
+
+        .student-name {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            font-size: 0.95em;
+        }
+
+        .count-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .controls-section {
+                padding: 20px;
+            }
+
+            #initial-controls,
+            #next-steps {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .button {
+                width: 100%;
+            }
+
+            .lists-wrapper {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .control-group {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            .control-group select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎲 Rastgele Öğrenci Seçici</h1>
+            <p>Hızlı ve kolay öğrenci seçimi</p>
+        </div>
+
+        <div class="content">
+            <div class="controls-section">
+                <div id="initial-controls">
+                    <div class="control-group">
+                        <label for="select-count">Kaç öğrenci seçilsin?</label>
+                        <select id="select-count">
+                            <option value="1">1 öğrenci</option>
+                            <option value="2">2 öğrenci</option>
+                            <option value="3">3 öğrenci</option>
+                            <option value="4">4 öğrenci</option>
+                            <option value="5">5 öğrenci</option>
+                            <option value="6">6 öğrenci</option>
+                            <option value="8">8 öğrenci</option>
+                            <option value="12">12 öğrenci</option>
+                        </select>
+                    </div>
+                    <button id="select-button" class="button btn-primary">Seçim Yap</button>
+                </div>
+
+                <div id="next-steps">
+                    <button id="select-remaining-button" class="button btn-tertiary">Kalanlardan Seç</button>
+                    <button id="reset-button" class="button btn-secondary">Sıfırla</button>
+                </div>
+            </div>
+
+            <div class="lists-wrapper">
+                <div class="list-box selected">
+                    <h2>✨ Seçilenler <span class="count-badge" id="selected-count">0</span></h2>
+                    <ul id="selected-list" class="student-list"></ul>
+                </div>
+
+                <div class="list-box remaining">
+                    <h2>📋 Kalan <span class="count-badge" id="remaining-count">0</span></h2>
+                    <ul id="remaining-list" class="student-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tumOgrenciler = [
+            "HAKAN AKDENİZ", "HÜSEYİN ÇAĞAN GÜRGAH", "AHMET ARIN AĞTÜRK",
+            "DENİZ GÜNEY", "İDİL DEMİRCİ", "DURU AYKANAT", "DENİZ KİMYON",
+            "KADİR BERKTAŞ", "DOĞA BORA", "AHMET CEVDET KORKMAZ", "GÜLNİHAL KARAKAŞ",
+            "NİL TİRYAKİ", "MASAL DEFNE TEL", "EYLÜL AFAT", "ELİF ADA KEKEÇ",
+            "EYLÜL MUTAF", "İPEK MİMAROĞLU", "YEKTA URAS DEMİRER", "HAMZA KAAN ÇEVEN",
+            "BEYZA DAĞDELEN", "NAZ KARABAĞLI", "AYNUR BUDAK", "DURU BÜKÜN", "WAFA MAKANSSI"
+        ];
+
+        let kalanOgrenciler = [];
+        let secilenOgrenciler = [];
+
+        const selectCount = document.getElementById('select-count');
+        const selectButton = document.getElementById('select-button');
+        const selectRemainingButton = document.getElementById('select-remaining-button');
+        const resetButton = document.getElementById('reset-button');
+        const selectedList = document.getElementById('selected-list');
+        const remainingList = document.getElementById('remaining-list');
+        const remainingCountSpan = document.getElementById('remaining-count');
+        const selectedCountSpan = document.getElementById('selected-count');
+        const initialControls = document.getElementById('initial-controls');
+        const nextSteps = document.getElementById('next-steps');
+
+        function renderLists() {
+            remainingList.innerHTML = '';
+            kalanOgrenciler.forEach(student => {
+                const li = document.createElement('li');
+                li.textContent = student;
+                li.className = 'student-name';
+                remainingList.appendChild(li);
+            });
+            remainingCountSpan.textContent = kalanOgrenciler.length;
+            selectedCountSpan.textContent = secilenOgrenciler.length;
+            checkButtons();
+        }
+
+        function secimYap() {
+            const count = parseInt(selectCount.value);
+            const actualCount = Math.min(count, kalanOgrenciler.length);
+
+            if (actualCount === 0) return;
+
+            for (let i = 0; i < actualCount; i++) {
+                const randomIndex = Math.floor(Math.random() * kalanOgrenciler.length);
+                const secilenOgrenci = kalanOgrenciler.splice(randomIndex, 1)[0];
+                secilenOgrenciler.push(secilenOgrenci);
+            }
+
+            selectedList.innerHTML = '';
+            secilenOgrenciler.forEach(student => {
+                const li = document.createElement('li');
+                li.textContent = student;
+                li.className = 'student-card';
+                selectedList.appendChild(li);
+            });
+
+            renderLists();
+            initialControls.style.display = 'none';
+            nextSteps.style.display = 'flex';
+        }
+
+        function sistemiSifirla() {
+            kalanOgrenciler = [...tumOgrenciler];
+            secilenOgrenciler = [];
+            selectedList.innerHTML = '';
+            renderLists();
+            initialControls.style.display = 'flex';
+            nextSteps.style.display = 'none';
+        }
+
+        function checkButtons() {
+            const hasRemaining = kalanOgrenciler.length > 0;
+            selectButton.disabled = !hasRemaining;
+            selectRemainingButton.disabled = !hasRemaining;
+        }
+
+        selectButton.addEventListener('click', secimYap);
+        selectRemainingButton.addEventListener('click', secimYap);
+        resetButton.addEventListener('click', sistemiSifirla);
+
+        document.addEventListener('DOMContentLoaded', sistemiSifirla);
+    </script>
+</body>
+</html>
