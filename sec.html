@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çarkıfelek Öğrenci Seçici v6</title>
+    <title>Çarkıfelek Öğrenci Seçici v7</title>
     <style>
+        /* (CSS kodları v6 ile aynı, değişiklik yok) */
         * {
             margin: 0;
             padding: 0;
@@ -274,7 +275,6 @@
             gap: 10px;
         }
 
-        /* Düzeltme: .student-card varsayılan olarak soluk */
         .student-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -286,12 +286,11 @@
             cursor: pointer;
             position: relative;
             transition: all 0.3s ease;
-            opacity: 0.2; /* Varsayılan soluk görünüm */
+            opacity: 0.2; 
         }
 
-        /* .new sınıfı eklendiğinde parlak ve büyük */
         .student-card.new {
-            opacity: 1; /* Vurgulu/parlak */
+            opacity: 1; 
             box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
             transform: scale(1.1);
         }
@@ -531,20 +530,22 @@
             </div>
 
             <div class="controls-section">
+                
+                <div class="control-group">
+                    <label for="select-count">Kaç kişi seçilsin?</label>
+                    <select id="select-count">
+                        <option value="1">1 öğrenci</option>
+                        <option value="2">2 öğrenci</option>
+                        <option value="3">3 öğrenci</option>
+                        <option value="4">4 öğrenci</option>
+                        <option value="5">5 öğrenci</option>
+                        <option value="6">6 öğrenci</option>
+                        <option value="8">8 öğrenci</option>
+                        <option value="12">12 öğrenci</option>
+                    </select>
+                </div>
+                
                 <div id="initial-controls">
-                    <div class="control-group">
-                        <label for="select-count">Kaç kişi seçilsin?</label>
-                        <select id="select-count">
-                            <option value="1">1 öğrenci</option>
-                            <option value="2">2 öğrenci</option>
-                            <option value="3">3 öğrenci</option>
-                            <option value="4">4 öğrenci</option>
-                            <option value="5">5 öğrenci</option>
-                            <option value="6">6 öğrenci</option>
-                            <option value="8">8 öğrenci</option>
-                            <option value="12">12 öğrenci</option>
-                        </select>
-                    </div>
                     <button id="spin-button" class="button btn-spin">🎲 ÇARKI ÇEVIR! 🎲</button>
                 </div>
 
@@ -553,7 +554,6 @@
                     <button id="reset-button" class="button btn-secondary">SIFIRLA</button>
                 </div>
             </div>
-
             <div class="wheel-container">
                 <div class="wheel-pointer"></div>
                 <div class="wheel" id="wheel">
@@ -700,19 +700,16 @@
 
         // ************************************
         // *** GÜNCELLENEN renderSelectedList FONKSİYONU ***
+        // (Vurgu düzeltmesi v6'dan)
         // ************************************
-        // Artık "lastCount" parametresi alıyor
         function renderSelectedList(lastCount = 0) {
             selectedList.innerHTML = '';
-            
-            // Eski, tahmine dayalı lastCount mantığı ÇIKARILDI.
 
             secilenOgrenciler.forEach((student, index) => {
                 const li = document.createElement('li');
                 li.textContent = student;
                 li.className = 'student-card';
                 
-                // Güvenilir `lastCount` parametresine göre `isNew` belirleniyor
                 const isNew = index >= secilenOgrenciler.length - lastCount;
                 
                 if (isNew) {
@@ -728,9 +725,6 @@
                 selectedList.appendChild(li);
             });
         }
-        // ************************************
-        // *** GÜNCELLEME BİTİŞ ***
-        // ************************************
 
 
         function showStudentMenu(student, element) {
@@ -749,7 +743,7 @@
                 element.style.opacity = '0';
                 element.style.transform = 'scale(0)';
                 setTimeout(() => {
-                    renderSelectedList(0); // Düzeltme: 0 yolla
+                    renderSelectedList(0); 
                     menu.remove();
                 }, 300);
             });
@@ -761,7 +755,7 @@
                 element.style.opacity = '0';
                 element.style.transform = 'scale(0)';
                 setTimeout(() => {
-                    renderSelectedList(0); // Düzeltme: 0 yolla
+                    renderSelectedList(0); 
                     renderLists();
                     menu.remove();
                 }, 300);
@@ -773,6 +767,8 @@
         function spinWheel(isFromRemainingButton = false) {
             if (isSpinning) return;
             
+            // Düzeltme: "Kalanlardan Seç" butonu 'remaining-select-count'u,
+            // diğer tüm çark çevirmeler (ilk ve yeniden) 'select-count'u kullanır.
             const countToSelect = isFromRemainingButton ? 
                                  parseInt(remainingSelectCount.value) : 
                                  parseInt(selectCount.value);
@@ -788,29 +784,29 @@
 
             const randomSpins = Math.floor(Math.random() * 360) + 1800;
             
+            // Sadece ana çark butonları (ilk ve yeniden) çarkı döndürür
             if (!isFromRemainingButton) {
                 wheel.style.transform = `rotateZ(${randomSpins}deg)`;
                 wheel.classList.add('spinning');
                 
                 setTimeout(() => {
-                    performSelection(actualCount); // Düzeltme: actualCount'u yolla
-                    initialControls.style.display = 'none';
-                    nextSteps.style.display = 'flex';
+                    performSelection(actualCount); 
+                    initialControls.style.display = 'none'; // İlk butonu gizle
+                    nextSteps.style.display = 'flex'; // Yeniden çevir/sıfırla'yı göster
                     isSpinning = false;
                     checkButtons(); 
                 }, 4000); 
             } else {
-                performSelection(actualCount); // Düzeltme: actualCount'u yolla
+                // "Kalanlardan Seç" butonu çarkı DÖNDÜRMEZ, anında seçer
+                performSelection(actualCount); 
                 isSpinning = false;
                 checkButtons();
             }
         }
         
-        // ************************************
-        // *** GÜNCELLENEN performSelection FONKSİYONU ***
-        // ************************************
+        // (Vurgu düzeltmesi v6'dan)
         function performSelection(actualCount) {
-            const karistirilmis = shuffleArray(kalanOgrenciler);
+             const karistirilmis = shuffleArray(kalanOgrenciler);
             const secilenBuSefer = karistirilmis.slice(0, actualCount);
 
             secilenBuSefer.forEach(ogrenci => {
@@ -821,25 +817,25 @@
                 secilenOgrenciler.push(ogrenci);
             });
 
-            renderSelectedList(actualCount); // Düzeltme: actualCount'u yolla
+            renderSelectedList(actualCount); // Seçilen sayısını yolla
             renderLists();
         }
-        // ************************************
-        // *** GÜNCELLEME BİTİŞ ***
-        // ************************************
 
         function selectFromRemaining() {
-            spinWheel(true);
+            spinWheel(true); // 'isFromRemainingButton' = true
         }
 
         function sistemiSifirla() {
             wheel.style.transform = 'rotateZ(0deg)';
             kalanOgrenciler = [...tumOgrenciler];
             secilenOgrenciler = [];
-            selectedList.innerHTML = ''; // Temizle
+            selectedList.innerHTML = ''; 
             renderLists();
-            initialControls.style.display = 'flex';
-            nextSteps.style.display = 'none';
+            
+            // HTML yapısı değiştiği için JS de değişti:
+            initialControls.style.display = 'flex'; // "Çarkı Çevir" butonunu göster
+            nextSteps.style.display = 'none'; // "Yeniden Çevir" butonlarını gizle
+            
             isSpinning = false;
             spinButton.disabled = false;
             
@@ -936,9 +932,7 @@
         }
 
         
-        // ************************************
-        // *** HATA DÜZELTMELİ createGroupsBySize ***
-        // ************************************
+        // (Grup Büyüklüğü hatası v5'ten düzeltildi)
         function createGroupsBySize() {
             const groupSize = parseInt(groupSizeSelect.value);
             let shuffledStudents = shuffleArray([...tumOgrenciler]);
@@ -948,51 +942,35 @@
                 groups.push(shuffledStudents.splice(0, groupSize));
             }
 
-            // Kuralı kontrol et: Duru Bükün ve Eylül Mutaf aynı grupta mı?
             const badGroupIndex = groups.findIndex(g => g.includes(constrainedStudent1) && g.includes(constrainedStudent2));
 
             if (badGroupIndex > -1) {
-                // Hata bulundu! "Taşıma" DEĞİL, "Takas" (Swap) yap.
-                
-                // 1. Takas yapılacak bir grup bul (kötü grup olmayan herhangi bir grup)
                 let swapGroupIndex = 0;
                 if (badGroupIndex === 0) {
-                    swapGroupIndex = 1; // Eğer kötü grup 0'sa, 1 ile takas et
+                    swapGroupIndex = 1;
                 }
                 
-                // Eğer (24/2=12) 12 grup varsa, 0 ve 1 her zaman güvenlidir.
-                // Eğer (24/24=1) tek grup varsa, bu kod çalışmaz (ama zaten 12'ye kadar izin veriliyor)
-                
                 if (groups.length > 1 && groups[swapGroupIndex]) {
-                     // 2. Takas edilecek öğrencileri belirle
-                    const studentA_Name = constrainedStudent2; // Eylül'ü taşıyalım
+                    const studentA_Name = constrainedStudent2;
                     const indexA = groups[badGroupIndex].indexOf(studentA_Name);
                     
-                    // Takas grubundan rastgele bir öğrenci al (ilk öğrenciyi almak en kolayı)
-                    // Ancak o öğrencinin de kısıtlı öğrenci olmadığından emin ol (çok düşük ihtimal ama olabilir)
                     let indexB = 0;
                     let studentB_Name = groups[swapGroupIndex][indexB];
                     
-                    // Eğer takas grubundaki ilk öğrenci Duru/Eylül ise (imkansız ama garantiye alalım)
-                    // ve grupta başka öğrenci varsa onu seç.
                     if((studentB_Name === constrainedStudent1 || studentB_Name === constrainedStudent2) && groups[swapGroupIndex].length > 1) {
                         indexB = 1;
                         studentB_Name = groups[swapGroupIndex][indexB];
                     }
 
-                    // 3. Takası yap
                     const studentA = groups[badGroupIndex].splice(indexA, 1)[0];
                     const studentB = groups[swapGroupIndex].splice(indexB, 1)[0];
                     
-                    groups[badGroupIndex].push(studentB); // Duru'nun grubuna B öğrencisini ekle
-                    groups[swapGroupIndex].push(studentA); // Takas grubuna Eylül'ü ekle
+                    groups[badGroupIndex].push(studentB);
+                    groups[swapGroupIndex].push(studentA);
                 }
             }
             return groups;
         }
-        // ************************************
-        // *** DÜZELTME BİTİŞ ***
-        // ************************************
 
 
         function renderGroups(groups) {
@@ -1101,15 +1079,16 @@
 
         // --- Olay Dinleyicileri ---
 
-        spinButton.addEventListener('click', () => spinWheel(false));
-        selectRemainingButton.addEventListener('click', () => spinWheel(false));
-        remainingSpinButton.addEventListener('click', selectFromRemaining);
+        // (HTML yapısı değiştiği için bu dinleyiciler güncellendi)
+        spinButton.addEventListener('click', () => spinWheel(false)); // İlk çevirme
+        selectRemainingButton.addEventListener('click', () => spinWheel(false)); // Yeniden çevirme
+        remainingSpinButton.addEventListener('click', selectFromRemaining); // Kalanlardan seç
 		resetButton.addEventListener('click', sistemiSifirla);
 
         document.addEventListener('click', (e) => {
             const menu = document.querySelector('.student-menu');
             const card = e.target.closest('.student-card');
-            if (menu && !menu.contains(e.g.target) && !card) {
+            if (menu && !menu.contains(e.target) && !card) {
                 menu.remove();
                 document.querySelectorAll('.student-card.selected-for-action').forEach(c => {
                     c.classList.remove('selected-for-action');
