@@ -236,6 +236,33 @@
             color: #764ba2;
         }
 
+        .remaining-controls {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remaining-controls select {
+            padding: 8px 12px;
+            border: 2px solid #764ba2;
+            border-radius: 8px;
+            font-size: 0.95em;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .remaining-controls button {
+            padding: 8px 20px;
+            font-size: 0.95em;
+        }
+
         .student-list {
             list-style: none;
             display: flex;
@@ -254,7 +281,7 @@
             cursor: pointer;
             position: relative;
             transition: all 0.3s ease;
-            opacity: 0.3;
+            opacity: 0.2;
         }
 
         .student-card.new {
@@ -378,6 +405,10 @@
                 padding: 10px 20px;
                 font-size: 0.9em;
             }
+
+            .remaining-controls {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -413,7 +444,7 @@
                 </div>
 
                 <div id="next-steps">
-                    <button id="select-remaining-button" class="button btn-secondary">KALANLARDAN SEÇ</button>
+                    <button id="select-remaining-button" class="button btn-secondary">ÇARKI YENIDEN ÇEVIR</button>
                     <button id="reset-button" class="button btn-secondary">SIFIRLA</button>
                 </div>
             </div>
@@ -427,21 +458,18 @@
 
             <div class="remaining-section">
                 <h3>📋 KALANLAR (<span id="remaining-count">0</span>)</h3>
-                <div class="controls-section" style="margin-bottom: 15px;">
-                    <div class="control-group">
-                        <label for="remaining-select-count">Kaç kişi seçilsin?</label>
-                        <select id="remaining-select-count">
-                            <option value="1">1 öğrenci</option>
-                            <option value="2">2 öğrenci</option>
-                            <option value="3">3 öğrenci</option>
-                            <option value="4">4 öğrenci</option>
-                            <option value="5">5 öğrenci</option>
-                            <option value="6">6 öğrenci</option>
-                            <option value="8">8 öğrenci</option>
-                            <option value="12">12 öğrenci</option>
-                        </select>
-                        <button id="remaining-spin-button" class="button btn-secondary">KALANLARDAN SEÇ</button>
-                    </div>
+                <div class="remaining-controls">
+                    <select id="remaining-select-count">
+                        <option value="1">1 öğrenci</option>
+                        <option value="2">2 öğrenci</option>
+                        <option value="3">3 öğrenci</option>
+                        <option value="4">4 öğrenci</option>
+                        <option value="5">5 öğrenci</option>
+                        <option value="6">6 öğrenci</option>
+                        <option value="8">8 öğrenci</option>
+                        <option value="12">12 öğrenci</option>
+                    </select>
+                    <button id="remaining-spin-button" class="button" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; width: auto;">KALANLARDAN SEÇ</button>
                 </div>
                 <ul id="remaining-list" class="student-list"></ul>
             </div>
@@ -472,6 +500,8 @@
         const remainingCountSpan = document.getElementById('remaining-count');
         const initialControls = document.getElementById('initial-controls');
         const nextSteps = document.getElementById('next-steps');
+        const remainingSelectCount = document.getElementById('remaining-select-count');
+        const remainingSpinButton = document.getElementById('remaining-spin-button');
 
         function shuffleArray(array) {
             const shuffled = [...array];
@@ -501,9 +531,20 @@
                 li.textContent = student;
                 li.className = 'student-card';
                 
-                // Son seçilen öğrencileri belirle (en son seçilen count kadar)
-                const lastSelectedCount = parseInt(selectCount.value);
-                const isNew = index >= secilenOgrenciler.length - lastSelectedCount;
+                // Son seçilen öğrencileri belirle
+                // selectCount değerinden bağımsız olarak, son eklenen öğrencileri bul
+                let lastCount = 0;
+                
+                // Kalanlardan seçme yapılmış mı?
+                if (secilenOgrenciler.length > 0) {
+                    const lastControl = document.getElementById('remaining-select-count');
+                    const wheelControl = document.getElementById('select-count');
+                    
+                    // Son hangi seçim yapıldığını belirle
+                    lastCount = parseInt(lastControl?.value || wheelControl?.value || 1);
+                }
+                
+                const isNew = index >= secilenOgrenciler.length - lastCount;
                 
                 if (isNew) {
                     li.classList.add('new');
@@ -537,7 +578,6 @@
                 setTimeout(() => {
                     renderSelectedList();
                     menu.remove();
-                    closeMenu();
                 }, 300);
             });
 
@@ -551,18 +591,8 @@
                     renderSelectedList();
                     renderLists();
                     menu.remove();
-                    closeMenu();
                 }, 300);
             });
-
-            // Menüyü kapatma
-            const closeMenu = () => {
-                const allCards = document.querySelectorAll('.student-card');
-                allCards.forEach(card => card.classList.remove('selected-for-action'));
-            };
-
-            // Dışarıya tıklandığında menüyü kapat
-            document.addEventListener('click', closeMenu, { once: true });
 
             document.body.appendChild(menu);
         }
@@ -605,6 +635,29 @@
             }, 4000);
         }
 
+        function selectFromRemaining() {
+            if (kalanOgrenciler.length === 0) return;
+            
+            const count = parseInt(remainingSelectCount.value);
+            const actualCount = Math.min(count, kalanOgrenciler.length);
+
+            if (actualCount === 0) return;
+
+            const karistirilmis = shuffleArray(kalanOgrenciler);
+            const secilenBuSefer = karistirilmis.slice(0, actualCount);
+            
+            secilenBuSefer.forEach(ogrenci => {
+                const idx = kalanOgrenciler.indexOf(ogrenci);
+                if (idx > -1) {
+                    kalanOgrenciler.splice(idx, 1);
+                }
+                secilenOgrenciler.push(ogrenci);
+            });
+
+            renderSelectedList();
+            renderLists();
+        }
+
         function sistemiSifirla() {
             wheel.style.transform = 'rotateZ(0deg)';
             kalanOgrenciler = [...tumOgrenciler];
@@ -621,10 +674,12 @@
             const hasRemaining = kalanOgrenciler.length > 0;
             spinButton.disabled = !hasRemaining;
             selectRemainingButton.disabled = !hasRemaining;
+            remainingSpinButton.disabled = !hasRemaining;
         }
 
         spinButton.addEventListener('click', spinWheel);
         selectRemainingButton.addEventListener('click', spinWheel);
+        remainingSpinButton.addEventListener('click', selectFromRemaining);
         resetButton.addEventListener('click', sistemiSifirla);
 
         document.addEventListener('DOMContentLoaded', sistemiSifirla);
