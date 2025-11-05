@@ -1,9 +1,9 @@
-/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ v3): 'pdfjsLib' YÜKLEME HATASI === */
+/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ v4): 'window.onload' Hatası === */
 'use strict';
 
-// YENİ v2.2.3: Tarayıcının HTML'i ve TÜM kütüphaneleri yüklemesini bekle!
-// Bu, "dosya seçme çalışmadı" ve "pdfjsLib bulunamadı" hatalarını düzeltecektir.
-document.addEventListener('DOMContentLoaded', () => {
+// YENİ v2.2.4: Tarayıcının HTML'i ve TÜM kütüphaneleri yüklemesini bekle!
+// Bu, 'pdfjsLib bulunamadı' hatasını ve çökmeyi engelleyecektir.
+window.onload = () => {
 
     // PDF HATA DÜZELTMESİ: PDF Worker'ı, kütüphane yüklendikten SONRA burada tanımlıyoruz.
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -92,7 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
      * v2.2: Gelen dosyaları işler ve kütüphaneye ekler.
      */
     async function loadFiles(files) {
-        if (sourceListPlaceholder) sourceListPlaceholder.remove();
+        // 'placeholder' elementini null kontrolü ile güvenli hale getir
+        const placeholder = document.getElementById('source-list-placeholder');
+        if (placeholder) placeholder.remove();
 
         const filePromises = Array.from(files).map(file => {
             const sourceId = 'source-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
@@ -316,6 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-}); // <-- DOMContentLoaded burada biter
+}; // <-- window.onload burada biter
 
-/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ v3) BİTTİ === */
+/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ v4) BİTTİ === */
