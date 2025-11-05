@@ -6,7 +6,7 @@ body, html {
     background-color: #f0f2f5;
     height: 100vh;
     width: 100vw;
-    overflow: hidden; /* Sayfa kaydırmasını engelle */
+    overflow: hidden;
 }
 
 /* --- EKRANLAR (YÜKLEME / EDİTÖR) --- */
@@ -33,38 +33,73 @@ aside {
     padding: 15px;
     background-color: #fff;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    overflow-y: auto; /* Gerekirse kaydırma çubuğu */
-    flex-shrink: 0; /* Paneller küçülmesin */
+    overflow: hidden; /* İç kaydırmayı UL'ler yapsın */
+    flex-shrink: 0;
+    display: flex; /* İçeriği dikey diz */
+    flex-direction: column;
 }
 
-/* --- 1. SOL PANEL (Kırpma Listesi) --- */
+/* --- 1. SOL PANEL (Kaynak Küt. + Kırpma List.) --- */
 #left-panel {
-    flex-basis: 300px; /* Sabit 300px genişlik */
-    display: flex;
-    flex-direction: column;
+    flex-basis: 300px;
 }
 #left-panel h3 {
     margin-top: 0;
+    margin-bottom: 5px;
 }
+#left-panel p { /* Placeholder text */
+    font-size: 13px;
+    color: #666;
+    margin: 5px 0;
+}
+#left-panel hr {
+    width: 100%;
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 15px 0;
+}
+
+/* Listelerin (Kaynak + Kırpma) stilleri */
+#source-library-list,
 #selection-list {
     list-style: none;
     padding: 0;
-    margin-top: 10px;
-    flex-grow: 1; /* Kalan alanı kapla */
-    overflow-y: auto; /* Liste uzarsa kaydır */
+    margin: 0;
+    overflow-y: auto; /* Kendi içinde kaydır */
     border: 1px solid #eee;
+    border-radius: 4px;
 }
 
-/* Sol Panel - Kırpma Listesi Öğesi */
+/* Kaynak Kütüphanesi (Üst Liste) */
+#source-library-list {
+    flex-grow: 1; /* Alanın %50'si */
+}
+.source-item {
+    padding: 10px;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    word-break: break-all; /* Uzun dosya adları için */
+}
+.source-item:hover {
+    background-color: #f9f9f9;
+}
+.source-item.active {
+    background-color: #e0eafc; /* Seçili kaynak */
+    font-weight: bold;
+}
+
+/* Kırpma Listesi (Alt Liste) */
+#selection-list {
+    flex-grow: 1; /* Alanın %50'si */
+}
 .clip-item {
     display: flex;
     align-items: center;
     padding: 8px;
-    margin-bottom: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #f9f9f9;
-    cursor: grab; /* Taşıma imleci */
+    border-bottom: 1px solid #f0f0f0;
+    background-color: #fff;
+    cursor: grab;
 }
 .clip-item:active {
     cursor: grabbing;
@@ -78,22 +113,32 @@ aside {
 .clip-item span.clip-name {
     font-size: 14px;
     font-weight: bold;
+    word-break: break-all;
 }
+/* Çift tıklama için not */
+.clip-item::after {
+    content: "(düzenle: çift tıkla)";
+    font-size: 10px;
+    color: #999;
+    margin-left: auto;
+    font-style: italic;
+}
+
 
 /* --- 2. ORTA PANEL (Sekmeli Çalışma Alanı) --- */
 #main-panel {
-    flex-grow: 1; /* Kalan tüm alanı kapla */
-    display: flex; /* İç düzeni flex yap */
-    flex-direction: column; /* Üstte sekmeler, altta içerik */
-    overflow: hidden; /* İç kaydırmayı sekmeler yönetecek */
-    background-color: #e9ebee; /* Arka plan rengi */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #e9ebee;
 }
 
 /* Sekme Butonları */
 #tab-controls {
     display: flex;
     background-color: #ddd;
-    flex-shrink: 0; /* Sekme butonları küçülmesin */
+    flex-shrink: 0;
 }
 .tab-button {
     flex-grow: 1;
@@ -115,9 +160,9 @@ aside {
 
 /* Sekme İçeriği (Ana kapsayıcı) */
 #tab-content {
-    flex-grow: 1; /* Kalan tüm alanı doldursun */
+    flex-grow: 1;
     position: relative;
-    overflow: hidden; /* Kaydırmayı .tab-page'e bırak */
+    overflow: hidden;
 }
 
 /* Tek bir sekme sayfası (Kaynak veya Mizanpaj) */
@@ -125,19 +170,16 @@ aside {
     display: none; /* Varsayılan olarak gizli */
     height: 100%;
     width: 100%;
-    overflow: hidden; /* Kaydırmayı iç kapsayıcıya bırak */
-    
-    /* İçeriği (butonlar, kaydırma alanı, sayfa kontrolü) dikey diz */
-    display: flex; 
+    overflow: hidden;
     flex-direction: column;
 }
 .tab-page.active {
-    display: flex; /* Aktif olunca flex olarak göster */
+    display: flex; /* Sadece aktif olan gösterilir */
 }
 
 /* Zoom Kontrolleri (Her iki sekmede de var) */
 .view-controls {
-    flex-shrink: 0; /* Bu alan küçülmesin */
+    flex-shrink: 0;
     padding: 8px;
     background-color: #f1f1f1;
     border-bottom: 1px solid #ccc;
@@ -155,43 +197,44 @@ aside {
     font-weight: bold;
 }
 
-/* Kaydırma Kapsayıcıları (LAYOUT SORUNUNU ÇÖZEN KISIM) */
+/* Kaydırma Kapsayıcıları */
 #source-scroll-container,
 #layout-scroll-container {
-    flex-grow: 1; /* Kalan tüm alanı doldur */
-    overflow: auto; /* HEM DİKEY HEM YATAY KAYDIRMA */
-    background-color: #e9ebee; /* Arka plan */
+    flex-grow: 1;
+    overflow: auto;
+    background-color: #e9ebee;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
-/* Sekme 1: Kaynak PDF Alanı */
-#source-scroll-container {
-    display: flex;
-    justify-content: center; /* PDF'i yatayda ortala */
-    align-items: flex-start; /* PDF'i dikeyde üste daya */
-    padding: 20px;
-    box-sizing: border-box; /* Padding dahil */
+/* Sekme 1: Kaynak Editörü */
+#source-viewer-wrapper {
+    position: relative; /* SEÇİM ARAÇLARI İÇİN HAYATİ */
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 #pdf-viewer-container {
-    position: relative;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    background-color: white;
+}
+#image-viewer {
+    max-width: 100%;
+    display: block;
     background-color: white;
 }
 
-/* Kaynak PDF: Seçim Kutusu (Eski) */
+/* Kaynak Editörü: Seçim Araçları */
 #selection-box {
     position: absolute;
     border: 2px dashed #007bff;
     background-color: rgba(0, 123, 255, 0.2);
     display: none;
-    pointer-events: none; /* Interact.js kullanırken bu değişecek */
+    pointer-events: none;
     z-index: 98;
 }
-
-/* Kaynak PDF: Onay Kutusu (Yeni) */
 #selection-confirm-box {
     position: absolute;
-    /* JS bunun 'left' ve 'top' değerlerini ayarlayacak */
     background: white;
     border-radius: 4px;
     padding: 5px;
@@ -205,18 +248,12 @@ aside {
     border: none;
     cursor: pointer;
 }
-#confirm-selection {
-    background-color: #4CAF50; /* Yeşil */
-    color: white;
-}
-#cancel-selection {
-    background-color: #f44336; /* Kırmızı */
-    color: white;
-}
+#confirm-selection { background-color: #4CAF50; color: white; }
+#cancel-selection { background-color: #f44336; color: white; }
 
-/* Kaynak PDF: Sayfa Kontrolleri (Altta sabit) */
+/* Kaynak Editörü: PDF Sayfa Kontrolleri (Altta) */
 #pdf-controls {
-    flex-shrink: 0; /* Bu alan küçülmesin */
+    flex-shrink: 0;
     padding: 8px;
     background-color: #f1f1f1;
     border-top: 1px solid #ccc;
@@ -225,30 +262,18 @@ aside {
 
 /* Sekme 2: Mizanpaj Alanı */
 #layout-scroll-container {
-    display: flex;
-    justify-content: center; /* Sanal A4'ü ortala */
-    align-items: flex-start; /* Üste daya */
-    padding: 20px;
-    box-sizing: border-box; /* Padding dahil */
-}
-#page-container {
-    padding: 0;
+    justify-content: center;
+    align-items: flex-start;
 }
 #page-stage {
     background-color: white;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     position: relative;
     overflow: hidden;
-    transform-origin: top center; /* Zoom'un merkez noktası */
+    transform-origin: top center;
 }
-.a4-portrait {
-    width: 595px;
-    height: 842px;
-}
-.a4-landscape {
-    width: 842px;
-    height: 595px;
-}
+.a4-portrait { width: 595px; height: 842px; }
+.a4-landscape { width: 842px; height: 595px; }
 
 /* Mizanpaj Alanı: Sahneye bırakılan kırpma */
 .stage-item {
@@ -264,7 +289,6 @@ aside {
     height: 100%;
     display: block;
 }
-/* Mizanpaj Alanı: Yeniden boyutlandırma tutamacı */
 .stage-item .resize-handle.bottom-right {
     position: absolute;
     width: 10px;
@@ -278,7 +302,7 @@ aside {
 
 /* --- 3. SAĞ PANEL (Ayarlar) --- */
 #right-panel {
-    flex-basis: 280px; /* Sabit 280px genişlik */
+    flex-basis: 280px;
 }
 #right-panel label {
     display: block;
@@ -292,7 +316,7 @@ aside {
     width: 100%;
     padding: 8px;
     margin-top: 5px;
-    box-sizing: border-box; /* padding'i genişliğe dahil et */
+    box-sizing: border-box;
 }
 
 /* Ayarlar: Düzen Türü Seçenekleri */
