@@ -6,6 +6,10 @@ const fileInput = document.getElementById('file-input');
 const uploadScreen = document.getElementById('upload-screen');
 const editorScreen = document.getElementById('editor-screen');
 
+// Sol Panel
+const sourceLibraryList = document.getElementById('source-library-list');
+const selectionList = document.getElementById('selection-list');
+
 // Orta Panel - Sekme Butonları ve İçerikleri
 const tabSourceBtn = document.getElementById('tab-source');
 const tabLayoutBtn = document.getElementById('tab-layout');
@@ -14,10 +18,13 @@ const layoutView = document.getElementById('layout-view');
 const sourceScrollContainer = document.getElementById('source-scroll-container');
 const layoutScrollContainer = document.getElementById('layout-scroll-container');
 
-// Sekme 1: Kaynak PDF Elemanları
-const pdfContainer = document.getElementById('pdf-viewer-container');
+// Sekme 1: Kaynak Editörü Elemanları
+const sourceViewerWrapper = document.getElementById('source-viewer-wrapper');
+const pdfViewerContainer = document.getElementById('pdf-viewer-container');
 const canvas = document.getElementById('pdf-canvas');
 const ctx = canvas.getContext('2d');
+const imageViewer = document.getElementById('image-viewer');
+const pdfControls = document.getElementById('pdf-controls');
 const prevPageBtn = document.getElementById('prev-page');
 const nextPageBtn = document.getElementById('next-page');
 const pageNumSpan = document.getElementById('page-num');
@@ -28,7 +35,7 @@ const zoomInSourceBtn = document.getElementById('zoom-in-source');
 const zoomOutSourceBtn = document.getElementById('zoom-out-source');
 const zoomLevelSourceSpan = document.getElementById('zoom-level-source');
 
-// Sekme 1: YENİ Seçim Akışı Elemanları
+// Sekme 1: Seçim Araçları
 const selectionBox = document.getElementById('selection-box');
 const selectionConfirmBox = document.getElementById('selection-confirm-box');
 const confirmSelectionBtn = document.getElementById('confirm-selection');
@@ -36,89 +43,187 @@ const cancelSelectionBtn = document.getElementById('cancel-selection');
 
 // Sekme 2: Mizanpaj Sahnesi Elemanları
 const pageStage = document.getElementById('page-stage');
-
-// Sekme 2: Zoom
 const zoomInLayoutBtn = document.getElementById('zoom-in-layout');
 const zoomOutLayoutBtn = document.getElementById('zoom-out-layout');
 const zoomLevelLayoutSpan = document.getElementById('zoom-level-layout');
-
-// Sol Panel: Kırpma Listesi
-const selectionList = document.getElementById('selection-list');
 
 // Sağ Panel: Ayarlar
 const pageLayoutSelect = document.getElementById('page-layout');
 const generatePdfBtn = document.getElementById('generate-pdf');
 const pdfTitleInput = document.getElementById('pdf-title');
 
-// --- 1. GLOBAL VERİ DEPOLARI VE UYGULAMA DURUMU ---
-let pdfDoc = null;
-let currentPageNum = 1;
-let clippings = []; // Tüm kırpma verilerini tutan ana dizi
+// --- 1. v2.0 GLOBAL VERİ DEPOLARI VE UYGULAMA DURUMU ---
+
+// YENİ: Yüklenen tüm kaynakları (PDF/Resim) tutan kütüphane
+let sourceLibrary = []; 
+// Kırpılan tüm alanları tutan dizi (yapısı güncellendi)
+let clippings = [];
+
+// Aktif olarak düzenlenen/bakılan kaynağın ID'si
+let activeSourceId = null;
+let activePdfDoc = null; // Sadece o an aktif olan PDF'in dokümanı
+let activePdfPageNum = 1; // Aktif PDF'in hangi sayfasında olduğu
 
 // Zoom Durumları
-let currentSourceZoom = 1.5; // pdf.js scale
+let currentSourceZoom = 1.0; // Hem PDF scale hem de Resim width/height için ortak
 let currentLayoutZoom = 1.0; // CSS scale
 
 // Seçim Akışı Durumları
-let isDrawing = false; // Kullanıcı şu an fare ile çizim mi yapıyor?
-let activeSelectionRect = null; // Onay bekleyen seçimin {x, y, width, height} bilgisi
-let isEditingClipId = null; // "Yeniden Kırpma" modunda mıyız? Hangi ID'yi düzenliyoruz?
-let selectionStartPoint = {}; // Çizimin başladığı nokta
+let isDrawing = false;
+let activeSelectionRect = null;
+let isEditingClipId = null;
+let selectionStartPoint = {};
 
-// --- 2. UYGULAMA BAŞLANGICI VE SEKMELER ---
+// --- 2. BAŞLANGIÇ VE ÇOKLU DOSYA YÜKLEME ---
 
 fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file || file.type !== 'application/pdf') {
-        alert("Lütfen bir PDF dosyası seçin.");
-        return;
-    }
+    // Birden fazla dosya yüklendi
+    const files = e.target.files;
+    if (!files.length) return;
+
     uploadScreen.classList.add('hidden');
     editorScreen.classList.remove('hidden');
     
-    // Interact.js'i ilk seçim kutusu için hazırla (YENİ AKIŞ)
+    // Interact.js'i ilk seçim kutusu için hazırla
     setupSelectionBoxInteract();
     
-    loadPdf(file);
+    // YENİ: Dosyaları paralel olarak (aynı anda) yükle
+    loadFiles(files);
 });
 
-// Sekme 1'i (Kaynak PDF) göster
-tabSourceBtn.addEventListener('click', () => {
-    tabSourceBtn.classList.add('active');
-    sourceView.classList.add('active');
-    tabLayoutBtn.classList.remove('active');
-    layoutView.classList.remove('active');
-});
+// YENİ: Çoklu dosya yükleme yöneticisi
+async function loadFiles(files) {
+    const placeholder = document.getElementById('source-list-placeholder');
+    if (placeholder) placeholder.remove();
 
-// Sekme 2'yi (Mizanpaj Sahnesi) göster
-tabLayoutBtn.addEventListener('click', () => {
-    tabSourceBtn.classList.remove('active');
-    sourceView.classList.remove('active');
-    tabLayoutBtn.classList.add('active');
-    layoutView.classList.add('active');
-});
+    for (const file of files) {
+        const sourceId = 'source-' + Date.now() + '-' + Math.random();
+        let sourceData = {
+            id: sourceId,
+            name: file.name,
+            type: null,
+            data: null, // pdfDoc veya image DataURL
+        };
 
-// --- 3. KAYNAK PDF (SEKME 1) - YÜKLEME, ÇİZDİRME VE ZOOM ---
+        if (file.type === 'application/pdf') {
+            sourceData.type = 'pdf';
+            sourceData.data = await loadPdfData(file);
+            sourceData.totalPages = sourceData.data.numPages;
+            sourceData.currentPage = 1; // PDF'ler için sayfa takibi
+        } else if (file.type.startsWith('image/')) {
+            sourceData.type = 'image';
+            sourceData.data = await loadImageData(file);
+        } else {
+            continue; // Desteklenmeyen dosya tipi
+        }
 
-async function loadPdf(file) {
-    const fileReader = new FileReader();
-    fileReader.onload = async function() {
-        const typedarray = new Uint8Array(this.result);
-        pdfDoc = await pdfjsLib.getDocument(typedarray).promise;
-        pageCountSpan.textContent = pdfDoc.numPages;
-        await renderPage(currentPageNum);
-    };
-    fileReader.readAsArrayBuffer(file);
+        sourceLibrary.push(sourceData);
+        addSourceToLibraryList(sourceData);
+    }
+    
+    // Yükleme bittikten sonra ilk kaynağı otomatik olarak aç
+    if (sourceLibrary.length > 0) {
+        showSourceInEditor(sourceLibrary[0].id);
+    }
 }
 
-// renderPage artık async (await) çünkü render bitmeden işlem yapmamalıyız
-async function renderPage(num) {
-    // Sayfa değişirken, yarım kalan seçim işlemlerini iptal et
-    cancelActiveSelection(); 
+// YENİ: PDF verisini (pdf.js doc) yükler
+function loadPdfData(file) {
+    return new Promise((resolve, reject) => {
+        const fileReader = new FileReader();
+        fileReader.onload = async function() {
+            const typedarray = new Uint8Array(this.result);
+            const pdf = await pdfjsLib.getDocument(typedarray).promise;
+            resolve(pdf);
+        };
+        fileReader.readAsArrayBuffer(file);
+    });
+}
+
+// YENİ: Resim verisini (DataURL) yükler
+function loadImageData(file) {
+    return new Promise((resolve, reject) => {
+        const fileReader = new FileReader();
+        fileReader.onload = function() {
+            resolve(this.result); // DataURL
+        };
+        fileReader.readAsDataURL(file);
+    });
+}
+
+// YENİ: Sol panele (Kaynak Kütüphanesi) dosyayı ekler
+function addSourceToLibraryList(sourceData) {
+    const li = document.createElement('li');
+    li.className = 'source-item';
+    li.id = sourceData.id;
+    li.textContent = `[${sourceData.type.toUpperCase()}] ${sourceData.name}`;
     
-    const page = await pdfDoc.getPage(num);
-    // YENİ: Zoom seviyesini global değişkenden al
-    const viewport = page.getViewport({ scale: currentSourceZoom }); 
+    // Tıklandığında o kaynağı editörde aç
+    li.addEventListener('click', () => {
+        showSourceInEditor(sourceData.id);
+    });
+    
+    sourceLibraryList.appendChild(li);
+}
+
+// --- 3. KAYNAK EDİTÖRÜ (SEKME 1) - Kaynak Değiştirme ve Görüntüleme ---
+
+// YENİ: Ana kaynak görüntüleme fonksiyonu
+async function showSourceInEditor(sourceId) {
+    // Yarım kalan seçimi iptal et
+    cancelActiveSelection();
+    
+    // Kütüphaneden kaynağı bul
+    const sourceData = sourceLibrary.find(s => s.id === sourceId);
+    if (!sourceData) return;
+
+    // Aktif kaynağı ayarla
+    activeSourceId = sourceId;
+
+    // Sol paneldeki listede "aktif" olanı vurgula
+    document.querySelectorAll('#source-library-list .source-item').forEach(item => {
+        item.classList.toggle('active', item.id === sourceId);
+    });
+
+    // Kaynak tipine göre editörü hazırla
+    if (sourceData.type === 'pdf') {
+        // PDF GÖRÜNTÜLEYİCİYİ HAZIRLA
+        activePdfDoc = sourceData.data; // Aktif PDF dokümanını ayarla
+        activePdfPageNum = sourceData.currentPage; // Kaldığı sayfayı getir
+        
+        pdfViewerContainer.classList.remove('hidden');
+        pdfControls.classList.remove('hidden');
+        imageViewer.classList.add('hidden');
+        
+        // PDF'i render et
+        currentSourceZoom = 1.0; // Zoom'u sıfırla
+        await renderPdfPage(activePdfPageNum);
+
+    } else if (sourceData.type === 'image') {
+        // RESİM GÖRÜNTÜLEYİCİYİ HAZIRLA
+        pdfViewerContainer.classList.add('hidden');
+        pdfControls.classList.add('hidden');
+        imageViewer.classList.remove('hidden');
+        
+        imageViewer.src = sourceData.data;
+        
+        // Resmi render et (Zoom ayarı)
+        currentSourceZoom = 1.0; // Zoom'u sıfırla
+        renderImageViewer();
+    }
+}
+
+// PDF sayfasını çizen fonksiyon (eski renderPage)
+async function renderPdfPage(num) {
+    if (!activePdfDoc) return;
+    
+    // Aktif kaynağın sayfasını güncelle
+    const sourceData = sourceLibrary.find(s => s.id === activeSourceId);
+    if(sourceData) sourceData.currentPage = num;
+    activePdfPageNum = num;
+    
+    const page = await activePdfDoc.getPage(num);
+    const viewport = page.getViewport({ scale: currentSourceZoom });
     
     canvas.height = viewport.height;
     canvas.width = viewport.width;
@@ -127,49 +232,77 @@ async function renderPage(num) {
     await page.render(renderContext).promise;
     
     pageNumSpan.textContent = num;
-    currentPageNum = num;
+    pageCountSpan.textContent = activePdfDoc.numPages;
 }
 
-// Kaynak PDF Zoom Butonları
+// YENİ: Resim görüntüleyiciyi zoom'a göre ayarlayan fonksiyon
+function renderImageViewer() {
+    // Zoom için 'transform' kullanmak, 'width' değiştirmekten daha performanslıdır
+    // Ancak 'width' değiştirmek, koordinat hesaplamalarını (kırpma) daha kolaylaştırır.
+    // Şimdilik 'width' kullanalım.
+    
+    // Orijinal boyutları al (eğer yüklendiyse)
+    const naturalWidth = imageViewer.naturalWidth;
+    if (naturalWidth > 0) {
+        imageViewer.style.width = (naturalWidth * currentSourceZoom) + 'px';
+    }
+    zoomLevelSourceSpan.textContent = `${Math.round(currentSourceZoom * 100)}%`;
+}
+
+// PDF Sayfa Kontrolleri (Sadece PDF aktifken çalışır)
+prevPageBtn.addEventListener('click', async () => {
+    if (activePdfPageNum <= 1) return;
+    await renderPdfPage(--activePdfPageNum);
+});
+nextPageBtn.addEventListener('click', async () => {
+    if (!activePdfDoc || activePdfPageNum >= activePdfDoc.numPages) return;
+    await renderPdfPage(++activePdfPageNum);
+});
+
+// Kaynak Editörü Zoom Butonları (YENİ: Hem PDF hem Resim için)
 zoomInSourceBtn.addEventListener('click', () => {
     currentSourceZoom += 0.25;
-    zoomLevelSourceSpan.textContent = `${Math.round(currentSourceZoom * 100)}%`;
-    renderPage(currentPageNum);
+    updateActiveSourceView();
 });
 zoomOutSourceBtn.addEventListener('click', () => {
     if (currentSourceZoom <= 0.25) return;
     currentSourceZoom -= 0.25;
+    updateActiveSourceView();
+});
+
+// YENİ: Aktif kaynağın (PDF veya Resim) görünümünü günceller
+function updateActiveSourceView() {
+    const sourceData = sourceLibrary.find(s => s.id === activeSourceId);
+    if (!sourceData) return;
+
     zoomLevelSourceSpan.textContent = `${Math.round(currentSourceZoom * 100)}%`;
-    renderPage(currentPageNum);
-});
+    if (sourceData.type === 'pdf') {
+        renderPdfPage(activePdfPageNum);
+    } else if (sourceData.type === 'image') {
+        renderImageViewer();
+    }
+}
 
-// Sayfa Navigasyon Butonları
-prevPageBtn.addEventListener('click', async () => {
-    if (currentPageNum <= 1) return;
-    await renderPage(--currentPageNum);
-});
-nextPageBtn.addEventListener('click', async () => {
-    if (currentPageNum >= pdfDoc.numPages) return;
-    await renderPage(++currentPageNum);
-});
 
-// --- 4. YENİ SEÇİM AKIŞI (SEKME 1) - ÇİZ, DÜZENLE, ONAYLA ---
+// --- 4. BİRLEŞTİRİLMİŞ SEÇİM AKIŞI (PDF & RESİM) ---
 
-// Adım 1: Kullanıcı fareye basar (Çizim Başlar)
-pdfContainer.addEventListener('mousedown', (e) => {
-    // Eğer zaten bir seçim kutusu onay bekliyorsa, yeni çizim başlatma
-    if (activeSelectionRect) return; 
+// Kapsayıcıya (wrapper) mousedown ekle
+sourceViewerWrapper.addEventListener('mousedown', (e) => {
+    if (activeSelectionRect) return; // Zaten bir seçim onay bekliyor
+    if (!activeSourceId) return; // Kaynak yoksa seçim yapma
     
     isDrawing = true;
     
-    // Koordinatları canvas'a göre al
-    const canvasRect = canvas.getBoundingClientRect();
-    const x = e.clientX - canvasRect.left + sourceScrollContainer.scrollLeft;
-    const y = e.clientY - canvasRect.top + sourceScrollContainer.scrollTop;
+    // YENİ: Koordinatları aktif elemana (canvas veya image) göre al
+    const activeElement = document.querySelector(`#${activeSourceId_to_elementId(activeSourceId)}`);
+    if (!activeElement) return;
+    
+    const rect = activeElement.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
     selectionStartPoint = { x, y };
     
-    // Seçim kutusunu başlat ve göster
     selectionBox.style.left = x + 'px';
     selectionBox.style.top = y + 'px';
     selectionBox.style.width = '0px';
@@ -177,13 +310,16 @@ pdfContainer.addEventListener('mousedown', (e) => {
     selectionBox.style.display = 'block';
 });
 
-// Adım 2: Kullanıcı fareyi hareket ettirir (Çizim)
-pdfContainer.addEventListener('mousemove', (e) => {
+// Kapsayıcıya mousemove ekle
+sourceViewerWrapper.addEventListener('mousemove', (e) => {
     if (!isDrawing) return;
 
-    const canvasRect = canvas.getBoundingClientRect();
-    const currentX = e.clientX - canvasRect.left + sourceScrollContainer.scrollLeft;
-    const currentY = e.clientY - canvasRect.top + sourceScrollContainer.scrollTop;
+    const activeElement = document.querySelector(`#${activeSourceId_to_elementId(activeSourceId)}`);
+    if (!activeElement) return;
+
+    const rect = activeElement.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
 
     const width = currentX - selectionStartPoint.x;
     const height = currentY - selectionStartPoint.y;
@@ -194,25 +330,30 @@ pdfContainer.addEventListener('mousemove', (e) => {
     selectionBox.style.height = Math.abs(height) + 'px';
 });
 
-// Adım 3: Kullanıcı fareyi bırakır (Düzenleme Başlar)
-pdfContainer.addEventListener('mouseup', (e) => {
+// Kapsayıcıya mouseup ekle
+sourceViewerWrapper.addEventListener('mouseup', (e) => {
     if (!isDrawing) return;
     isDrawing = false;
     
     const width = parseFloat(selectionBox.style.width);
     const height = parseFloat(selectionBox.style.height);
 
-    // Çok küçük bir tıklamaysa (seçim değilse) iptal et
     if (width < 10 || height < 10) {
         selectionBox.style.display = 'none';
         return;
     }
 
-    // Seçimi "aktif" hale getir ve onay/iptal kutularını göster
     makeSelectionBoxInteractive();
 });
 
-// Adım 4: Seçim kutusunu taşınabilir/boyutlandırılabilir yap
+// YENİ: Hangi DOM elementinin (canvas/image) aktif olduğunu bulan helper
+function activeSourceId_to_elementId() {
+    const sourceData = sourceLibrary.find(s => s.id === activeSourceId);
+    if (!sourceData) return null;
+    return (sourceData.type === 'pdf') ? 'pdf-canvas' : 'image-viewer';
+}
+
+// Seçim kutusunu taşınabilir/boyutlandırılabilir yap (Değişiklik yok)
 function setupSelectionBoxInteract() {
     interact(selectionBox)
         .draggable({
@@ -220,46 +361,28 @@ function setupSelectionBoxInteract() {
                 move(event) {
                     const x = (parseFloat(event.target.style.left) || 0) + event.dx;
                     const y = (parseFloat(event.target.style.top) || 0) + event.dy;
-
                     event.target.style.left = x + 'px';
                     event.target.style.top = y + 'px';
-                    
-                    // Onay kutusunu da taşı
                     positionConfirmBox(x, y, parseFloat(event.target.style.width));
                 }
-            },
-            inertia: true
+            }
         })
         .resizable({
             edges: { left: true, right: true, bottom: true, top: true },
             listeners: {
                 move(event) {
-                    let { x, y } = event.target.dataset;
-                    x = (parseFloat(x) || 0);
-                    y = (parseFloat(y) || 0);
-
-                    // Boyutları güncelle
                     event.target.style.width = event.rect.width + 'px';
                     event.target.style.height = event.rect.height + 'px';
-
-                    // Yeniden boyutlandırmadan kaynaklanan pozisyon kaymasını düzelt
-                    x += event.deltaRect.left;
-                    y += event.deltaRect.top;
-                    
                     event.target.style.left = (parseFloat(event.target.style.left) + event.deltaRect.left) + 'px';
                     event.target.style.top = (parseFloat(event.target.style.top) + event.deltaRect.top) + 'px';
-
-                    // Onay kutusunu yeniden konumlandır
                     positionConfirmBox(parseFloat(event.target.style.left), parseFloat(event.target.style.top), event.rect.width);
                 }
-            },
-            inertia: true
+            }
         });
 }
 
-// Adım 5: Seçim kutusunu "aktif" hale getir (interact.js'i etkinleştir)
+// Seçim kutusunu "aktif" hale getir (Değişiklik yok)
 function makeSelectionBoxInteractive(rect) {
-    // Eğer dışarıdan (yeniden kırma) bir koordinat geldiyse onu kullan
     if (rect) {
         selectionBox.style.left = rect.x + 'px';
         selectionBox.style.top = rect.y + 'px';
@@ -268,7 +391,6 @@ function makeSelectionBoxInteractive(rect) {
         selectionBox.style.display = 'block';
     }
 
-    // Seçim kutusunun son koordinatlarını global değişkene ata
     activeSelectionRect = {
         x: parseFloat(selectionBox.style.left),
         y: parseFloat(selectionBox.style.top),
@@ -276,17 +398,13 @@ function makeSelectionBoxInteractive(rect) {
         height: parseFloat(selectionBox.style.height)
     };
     
-    // interact.js'nin bu kutuyu yakalayabilmesi için
     selectionBox.style.pointerEvents = 'auto'; 
-    
-    // Onay kutusunu göster ve konumlandır
     positionConfirmBox(activeSelectionRect.x, activeSelectionRect.y, activeSelectionRect.width);
     selectionConfirmBox.classList.remove('hidden');
 }
 
-// Adım 6: Onay/İptal Butonları
+// Onay/İptal Butonları (Değişiklik yok)
 confirmSelectionBtn.addEventListener('click', () => {
-    // Güncel koordinatları al
     activeSelectionRect = {
         x: parseFloat(selectionBox.style.left),
         y: parseFloat(selectionBox.style.top),
@@ -294,9 +412,7 @@ confirmSelectionBtn.addEventListener('click', () => {
         height: parseFloat(selectionBox.style.height)
     };
 
-    // İsim sor
-    let defaultName = `Soru ${clippings.length + 1}`;
-    // Eğer "yeniden kırpma" modundaysak, eski adı getir
+    let defaultName = `Kırpma ${clippings.length + 1}`;
     if (isEditingClipId) {
         defaultName = clippings.find(c => c.id === isEditingClipId).name;
     }
@@ -306,71 +422,87 @@ confirmSelectionBtn.addEventListener('click', () => {
         captureSelection(clipName, activeSelectionRect);
     }
     
-    // İptal'e basılmış gibi temizle
     cancelActiveSelection();
 });
-
-cancelSelectionBtn.addEventListener('click', () => {
-    cancelActiveSelection();
-});
-
-// Helper: Onay kutusunu seçim kutusunun yanına/altına konumlandır
+cancelSelectionBtn.addEventListener('click', () => cancelActiveSelection() );
 function positionConfirmBox(x, y, width) {
-    selectionConfirmBox.style.left = (x + width - 65) + 'px'; // 65px = kutunun genişliği
-    selectionConfirmBox.style.top = (y - 40) + 'px'; // 40px = kutunun yüksekliği
+    selectionConfirmBox.style.left = (x + width - 65) + 'px';
+    selectionConfirmBox.style.top = (y - 40) + 'px';
 }
-
-// Helper: Aktif seçimi iptal et ve temizle
 function cancelActiveSelection() {
     selectionBox.style.display = 'none';
     selectionBox.style.pointerEvents = 'none';
     selectionConfirmBox.classList.add('hidden');
     activeSelectionRect = null;
-    isEditingClipId = null; // Düzenleme modunu daima kapat
+    isEditingClipId = null;
 }
 
-// --- 5. KIRPMA İŞLEMİ VE "YENİDEN KIRPMA" (RE-CROP) ---
+// --- 5. BİRLEŞTİRİLMİŞ KIRPMA İŞLEMİ VE "YENİDEN KIRPMA" (RE-CROP) ---
 
-// Adım 7: Seçimi yakala, veriye dönüştür ve sol panele ekle
+// YENİ: Hem PDF (canvas) hem Resim (img) kırpabilen fonksiyon
 function captureSelection(name, rect) {
-    // Geçici tuval kullanarak görüntüyü canvas'tan kopyala
+    const sourceData = sourceLibrary.find(s => s.id === activeSourceId);
+    if (!sourceData) return;
+
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = rect.width;
     tempCanvas.height = rect.height;
     const tempCtx = tempCanvas.getContext('2d');
     
-    tempCtx.drawImage(canvas, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
-    const imageData = tempCanvas.toDataURL('image/jpeg', 0.9);
+    // YENİ: Kaynak tipine göre kırpma
+    if (sourceData.type === 'pdf') {
+        // PDF (Canvas) üzerinden kırp
+        tempCtx.drawImage(canvas, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
+    } else if (sourceData.type === 'image') {
+        // RESİM (Image) üzerinden kırp
+        // Orijinal zoom'suz koordinatları bulmamız lazım
+        const scale = imageViewer.width / imageViewer.naturalWidth;
+        const origX = rect.x / scale;
+        const origY = rect.y / scale;
+        const origWidth = rect.width / scale;
+        const origHeight = rect.height / scale;
 
+        tempCanvas.width = origWidth; // Tuval boyutunu orijinal kırpma boyutuna ayarla
+        tempCanvas.height = origHeight;
+        
+        tempCtx.drawImage(imageViewer, origX, origY, origWidth, origHeight, 0, 0, origWidth, origHeight);
+    }
+    
+    const imageData = tempCanvas.toDataURL('image/jpeg', 0.9);
+    const originalWidth = tempCanvas.width;
+    const originalHeight = tempCanvas.height;
+    
     // YENİDEN KIRPMA (RE-CROP) KONTROLÜ
-    // Eğer 'isEditingClipId' doluysa, yeni oluşturma, eskisini GÜNCELLE
     if (isEditingClipId) {
         const clipData = clippings.find(c => c.id === isEditingClipId);
         clipData.name = name;
         clipData.imageData = imageData;
-        clipData.sourceRect = rect;
-        clipData.sourcePage = currentPageNum; // Sayfa değişmiş olabilir
+        clipData.sourceId = activeSourceId; // Kaynak değişmiş olabilir
+        clipData.sourceType = sourceData.type;
+        clipData.sourceRect = rect; // Ekrana göre koordinatlar
+        clipData.sourcePage = (sourceData.type === 'pdf') ? activePdfPageNum : null;
+        clipData.originalWidth = originalWidth;
+        clipData.originalHeight = originalHeight;
         
-        // Sol paneldeki listeyi güncelle
         updateClipInLeftPanel(clipData);
-        
     } else { 
-        // 'isEditingClipId' boşsa, YENİ KIRPMA oluştur
         const clipData = {
             id: 'clip-' + Date.now(),
             name: name,
             imageData: imageData,
-            sourcePage: currentPageNum, // YENİDEN KIRPMA için kaynak sayfa
-            sourceRect: rect, // YENİDEN KIRPMA için kaynak koordinatlar
-            originalWidth: rect.width, // Orijinal boyutları da sakla
-            originalHeight: rect.height
+            sourceId: activeSourceId, // YENİ: Hangi kaynaktan geldi
+            sourceType: sourceData.type, // YENİ: Kaynak tipi
+            sourcePage: (sourceData.type === 'pdf') ? activePdfPageNum : null,
+            sourceRect: rect, // Ekrana göre koordinatlar
+            originalWidth: originalWidth,
+            originalHeight: originalHeight
         };
 
         clippings.push(clipData);
         addClipToLeftPanel(clipData);
     }
     
-    isEditingClipId = null; // İşlem bitti, düzenleme modunu sıfırla
+    isEditingClipId = null;
 }
 
 // Sol panele YENİ kırpma ekle
@@ -385,10 +517,10 @@ function addClipToLeftPanel(clipData) {
 
     li.innerHTML = `
         <img src="${clipData.imageData}" alt="Önizleme" class="clip-thumbnail">
-        <span class="clip-name">${clipData.name}</span>
+        <span class.clip-name">${clipData.name}</span>
     `;
     
-    // YENİDEN KIRPMA (RE-CROP) İÇİN ÇİFT TIKLAMA OLAYI
+    // YENİDEN KIRPMA (RE-CROP) İÇİN ÇİFT TIKLAMA
     li.addEventListener('dblclick', () => {
         editClipping(clipData.id);
     });
@@ -405,40 +537,36 @@ function updateClipInLeftPanel(clipData) {
     }
 }
 
-// YENİDEN KIRPMA (RE-CROP) Ana Fonksiyonu
+// YENİDEN KIRPMA (RE-CROP) Ana Fonksiyonu (Güncellendi)
 async function editClipping(clipId) {
-    // Yarım kalan başka bir seçim varsa iptal et
     cancelActiveSelection();
 
     const clipData = clippings.find(c => c.id === clipId);
     if (!clipData) return;
     
-    console.log(`Düzenleniyor: ${clipData.name}`);
-
-    // 1. Düzenleme modunu global olarak ayarla
     isEditingClipId = clipId;
     
-    // 2. Kaynak PDF sekmesine geç
-    tabSourceBtn.click();
+    // 1. Doğru kaynağı editörde aç (Bu fonksiyon PDF/Resim ayrımını kendi yapar)
+    await showSourceInEditor(clipData.sourceId);
     
-    // 3. Doğru sayfayı ve zoom'u ayarla (async/await ile render'ı bekle)
-    // Zoom'u sıfırlamak, koordinatların tutarlı kalmasını sağlar
-    currentSourceZoom = 1.5; 
-    zoomLevelSourceSpan.textContent = `150%`;
-    await renderPage(clipData.sourcePage);
+    // 2. Kaynak PDF ise, doğru sayfaya git
+    if (clipData.sourceType === 'pdf' && activePdfPageNum !== clipData.sourcePage) {
+        await renderPdfPage(clipData.sourcePage);
+    }
     
-    // 4. Render bittikten SONRA, eski seçim kutusunu ekrana getir
-    // ve "aktif" hale getir
+    // 3. Render bittikten SONRA, eski seçim kutusunu ekrana getir
+    // Not: Zoom'un 1.0 olduğunu varsayıyoruz (showSourceInEditor sıfırlıyor)
+    // TODO: Zoom'u da saklamak gerekir, şimdilik 1.0 kabul edelim.
     makeSelectionBoxInteractive(clipData.sourceRect);
     
-    // 5. Kullanıcının görebilmesi için o bölgeye scroll yap
-    sourceScrollContainer.scrollTop = clipData.sourceRect.y - 50; // Biraz üstten
+    // 4. O bölgeye scroll yap
+    sourceScrollContainer.scrollTop = clipData.sourceRect.y - 50;
+    sourceScrollContainer.scrollLeft = clipData.sourceRect.x - 50;
 }
 
+// --- 6. MİZANPAJ (SEKME 2) - SÜRÜKLE, BIRAK, ZOOM (Değişiklik yok) ---
 
-// --- 6. MİZANPAJ (SEKME 2) - SÜRÜKLE, BIRAK, ZOOM ---
-
-// Sol paneldeki Kırpma Listesini SÜRÜKLENEBİLİR yap (Değişiklik yok)
+// Sol paneldeki Kırpma Listesini SÜRÜKLENEBİLİR yap
 interact('.clip-item')
     .draggable({
         inertia: true,
@@ -467,16 +595,10 @@ interact('#page-stage')
         ondrop: function (event) {
             const draggableElement = event.relatedTarget;
             const clipId = draggableElement.dataset.clipId;
-            
             const stageRect = pageStage.getBoundingClientRect();
-            
-            // Bırakılan yerin sahneye göre pozisyonunu al (sayfa kaydırması ve ZOOM'u hesaba kat)
             const dropX = (event.clientX - stageRect.left + layoutScrollContainer.scrollLeft) / currentLayoutZoom;
             const dropY = (event.clientY - stageRect.top + layoutScrollContainer.scrollTop) / currentLayoutZoom;
-
             createStageItem(clipId, dropX, dropY);
-            
-            // Bıraktıktan sonra otomatik olarak Mizanpaj sekmesine geç
             tabLayoutBtn.click();
         }
     });
@@ -485,13 +607,13 @@ interact('#page-stage')
 function createStageItem(clipId, x, y) {
     const clipData = clippings.find(c => c.id === clipId);
     if (!clipData) return;
-    if (document.getElementById(clipData.id + '-stage')) return; // Zaten sahnede
+    if (document.getElementById(clipData.id + '-stage')) return;
 
     const stageItem = document.createElement('div');
     stageItem.className = 'stage-item';
     stageItem.id = clipData.id + '-stage';
     
-    // Başlangıç boyutunu ayarla (orantılı)
+    // Orantılı başlangıç boyutu
     const initialWidth = clipData.originalWidth > 200 ? 200 : clipData.originalWidth;
     const initialHeight = clipData.originalHeight * (initialWidth / clipData.originalWidth);
     stageItem.style.width = initialWidth + 'px';
@@ -512,11 +634,7 @@ function createStageItem(clipId, x, y) {
 interact('.stage-item')
     .draggable({
         inertia: true,
-        modifiers: [
-            interact.modifiers.restrictRect({
-                restriction: 'parent'
-            })
-        ],
+        modifiers: [interact.modifiers.restrictRect({ restriction: 'parent' })],
         listeners: {
             move(event) {
                 const target = event.target;
@@ -533,19 +651,13 @@ interact('.stage-item')
         listeners: {
             move(event) {
                 let { x, y } = event.target.dataset;
-                x = (parseFloat(x) || 0);
-                y = (parseFloat(y) || 0);
-
+                x = (parseFloat(x) || 0); y = (parseFloat(y) || 0);
                 event.target.style.width = event.rect.width + 'px';
                 event.target.style.height = event.rect.height + 'px';
-                
-                // Zoom'u hesaba katarak pozisyonu düzelt
                 x += event.deltaRect.left / currentLayoutZoom;
                 y += event.deltaRect.top / currentLayoutZoom;
-
                 event.target.style.transform = `translate(${x}px, ${y}px)`;
-                event.target.dataset.x = x;
-                event.target.dataset.y = y;
+                event.target.dataset.x = x; event.target.dataset.y = y;
             }
         }
     });
@@ -567,8 +679,10 @@ function updateLayoutZoom() {
 }
 
 // --- 7. FİNAL PDF OLUŞTURMA (TÜM MODLAR) ---
+// Bu bölümde hiçbir değişiklik gerekmiyor.
+// PDF oluşturucu, 'clippings' dizisindeki 'imageData'ya bakar.
+// Bu 'imageData'nın PDF'ten mi PNG'den mi geldiği onun için önemsizdir.
 
-// (Bu bölümde bir değişiklik yok, önceki kodla aynı)
 generatePdfBtn.addEventListener('click', () => {
     const title = pdfTitleInput.value || "Mizanpajım";
     const layoutMode = document.querySelector('input[name="layout-type"]:checked').value;
@@ -599,23 +713,15 @@ function generateFreeformPdf(title, orientation) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF(orientation, 'pt', 'a4');
     const stageItems = pageStage.querySelectorAll('.stage-item');
-
-    doc.setFontSize(16);
-    doc.text(title, 40, 40);
-
+    doc.setFontSize(16); doc.text(title, 40, 40);
     stageItems.forEach(item => {
         const baseId = item.id.replace('-stage', '');
-        const clipData = clippings.find(c => c.id === baseId);
-        if (!clipData) return;
-
-        // Son konumu (style + transform) al
+        const clipData = clippings.find(c => c.id === baseId); if (!clipData) return;
         const x = parseFloat(item.style.left) + (parseFloat(item.dataset.x) || 0);
         const y = parseFloat(item.style.top) + (parseFloat(item.dataset.y) || 0);
         const width = parseFloat(item.style.width);
         const height = parseFloat(item.style.height);
-
-        doc.setFontSize(8);
-        doc.text(clipData.name, x, y - 5);
+        doc.setFontSize(8); doc.text(clipData.name, x, y - 5);
         doc.addImage(clipData.imageData, 'JPEG', x, y, width, height);
     });
     doc.save(title.replace(/ /g, '_') + '.pdf');
@@ -627,31 +733,19 @@ function generateAuto1ColPdf(title, orientation) {
     const doc = new jsPDF(orientation, 'pt', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 40;
-    const usableWidth = pageWidth - margin * 2;
+    const margin = 40; const usableWidth = pageWidth - margin * 2;
     let currentY = margin;
-
-    doc.setFontSize(16);
-    doc.text(title, margin, currentY);
-    currentY += 30;
-
+    doc.setFontSize(16); doc.text(title, margin, currentY); currentY += 30;
     clippings.forEach((clip, index) => {
         const ratio = usableWidth / clip.originalWidth;
         const scaledHeight = clip.originalHeight * ratio;
         const itemTotalHeight = scaledHeight + 20 + 15;
-
         if (currentY + itemTotalHeight > pageHeight - margin) {
-            doc.addPage();
-            currentY = margin;
+            doc.addPage(); currentY = margin;
         }
-
-        doc.setFontSize(10);
-        doc.text(clip.name, margin, currentY);
-        currentY += 20;
-
+        doc.setFontSize(10); doc.text(clip.name, margin, currentY); currentY += 20;
         doc.addImage(clip.imageData, 'JPEG', margin, currentY, usableWidth, scaledHeight);
         currentY += scaledHeight;
-
         if (index < clippings.length - 1) {
             doc.setDrawColor(180, 180, 180);
             doc.line(margin, currentY + 10, pageWidth - margin, currentY + 10);
@@ -667,42 +761,27 @@ function generateAuto2ColPdf(title, orientation) {
     const doc = new jsPDF(orientation, 'pt', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 40;
-    const gutter = 20;
+    const margin = 40; const gutter = 20;
     const usableWidth = (pageWidth - margin * 2 - gutter) / 2;
-    const col1_X = margin;
-    const col2_X = margin + usableWidth + gutter;
+    const col1_X = margin; const col2_X = margin + usableWidth + gutter;
     let colHeights = [margin, margin];
-
-    doc.setFontSize(16);
-    doc.text(title, margin, colHeights[0]);
-    colHeights[0] += 30;
-    colHeights[1] += 30;
-
+    doc.setFontSize(16); doc.text(title, margin, colHeights[0]);
+    colHeights[0] += 30; colHeights[1] += 30;
     clippings.forEach((clip, index) => {
         const ratio = usableWidth / clip.originalWidth;
         const scaledHeight = clip.originalHeight * ratio;
         const itemTotalHeight = scaledHeight + 20 + 15;
-
         let targetCol = (colHeights[0] <= colHeights[1]) ? 0 : 1;
-        
         if (colHeights[targetCol] + itemTotalHeight > pageHeight - margin) {
             if (targetCol === 0 && colHeights[1] + itemTotalHeight <= pageHeight - margin) {
-                targetCol = 1; // Solda yer yoksa sağa geç
+                targetCol = 1;
             } else {
-                doc.addPage();
-                colHeights = [margin, margin]; // Yeni sayfa, Y'leri sıfırla
-                targetCol = 0; // Soldan başla
+                doc.addPage(); colHeights = [margin, margin]; targetCol = 0;
             }
         }
-        
         let targetX = (targetCol === 0) ? col1_X : col2_X;
         let currentY = colHeights[targetCol];
-
-        doc.setFontSize(10);
-        doc.text(clip.name, targetX, currentY);
-        currentY += 20;
-
+        doc.setFontSize(10); doc.text(clip.name, targetX, currentY); currentY += 20;
         doc.addImage(clip.imageData, 'JPEG', targetX, currentY, usableWidth, scaledHeight);
         colHeights[targetCol] = currentY + scaledHeight + 15;
     });
