@@ -313,13 +313,72 @@ pageLayoutSelect.addEventListener('change', (e) => {
     }
 });
 
-// PDF Oluşturma Butonu (Henüz işlev atanmadı, bu bir sonraki adımdır)
+// --- 4. AYARLAR VE FİNAL PDF OLUŞTURMA ---
+
+// Sağ panel - Sayfa Yönü değiştirme
+pageLayoutSelect.addEventListener('change', (e) => {
+    const pageStage = document.getElementById('page-stage');
+    if (e.target.value === 'a4-landscape') {
+        pageStage.classList.remove('a4-portrait');
+        pageStage.classList.add('a4-landscape');
+    } else {
+        pageStage.classList.remove('a4-landscape');
+        pageStage.classList.add('a4-portrait');
+    }
+});
+
+// "YENİ PDF OLUŞTUR" Butonunun Gerçek İşlevi
 generatePdfBtn.addEventListener('click', () => {
-    alert("PDF oluşturma işlevi bir sonraki adımda eklenecek.");
-    
-    // BİR SONRAKİ ADIMDA:
-    // 1. Sağ paneldeki 'Başlık' ve 'Sayfa Yönü' ayarlarını alacağız.
-    // 2. 'page-stage' içindeki TÜM '.stage-item' öğelerini gezeceğiz.
-    // 3. Her öğenin son 'transform' (konum) ve 'style' (boyut) değerlerini okuyacağız.
-    // 4. Bu bilgilere göre jsPDF ile PDF'i oluşturacağız.
+    console.log("PDF oluşturma işlemi başlatıldı...");
+
+    // 1. Gerekli ayarları sağ panelden al
+    const title = document.getElementById('pdf-title').value || "Mizanpajım";
+    const layout = pageLayoutSelect.value;
+    const orientation = (layout === 'a4-landscape') ? 'l' : 'p'; // 'l' (landscape/yatay) or 'p' (portrait/dikey)
+
+    // 2. jsPDF kütüphanesini başlat
+    // 'pt' (point) birimini kullanıyoruz, çünkü CSS'deki pixel (px) değerlerimiz
+    // (örn: 595px) A4'ün 'pt' değerlerine (595.28 pt) doğrudan karşılık geliyor.
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF(orientation, 'pt', 'a4');
+
+    // 3. Mizanpaj Alanı'ndaki (Sahne) tüm kırpmaları bul
+    const stageItems = pageStage.querySelectorAll('.stage-item');
+
+    if (stageItems.length === 0) {
+        alert("PDF oluşturmak için lütfen önce Mizanpaj Alanı'na bir kırpma ekleyin.");
+        return;
+    }
+
+    // 4. (İsteğe bağlı) Başlığı PDF'e ekle
+    if (title) {
+        doc.setFontSize(16);
+        doc.text(title, 40, 40); // 40pt (sol) ve 40pt (üst) marj ile başlığı yaz
+    }
+
+    // 5. Her bir kırpmayı PDF'e ekle
+    stageItems.forEach(item => {
+        // Orijinal kırpma verisini bulmak için ID'yi kullan
+        const baseId = item.id.replace('-stage', '');
+        const clipData = clippings.find(c => c.id === baseId);
+        if (!clipData) return; // Veri bulunamazsa atla
+
+        // Kırpmanın son konumunu al
+        // Konum = Bırakıldığı yer (style.left/top) + Sürüklendiği miktar (dataset.x/y)
+        const x = parseFloat(item.style.left) + (parseFloat(item.dataset.x) || 0);
+        const y = parseFloat(item.style.top) + (parseFloat(item.dataset.y) || 0);
+
+        // Kırpmanın son boyutunu al
+        const width = parseFloat(item.style.width);
+        const height = parseFloat(item.style.height);
+
+        console.log(`Ekleniyor: ${clipData.name} -> Konum: (${x}, ${y}), Boyut: ${width}x${height}`);
+
+        // Resmi PDF'e ekle
+        // doc.addImage(resimVerisi, format, x, y, genişlik, yükseklik)
+        doc.addImage(clipData.imageData, 'JPEG', x, y, width, height);
+    });
+
+    // 6. PDF dosyasını oluştur ve kullanıcıya indir
+    doc.save(title.replace(/ /g, '_') + '.pdf'); // dosya adındaki boşlukları _ ile değiştir
 });
