@@ -1,14 +1,15 @@
-/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ v3): YÜKLEME HATASI DÜZELTMESİ === */
+/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ v3): 'pdfjsLib' YÜKLEME HATASI === */
 'use strict';
 
-// PDF HATA DÜZELTMESİ: PDF Worker'ı burada tanımlıyoruz.
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-// YENİ v2.2.2: Tarayıcının HTML'i tamamen yüklemesini bekle!
-// Bu, "dosya seçme çalışmadı" hatasını düzeltecektir.
+// YENİ v2.2.3: Tarayıcının HTML'i ve TÜM kütüphaneleri yüklemesini bekle!
+// Bu, "dosya seçme çalışmadı" ve "pdfjsLib bulunamadı" hatalarını düzeltecektir.
 document.addEventListener('DOMContentLoaded', () => {
 
+    // PDF HATA DÜZELTMESİ: PDF Worker'ı, kütüphane yüklendikten SONRA burada tanımlıyoruz.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
     // --- 1. DOM ELEMENTLERİ ---
+    // (Artık tüm elementlerin var olduğundan eminiz)
     const fileInput = document.getElementById('file-input');
     const uploadScreen = document.getElementById('upload-screen');
     const initialUploadButton = document.getElementById('initial-upload-button');
@@ -315,6 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-}); // <-- YENİ v2.2.2: DOMContentLoaded burada biter
+}); // <-- DOMContentLoaded burada biter
 
 /* === v2.2 - ADIM 1 (DÜZELTİLMİŞ v3) BİTTİ === */
