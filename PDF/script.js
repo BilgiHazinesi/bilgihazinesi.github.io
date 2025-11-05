@@ -2,10 +2,9 @@
 
 window.onload = () => {
 
-    // PDF Worker tanımlaması
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-    // --- 1. DOM ELEMENTLERİ ---
+    // --- DOM ELEMENTLERİ ---
     const fileInput = document.getElementById('file-input');
     const uploadScreen = document.getElementById('upload-screen');
     const initialUploadButton = document.getElementById('initial-upload-button');
@@ -13,7 +12,7 @@ window.onload = () => {
 
     // Sol Panel
     const sourceLibraryList = document.getElementById('source-library-list');
-    const sourceListPlaceholder = document.getElementById('source-list-placeholder');
+    const selectionList = document.getElementById('selection-list');
     const addMoreFilesBtn = document.getElementById('add-more-files-btn');
 
     // Orta Panel - Sekmeler
@@ -35,18 +34,31 @@ window.onload = () => {
     const zoomOutSourceBtn = document.getElementById('zoom-out-source');
     const zoomLevelSourceSpan = document.getElementById('zoom-level-source');
 
-    // --- 2. GLOBAL DEĞİŞKENLER ---
+    // Sağ Panel - Ayarlar
+    const titleInput = document.getElementById('pdf-title');
+    const orientationSelect = document.getElementById('orientation');
+    const leftHeaderInput = document.getElementById('left-header');
+    const rightHeaderInput = document.getElementById('right-header');
+    const logoCheckbox = document.getElementById('logo-checkbox');
+    const layoutTypeSelect = document.getElementById('layout-type');
+    const createPdfBtn = document.getElementById('create-pdf-btn');
+
+    // --- GLOBAL DEĞİŞKENLER ---
     let sourceLibrary = [];
+    let selectionList_data = [];
     let activeSourceId = null;
     let activePdfDoc = null;
     let activePdfPageNum = 1;
     let currentSourceZoom = 1.0;
     let isEditorInitialized = false;
-    
-    // DÜZELTME 1: Canvas context tanımlaması
+    let currentCropBox = null;
+    let isDrawingCrop = false;
+    let cropStartX = 0;
+    let cropStartY = 0;
+
     const ctx = canvas.getContext('2d');
 
-    // --- 3. UYGULAMA BAŞLANGICI ---
+    // --- UYGULAMA BAŞLANGICI ---
 
     initialUploadButton.addEventListener('click', () => fileInput.click());
 
@@ -66,7 +78,7 @@ window.onload = () => {
     });
 
     /**
-     * DÜZELTME 2: setupEditorEventListeners fonksiyonu
+     * Editör arayüzü için olay dinleyicileri
      */
     function setupEditorEventListeners() {
         tabSourceBtn.addEventListener('click', () => switchTab('source'));
@@ -79,13 +91,17 @@ window.onload = () => {
 
         prevPageBtn.addEventListener('click', () => changePdfPage(-1));
         nextPageBtn.addEventListener('click', () => changePdfPage(1));
+
+        createPdfBtn.addEventListener('click', createPdf);
+
+        // Kırpma alanı fare olayları
+        pdfViewerContainer.addEventListener('mousedown', startCrop);
+        document.addEventListener('mousemove', updateCrop);
+        document.addEventListener('mouseup', endCrop);
     }
 
-    // --- 4. ÇOKLU DOSYA YÜKLEME MANTIĞI ---
+    // --- DOSYA YÜKLEME ---
 
-    /**
-     * Dosyaları işler ve kütüphaneye ekler
-     */
     async function loadFiles(files) {
         const placeholder = document.getElementById('source-list-placeholder');
         if (placeholder) placeholder.remove();
@@ -135,9 +151,6 @@ window.onload = () => {
         }
     }
 
-    /**
-     * PDF verisini yükler
-     */
     function loadPdfData(file) {
         return new Promise((resolve, reject) => {
             const fileReader = new FileReader();
@@ -155,9 +168,6 @@ window.onload = () => {
         });
     }
 
-    /**
-     * Resim verisini yükler
-     */
     function loadImageData(file) {
         return new Promise((resolve, reject) => {
             const fileReader = new FileReader();
@@ -169,9 +179,6 @@ window.onload = () => {
         });
     }
 
-    /**
-     * Sol panele dosyayı ekler
-     */
     function addSourceToLibraryList(sourceData) {
         const li = document.createElement('li');
         li.className = 'source-item';
@@ -187,11 +194,8 @@ window.onload = () => {
         sourceLibraryList.appendChild(li);
     }
 
-    // --- 5. KAYNAK EDİTÖRÜ MANTIĞI (GÖRÜNTÜLEME) ---
+    // --- SEKME YÖNETİMİ ---
 
-    /**
-     * Sekme değiştirme fonksiyonu
-     */
     function switchTab(tabName) {
         if (tabName === 'source') {
             tabSourceBtn.classList.add('active');
@@ -206,9 +210,8 @@ window.onload = () => {
         }
     }
 
-    /**
-     * DÜZELTME 3: showSourceInEditor fonksiyonunda sourceId parametresi eklendi
-     */
+    // --- KAYNAK GÖRÜNTÜLEME ---
+
     async function showSourceInEditor(sourceId) {
         if (activeSourceId === sourceId) return;
 
@@ -249,9 +252,6 @@ window.onload = () => {
         }
     }
 
-    /**
-     * DÜZELTME 4: renderPdfPage fonksiyonunda sourceId parametresi düzeltildi
-     */
     async function renderPdfPage(num) {
         if (!activePdfDoc) return;
 
@@ -278,9 +278,6 @@ window.onload = () => {
         }
     }
 
-    /**
-     * Resim görüntüleyiciyi zoom'a göre ayarlar
-     */
     function renderImageViewer() {
         if (!imageViewer.src || !imageViewer.naturalWidth) return;
 
@@ -289,9 +286,6 @@ window.onload = () => {
         zoomLevelSourceSpan.textContent = `${Math.round(currentSourceZoom * 100)}%`;
     }
 
-    /**
-     * Zoom fonksiyonu
-     */
     function zoomSource(amount) {
         currentSourceZoom += amount;
         if (currentSourceZoom < 0.25) currentSourceZoom = 0.25;
@@ -303,9 +297,6 @@ window.onload = () => {
         }
     }
 
-    /**
-     * PDF sayfa değiştirme fonksiyonu
-     */
     async function changePdfPage(direction) {
         if (!activePdfDoc) return;
 
@@ -314,6 +305,285 @@ window.onload = () => {
         if (newPageNum >= 1 && newPageNum <= activePdfDoc.numPages) {
             await renderPdfPage(newPageNum);
         }
+    }
+
+    // --- KIRPMA MANTIĞI ---
+
+    function startCrop(e) {
+        if (e.button !== 0) return; // Sadece sol fare butonu
+        isDrawingCrop = true;
+        cropStartX = e.offsetX;
+        cropStartY = e.offsetY;
+    }
+
+    function updateCrop(e) {
+        if (!isDrawingCrop) return;
+
+        if (!currentCropBox) {
+            currentCropBox = document.createElement('div');
+            currentCropBox.id = 'crop-selection-box';
+            currentCropBox.classList.add('visible');
+            pdfViewerContainer.appendChild(currentCropBox);
+        }
+
+        const currentX = e.offsetX || cropStartX;
+        const currentY = e.offsetY || cropStartY;
+        const width = Math.abs(currentX - cropStartX);
+        const height = Math.abs(currentY - cropStartY);
+        const left = Math.min(cropStartX, currentX);
+        const top = Math.min(cropStartY, currentY);
+
+        currentCropBox.style.left = left + 'px';
+        currentCropBox.style.top = top + 'px';
+        currentCropBox.style.width = width + 'px';
+        currentCropBox.style.height = height + 'px';
+    }
+
+    function endCrop(e) {
+        if (!isDrawingCrop) return;
+        isDrawingCrop = false;
+
+        if (currentCropBox && parseInt(currentCropBox.style.width) > 20 && parseInt(currentCropBox.style.height) > 20) {
+            // Kırpma kutusu yeterince büyük, onay butonları ekle
+            showCropConfirmation();
+        } else if (currentCropBox) {
+            currentCropBox.remove();
+            currentCropBox = null;
+        }
+    }
+
+    function showCropConfirmation() {
+        const name = prompt('Kırpma adını girin (örn: "Soru 1"):', '');
+        if (!name) {
+            currentCropBox.remove();
+            currentCropBox = null;
+            return;
+        }
+
+        const cropData = {
+            id: 'crop-' + Date.now(),
+            name: name,
+            sourceId: activeSourceId,
+            pageNum: activePdfPageNum,
+            x: parseInt(currentCropBox.style.left),
+            y: parseInt(currentCropBox.style.top),
+            width: parseInt(currentCropBox.style.width),
+            height: parseInt(currentCropBox.style.height),
+            zoom: currentSourceZoom,
+        };
+
+        selectionList_data.push(cropData);
+        addCropToSelectionList(cropData);
+        currentCropBox.remove();
+        currentCropBox = null;
+    }
+
+    function addCropToSelectionList(cropData) {
+        const li = document.createElement('li');
+        li.className = 'selection-item';
+        li.id = cropData.id;
+
+        const label = document.createElement('span');
+        label.className = 'item-label';
+        label.textContent = cropData.name;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'item-delete-btn';
+        deleteBtn.textContent = 'Sil';
+        deleteBtn.addEventListener('click', () => {
+            li.remove();
+            selectionList_data = selectionList_data.filter(c => c.id !== cropData.id);
+        });
+
+        li.appendChild(label);
+        li.appendChild(deleteBtn);
+        selectionList.appendChild(li);
+    }
+
+    // --- PDF OLUŞTURMA ---
+
+    async function createPdf() {
+        if (selectionList_data.length === 0) {
+            alert('Lütfen önce kırpmalar yapın!');
+            return;
+        }
+
+        const title = titleInput.value || 'Raporunuz';
+        const orientation = orientationSelect.value;
+        const leftHeader = leftHeaderInput.value;
+        const rightHeader = rightHeaderInput.value;
+        const includelogo = logoCheckbox.checked;
+        const layoutType = layoutTypeSelect.value;
+
+        const doc = new jsPDF({
+            orientation: orientation === 'landscape' ? 'l' : 'p',
+            unit: 'mm',
+            format: 'a4',
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        let yPosition = 15;
+
+        // Header ekle
+        addHeaderToPage(doc, pageWidth, title, leftHeader, rightHeader, includelogo);
+        yPosition = 45;
+
+        if (layoutType === 'free') {
+            // Serbest düzen: kırpmalar manuel olarak yerleştirildi
+            // (Bu versionda basit layout yapıyoruz)
+            yPosition = await addCropsToPage(doc, pageWidth, pageHeight, yPosition);
+        } else if (layoutType === 'column2') {
+            // 2 sütunlu otomatik layout
+            yPosition = await addCropsToPageAuto(doc, pageWidth, pageHeight, yPosition, 2);
+        } else if (layoutType === 'vertical') {
+            // Alt alta layout
+            yPosition = await addCropsToPageAuto(doc, pageWidth, pageHeight, yPosition, 1);
+        }
+
+        doc.save(title + '.pdf');
+    }
+
+    function addHeaderToPage(doc, pageWidth, title, leftHeader, rightHeader, includeLogo) {
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        // Başlık
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text(title, pageWidth / 2, 10, { align: 'center' });
+
+        // Logo (eğer seçildiyse)
+        if (includeLogo) {
+            const logoUrl = 'https://i.imgur.com/hwSvPQK.jpeg';
+            try {
+                doc.addImage(logoUrl, 'JPEG', pageWidth / 2 - 5, 12, 10, 10);
+            } catch (e) {
+                console.warn('Logo yüklenemedi:', e);
+            }
+        }
+
+        // Üst bilgiler
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text(leftHeader, 10, 28);
+        doc.text(rightHeader, pageWidth - 10, 28, { align: 'right' });
+
+        // Ayırıcı çizgi
+        doc.setDrawColor(0, 0, 0);
+        doc.line(10, 32, pageWidth - 10, 32);
+    }
+
+    async function addCropsToPage(doc, pageWidth, pageHeight, startY) {
+        let yPos = startY;
+        const xMargin = 10;
+        const maxWidth = pageWidth - 2 * xMargin;
+
+        for (const crop of selectionList_data) {
+            const sourceData = sourceLibrary.find(s => s.id === crop.sourceId);
+            if (!sourceData) continue;
+
+            try {
+                const canvas_crop = await generateCropCanvas(sourceData, crop);
+                if (canvas_crop) {
+                    const imgData = canvas_crop.toDataURL('image/png');
+                    const imgHeight = (maxWidth * canvas_crop.height) / canvas_crop.width;
+
+                    if (yPos + imgHeight > pageHeight - 10) {
+                        doc.addPage();
+                        yPos = 10;
+                    }
+
+                    doc.addImage(imgData, 'PNG', xMargin, yPos, maxWidth, imgHeight);
+                    yPos += imgHeight + 5;
+
+                    // Kırpma adı
+                    doc.setFont('Helvetica', 'bold');
+                    doc.setFontSize(10);
+                    doc.text(crop.name, xMargin, yPos);
+                    yPos += 8;
+                }
+            } catch (error) {
+                console.error('Kırpma işlenemedi:', error);
+            }
+        }
+
+        return yPos;
+    }
+
+    async function addCropsToPageAuto(doc, pageWidth, pageHeight, startY, columns) {
+        let yPos = startY;
+        const xMargin = 10;
+        const itemWidth = (pageWidth - 2 * xMargin - 5) / columns;
+        let columnHeights = Array(columns).fill(yPos);
+        let currentColumn = 0;
+
+        for (const crop of selectionList_data) {
+            const sourceData = sourceLibrary.find(s => s.id === crop.sourceId);
+            if (!sourceData) continue;
+
+            try {
+                const canvas_crop = await generateCropCanvas(sourceData, crop);
+                if (canvas_crop) {
+                    const imgHeight = (itemWidth * canvas_crop.height) / canvas_crop.width;
+                    const xPos = xMargin + currentColumn * (itemWidth + 5);
+                    const currentY = columnHeights[currentColumn];
+
+                    if (currentY + imgHeight > pageHeight - 10) {
+                        doc.addPage();
+                        columnHeights = Array(columns).fill(10);
+                        currentColumn = 0;
+                    }
+
+                    const imgData = canvas_crop.toDataURL('image/png');
+                    doc.addImage(imgData, 'PNG', xPos, columnHeights[currentColumn], itemWidth, imgHeight);
+
+                    columnHeights[currentColumn] += imgHeight + 2;
+
+                    currentColumn = (currentColumn + 1) % columns;
+                }
+            } catch (error) {
+                console.error('Kırpma işlenemedi:', error);
+            }
+        }
+
+        return Math.max(...columnHeights);
+    }
+
+    async function generateCropCanvas(sourceData, crop) {
+        const cropCanvas = document.createElement('canvas');
+        const cropCtx = cropCanvas.getContext('2d');
+
+        if (sourceData.type === 'pdf') {
+            const page = await sourceData.data.getPage(crop.pageNum);
+            const viewport = page.getViewport({ scale: crop.zoom });
+
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.height = viewport.height;
+            tempCanvas.width = viewport.width;
+
+            await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
+
+            cropCanvas.width = crop.width;
+            cropCanvas.height = crop.height;
+            cropCtx.drawImage(tempCanvas, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+
+            return cropCanvas;
+        } else if (sourceData.type === 'image') {
+            const img = new Image();
+            await new Promise((resolve) => {
+                img.onload = resolve;
+                img.src = sourceData.data;
+            });
+
+            cropCanvas.width = crop.width;
+            cropCanvas.height = crop.height;
+            cropCtx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+
+            return cropCanvas;
+        }
+
+        return null;
     }
 
 };
