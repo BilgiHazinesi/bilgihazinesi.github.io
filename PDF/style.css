@@ -33,9 +33,9 @@ aside {
     padding: 15px;
     background-color: #fff;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    overflow: hidden; /* İç kaydırmayı UL'ler yapsın */
+    overflow: hidden;
     flex-shrink: 0;
-    display: flex; /* İçeriği dikey diz */
+    display: flex;
     flex-direction: column;
 }
 
@@ -47,7 +47,7 @@ aside {
     margin-top: 0;
     margin-bottom: 5px;
 }
-#left-panel p { /* Placeholder text */
+#left-panel p {
     font-size: 13px;
     color: #666;
     margin: 5px 0;
@@ -59,65 +59,44 @@ aside {
     margin: 15px 0;
 }
 
-/* Listelerin (Kaynak + Kırpma) stilleri */
 #source-library-list,
 #selection-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    overflow-y: auto; /* Kendi içinde kaydır */
+    overflow-y: auto;
     border: 1px solid #eee;
     border-radius: 4px;
-    flex-grow: 1; /* Kaynak ve kırpma listeleri için eşit alan */
 }
-
-/* Kaynak Kütüphanesi (Üst Liste) */
+#source-library-list {
+    flex-grow: 1; /* %50 alan */
+}
 .source-item {
     padding: 10px;
     font-size: 14px;
     border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
-    word-break: break-all; /* Uzun dosya adları için */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    word-break: break-all;
 }
 .source-item:hover {
     background-color: #f9f9f9;
 }
 .source-item.active {
-    background-color: #e0eafc; /* Seçili kaynak */
+    background-color: #e0eafc;
     font-weight: bold;
 }
-.source-item .source-name {
-    flex-grow: 1;
-    margin-right: 5px;
-}
-.source-item .delete-source-btn {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    padding: 2px 5px;
-    font-size: 12px;
-    cursor: pointer;
-    line-height: 1;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-.source-item .delete-source-btn:hover {
-    opacity: 1;
-}
 
-/* Kırpma Listesi (Alt Liste) */
+#selection-list {
+    flex-grow: 1; /* %50 alan */
+}
 .clip-item {
+    position: relative; /* Sil butonu için */
     display: flex;
     align-items: center;
     padding: 8px;
     border-bottom: 1px solid #f0f0f0;
     background-color: #fff;
     cursor: grab;
-    position: relative; /* Silme butonu için */
 }
 .clip-item:active {
     cursor: grabbing;
@@ -127,40 +106,15 @@ aside {
     height: auto;
     margin-right: 10px;
     border: 1px solid #ccc;
-    flex-shrink: 0;
 }
 .clip-item span.clip-name {
     font-size: 14px;
     font-weight: bold;
     word-break: break-all;
-    flex-grow: 1;
 }
-/* Çift tıklama için not */
-.clip-item::after {
-    content: "(düzenle: çift tıkla)";
-    font-size: 10px;
-    color: #999;
-    margin-left: auto;
-    font-style: italic;
-    flex-shrink: 0;
-}
-/* Kırpma öğesi silme butonu */
-.clip-item .delete-clip-btn {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    padding: 2px 5px;
-    font-size: 12px;
-    cursor: pointer;
-    line-height: 1;
-    margin-left: 10px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-.clip-item .delete-clip-btn:hover {
-    opacity: 1;
-}
+/* Kırpma Listesi: Silme Butonu (Gelecek özellik için) */
+/* .clip-item-delete-btn { ... } */
+
 
 /* --- 2. ORTA PANEL (Sekmeli Çalışma Alanı) --- */
 #main-panel {
@@ -201,20 +155,18 @@ aside {
     position: relative;
     overflow: hidden;
 }
-
-/* Tek bir sekme sayfası (Kaynak veya Mizanpaj) */
 .tab-page {
-    display: none; /* Varsayılan olarak gizli */
+    display: none;
     height: 100%;
     width: 100%;
     overflow: hidden;
     flex-direction: column;
 }
 .tab-page.active {
-    display: flex; /* Sadece aktif olan gösterilir */
+    display: flex;
 }
 
-/* Zoom Kontrolleri (Her iki sekmede de var) */
+/* Zoom Kontrolleri */
 .view-controls {
     flex-shrink: 0;
     padding: 8px;
@@ -234,7 +186,7 @@ aside {
     font-weight: bold;
 }
 
-/* Kaydırma Kapsayıcıları */
+/* Kaydırma Kapsayıcıları (Layout Düzeltmesi) */
 #source-scroll-container,
 #layout-scroll-container {
     flex-grow: 1;
@@ -245,28 +197,17 @@ aside {
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    position: relative; /* Seçim kutularının pozisyonu için */
 }
 
-/* Sekme 1: Kaynak Editörü */
-#source-viewer-wrapper {
-    position: relative; /* SEÇİM ARAÇLARI İÇİN HAYATİ */
+/* Sekme 1: Kaynak Editörü (PDF/Resim) */
+.source-element {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    background-color: white; /* Hem PDF hem resim için arka plan */
-    display: inline-block; /* İçeriğine göre boyutlansın */
-    /* Resim yükleme sırasında wrapper'ın boyutları için max-width */
-    max-width: 100%; 
-    max-height: 100%;
-}
-#pdf-viewer-container {
-    /* Buranın 'display: inline-block' olması, wrapper'ın boyutunu almasını sağlar */
-    display: inline-block;
-}
-#pdf-canvas {
-    display: block; /* Canvas'ın altındaki boşluğu kaldırmak için */
+    background-color: white;
+    /* KOORDİNAT HATASI ÇÖZÜMÜ: Olaylar doğrudan bu elementlere bağlanacak */
 }
 #image-viewer {
     max-width: 100%;
-    height: auto; /* Oranı koru */
     display: block;
 }
 
@@ -278,6 +219,7 @@ aside {
     display: none;
     pointer-events: none;
     z-index: 98;
+    box-sizing: border-box; /* Kenarlıklar dahil */
 }
 #selection-confirm-box {
     position: absolute;
@@ -297,7 +239,7 @@ aside {
 #confirm-selection { background-color: #4CAF50; color: white; }
 #cancel-selection { background-color: #f44336; color: white; }
 
-/* Kaynak Editörü: PDF Sayfa Kontrolleri (Altta) */
+/* Kaynak Editörü: PDF Sayfa Kontrolleri */
 #pdf-controls {
     flex-shrink: 0;
     padding: 8px;
@@ -307,10 +249,6 @@ aside {
 }
 
 /* Sekme 2: Mizanpaj Alanı */
-#layout-scroll-container {
-    justify-content: center;
-    align-items: flex-start;
-}
 #page-stage {
     background-color: white;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
@@ -335,6 +273,29 @@ aside {
     height: 100%;
     display: block;
 }
+/* YENİ: Mizanpaj Sahnesi Silme Butonu */
+.stage-item-delete-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 24px;
+    height: 24px;
+    background-color: #f44336; /* Kırmızı */
+    color: white;
+    border: 1px solid white;
+    border-radius: 50%;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 16px;
+    line-height: 22px;
+    text-align: center;
+}
+.stage-item-delete-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* Mizanpaj Alanı: Yeniden boyutlandırma tutamacı */
 .stage-item .resize-handle.bottom-right {
     position: absolute;
     width: 10px;
@@ -344,29 +305,6 @@ aside {
     bottom: -5px;
     right: -5px;
     cursor: se-resize;
-}
-/* Mizanpaj öğesi silme butonu */
-.stage-item .delete-stage-item-btn {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 14px;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    opacity: 0.8;
-}
-.stage-item .delete-stage-item-btn:hover {
-    opacity: 1;
 }
 
 /* --- 3. SAĞ PANEL (Ayarlar) --- */
@@ -380,12 +318,20 @@ aside {
     font-size: 14px;
 }
 #right-panel input[type="text"], 
-#right-panel select, 
-#right-panel button {
+#right-panel select {
     width: 100%;
     padding: 8px;
     margin-top: 5px;
     box-sizing: border-box;
+}
+/* YENİ: Header Ayarları stilleri */
+#header-logo-toggle {
+    width: auto;
+}
+#header-logo-url {
+    font-size: 10px;
+    color: #555;
+    padding: 4px;
 }
 
 /* Ayarlar: Düzen Türü Seçenekleri */
