@@ -1,11 +1,10 @@
-/* === v2.2 - ADIM 1: TEMEL (YÜKLEME, SEKMELER, GÖRÜNTÜLEME) === */
-'use strict'; // Hataları daha kolay bulmak için katı modu etkinleştir
+/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ): TEMEL YÜKLEME, SEKMELER, GÖRÜNTÜLEME === */
+'use strict';
 
 // Kütüphane Yükleyicisi
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 // --- 1. DOM ELEMENTLERİ ---
-// (index.html'deki tüm önemli ID'leri al)
 const fileInput = document.getElementById('file-input');
 const uploadScreen = document.getElementById('upload-screen');
 const editorScreen = document.getElementById('editor-screen');
@@ -13,6 +12,7 @@ const editorScreen = document.getElementById('editor-screen');
 // Sol Panel
 const sourceLibraryList = document.getElementById('source-library-list');
 const sourceListPlaceholder = document.getElementById('source-list-placeholder');
+const addMoreFilesBtn = document.getElementById('add-more-files-btn'); // YENİ (v2.2)
 
 // Orta Panel - Sekmeler
 const tabSourceBtn = document.getElementById('tab-source');
@@ -33,40 +33,52 @@ const zoomInSourceBtn = document.getElementById('zoom-in-source');
 const zoomOutSourceBtn = document.getElementById('zoom-out-source');
 const zoomLevelSourceSpan = document.getElementById('zoom-level-source');
 
-// --- 2. GLOBAL DEĞİŞKENLER (v2.2 - Adım 1) ---
-
-// Yüklenen tüm kaynakları (PDF/Resim) tutan kütüphane
+// --- 2. GLOBAL DEĞİŞKENLER ---
 let sourceLibrary = []; 
-// Aktif olarak düzenlenen/bakılan kaynağın ID'si
 let activeSourceId = null;
-let activePdfDoc = null; // Sadece o an aktif olan PDF'in dokümanı
-let activePdfPageNum = 1; // Aktif PDF'in hangi sayfasında olduğu
+let activePdfDoc = null; 
+let activePdfPageNum = 1; 
 let currentSourceZoom = 1.0; 
+let isEditorInitialized = false; // YENİ (v2.2): Editörün ilk kez açılıp açılmadığını kontrol eder
 
 // --- 3. UYGULAMA BAŞLANGICI ---
 
-// Ana giriş noktası: Dosya seçildiğinde
+/**
+ * Ana giriş noktası: Dosya seçildiğinde tetiklenir
+ * Bu, hem ilk yükleme hem de "Yeni Kaynak Ekle" için çalışır
+ */
 fileInput.addEventListener('change', (e) => {
     const files = e.target.files;
     if (!files || !files.length) return;
 
-    uploadScreen.classList.add('hidden');
-    editorScreen.classList.remove('hidden');
+    // Eğer editör *ilk kez* açılıyorsa:
+    if (!isEditorInitialized) {
+        uploadScreen.classList.add('hidden');
+        editorScreen.classList.remove('hidden');
+        
+        // Olay dinleyicilerini SADECE BİR KEZ kur
+        setupEditorEventListeners(); 
+        isEditorInitialized = true;
+    }
     
-    // Gerekli tüm olay dinleyicilerini (event listeners) ayarla
-    setupEventListeners();
-    
-    // Dosyaları yükle
+    // Dosyaları yükle (ister ilk kez olsun, ister sonradan)
     loadFiles(files);
+    
+    // Input'u sıfırla ki aynı dosyayı (veya yenisini) tekrar seçebilsin
+    fileInput.value = null; 
 });
 
 /**
- * Adım 1 için gerekli tüm olay dinleyicilerini kurar.
+ * Editör arayüzü için gerekli tüm olay dinleyicilerini bir kez kurar.
  */
-function setupEventListeners() {
+function setupEditorEventListeners() {
     // Sekme Kontrolleri
     tabSourceBtn.addEventListener('click', () => switchTab('source'));
     tabLayoutBtn.addEventListener('click', () => switchTab('layout'));
+
+    // YENİ (v2.2): "Yeni Kaynak Ekle" butonu
+    // Bu buton, gizli olan ilk 'fileInput'u tetikler
+    addMoreFilesBtn.addEventListener('click', () => fileInput.click());
 
     // Kaynak Editörü Zoom
     zoomInSourceBtn.addEventListener('click', () => zoomSource(0.25));
@@ -75,19 +87,15 @@ function setupEventListeners() {
     // PDF Sayfa Kontrolleri
     prevPageBtn.addEventListener('click', () => changePdfPage(-1));
     nextPageBtn.addEventListener('click', () => changePdfPage(1));
-
+    
     // ADIM 2'DE EKLENECEK DİNLEYİCİLER:
-    // - Kırpma (mousedown, mousemove, mouseup)
-    // - Onay butonları (confirm, cancel)
-    // - Mizanpaj (interact.js)
-    // - PDF Oluşturma
+    // - Kırpma, Onay, Mizanpaj, PDF Oluşturma...
 }
 
 // --- 4. ÇOKLU DOSYA YÜKLEME MANTIĞI ---
 
 /**
- * v2.2: Çoklu dosya yükleme yöneticisi (PDF, PNG, JPG)
- * "Sadece görsellerle çalışma" özgürlüğünü sağlar.
+ * v2.2: Gelen dosyaları işler ve kütüphaneye ekler.
  */
 async function loadFiles(files) {
     if (sourceListPlaceholder) sourceListPlaceholder.remove();
@@ -99,7 +107,7 @@ async function loadFiles(files) {
             id: sourceId,
             name: file.name,
             type: null,
-            data: null, // pdfDoc veya image DataURL
+            data: null, 
         };
 
         if (file.type === 'application/pdf') {
@@ -111,7 +119,7 @@ async function loadFiles(files) {
                 return sourceData;
             }).catch(error => {
                 console.error(`PDF yüklenemedi: ${file.name}`, error);
-                return null; // Başarısız yüklemeyi atla
+                return null;
             });
         } else if (file.type.startsWith('image/')) {
             sourceData.type = 'image';
@@ -120,25 +128,23 @@ async function loadFiles(files) {
                 return sourceData;
             }).catch(error => {
                 console.error(`Resim yüklenemedi: ${file.name}`, error);
-                return null; // Başarısız yüklemeyi atla
+                return null;
             });
         } else {
             console.warn(`Desteklenmeyen dosya tipi: ${file.name}`);
-            return Promise.resolve(null); // Desteklenmeyen tipi atla
+            return Promise.resolve(null);
         }
     });
 
-    // Tüm dosyaların yüklenmesini bekle
-    const loadedSources = (await Promise.all(filePromises)).filter(Boolean); // null olanları filtrele
-
-    // Global kütüphaneye ekle
+    const loadedSources = (await Promise.all(filePromises)).filter(Boolean); 
     sourceLibrary.push(...loadedSources);
-    
-    // Sol panele listele
     loadedSources.forEach(addSourceToLibraryList);
     
-    // Yükleme bittikten sonra ilk kaynağı otomatik olarak aç
+    // Yüklendikten sonra ilk kaynağı otomatik olarak aç
+    // (Eğer zaten bir kaynak açık değilse)
     if (sourceLibrary.length > 0 && !activeSourceId) {
+        // HATA DÜZELTMESİ: Otomatik açarken sekmeyi de değiştir
+        switchTab('source');
         showSourceInEditor(sourceLibrary[0].id);
     }
 }
@@ -154,9 +160,7 @@ function loadPdfData(file) {
                 const typedarray = new Uint8Array(this.result);
                 const pdf = await pdfjsLib.getDocument(typedarray).promise;
                 resolve(pdf);
-            } catch (error) {
-                reject(error);
-            }
+            } catch (error) { reject(error); }
         };
         fileReader.onerror = reject;
         fileReader.readAsArrayBuffer(file);
@@ -169,9 +173,7 @@ function loadPdfData(file) {
 function loadImageData(file) {
     return new Promise((resolve, reject) => {
         const fileReader = new FileReader();
-        fileReader.onload = function() {
-            resolve(this.result); // DataURL
-        };
+        fileReader.onload = function() { resolve(this.result); };
         fileReader.onerror = reject;
         fileReader.readAsDataURL(file);
     });
@@ -187,8 +189,11 @@ function addSourceToLibraryList(sourceData) {
     const icon = sourceData.type === 'pdf' ? '[PDF]' : '[IMG]';
     li.textContent = `${icon} ${sourceData.name}`;
     
-    // Tıklandığında o kaynağı editörde aç
+    // v2.2 - HATA DÜZELTMESİ (TIKLAMA ÇALIŞMIYOR HATASI)
     li.addEventListener('click', () => {
+        // Önce sekmeyi "Kaynak Editörü"ne getir
+        switchTab('source'); 
+        // SONRA kaynağı o sekmede göster
         showSourceInEditor(sourceData.id);
     });
     
@@ -199,8 +204,7 @@ function addSourceToLibraryList(sourceData) {
 // --- 5. KAYNAK EDİTÖRÜ MANTIĞI (GÖRÜNTÜLEME) ---
 
 /**
- * v2.2 (SEKME HATASI DÜZELTİLDİ)
- * Ana Sekme Değiştirme Fonksiyonu. Sadece 'active' sınıflarını değiştirir.
+ * v2.2: Ana Sekme Değiştirme Fonksiyonu
  */
 function switchTab(tabName) {
     if (tabName === 'source') {
@@ -218,17 +222,14 @@ function switchTab(tabName) {
 
 /**
  * v2.2 Ana Kaynak Görüntüleme Fonksiyonu
- * Sol panelden bir kaynak seçildiğinde (PDF veya Resim) orta paneli günceller.
  */
 async function showSourceInEditor(sourceId) {
     // Zaten bu kaynak açıksa, tekrar yükleme
     if (activeSourceId === sourceId) return;
 
-    // Kütüphaneden kaynağı bul
     const sourceData = sourceLibrary.find(s => s.id === sourceId);
     if (!sourceData) return;
 
-    // Aktif kaynağı ayarla
     activeSourceId = sourceId;
 
     // Sol paneldeki listede "aktif" olanı vurgula
@@ -236,9 +237,7 @@ async function showSourceInEditor(sourceId) {
         item.classList.toggle('active', item.id === sourceId);
     });
 
-    // Kaynak tipine göre editörü hazırla
     if (sourceData.type === 'pdf') {
-        // === PDF GÖRÜNTÜLEYİCİYİ HAZIRLA ===
         activePdfDoc = sourceData.data;
         activePdfPageNum = sourceData.currentPage;
         
@@ -246,24 +245,22 @@ async function showSourceInEditor(sourceId) {
         pdfControls.classList.remove('hidden');
         imageViewer.classList.add('hidden');
         
-        currentSourceZoom = 1.0; // Zoom'u sıfırla
+        currentSourceZoom = 1.0; 
         await renderPdfPage(activePdfPageNum);
 
     } else if (sourceData.type === 'image') {
-        // === RESİM GÖRÜNTÜLEYİCİYİ HAZIRLA ===
-        activePdfDoc = null; // Aktif PDF yok
+        activePdfDoc = null; 
         
         pdfViewerContainer.classList.add('hidden');
         pdfControls.classList.add('hidden');
         imageViewer.classList.remove('hidden');
         
-        // Resmin yüklenmesini bekle (tarayıcı önbelleğinde değilse)
         await new Promise((resolve) => {
             imageViewer.onload = resolve;
             imageViewer.src = sourceData.data;
         });
 
-        currentSourceZoom = 1.0; // Zoom'u sıfırla
+        currentSourceZoom = 1.0; 
         renderImageViewer();
     }
 }
@@ -274,7 +271,6 @@ async function showSourceInEditor(sourceId) {
 async function renderPdfPage(num) {
     if (!activePdfDoc) return;
     
-    // Aktif kaynağın sayfasını global değişkende ve veri yapısında sakla
     const sourceData = sourceLibrary.find(s => s.id === activeSourceId);
     if (sourceData) sourceData.currentPage = num;
     activePdfPageNum = num;
@@ -310,13 +306,12 @@ function renderImageViewer() {
 }
 
 /**
- * v2.2: Kaynak Editörü Zoom Fonksiyonu (Hem PDF hem Resim)
+ * v2.2: Kaynak Editörü Zoom Fonksiyonu
  */
 function zoomSource(amount) {
     currentSourceZoom += amount;
     if (currentSourceZoom < 0.25) currentSourceZoom = 0.25; 
 
-    // Aktif kaynağın (PDF veya Resim) görünümünü güncelle
     if (activePdfDoc) {
         renderPdfPage(activePdfPageNum);
     } else if (imageViewer.src) {
@@ -328,7 +323,7 @@ function zoomSource(amount) {
  * v2.2: PDF Sayfa Değiştirme Fonksiyonu
  */
 async function changePdfPage(direction) {
-    if (!activePdfDoc) return; // Sadece PDF'ler için çalışır
+    if (!activePdfDoc) return;
 
     const newPageNum = activePdfPageNum + direction;
 
@@ -337,4 +332,4 @@ async function changePdfPage(direction) {
     }
 }
 
-/* === v2.2 - ADIM 1/3 BİTTİ === */
+/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ) BİTTİ === */
