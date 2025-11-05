@@ -1,18 +1,19 @@
-/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ): TEMEL YÜKLEME, SEKMELER, GÖRÜNTÜLEME === */
+/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ v2): Hata Düzeltmeleri === */
 'use strict';
 
-// Kütüphane Yükleyicisi
+// PDF HATA DÜZELTMESİ: PDF Worker'ı HTML'den kaldırıp buraya ekliyoruz.
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 // --- 1. DOM ELEMENTLERİ ---
 const fileInput = document.getElementById('file-input');
 const uploadScreen = document.getElementById('upload-screen');
+const initialUploadButton = document.getElementById('initial-upload-button'); // YENİ
 const editorScreen = document.getElementById('editor-screen');
 
 // Sol Panel
 const sourceLibraryList = document.getElementById('source-library-list');
 const sourceListPlaceholder = document.getElementById('source-list-placeholder');
-const addMoreFilesBtn = document.getElementById('add-more-files-btn'); // YENİ (v2.2)
+const addMoreFilesBtn = document.getElementById('add-more-files-btn');
 
 // Orta Panel - Sekmeler
 const tabSourceBtn = document.getElementById('tab-source');
@@ -39,32 +40,28 @@ let activeSourceId = null;
 let activePdfDoc = null; 
 let activePdfPageNum = 1; 
 let currentSourceZoom = 1.0; 
-let isEditorInitialized = false; // YENİ (v2.2): Editörün ilk kez açılıp açılmadığını kontrol eder
+let isEditorInitialized = false;
 
 // --- 3. UYGULAMA BAŞLANGICI ---
 
+// YENİ (v2.2.1): Başlangıçtaki "Dosyaları Seç" butonu da gizli fileInput'u tetikler
+initialUploadButton.addEventListener('click', () => fileInput.click());
+
 /**
  * Ana giriş noktası: Dosya seçildiğinde tetiklenir
- * Bu, hem ilk yükleme hem de "Yeni Kaynak Ekle" için çalışır
  */
 fileInput.addEventListener('change', (e) => {
     const files = e.target.files;
     if (!files || !files.length) return;
 
-    // Eğer editör *ilk kez* açılıyorsa:
     if (!isEditorInitialized) {
         uploadScreen.classList.add('hidden');
         editorScreen.classList.remove('hidden');
-        
-        // Olay dinleyicilerini SADECE BİR KEZ kur
         setupEditorEventListeners(); 
         isEditorInitialized = true;
     }
     
-    // Dosyaları yükle (ister ilk kez olsun, ister sonradan)
     loadFiles(files);
-    
-    // Input'u sıfırla ki aynı dosyayı (veya yenisini) tekrar seçebilsin
     fileInput.value = null; 
 });
 
@@ -72,24 +69,17 @@ fileInput.addEventListener('change', (e) => {
  * Editör arayüzü için gerekli tüm olay dinleyicilerini bir kez kurar.
  */
 function setupEditorEventListeners() {
-    // Sekme Kontrolleri
     tabSourceBtn.addEventListener('click', () => switchTab('source'));
     tabLayoutBtn.addEventListener('click', () => switchTab('layout'));
 
-    // YENİ (v2.2): "Yeni Kaynak Ekle" butonu
-    // Bu buton, gizli olan ilk 'fileInput'u tetikler
+    // YENİ (v2.2.1): Bu buton artık fileInput'u tetikleyecek
     addMoreFilesBtn.addEventListener('click', () => fileInput.click());
 
-    // Kaynak Editörü Zoom
     zoomInSourceBtn.addEventListener('click', () => zoomSource(0.25));
     zoomOutSourceBtn.addEventListener('click', () => zoomSource(-0.25));
 
-    // PDF Sayfa Kontrolleri
     prevPageBtn.addEventListener('click', () => changePdfPage(-1));
     nextPageBtn.addEventListener('click', () => changePdfPage(1));
-    
-    // ADIM 2'DE EKLENECEK DİNLEYİCİLER:
-    // - Kırpma, Onay, Mizanpaj, PDF Oluşturma...
 }
 
 // --- 4. ÇOKLU DOSYA YÜKLEME MANTIĞI ---
@@ -100,7 +90,6 @@ function setupEditorEventListeners() {
 async function loadFiles(files) {
     if (sourceListPlaceholder) sourceListPlaceholder.remove();
 
-    // Paralel yükleme için Promise.all kullanıyoruz
     const filePromises = Array.from(files).map(file => {
         const sourceId = 'source-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         let sourceData = {
@@ -140,10 +129,7 @@ async function loadFiles(files) {
     sourceLibrary.push(...loadedSources);
     loadedSources.forEach(addSourceToLibraryList);
     
-    // Yüklendikten sonra ilk kaynağı otomatik olarak aç
-    // (Eğer zaten bir kaynak açık değilse)
     if (sourceLibrary.length > 0 && !activeSourceId) {
-        // HATA DÜZELTMESİ: Otomatik açarken sekmeyi de değiştir
         switchTab('source');
         showSourceInEditor(sourceLibrary[0].id);
     }
@@ -189,17 +175,13 @@ function addSourceToLibraryList(sourceData) {
     const icon = sourceData.type === 'pdf' ? '[PDF]' : '[IMG]';
     li.textContent = `${icon} ${sourceData.name}`;
     
-    // v2.2 - HATA DÜZELTMESİ (TIKLAMA ÇALIŞMIYOR HATASI)
     li.addEventListener('click', () => {
-        // Önce sekmeyi "Kaynak Editörü"ne getir
         switchTab('source'); 
-        // SONRA kaynağı o sekmede göster
         showSourceInEditor(sourceData.id);
     });
     
     sourceLibraryList.appendChild(li);
 }
-
 
 // --- 5. KAYNAK EDİTÖRÜ MANTIĞI (GÖRÜNTÜLEME) ---
 
@@ -224,7 +206,6 @@ function switchTab(tabName) {
  * v2.2 Ana Kaynak Görüntüleme Fonksiyonu
  */
 async function showSourceInEditor(sourceId) {
-    // Zaten bu kaynak açıksa, tekrar yükleme
     if (activeSourceId === sourceId) return;
 
     const sourceData = sourceLibrary.find(s => s.id === sourceId);
@@ -232,7 +213,6 @@ async function showSourceInEditor(sourceId) {
 
     activeSourceId = sourceId;
 
-    // Sol paneldeki listede "aktif" olanı vurgula
     document.querySelectorAll('#source-library-list .source-item').forEach(item => {
         item.classList.toggle('active', item.id === sourceId);
     });
@@ -332,4 +312,4 @@ async function changePdfPage(direction) {
     }
 }
 
-/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ) BİTTİ === */
+/* === v2.2 - ADIM 1 (DÜZELTİLMİŞ v2) BİTTİ === */
