@@ -22,6 +22,7 @@ window.onload = () => {
     const layoutView = document.getElementById('layout-view');
 
     // Sekme 1: Kaynak Editörü
+    const sourceScrollContainer = document.getElementById('source-scroll-container');
     const pdfViewerContainer = document.getElementById('pdf-viewer-container');
     const canvas = document.getElementById('pdf-canvas');
     const imageViewer = document.getElementById('image-viewer');
@@ -34,6 +35,9 @@ window.onload = () => {
     const zoomOutSourceBtn = document.getElementById('zoom-out-source');
     const zoomLevelSourceSpan = document.getElementById('zoom-level-source');
 
+    // Sekme 2: Layout
+    const layoutCanvas = document.getElementById('layout-canvas');
+
     // Sağ Panel - Ayarlar
     const titleInput = document.getElementById('pdf-title');
     const orientationSelect = document.getElementById('orientation');
@@ -45,16 +49,16 @@ window.onload = () => {
 
     // --- GLOBAL DEĞİŞKENLER ---
     let sourceLibrary = [];
-    let selectionList_data = [];
+    let selectionListData = [];
     let activeSourceId = null;
     let activePdfDoc = null;
     let activePdfPageNum = 1;
     let currentSourceZoom = 1.0;
     let isEditorInitialized = false;
-    let currentCropBox = null;
-    let isDrawingCrop = false;
-    let cropStartX = 0;
-    let cropStartY = 0;
+    
+    let cropStart = null;
+    let cropBox = null;
+    let isCropping = false;
 
     const ctx = canvas.getContext('2d');
 
@@ -77,9 +81,6 @@ window.onload = () => {
         fileInput.value = '';
     });
 
-    /**
-     * Editör arayüzü için olay dinleyicileri
-     */
     function setupEditorEventListeners() {
         tabSourceBtn.addEventListener('click', () => switchTab('source'));
         tabLayoutBtn.addEventListener('click', () => switchTab('layout'));
@@ -94,10 +95,10 @@ window.onload = () => {
 
         createPdfBtn.addEventListener('click', createPdf);
 
-        // Kırpma alanı fare olayları
-        pdfViewerContainer.addEventListener('mousedown', startCrop);
-        document.addEventListener('mousemove', updateCrop);
-        document.addEventListener('mouseup', endCrop);
+        // Kırpma olayları
+        sourceScrollContainer.addEventListener('mousedown', startCrop);
+        sourceScrollContainer.addEventListener('mousemove', moveCrop);
+        sourceScrollContainer.addEventListener('mouseup', endCrop);
     }
 
     // --- DOSYA YÜKLEME ---
@@ -113,6 +114,7 @@ window.onload = () => {
                 name: file.name,
                 type: null,
                 data: null,
+                file: file,
             };
 
             if (file.type === 'application/pdf') {
@@ -207,6 +209,7 @@ window.onload = () => {
             sourceView.classList.remove('active');
             tabLayoutBtn.classList.add('active');
             layoutView.classList.add('active');
+            renderLayoutPage();
         }
     }
 
@@ -310,72 +313,78 @@ window.onload = () => {
     // --- KIRPMA MANTIĞI ---
 
     function startCrop(e) {
-        if (e.button !== 0) return; // Sadece sol fare butonu
-        isDrawingCrop = true;
-        cropStartX = e.offsetX;
-        cropStartY = e.offsetY;
+        if (e.button !== 0) return;
+        if (!activeSourceId) return;
+
+        const rect = sourceScrollContainer.getBoundingClientRect();
+        const x = e.clientX - rect.left + sourceScrollContainer.scrollLeft;
+        const y = e.clientY - rect.top + sourceScrollContainer.scrollTop;
+
+        cropStart = { x, y };
+        isCropping = true;
+
+        if (cropBox) cropBox.remove();
+        cropBox = document.createElement('div');
+        cropBox.id = 'crop-selection-box';
+        cropBox.classList.add('visible');
+        sourceScrollContainer.appendChild(cropBox);
     }
 
-    function updateCrop(e) {
-        if (!isDrawingCrop) return;
+    function moveCrop(e) {
+        if (!isCropping || !cropBox || !cropStart) return;
 
-        if (!currentCropBox) {
-            currentCropBox = document.createElement('div');
-            currentCropBox.id = 'crop-selection-box';
-            currentCropBox.classList.add('visible');
-            pdfViewerContainer.appendChild(currentCropBox);
-        }
+        const rect = sourceScrollContainer.getBoundingClientRect();
+        const x = e.clientX - rect.left + sourceScrollContainer.scrollLeft;
+        const y = e.clientY - rect.top + sourceScrollContainer.scrollTop;
 
-        const currentX = e.offsetX || cropStartX;
-        const currentY = e.offsetY || cropStartY;
-        const width = Math.abs(currentX - cropStartX);
-        const height = Math.abs(currentY - cropStartY);
-        const left = Math.min(cropStartX, currentX);
-        const top = Math.min(cropStartY, currentY);
+        const width = Math.abs(x - cropStart.x);
+        const height = Math.abs(y - cropStart.y);
+        const left = Math.min(cropStart.x, x);
+        const top = Math.min(cropStart.y, y);
 
-        currentCropBox.style.left = left + 'px';
-        currentCropBox.style.top = top + 'px';
-        currentCropBox.style.width = width + 'px';
-        currentCropBox.style.height = height + 'px';
+        cropBox.style.left = left + 'px';
+        cropBox.style.top = top + 'px';
+        cropBox.style.width = width + 'px';
+        cropBox.style.height = height + 'px';
     }
 
     function endCrop(e) {
-        if (!isDrawingCrop) return;
-        isDrawingCrop = false;
-
-        if (currentCropBox && parseInt(currentCropBox.style.width) > 20 && parseInt(currentCropBox.style.height) > 20) {
-            // Kırpma kutusu yeterince büyük, onay butonları ekle
-            showCropConfirmation();
-        } else if (currentCropBox) {
-            currentCropBox.remove();
-            currentCropBox = null;
-        }
-    }
-
-    function showCropConfirmation() {
-        const name = prompt('Kırpma adını girin (örn: "Soru 1"):', '');
-        if (!name) {
-            currentCropBox.remove();
-            currentCropBox = null;
+        if (!isCropping || !cropBox) {
+            isCropping = false;
             return;
         }
 
-        const cropData = {
-            id: 'crop-' + Date.now(),
-            name: name,
-            sourceId: activeSourceId,
-            pageNum: activePdfPageNum,
-            x: parseInt(currentCropBox.style.left),
-            y: parseInt(currentCropBox.style.top),
-            width: parseInt(currentCropBox.style.width),
-            height: parseInt(currentCropBox.style.height),
-            zoom: currentSourceZoom,
-        };
+        isCropping = false;
 
-        selectionList_data.push(cropData);
-        addCropToSelectionList(cropData);
-        currentCropBox.remove();
-        currentCropBox = null;
+        const width = parseInt(cropBox.style.width);
+        const height = parseInt(cropBox.style.height);
+
+        if (width > 20 && height > 20) {
+            const cropName = prompt('Kırpma adını girin (örn: "Soru 1"):', 'Kırpma ' + (selectionListData.length + 1));
+            
+            if (cropName) {
+                const cropData = {
+                    id: 'crop-' + Date.now(),
+                    name: cropName,
+                    sourceId: activeSourceId,
+                    pageNum: activePdfPageNum,
+                    x: parseInt(cropBox.style.left),
+                    y: parseInt(cropBox.style.top),
+                    width: width,
+                    height: height,
+                    zoom: currentSourceZoom,
+                };
+
+                selectionListData.push(cropData);
+                addCropToSelectionList(cropData);
+            }
+        }
+
+        if (cropBox) {
+            cropBox.remove();
+            cropBox = null;
+        }
+        cropStart = null;
     }
 
     function addCropToSelectionList(cropData) {
@@ -390,9 +399,10 @@ window.onload = () => {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'item-delete-btn';
         deleteBtn.textContent = 'Sil';
-        deleteBtn.addEventListener('click', () => {
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             li.remove();
-            selectionList_data = selectionList_data.filter(c => c.id !== cropData.id);
+            selectionListData = selectionListData.filter(c => c.id !== cropData.id);
         });
 
         li.appendChild(label);
@@ -400,143 +410,210 @@ window.onload = () => {
         selectionList.appendChild(li);
     }
 
+    // --- LAYOUT PAGE ---
+
+    function renderLayoutPage() {
+        layoutCanvas.innerHTML = '';
+
+        const a4Width = 210;
+        const a4Height = 297;
+        const scale = 0.5;
+
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'layout-page';
+        pageDiv.style.width = (a4Width * scale) + 'mm';
+        pageDiv.style.height = (a4Height * scale) + 'mm';
+        pageDiv.style.left = '50px';
+        pageDiv.style.top = '50px';
+
+        selectionListData.forEach((crop, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'layout-item';
+            itemDiv.id = 'layout-' + crop.id;
+            itemDiv.style.left = (20 + index * 30) + 'px';
+            itemDiv.style.top = (20 + index * 30) + 'px';
+            itemDiv.style.width = '100px';
+            itemDiv.style.height = '80px';
+
+            const label = document.createElement('span');
+            label.className = 'layout-item-label';
+            label.textContent = crop.name;
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'layout-item-delete';
+            deleteBtn.textContent = 'Sil';
+            deleteBtn.addEventListener('click', () => {
+                selectionListData = selectionListData.filter(c => c.id !== crop.id);
+                document.getElementById(crop.id).remove();
+                renderLayoutPage();
+            });
+
+            itemDiv.appendChild(label);
+            itemDiv.appendChild(deleteBtn);
+
+            makeItemDraggable(itemDiv, crop);
+            pageDiv.appendChild(itemDiv);
+        });
+
+        layoutCanvas.appendChild(pageDiv);
+    }
+
+    function makeItemDraggable(element, crop) {
+        let isDragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        element.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - element.getBoundingClientRect().left;
+            offsetY = e.clientY - element.getBoundingClientRect().top;
+            element.classList.add('selected');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            element.style.left = (e.clientX - layoutCanvas.getBoundingClientRect().left - offsetX) + 'px';
+            element.style.top = (e.clientY - layoutCanvas.getBoundingClientRect().top - offsetY) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            element.classList.remove('selected');
+        });
+    }
+
     // --- PDF OLUŞTURMA ---
 
     async function createPdf() {
-        if (selectionList_data.length === 0) {
+        if (selectionListData.length === 0) {
             alert('Lütfen önce kırpmalar yapın!');
             return;
         }
 
         const title = titleInput.value || 'Raporunuz';
-        const orientation = orientationSelect.value;
+        const orientation = orientationSelect.value === 'landscape' ? 'l' : 'p';
         const leftHeader = leftHeaderInput.value;
         const rightHeader = rightHeaderInput.value;
-        const includelogo = logoCheckbox.checked;
+        const includeLogo = logoCheckbox.checked;
         const layoutType = layoutTypeSelect.value;
 
         const doc = new jsPDF({
-            orientation: orientation === 'landscape' ? 'l' : 'p',
+            orientation: orientation,
             unit: 'mm',
             format: 'a4',
         });
 
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
-        let yPosition = 15;
 
         // Header ekle
-        addHeaderToPage(doc, pageWidth, title, leftHeader, rightHeader, includelogo);
-        yPosition = 45;
+        addHeaderToPage(doc, pageWidth, pageHeight, title, leftHeader, rightHeader, includeLogo);
 
+        // İçerik ekle
         if (layoutType === 'free') {
-            // Serbest düzen: kırpmalar manuel olarak yerleştirildi
-            // (Bu versionda basit layout yapıyoruz)
-            yPosition = await addCropsToPage(doc, pageWidth, pageHeight, yPosition);
+            await addCropsToPageFree(doc, pageWidth, pageHeight);
         } else if (layoutType === 'column2') {
-            // 2 sütunlu otomatik layout
-            yPosition = await addCropsToPageAuto(doc, pageWidth, pageHeight, yPosition, 2);
+            await addCropsToPageAuto(doc, pageWidth, pageHeight, 2);
         } else if (layoutType === 'vertical') {
-            // Alt alta layout
-            yPosition = await addCropsToPageAuto(doc, pageWidth, pageHeight, yPosition, 1);
+            await addCropsToPageAuto(doc, pageWidth, pageHeight, 1);
         }
 
         doc.save(title + '.pdf');
+        alert('PDF başarıyla oluşturuldu: ' + title + '.pdf');
     }
 
-    function addHeaderToPage(doc, pageWidth, title, leftHeader, rightHeader, includeLogo) {
-        const pageHeight = doc.internal.pageSize.getHeight();
+    function addHeaderToPage(doc, pageWidth, pageHeight, title, leftHeader, rightHeader, includeLogo) {
+        const headerY = 8;
+        const logoSize = 8;
 
         // Başlık
         doc.setFont('Helvetica', 'bold');
         doc.setFontSize(16);
-        doc.text(title, pageWidth / 2, 10, { align: 'center' });
+        doc.text(title, pageWidth / 2, headerY + 5, { align: 'center' });
 
-        // Logo (eğer seçildiyse)
+        // Logo
         if (includeLogo) {
             const logoUrl = 'https://i.imgur.com/hwSvPQK.jpeg';
             try {
-                doc.addImage(logoUrl, 'JPEG', pageWidth / 2 - 5, 12, 10, 10);
+                doc.addImage(logoUrl, 'JPEG', pageWidth / 2 - logoSize / 2, headerY, logoSize, logoSize);
             } catch (e) {
-                console.warn('Logo yüklenemedi:', e);
+                console.warn('Logo yüklenemedi');
             }
         }
 
         // Üst bilgiler
         doc.setFont('Helvetica', 'normal');
-        doc.setFontSize(10);
-        doc.text(leftHeader, 10, 28);
-        doc.text(rightHeader, pageWidth - 10, 28, { align: 'right' });
+        doc.setFontSize(9);
+        doc.text(leftHeader, 10, headerY + 15);
+        doc.text(rightHeader, pageWidth - 10, headerY + 15, { align: 'right' });
 
-        // Ayırıcı çizgi
-        doc.setDrawColor(0, 0, 0);
-        doc.line(10, 32, pageWidth - 10, 32);
+        // Çizgi
+        doc.setDrawColor(0);
+        doc.line(10, headerY + 18, pageWidth - 10, headerY + 18);
     }
 
-    async function addCropsToPage(doc, pageWidth, pageHeight, startY) {
-        let yPos = startY;
-        const xMargin = 10;
-        const maxWidth = pageWidth - 2 * xMargin;
+    async function addCropsToPageFree(doc, pageWidth, pageHeight) {
+        let yPos = 35;
+        const margin = 10;
 
-        for (const crop of selectionList_data) {
+        for (const crop of selectionListData) {
             const sourceData = sourceLibrary.find(s => s.id === crop.sourceId);
             if (!sourceData) continue;
 
             try {
-                const canvas_crop = await generateCropCanvas(sourceData, crop);
-                if (canvas_crop) {
-                    const imgData = canvas_crop.toDataURL('image/png');
-                    const imgHeight = (maxWidth * canvas_crop.height) / canvas_crop.width;
+                const cropCanvas = await generateCropCanvas(sourceData, crop);
+                if (cropCanvas) {
+                    const imgData = cropCanvas.toDataURL('image/png');
+                    const maxWidth = pageWidth - 2 * margin;
+                    const imgHeight = (maxWidth * cropCanvas.height) / cropCanvas.width;
 
-                    if (yPos + imgHeight > pageHeight - 10) {
+                    if (yPos + imgHeight + 5 > pageHeight - 10) {
                         doc.addPage();
                         yPos = 10;
+                        addHeaderToPage(doc, pageWidth, pageHeight, '', '', '', false);
+                        yPos = 35;
                     }
 
-                    doc.addImage(imgData, 'PNG', xMargin, yPos, maxWidth, imgHeight);
-                    yPos += imgHeight + 5;
+                    doc.addImage(imgData, 'PNG', margin, yPos, maxWidth, imgHeight);
+                    yPos += imgHeight + 3;
 
-                    // Kırpma adı
                     doc.setFont('Helvetica', 'bold');
                     doc.setFontSize(10);
-                    doc.text(crop.name, xMargin, yPos);
-                    yPos += 8;
+                    doc.text(crop.name, margin, yPos);
+                    yPos += 6;
                 }
             } catch (error) {
                 console.error('Kırpma işlenemedi:', error);
             }
         }
-
-        return yPos;
     }
 
-    async function addCropsToPageAuto(doc, pageWidth, pageHeight, startY, columns) {
-        let yPos = startY;
-        const xMargin = 10;
-        const itemWidth = (pageWidth - 2 * xMargin - 5) / columns;
-        let columnHeights = Array(columns).fill(yPos);
+    async function addCropsToPageAuto(doc, pageWidth, pageHeight, columns) {
+        let yPos = 35;
+        const margin = 10;
+        const itemWidth = (pageWidth - 2 * margin - 5) / columns;
+        const columnHeights = Array(columns).fill(yPos);
         let currentColumn = 0;
 
-        for (const crop of selectionList_data) {
+        for (const crop of selectionListData) {
             const sourceData = sourceLibrary.find(s => s.id === crop.sourceId);
             if (!sourceData) continue;
 
             try {
-                const canvas_crop = await generateCropCanvas(sourceData, crop);
-                if (canvas_crop) {
-                    const imgHeight = (itemWidth * canvas_crop.height) / canvas_crop.width;
-                    const xPos = xMargin + currentColumn * (itemWidth + 5);
-                    const currentY = columnHeights[currentColumn];
+                const cropCanvas = await generateCropCanvas(sourceData, crop);
+                if (cropCanvas) {
+                    const imgData = cropCanvas.toDataURL('image/png');
+                    const imgHeight = (itemWidth * cropCanvas.height) / cropCanvas.width;
+                    const xPos = margin + currentColumn * (itemWidth + 5);
 
-                    if (currentY + imgHeight > pageHeight - 10) {
+                    if (columnHeights[currentColumn] + imgHeight > pageHeight - 10) {
                         doc.addPage();
-                        columnHeights = Array(columns).fill(10);
+                        columnHeights.fill(35);
                         currentColumn = 0;
+                        addHeaderToPage(doc, pageWidth, pageHeight, '', '', '', false);
                     }
 
-                    const imgData = canvas_crop.toDataURL('image/png');
                     doc.addImage(imgData, 'PNG', xPos, columnHeights[currentColumn], itemWidth, imgHeight);
-
                     columnHeights[currentColumn] += imgHeight + 2;
 
                     currentColumn = (currentColumn + 1) % columns;
@@ -545,8 +622,6 @@ window.onload = () => {
                 console.error('Kırpma işlenemedi:', error);
             }
         }
-
-        return Math.max(...columnHeights);
     }
 
     async function generateCropCanvas(sourceData, crop) {
@@ -554,33 +629,45 @@ window.onload = () => {
         const cropCtx = cropCanvas.getContext('2d');
 
         if (sourceData.type === 'pdf') {
-            const page = await sourceData.data.getPage(crop.pageNum);
-            const viewport = page.getViewport({ scale: crop.zoom });
+            try {
+                const page = await sourceData.data.getPage(crop.pageNum);
+                const viewport = page.getViewport({ scale: crop.zoom });
 
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.height = viewport.height;
-            tempCanvas.width = viewport.width;
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.height = viewport.height;
+                tempCanvas.width = viewport.width;
 
-            await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
+                await page.render({ canvasContext: tempCtx, viewport: viewport }).promise;
 
-            cropCanvas.width = crop.width;
-            cropCanvas.height = crop.height;
-            cropCtx.drawImage(tempCanvas, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+                cropCanvas.width = crop.width;
+                cropCanvas.height = crop.height;
+                cropCtx.drawImage(tempCanvas, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
 
-            return cropCanvas;
+                return cropCanvas;
+            } catch (error) {
+                console.error('PDF crop hatası:', error);
+                return null;
+            }
         } else if (sourceData.type === 'image') {
-            const img = new Image();
-            await new Promise((resolve) => {
-                img.onload = resolve;
-                img.src = sourceData.data;
-            });
+            try {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = sourceData.data;
+                });
 
-            cropCanvas.width = crop.width;
-            cropCanvas.height = crop.height;
-            cropCtx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+                cropCanvas.width = crop.width;
+                cropCanvas.height = crop.height;
+                cropCtx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
 
-            return cropCanvas;
+                return cropCanvas;
+            } catch (error) {
+                console.error('Image crop hatası:', error);
+                return null;
+            }
         }
 
         return null;
