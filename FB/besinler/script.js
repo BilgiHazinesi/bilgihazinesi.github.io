@@ -401,3 +401,80 @@ function checkBulmacaAnswers() {
         alert("Bazı hatalar var. Kırmızı kutuları kontrol edin.");
     }
 }
+/* --- YENİ BÖLÜM 1.9: Kazanım Testi JS --- */
+
+// Testte bir şık seçildiğinde
+function selectQuizOption(selectedOption) {
+    // Bu sorunun kapsayıcısını bul
+    var container = selectedOption.closest('.mcq-question-container');
+    
+    // Bu soruya ait tüm seçeneklerdeki 'selected' sınıfını kaldır
+    container.querySelectorAll('.mcq-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    
+    // Sadece tıklanan seçeneğe 'selected' sınıfını ekle
+    selectedOption.classList.add('selected');
+}
+
+// Testi Bitir butonuna basıldığında
+function submitQuiz() {
+    let score = 0;
+    const questions = document.querySelectorAll('#quiz-container .mcq-question-container');
+    const totalQuestions = questions.length;
+
+    questions.forEach((question, index) => {
+        const correctAnswer = question.dataset.answer; // Doğru cevap (A, B, C, D)
+        const selectedOption = question.querySelector('.mcq-option.selected');
+        const feedbackEl = question.querySelector('.mcq-feedback');
+
+        // Önceki geri bildirimleri temizle
+        question.querySelectorAll('.mcq-option').forEach(opt => {
+            opt.classList.remove('feedback-correct', 'feedback-incorrect');
+        });
+        
+        if (selectedOption) {
+            const userAnswer = selectedOption.textContent.charAt(0); // Cevabın harfi (A, B, C, D)
+            
+            if (userAnswer === correctAnswer) {
+                // CEVAP DOĞRU
+                score++;
+                selectedOption.classList.add('feedback-correct');
+                feedbackEl.textContent = "Doğru!";
+                feedbackEl.className = "mcq-feedback feedback-correct";
+            } else {
+                // CEVAP YANLIŞ
+                selectedOption.classList.add('feedback-incorrect');
+                feedbackEl.textContent = "Yanlış! Doğru cevap: " + correctAnswer;
+                feedbackEl.className = "mcq-feedback feedback-incorrect";
+                
+                // Doğru cevabı da bulup yeşil yap
+                question.querySelectorAll('.mcq-option').forEach(opt => {
+                    if (opt.textContent.charAt(0) === correctAnswer) {
+                        opt.classList.add('feedback-correct');
+                    }
+                });
+            }
+        } else {
+            // CEVAP BOŞ BIRAKILDI
+            feedbackEl.textContent = "Boş Bırakıldı! Doğru cevap: " + correctAnswer;
+            feedbackEl.className = "mcq-feedback feedback-incorrect";
+            
+            // Doğru cevabı bulup yeşil yap
+            question.querySelectorAll('.mcq-option').forEach(opt => {
+                if (opt.textContent.charAt(0) === correctAnswer) {
+                    opt.classList.add('feedback-correct');
+                }
+            });
+        }
+    });
+
+    // Final Sonucunu Göster
+    const resultsContainer = document.getElementById('quiz-results');
+    resultsContainer.textContent = `Test Sonucu: ${totalQuestions} soruda ${score} doğru yaptın!`;
+    resultsContainer.style.display = "block";
+
+    // Testi Bitir butonunu gizle ve sayfanın en altına kaydır
+    document.getElementById('quiz-submit-button').style.display = 'none';
+    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
