@@ -611,3 +611,54 @@ function checkFillBlanksZararli() {
         }
     });
 }
+/* --- YENİ BÖLÜM 2.3: Hastalık Tablosu JS --- */
+
+// Tıklanan hücreye 'selected' sınıfı ekle/kaldır
+function toggleDiseaseCell(cell) {
+    // Kontrol edildikten sonra (correct/incorrect sınıfı varsa) değiştirmeyi engelle
+    if (cell.classList.contains('correct') || cell.classList.contains('incorrect') || cell.classList.contains('missing')) {
+        return;
+    }
+    cell.classList.toggle('selected');
+}
+
+// Tabloyu kontrol et
+function checkDiseaseTable() {
+    const rows = document.querySelectorAll("#disease-table tbody tr");
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll(".disease-cell");
+        const sigaraCell = cells[0];
+        const alkolCell = cells[1];
+        
+        // Gerekli cevaplar (true/false)
+        const needsSigara = row.dataset.sigara === 'true';
+        const needsAlkol = row.dataset.alkol === 'true';
+        
+        // Öğrenci cevapları (tıklanmış mı?)
+        const selectedSigara = sigaraCell.classList.contains('selected');
+        const selectedAlkol = alkolCell.classList.contains('selected');
+        
+        // Önceki geri bildirimleri temizle
+        sigaraCell.classList.remove('correct', 'incorrect', 'missing', 'selected');
+        alkolCell.classList.remove('correct', 'incorrect', 'missing', 'selected');
+
+        // SİGARA hücresini kontrol et
+        if (needsSigara && selectedSigara) {
+            sigaraCell.classList.add('correct'); // Doğru seçildi
+        } else if (!needsSigara && selectedSigara) {
+            sigaraCell.classList.add('incorrect'); // Yanlış seçildi
+        } else if (needsSigara && !selectedSigara) {
+            sigaraCell.classList.add('missing'); // Seçilmeliydi, seçilmedi
+        }
+        
+        // ALKOL hücresini kontrol et
+        if (needsAlkol && selectedAlkol) {
+            alkolCell.classList.add('correct');
+        } else if (!needsAlkol && selectedAlkol) {
+            alkolCell.classList.add('incorrect');
+        } else if (needsAlkol && !selectedAlkol) {
+            alkolCell.classList.add('missing');
+        }
+    });
+}
