@@ -89,6 +89,23 @@
             margin-bottom: 20px;
         }
         
+        .check-button {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .check-button:hover {
+            background-color: #218838;
+        }
+
         /* --- BÖLÜM 1.1: Bilgi Kartı Stilleri --- */
         .card-container {
             display: flex;
@@ -244,23 +261,6 @@
             display: inline-block;
         }
         
-        .check-button {
-            display: block;
-            margin: 20px auto;
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: bold;
-            color: white;
-            background-color: #28a745;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .check-button:hover {
-            background-color: #218838;
-        }
-        
         .food-item.correct, .dropped-item.correct {
             background-color: #d4edda;
             border-color: #c3e6cb;
@@ -273,7 +273,7 @@
             color: #721c24;
         }
 
-        /* --- YENİ BÖLÜM 1.3: Doğru-Yanlış Stilleri --- */
+        /* --- BÖLÜM 1.3: Doğru-Yanlış Stilleri --- */
         .tf-container {
             list-style-type: none;
             padding: 0;
@@ -304,7 +304,7 @@
         .tf-btn {
             width: 40px;
             height: 40px;
-            border-radius: 50%; /* Daire */
+            border-radius: 50%;
             border: 2px solid #ccc;
             background-color: #fff;
             font-weight: bold;
@@ -321,7 +321,6 @@
             border-color: #999;
         }
         
-        /* Geri bildirim stilleri */
         .tf-btn.correct {
             background-color: #d4edda;
             border-color: #28a745;
@@ -334,7 +333,6 @@
             color: #721c24;
         }
         
-        /* Cevap verildiğinde diğer butonu pasif yap */
         .tf-answered .tf-btn:not(.correct):not(.incorrect) {
             opacity: 0.5;
             cursor: not-allowed;
@@ -349,6 +347,95 @@
         
         .tf-feedback.correct { color: #28a745; }
         .tf-feedback.incorrect { color: #dc3545; }
+        
+        /* --- YENİ BÖLÜM 1.4: Boşluk Doldurma Stilleri --- */
+        #fill-word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            background-color: #f1f1f1;
+            border-radius: 8px;
+            min-height: 60px;
+            margin-bottom: 25px;
+        }
+
+        .fill-word {
+            padding: 8px 16px;
+            background-color: #e0eaff;
+            border: 1px solid #b3c5ff;
+            border-radius: 5px;
+            cursor: move;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .fill-word:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .fill-word.dragging {
+            opacity: 0.5;
+        }
+        
+        .fill-sentences {
+            list-style-type: decimal;
+            padding-left: 30px;
+            font-size: 17px;
+        }
+        
+        .fill-sentences li {
+            margin-bottom: 20px;
+            line-height: 2;
+        }
+
+        .fill-blank {
+            display: inline-block;
+            width: 150px;
+            height: 35px;
+            background-color: #fafafa;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            margin: 0 5px;
+            vertical-align: middle;
+            transition: all 0.2s ease;
+            padding: 0 5px; /* İçine gelen kelime için */
+            box-sizing: border-box; /* Padding'i düzgün ayarlar */
+        }
+        
+        .fill-blank.drag-over {
+            background-color: #e0e0e0;
+            border-style: solid;
+        }
+        
+        /* Boşluğa kelime bırakıldığında */
+        .fill-blank .fill-word {
+            margin: -1px; /* Kenarlığı düzgün göstermek için */
+            width: 100%;
+            text-align: center;
+            padding: 5px 0;
+        }
+        
+        /* Kontrol sonrası stiller */
+        .fill-word.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .fill-word.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        /* Boş bırakılan boşluklar */
+        .fill-blank.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
 
     </style>
 </head>
@@ -460,7 +547,7 @@
                         <h4>BİTKİSEL BESİNLER</h4>
                     </div>
                 </div>
-                <div id="food-items-source" class="food-items-container">
+                <div id="food-items-source" class="food-items-container" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
                     <div id="item1" class="food-item" draggable="true" ondragstart="drag(event)" data-group="hayvansal">Et</div>
                     <div id="item2" class="food-item" draggable="true" ondragstart="drag(event)" data-group="bitkisel">Ekmek</div>
                     <div id="item3" class="food-item" draggable="true" ondragstart="drag(event)" data-group="bitkisel">Mısır</div>
@@ -481,7 +568,6 @@
             </div> <div class="activity-section">
                 <h3>Bölüm 1.3: Doğru mu, Yanlış mı?</h3>
                 <p class="activity-instructions">Cümleleri okuyun ve "D" (Doğru) veya "Y" (Yanlış) butonuna basın.</p>
-                
                 <ul class="tf-container">
                     <li class="tf-question" data-answer="D">
                         <span class="tf-text">1. Paketlenmiş ürün alırken TSE damgasına bakmalıyız.</span>
@@ -547,8 +633,7 @@
                         </div>
                         <span class="tf-feedback"></span>
                     </li>
-                    <li class="tf-question" data-answer="Y">
-                        <span class="tf-text">9. Mayonez gibi bazı besinlerin raf ömrünü arttırmak için katkı maddeleri kullanılır. (Not: Cümle doğru olsa da görseldeki bağlama göre katkı maddeleri 'sağlıklı olmayan' olarak belirtilmiş, bu soru 'katkı maddeleri kullanılır' bilgisini sorguluyor, 'sağlıklı mı' değil. Görseldeki metne göre 'kullanılır' bilgisi DOĞRU. Ancak 4. sınıf seviyesinde 'katkı maddesi = kötü' algısı varsa bu YANLIŞ istenmiş olabilir. Ben 'kullanılır' bilgisini DOĞRU alıyorum. Eğer YANLIŞ olmasını isterseniz data-answer="Y" yapın)</span>
+                    <li class="tf-question" data-answer="D">
                         <span class="tf-text">9. Mayonez gibi bazı besinlerin raf ömrünü arttırmak için katkı maddeleri kullanılır.</span>
                         <div class="tf-buttons">
                             <button class="tf-btn" onclick="checkTrueFalse(this, 'D')">D</button>
@@ -565,6 +650,42 @@
                         <span class="tf-feedback"></span>
                     </li>
                 </ul>
+            </div> <div class="activity-section">
+                <h3>Bölüm 1.4: Boşluk Doldurma (Sürükle-Bırak)</h3>
+                <p class="activity-instructions">Kelime havuzundaki kelimeleri cümlelerdeki doğru boşluklara sürükleyin.</p>
+                
+                <div id="fill-word-bank" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
+                    <div id="word1" class="fill-word" draggable="true" ondragstart="drag(event)" data-word="karbonhidratlar">karbonhidratlar</div>
+                    <div id="word2" class="fill-word" draggable="true" ondragstart="drag(event)" data-word="hayvansal">hayvansal</div>
+                    <div id="word3" class="fill-word" draggable="true" ondragstart="drag(event)" data-word="su">su</div>
+                    <div id="word4" class="fill-word" draggable="true" ondragstart="drag(event)" data-word="bitkisel">bitkisel</div>
+                    <div id="word5" class="fill-word" draggable="true" ondragstart="drag(event)" data-word="vitaminler">vitaminler</div>
+                    <div id="word6" class="fill-word" draggable="true" ondragstart="drag(event)" data-word="proteinler">proteinler</div>
+                    <div id="word7" class="fill-word" draggable="true" ondragstart="drag(event)" data-word="yağlar">yağlar</div>
+                    <div id="word8" class="fill-word" draggable="true" ondragstart="drag(event)" data-word="mineraller">mineraller</div>
+                </div>
+
+                <ul class="fill-sentences">
+                    <li data-answer="bitkisel">
+                        Ceviz yağı <span class="fill-blank" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" data-answer="bitkisel"></span> bir yağdır.
+                    </li>
+                    <li data-answer1="su" data-answer2="mineraller">
+                        <span class="fill-blank" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" data-answer="su"></span> ve <span class="fill-blank" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" data-answer="mineraller"></span> vücutta düzenleyici olarak görev yapar. (Sıra önemli değil)
+                    </li>
+                    <li data-answer="karbonhidratlar">
+                        <span class="fill-blank" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" data-answer="karbonhidratlar"></span> beyinsel faaliyetler için kullanılan önemli enerji kaynaklarıdır.
+                    </li>
+                    <li data-answer="proteinler">
+                        <span class="fill-blank" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" data-answer="proteinler"></span> zekâ gelişimi ve büyümede etkilidir.
+                    </li>
+                    <li data-answer="yağlar">
+                        Aşırı tüketilirse <span class="fill-blank" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" data-answer="yağlar"></span> vücutta depolanır.
+                    </li>
+                    <li data-answer="vitaminler">
+                        <span class="fill-blank" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)" data-answer="vitaminler"></span> sebze ve meyvelerde bol miktarda bulunur.
+                    </li>
+                </ul>
+                <button class="check-button" onclick="checkFillBlanksAnswers()">Cevapları Kontrol Et</button>
             </div> </div> <div id="ZararliMaddeler" class="tab-content">
             <h3>BÖLÜM 2: Sağlığa Zararlı Maddeler</h3>
             <p>Bu bölüm yakında eklenecektir. (Planımızın ikinci aşaması)</p>
@@ -572,6 +693,9 @@
     </div>
 
     <script>
+        // Global sürüklenen öğe değişkeni
+        var draggedItem = null;
+
         /* --- Sekmeli (Tab) Sistem JS --- */
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
@@ -587,15 +711,21 @@
             evt.currentTarget.className += " active";
         }
 
-        /* --- BÖLÜM 1.2: Sürükle-Bırak JS --- */
+        /* --- GENEL SÜRÜKLE-BIRAK Fonksiyonları --- */
         function drag(ev) {
             ev.dataTransfer.setData("text", ev.target.id);
-            ev.target.classList.add("dragging");
+            draggedItem = ev.target; // Sürüklenen öğeyi global değişkene ata
+            setTimeout(() => {
+                if (draggedItem) draggedItem.classList.add("dragging");
+            }, 0);
         }
 
         function allowDrop(ev) {
             ev.preventDefault();
-            ev.currentTarget.classList.add("drag-over");
+            // Sadece bir bırakma alanıysa 'drag-over' ekle
+            if (ev.target.classList.contains("drop-zone") || ev.target.classList.contains("fill-blank") || ev.target.id === "fill-word-bank" || ev.target.classList.contains("food-items-container")) {
+                ev.target.classList.add("drag-over");
+            }
         }
 
         function dragLeave(ev) {
@@ -604,22 +734,39 @@
 
         function drop(ev) {
             ev.preventDefault();
-            var data = ev.dataTransfer.getData("text");
-            var draggedElement = document.getElementById(data);
+            ev.currentTarget.classList.remove("drag-over");
             
-            if (draggedElement) {
-                if (ev.target.classList.contains("drop-zone")) {
-                    ev.target.appendChild(draggedElement);
-                } else {
-                    ev.target.closest('.drop-zone').appendChild(draggedElement);
+            if (!draggedItem) return;
+
+            var target = ev.currentTarget;
+
+            // Eğer bir .fill-blank (boşluk) içine bırakılıyorsa
+            if (target.classList.contains("fill-blank")) {
+                // Eğer boşlukta zaten bir kelime varsa, onu kelime havuzuna geri gönder
+                if (target.children.length > 0) {
+                    document.getElementById("fill-word-bank").appendChild(target.firstElementChild);
+                }
+                // Yeni kelimeyi boşluğa ekle
+                target.appendChild(draggedItem);
+            }
+            // Eğer .drop-zone (hayvansal/bitkisel) veya kelime havuzlarına bırakılıyorsa
+            else if (target.classList.contains("drop-zone") || target.id === "fill-word-bank" || target.classList.contains("food-items-container")) {
+                target.appendChild(draggedItem);
+            }
+            // Eğer bir öğenin üzerine bırakıldıysa, en yakın .drop-zone veya .fill-blank'e git
+            else {
+                var dropTarget = ev.target.closest('.drop-zone, .fill-blank, #fill-word-bank, .food-items-container');
+                if(dropTarget) {
+                    dropTarget.appendChild(draggedItem);
                 }
             }
-            draggedElement.classList.remove("dragging");
-            draggedElement.classList.add("dropped-item");
-            ev.currentTarget.classList.remove("drag-over");
+            
+            draggedItem.classList.remove("dragging");
+            draggedItem.classList.add("dropped-item"); // Bırakıldığını belirtmek için (1.2 için)
+            draggedItem = null;
         }
-        
-        // Sürükle-bırak cevap kontrolü
+
+        /* --- BÖLÜM 1.2: Sınıflandırma JS --- */
         function checkDragDropAnswers() {
             var dropZones = document.querySelectorAll(".drop-zone");
             dropZones.forEach(zone => {
@@ -646,18 +793,15 @@
             });
         }
 
-        /* --- YENİ BÖLÜM 1.3: Doğru-Yanlış JS --- */
+        /* --- BÖLÜM 1.3: Doğru-Yanlış JS --- */
         function checkTrueFalse(buttonElement, selectedAnswer) {
             var questionItem = buttonElement.closest('.tf-question');
             var correctAnswer = questionItem.dataset.answer;
             var feedbackElement = questionItem.querySelector('.tf-feedback');
             
-            // Cevap verildiyse tekrar tıklamayı engelle
             if (questionItem.classList.contains('tf-answered')) {
                 return;
             }
-            
-            // Cevap verildi olarak işaretle
             questionItem.classList.add('tf-answered');
 
             if (selectedAnswer === correctAnswer) {
@@ -669,7 +813,6 @@
                 feedbackElement.textContent = 'Yanlış!';
                 feedbackElement.className = 'tf-feedback incorrect';
                 
-                // Doğru olanı da göster (opsiyonel)
                 var allButtons = questionItem.querySelectorAll('.tf-btn');
                 allButtons.forEach(btn => {
                     if (btn.textContent === correctAnswer) {
@@ -678,6 +821,50 @@
                 });
             }
         }
+        
+        /* --- YENİ BÖLÜM 1.4: Boşluk Doldurma JS --- */
+        function checkFillBlanksAnswers() {
+            var allBlanks = document.querySelectorAll(".fill-blank");
+            
+            allBlanks.forEach(blank => {
+                var correctAnswer = blank.dataset.answer;
+                var droppedWordElement = blank.querySelector(".fill-word");
+                
+                // Önceki kontrol stillerini temizle
+                blank.classList.remove("incorrect");
+                if (droppedWordElement) {
+                    droppedWordElement.classList.remove("correct", "incorrect");
+                }
+
+                if (droppedWordElement) {
+                    var droppedWord = droppedWordElement.dataset.word;
+                    
+                    // 2. soru gibi çoklu cevaplılar için özel kontrol
+                    var parentLi = blank.closest('li');
+                    if (parentLi && parentLi.dataset.answer1 && parentLi.dataset.answer2) {
+                        if (droppedWord === parentLi.dataset.answer1 || droppedWord === parentLi.dataset.answer2) {
+                            droppedWordElement.classList.add("correct");
+                            // Bu kelimenin diğer boşluğun cevabı olup olmadığını da kontrol et
+                            // Bu, iki boşluğa da 'su' sürüklenirse ikisini de doğru kabul etmeyi engeller
+                            // (Şimdilik basit tutalım: eğer 'su' VEYA 'mineraller' ise doğru kabul et)
+                        } else {
+                            droppedWordElement.classList.add("incorrect");
+                        }
+                    } else {
+                        // Normal tek cevaplı sorular
+                        if (droppedWord === correctAnswer) {
+                            droppedWordElement.classList.add("correct");
+                        } else {
+                            droppedWordElement.classList.add("incorrect");
+                        }
+                    }
+                } else {
+                    // Boş bırakılmışsa
+                    blank.classList.add("incorrect");
+                }
+            });
+        }
+
     </script>
 
 </body>
