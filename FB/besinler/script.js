@@ -22,7 +22,69 @@ function flipCard(cardElement) {
     cardElement.classList.toggle('is-flipped');
 }
 
-/* --- GENEL SÜRÜKLE-BIRAK Fonksiyonları (Bölüm 1.2, 1.4, 1.6) --- */
+/* --- GENEL SÜRÜKLE-BIRAK Fonksiyonları (Bölüm 1.2, 1.4, 1.6, 2.2) --- */
+
+function allowDrop(ev) {
+    ev.preventDefault();
+    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source, #fill-word-bank-zararli";
+    
+    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
+    if (target) {
+         target.classList.add("drag-over");
+    }
+}
+
+function dragLeave(ev) {
+    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source, #fill-word-bank-zararli";
+    
+    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
+    if (target) {
+        target.classList.remove("drag-over");
+    }
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    if (!draggedItem) return;
+
+    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source, #fill-word-bank-zararli";
+    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
+    
+    if (!target) return;
+    
+    target.classList.remove("drag-over");
+
+    if (target.classList.contains("fill-blank") || target.classList.contains("pyramid-level")) {
+        if (target.children.length > 0 && target.firstElementChild !== draggedItem) {
+            var child = target.firstElementChild;
+            var sourceId;
+            
+            if (child.classList.contains('fill-word')) {
+                sourceId = 'fill-word-bank';
+            } else if (child.classList.contains('pyramid-label')) {
+                sourceId = 'pyramid-labels-source';
+            } else if (child.classList.contains('fill-word-zararli')) {
+                sourceId = 'fill-word-bank-zararli';
+            } else {
+                sourceId = 'food-items-source';
+            }
+            var sourceElement = document.getElementById(sourceId);
+            if (sourceElement) {
+                sourceElement.appendChild(child);
+            }
+        }
+        target.appendChild(draggedItem);
+    }
+    else if (target.matches(".drop-zone, #fill-word-bank, .food-items-container, #pyramid-labels-source, #fill-word-bank-zararli")) {
+        target.appendChild(draggedItem);
+    }
+    
+    if(draggedItem) { 
+         draggedItem.classList.remove("dragging");
+         draggedItem.classList.add("dropped-item"); 
+    }
+    draggedItem = null;
+}
 
 function drag(ev) {
     ev.dataTransfer.setData("text", ev.target.id);
@@ -30,57 +92,13 @@ function drag(ev) {
     setTimeout(() => {
         if (draggedItem) draggedItem.classList.add("dragging");
     }, 0);
-}
-
-function allowDrop(ev) {
-    ev.preventDefault();
-    // Tüm geçerli bırakma alanları
-    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source";
-    if (ev.target.matches(validDropTargets) || ev.target.closest(validDropTargets)) {
-         var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
-         target.classList.add("drag-over");
-    }
-}
-
-function dragLeave(ev) {
-    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source";
-    if (ev.target.matches(validDropTargets)) {
-        ev.target.classList.remove("drag-over");
-    }
-}
-
-function drop(ev) {
-    ev.preventDefault();
     
-    if (!draggedItem) return;
-
-    // Bırakma hedefini bul
-    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source";
-    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
-    
-    if (!target) return; // Geçerli bir hedef değilse bırak
-    
-    target.classList.remove("drag-over");
-
-    // Eğer bir .fill-blank (boşluk) veya .pyramid-level içine bırakılıyorsa
-    if (target.classList.contains("fill-blank") || target.classList.contains("pyramid-level")) {
-        // Eğer alanda zaten bir öğe varsa, onu kaynak havuzuna geri gönder
-        if (target.children.length > 0 && target.firstElementChild !== draggedItem) {
-            var child = target.firstElementChild;
-            var sourceId = child.classList.contains('fill-word') ? 'fill-word-bank' : 'pyramid-labels-source';
-            document.getElementById(sourceId).appendChild(child);
+    ev.target.addEventListener('dragend', () => {
+        if(draggedItem) { 
+             draggedItem.classList.remove("dragging");
+             draggedItem = null;
         }
-        // Yeni öğeyi alana ekle
-        target.appendChild(draggedItem);
-    }
-    // Eğer bir ana kaynak havuzuna (.drop-zone, kelime bankaları) bırakılıyorsa
-    else if (target.matches(".drop-zone, #fill-word-bank, .food-items-container, #pyramid-labels-source")) {
-        target.appendChild(draggedItem);
-    }
-    
-    draggedItem.classList.remove("dragging");
-    draggedItem.classList.add("dropped-item"); // (1.2 için)
-    draggedItem = null;
+    }, { once: true });
 }
 
 /* --- BÖLÜM 1.2: Sınıflandırma JS --- */
@@ -141,7 +159,7 @@ function checkTrueFalse(buttonElement, selectedAnswer) {
 
 /* --- BÖLÜM 1.4: Boşluk Doldurma JS --- */
 function checkFillBlanksAnswers() {
-    var allBlanks = document.querySelectorAll(".fill-blank");
+    var allBlanks = document.querySelectorAll(".fill-sentences .fill-blank"); // Sadece 1.4'tekileri seç
     
     allBlanks.forEach(blank => {
         var correctAnswer = blank.dataset.answer;
@@ -171,6 +189,15 @@ function checkFillBlanksAnswers() {
             }
         } else {
             blank.classList.add("incorrect");
+        }
+    });
+    
+    // Kaynak havuzunda kalanları yanlış işaretle
+    var source = document.getElementById("fill-word-bank");
+    source.querySelectorAll(".fill-word").forEach(word => {
+        if (!word.closest('.fill-blank')) {
+             word.classList.add("incorrect");
+             word.classList.remove("correct");
         }
     });
 }
@@ -238,8 +265,10 @@ function checkPyramidAnswers() {
     
     var source = document.getElementById("pyramid-labels-source");
     source.querySelectorAll(".pyramid-label").forEach(label => {
-        label.classList.add("incorrect");
-        label.classList.remove("correct");
+        if (!label.closest('.pyramid-level')) {
+            label.classList.add("incorrect");
+            label.classList.remove("correct");
+        }
     });
 }
 
@@ -276,34 +305,39 @@ function checkChecklist() {
 
 function selectMCQOption(selectedOption, answerText) {
     var container = selectedOption.closest('.mcq-question-container');
-    var feedbackEl = container.querySelector('.mcq-feedback');
-    var correctAnswer = feedbackEl.dataset.answer;
     
-    container.querySelectorAll('.mcq-option').forEach(opt => {
-        opt.classList.remove('selected', 'feedback-correct', 'feedback-incorrect');
-    });
-    
-    selectedOption.classList.add('selected');
-
-    if (answerText === correctAnswer) {
-        selectedOption.classList.add('feedback-correct');
-        feedbackEl.textContent = "Tebrikler, doğru!";
-        feedbackEl.className = "mcq-feedback feedback-correct";
-    } else {
-        selectedOption.classList.add('feedback-incorrect');
-        feedbackEl.textContent = "Yanlış cevap. Doğrusu 'B' şıkkı olacaktı.";
-        feedbackEl.className = "mcq-feedback feedback-incorrect";
+    // Eğer bu quiz'in bir parçasıysa (Bölüm 1.9), bu fonksiyonu kullanma
+    if (container.closest('#quiz-container')) {
+        // Bölüm 1.9'un kendi selectQuizOption() fonksiyonu var.
+        // Bu, Bölüm 1.7'deki tekil sorular içindir.
+        var feedbackEl = container.querySelector('.mcq-feedback');
+        var correctAnswer = feedbackEl.dataset.answer;
         
         container.querySelectorAll('.mcq-option').forEach(opt => {
-            if (opt.textContent === correctAnswer) {
-                opt.classList.add('feedback-correct');
-            }
+            opt.classList.remove('selected', 'feedback-correct', 'feedback-incorrect');
         });
+        
+        selectedOption.classList.add('selected');
+
+        if (answerText === correctAnswer) {
+            selectedOption.classList.add('feedback-correct');
+            feedbackEl.textContent = "Tebrikler, doğru!";
+            feedbackEl.className = "mcq-feedback feedback-correct";
+        } else {
+            selectedOption.classList.add('feedback-incorrect');
+            feedbackEl.textContent = "Yanlış cevap. Doğrusu 'B' şıkkı olacaktı.";
+            feedbackEl.className = "mcq-feedback feedback-incorrect";
+            
+            container.querySelectorAll('.mcq-option').forEach(opt => {
+                if (opt.textContent === correctAnswer) {
+                    opt.classList.add('feedback-correct');
+                }
+            });
+        }
     }
 }
-/* --- YENİ BÖLÜM 1.8: Bulmaca JS --- */
 
-// Bulmaca cevaplarını ve hücrelerini tanımla
+/* --- BÖLÜM 1.8: Bulmaca JS --- */
 const wordData = {
     1: { answer: "MİNERAL", cells: ["c-1-2", "c-2-2", "c-3-2", "c-4-2", "c-5-2", "c-6-2", "c-7-2"] },
     2: { answer: "TSE", cells: ["c-8-8", "c-9-8", "c-10-8"] },
@@ -316,21 +350,16 @@ const wordData = {
     9: { answer: "BAKTERİ", cells: ["c-10-4", "c-10-5", "c-10-6", "c-10-7", "c-10-8", "c-10-9", "c-10-10"] }
 };
 
-// Harf yazıldığında otomatik sonraki kutuya geç
 function bulmacaAutoTab(event) {
     const target = event.target;
     
-    // Sadece harf girildiğinde çalış (Backspace, Tab, vb. hariç)
     if (target.value.length === 1 && event.key.length === 1 && event.key.match(/[a-zçğıöşüA-ZÇĞİÖŞÜ]/i)) {
-        // Türkçe karakterleri de büyük harfe çevir
         target.value = target.value.toLocaleUpperCase('tr-TR');
         
         const inputs = Array.from(document.querySelectorAll('#bulmaca-gridi .bulmaca-input'));
         const currentIndex = inputs.indexOf(target);
         
-        // Son input değilse bir sonrakine odaklan
         if (currentIndex < inputs.length - 1) {
-            // Bir sonraki 'input' olan hücreye atla
             for (let i = currentIndex + 1; i < inputs.length; i++) {
                 if (inputs[i].tagName === 'INPUT') {
                     inputs[i].focus();
@@ -341,16 +370,14 @@ function bulmacaAutoTab(event) {
     }
 }
 
-// Backspace (Silme) tuşuna basıldığında bir öncekine geç
 function bulmacaBackspace(event) {
     if (event.key === 'Backspace') {
         const target = event.target;
-        if (target.value === '') { // Kutu zaten boşsa bir öncekine git
+        if (target.value === '') { 
             const inputs = Array.from(document.querySelectorAll('#bulmaca-gridi .bulmaca-input'));
             const currentIndex = inputs.indexOf(target);
             
             if (currentIndex > 0) {
-                // Bir önceki 'input' olan hücreye atla
                 for (let i = currentIndex - 1; i >= 0; i--) {
                     if (inputs[i].tagName === 'INPUT') {
                         inputs[i].focus();
@@ -362,22 +389,18 @@ function bulmacaBackspace(event) {
     }
 }
 
-// Bulmaca cevaplarını kontrol et
 function checkBulmacaAnswers() {
     let allWordsCorrect = true;
     
-    // Önce tüm stilleri temizle
     document.querySelectorAll('.bulmaca-input').forEach(input => {
         input.classList.remove('correct', 'incorrect');
     });
 
-    // Kelimeleri tek tek kontrol et
     for (const num in wordData) {
         const word = wordData[num];
         let userAnswer = "";
         let cells = [];
 
-        // Kelimeyi oluşturan hücrelerden harfleri al
         word.cells.forEach(cellId => {
             const cell = document.getElementById(cellId);
             if (cell) {
@@ -386,7 +409,6 @@ function checkBulmacaAnswers() {
             }
         });
 
-        // Cevabı kontrol et
         if (userAnswer === word.answer) {
             cells.forEach(cell => cell.classList.add('correct'));
         } else {
@@ -401,23 +423,20 @@ function checkBulmacaAnswers() {
         alert("Bazı hatalar var. Kırmızı kutuları kontrol edin.");
     }
 }
-/* --- YENİ BÖLÜM 1.9: Kazanım Testi JS --- */
 
-// Testte bir şık seçildiğinde
+/* --- BÖLÜM 1.9: Kazanım Testi JS --- */
+
 function selectQuizOption(selectedOption) {
-    // Bu sorunun kapsayıcısını bul
     var container = selectedOption.closest('.mcq-question-container');
     
-    // Bu soruya ait tüm seçeneklerdeki 'selected' sınıfını kaldır
+    // Sadece bu soruya ait seçenekleri temizle
     container.querySelectorAll('.mcq-option').forEach(opt => {
         opt.classList.remove('selected');
     });
     
-    // Sadece tıklanan seçeneğe 'selected' sınıfını ekle
     selectedOption.classList.add('selected');
 }
 
-// Testi Bitir butonuna basıldığında
 function submitQuiz() {
     let score = 0;
     const questions = document.querySelectorAll('#quiz-container .mcq-question-container');
@@ -428,7 +447,6 @@ function submitQuiz() {
         const selectedOption = question.querySelector('.mcq-option.selected');
         const feedbackEl = question.querySelector('.mcq-feedback');
 
-        // Önceki geri bildirimleri temizle
         question.querySelectorAll('.mcq-option').forEach(opt => {
             opt.classList.remove('feedback-correct', 'feedback-incorrect');
         });
@@ -437,18 +455,15 @@ function submitQuiz() {
             const userAnswer = selectedOption.textContent.charAt(0); // Cevabın harfi (A, B, C, D)
             
             if (userAnswer === correctAnswer) {
-                // CEVAP DOĞRU
                 score++;
                 selectedOption.classList.add('feedback-correct');
                 feedbackEl.textContent = "Doğru!";
                 feedbackEl.className = "mcq-feedback feedback-correct";
             } else {
-                // CEVAP YANLIŞ
                 selectedOption.classList.add('feedback-incorrect');
                 feedbackEl.textContent = "Yanlış! Doğru cevap: " + correctAnswer;
                 feedbackEl.className = "mcq-feedback feedback-incorrect";
                 
-                // Doğru cevabı da bulup yeşil yap
                 question.querySelectorAll('.mcq-option').forEach(opt => {
                     if (opt.textContent.charAt(0) === correctAnswer) {
                         opt.classList.add('feedback-correct');
@@ -456,11 +471,9 @@ function submitQuiz() {
                 });
             }
         } else {
-            // CEVAP BOŞ BIRAKILDI
             feedbackEl.textContent = "Boş Bırakıldı! Doğru cevap: " + correctAnswer;
             feedbackEl.className = "mcq-feedback feedback-incorrect";
             
-            // Doğru cevabı bulup yeşil yap
             question.querySelectorAll('.mcq-option').forEach(opt => {
                 if (opt.textContent.charAt(0) === correctAnswer) {
                     opt.classList.add('feedback-correct');
@@ -469,113 +482,15 @@ function submitQuiz() {
         }
     });
 
-    // Final Sonucunu Göster
     const resultsContainer = document.getElementById('quiz-results');
     resultsContainer.textContent = `Test Sonucu: ${totalQuestions} soruda ${score} doğru yaptın!`;
     resultsContainer.style.display = "block";
 
-    // Testi Bitir butonunu gizle ve sayfanın en altına kaydır
     document.getElementById('quiz-submit-button').style.display = 'none';
     resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
-/* --- BÖLÜM 2.2 İÇİN GÜNCELLENMİŞ DRAG/DROP FONKSİYONLARI --- */
-/* Bu fonksiyonlar script.js'deki eskilerinin yerine geçecek (üzerine yazacak) */
 
-function allowDrop(ev) {
-    ev.preventDefault();
-    // BÖLÜM 2.2 İÇİN YENİ SEÇİCİ EKLENDİ
-    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source, #fill-word-bank-zararli";
-    
-    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
-    if (target) {
-         target.classList.add("drag-over");
-    }
-}
-
-function dragLeave(ev) {
-    // BÖLÜM 2.2 İÇİN YENİ SEÇİCİ EKLENDİ
-    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source, #fill-word-bank-zararli";
-    
-    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
-    if (target) {
-        target.classList.remove("drag-over");
-    }
-}
-
-function drop(ev) {
-    ev.preventDefault();
-    if (!draggedItem) return;
-
-    // BÖLÜM 2.2 İÇİN YENİ SEÇİCİ EKLENDİ
-    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source, #fill-word-bank-zararli";
-    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
-    
-    if (!target) return;
-    
-    target.classList.remove("drag-over");
-
-    if (target.classList.contains("fill-blank") || target.classList.contains("pyramid-level")) {
-        if (target.children.length > 0 && target.firstElementChild !== draggedItem) {
-            var child = target.firstElementChild;
-            var sourceId;
-            
-            // BÖLÜM 2.2 İÇİN YENİ KONTROL EKLENDİ
-            if (child.classList.contains('fill-word')) {
-                sourceId = 'fill-word-bank';
-            } else if (child.classList.contains('pyramid-label')) {
-                sourceId = 'pyramid-labels-source';
-            } else if (child.classList.contains('fill-word-zararli')) {
-                sourceId = 'fill-word-bank-zararli';
-            } else {
-                // Diğer sürükle-bıraklar için (örn. 1.2) varsayılan
-                sourceId = 'food-items-source';
-            }
-            // Sadece bir kaynak havuzu varsa geri gönder (bazı öğeler kaynak havuzuna dönmez)
-            var sourceElement = document.getElementById(sourceId);
-            if (sourceElement) {
-                sourceElement.appendChild(child);
-            }
-        }
-        target.appendChild(draggedItem);
-    }
-    // BÖLÜM 2.2 İÇİN YENİ KONTROL EKLENDİ
-    else if (target.matches(".drop-zone, #fill-word-bank, .food-items-container, #pyramid-labels-source, #fill-word-bank-zararli")) {
-        target.appendChild(draggedItem);
-    }
-    
-    // draggedItem null kontrolü (dragend event'i bazen önce çalışabilir)
-    if(draggedItem) {
-        draggedItem.classList.remove("dragging");
-        // 'dropped-item' sınıfı sadece 1.2 için gerekliydi, daha genel bir yaklaşım daha iyi olabilir
-        // ama şimdilik bırakalım, zararı yok.
-        draggedItem.classList.add("dropped-item"); 
-    }
-    draggedItem = null;
-}
-
-// drag fonksiyonu zaten genel, onu güncellemeye gerek yok.
-// Ama dragend'de sürüklemeyi temizlemek iyi bir pratik olur.
-// Var olan drag() fonksiyonunu güncelleyelim.
-// NOT: Kullanıcı sadece ekleme yapıyorsa, bu da üzerine yazma (override) olacaktır.
-
-function drag(ev) {
-    ev.dataTransfer.setData("text", ev.target.id);
-    draggedItem = ev.target;
-    setTimeout(() => {
-        if (draggedItem) draggedItem.classList.add("dragging");
-    }, 0);
-    
-    // Sürükleme bittiğinde (başarısız bir bırakma dahil) stili temizle
-    ev.target.addEventListener('dragend', () => {
-        if(draggedItem) { // Hâlâ sürükleniyorsa (drop() içinde null yapılmadıysa)
-             draggedItem.classList.remove("dragging");
-             draggedItem = null;
-        }
-    }, { once: true }); // Olayı sadece bir kez dinle
-}
-
-
-/* --- YENİ BÖLÜM 2.2: Boşluk Doldurma (Zararlı) JS --- */
+/* --- BÖLÜM 2.2: Boşluk Doldurma (Zararlı) JS --- */
 function checkFillBlanksZararli() {
     var allBlanks = document.querySelectorAll("#zararli-fill-sentences .fill-blank");
     
@@ -583,7 +498,6 @@ function checkFillBlanksZararli() {
         var correctAnswer = blank.dataset.answer;
         var droppedWordElement = blank.querySelector(".fill-word-zararli"); // Sadece bu bölümün kelimelerini ara
         
-        // Önceki kontrol stillerini temizle
         blank.classList.remove("incorrect");
         if (droppedWordElement) {
             droppedWordElement.classList.remove("correct", "incorrect");
@@ -597,32 +511,28 @@ function checkFillBlanksZararli() {
                 droppedWordElement.classList.add("incorrect");
             }
         } else {
-            // Boş bırakılmışsa
             blank.classList.add("incorrect");
         }
     });
 
-    // Kaynak havuzunda kalanları yanlış işaretle
     var source = document.getElementById("fill-word-bank-zararli");
     source.querySelectorAll(".fill-word-zararli").forEach(word => {
-        if (!word.closest('.fill-blank')) { // Eğer bir boşluğun içinde değilse
+        if (!word.closest('.fill-blank')) { 
              word.classList.add("incorrect");
              word.classList.remove("correct");
         }
     });
 }
-/* --- YENİ BÖLÜM 2.3: Hastalık Tablosu JS --- */
 
-// Tıklanan hücreye 'selected' sınıfı ekle/kaldır
+/* --- BÖLÜM 2.3: Hastalık Tablosu JS --- */
+
 function toggleDiseaseCell(cell) {
-    // Kontrol edildikten sonra (correct/incorrect sınıfı varsa) değiştirmeyi engelle
     if (cell.classList.contains('correct') || cell.classList.contains('incorrect') || cell.classList.contains('missing')) {
         return;
     }
     cell.classList.toggle('selected');
 }
 
-// Tabloyu kontrol et
 function checkDiseaseTable() {
     const rows = document.querySelectorAll("#disease-table tbody tr");
 
@@ -631,28 +541,25 @@ function checkDiseaseTable() {
         const sigaraCell = cells[0];
         const alkolCell = cells[1];
         
-        // Gerekli cevaplar (true/false)
         const needsSigara = row.dataset.sigara === 'true';
         const needsAlkol = row.dataset.alkol === 'true';
         
-        // Öğrenci cevapları (tıklanmış mı?)
         const selectedSigara = sigaraCell.classList.contains('selected');
         const selectedAlkol = alkolCell.classList.contains('selected');
         
-        // Önceki geri bildirimleri temizle
         sigaraCell.classList.remove('correct', 'incorrect', 'missing', 'selected');
         alkolCell.classList.remove('correct', 'incorrect', 'missing', 'selected');
 
-        // SİGARA hücresini kontrol et
+        // SİGARA hücresi
         if (needsSigara && selectedSigara) {
-            sigaraCell.classList.add('correct'); // Doğru seçildi
+            sigaraCell.classList.add('correct'); 
         } else if (!needsSigara && selectedSigara) {
-            sigaraCell.classList.add('incorrect'); // Yanlış seçildi
+            sigaraCell.classList.add('incorrect');
         } else if (needsSigara && !selectedSigara) {
-            sigaraCell.classList.add('missing'); // Seçilmeliydi, seçilmedi
+            sigaraCell.classList.add('missing');
         }
         
-        // ALKOL hücresini kontrol et
+        // ALKOL hücresi
         if (needsAlkol && selectedAlkol) {
             alkolCell.classList.add('correct');
         } else if (!needsAlkol && selectedAlkol) {
