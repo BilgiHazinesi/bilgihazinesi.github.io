@@ -301,3 +301,103 @@ function selectMCQOption(selectedOption, answerText) {
         });
     }
 }
+/* --- YENİ BÖLÜM 1.8: Bulmaca JS --- */
+
+// Bulmaca cevaplarını ve hücrelerini tanımla
+const wordData = {
+    1: { answer: "MİNERAL", cells: ["c-1-2", "c-2-2", "c-3-2", "c-4-2", "c-5-2", "c-6-2", "c-7-2"] },
+    2: { answer: "TSE", cells: ["c-8-8", "c-9-8", "c-10-8"] },
+    3: { answer: "YAĞLAR", cells: ["c-4-1", "c-4-2", "c-4-3", "c-4-4", "c-4-5", "c-4-6"] },
+    4: { answer: "BESİN", cells: ["c-6-4", "c-7-4", "c-8-4", "c-9-4", "c-10-4"] },
+    5: { answer: "PROTEİN", cells: ["c-6-2", "c-6-3", "c-6-4", "c-6-5", "c-6-6", "c-6-7", "c-6-8"] },
+    6: { answer: "KARBONHİDRAT", cells: ["c-2-1", "c-2-2", "c-2-3", "c-2-4", "c-2-5", "c-2-6", "c-2-7", "c-2-8", "c-2-9", "c-2-10", "c-2-11"] },
+    7: { answer: "VİTAMİN", cells: ["c-8-4", "c-8-5", "c-8-6", "c-8-7", "c-8-8", "c-8-9", "c-8-10"] },
+    8: { answer: "SU", cells: ["c-3-5", "c-4-5"] },
+    9: { answer: "BAKTERİ", cells: ["c-10-4", "c-10-5", "c-10-6", "c-10-7", "c-10-8", "c-10-9", "c-10-10"] }
+};
+
+// Harf yazıldığında otomatik sonraki kutuya geç
+function bulmacaAutoTab(event) {
+    const target = event.target;
+    
+    // Sadece harf girildiğinde çalış (Backspace, Tab, vb. hariç)
+    if (target.value.length === 1 && event.key.length === 1 && event.key.match(/[a-zçğıöşüA-ZÇĞİÖŞÜ]/i)) {
+        // Türkçe karakterleri de büyük harfe çevir
+        target.value = target.value.toLocaleUpperCase('tr-TR');
+        
+        const inputs = Array.from(document.querySelectorAll('#bulmaca-gridi .bulmaca-input'));
+        const currentIndex = inputs.indexOf(target);
+        
+        // Son input değilse bir sonrakine odaklan
+        if (currentIndex < inputs.length - 1) {
+            // Bir sonraki 'input' olan hücreye atla
+            for (let i = currentIndex + 1; i < inputs.length; i++) {
+                if (inputs[i].tagName === 'INPUT') {
+                    inputs[i].focus();
+                    break;
+                }
+            }
+        }
+    }
+}
+
+// Backspace (Silme) tuşuna basıldığında bir öncekine geç
+function bulmacaBackspace(event) {
+    if (event.key === 'Backspace') {
+        const target = event.target;
+        if (target.value === '') { // Kutu zaten boşsa bir öncekine git
+            const inputs = Array.from(document.querySelectorAll('#bulmaca-gridi .bulmaca-input'));
+            const currentIndex = inputs.indexOf(target);
+            
+            if (currentIndex > 0) {
+                // Bir önceki 'input' olan hücreye atla
+                for (let i = currentIndex - 1; i >= 0; i--) {
+                    if (inputs[i].tagName === 'INPUT') {
+                        inputs[i].focus();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Bulmaca cevaplarını kontrol et
+function checkBulmacaAnswers() {
+    let allWordsCorrect = true;
+    
+    // Önce tüm stilleri temizle
+    document.querySelectorAll('.bulmaca-input').forEach(input => {
+        input.classList.remove('correct', 'incorrect');
+    });
+
+    // Kelimeleri tek tek kontrol et
+    for (const num in wordData) {
+        const word = wordData[num];
+        let userAnswer = "";
+        let cells = [];
+
+        // Kelimeyi oluşturan hücrelerden harfleri al
+        word.cells.forEach(cellId => {
+            const cell = document.getElementById(cellId);
+            if (cell) {
+                userAnswer += cell.value.toLocaleUpperCase('tr-TR');
+                cells.push(cell);
+            }
+        });
+
+        // Cevabı kontrol et
+        if (userAnswer === word.answer) {
+            cells.forEach(cell => cell.classList.add('correct'));
+        } else {
+            cells.forEach(cell => cell.classList.add('incorrect'));
+            allWordsCorrect = false;
+        }
+    }
+
+    if (allWordsCorrect) {
+        alert("Tebrikler! Bulmacayı tamamen doğru çözdünüz!");
+    } else {
+        alert("Bazı hatalar var. Kırmızı kutuları kontrol edin.");
+    }
+}
