@@ -478,3 +478,136 @@ function submitQuiz() {
     document.getElementById('quiz-submit-button').style.display = 'none';
     resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+/* --- BÖLÜM 2.2 İÇİN GÜNCELLENMİŞ DRAG/DROP FONKSİYONLARI --- */
+/* Bu fonksiyonlar script.js'deki eskilerinin yerine geçecek (üzerine yazacak) */
+
+function allowDrop(ev) {
+    ev.preventDefault();
+    // BÖLÜM 2.2 İÇİN YENİ SEÇİCİ EKLENDİ
+    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source, #fill-word-bank-zararli";
+    
+    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
+    if (target) {
+         target.classList.add("drag-over");
+    }
+}
+
+function dragLeave(ev) {
+    // BÖLÜM 2.2 İÇİN YENİ SEÇİCİ EKLENDİ
+    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source, #fill-word-bank-zararli";
+    
+    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
+    if (target) {
+        target.classList.remove("drag-over");
+    }
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    if (!draggedItem) return;
+
+    // BÖLÜM 2.2 İÇİN YENİ SEÇİCİ EKLENDİ
+    const validDropTargets = ".drop-zone, .fill-blank, #fill-word-bank, .food-items-container, .pyramid-level, #pyramid-labels-source, #fill-word-bank-zararli";
+    var target = ev.target.matches(validDropTargets) ? ev.target : ev.target.closest(validDropTargets);
+    
+    if (!target) return;
+    
+    target.classList.remove("drag-over");
+
+    if (target.classList.contains("fill-blank") || target.classList.contains("pyramid-level")) {
+        if (target.children.length > 0 && target.firstElementChild !== draggedItem) {
+            var child = target.firstElementChild;
+            var sourceId;
+            
+            // BÖLÜM 2.2 İÇİN YENİ KONTROL EKLENDİ
+            if (child.classList.contains('fill-word')) {
+                sourceId = 'fill-word-bank';
+            } else if (child.classList.contains('pyramid-label')) {
+                sourceId = 'pyramid-labels-source';
+            } else if (child.classList.contains('fill-word-zararli')) {
+                sourceId = 'fill-word-bank-zararli';
+            } else {
+                // Diğer sürükle-bıraklar için (örn. 1.2) varsayılan
+                sourceId = 'food-items-source';
+            }
+            // Sadece bir kaynak havuzu varsa geri gönder (bazı öğeler kaynak havuzuna dönmez)
+            var sourceElement = document.getElementById(sourceId);
+            if (sourceElement) {
+                sourceElement.appendChild(child);
+            }
+        }
+        target.appendChild(draggedItem);
+    }
+    // BÖLÜM 2.2 İÇİN YENİ KONTROL EKLENDİ
+    else if (target.matches(".drop-zone, #fill-word-bank, .food-items-container, #pyramid-labels-source, #fill-word-bank-zararli")) {
+        target.appendChild(draggedItem);
+    }
+    
+    // draggedItem null kontrolü (dragend event'i bazen önce çalışabilir)
+    if(draggedItem) {
+        draggedItem.classList.remove("dragging");
+        // 'dropped-item' sınıfı sadece 1.2 için gerekliydi, daha genel bir yaklaşım daha iyi olabilir
+        // ama şimdilik bırakalım, zararı yok.
+        draggedItem.classList.add("dropped-item"); 
+    }
+    draggedItem = null;
+}
+
+// drag fonksiyonu zaten genel, onu güncellemeye gerek yok.
+// Ama dragend'de sürüklemeyi temizlemek iyi bir pratik olur.
+// Var olan drag() fonksiyonunu güncelleyelim.
+// NOT: Kullanıcı sadece ekleme yapıyorsa, bu da üzerine yazma (override) olacaktır.
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+    draggedItem = ev.target;
+    setTimeout(() => {
+        if (draggedItem) draggedItem.classList.add("dragging");
+    }, 0);
+    
+    // Sürükleme bittiğinde (başarısız bir bırakma dahil) stili temizle
+    ev.target.addEventListener('dragend', () => {
+        if(draggedItem) { // Hâlâ sürükleniyorsa (drop() içinde null yapılmadıysa)
+             draggedItem.classList.remove("dragging");
+             draggedItem = null;
+        }
+    }, { once: true }); // Olayı sadece bir kez dinle
+}
+
+
+/* --- YENİ BÖLÜM 2.2: Boşluk Doldurma (Zararlı) JS --- */
+function checkFillBlanksZararli() {
+    var allBlanks = document.querySelectorAll("#zararli-fill-sentences .fill-blank");
+    
+    allBlanks.forEach(blank => {
+        var correctAnswer = blank.dataset.answer;
+        var droppedWordElement = blank.querySelector(".fill-word-zararli"); // Sadece bu bölümün kelimelerini ara
+        
+        // Önceki kontrol stillerini temizle
+        blank.classList.remove("incorrect");
+        if (droppedWordElement) {
+            droppedWordElement.classList.remove("correct", "incorrect");
+        }
+
+        if (droppedWordElement) {
+            var droppedWord = droppedWordElement.dataset.word;
+            if (droppedWord === correctAnswer) {
+                droppedWordElement.classList.add("correct");
+            } else {
+                droppedWordElement.classList.add("incorrect");
+            }
+        } else {
+            // Boş bırakılmışsa
+            blank.classList.add("incorrect");
+        }
+    });
+
+    // Kaynak havuzunda kalanları yanlış işaretle
+    var source = document.getElementById("fill-word-bank-zararli");
+    source.querySelectorAll(".fill-word-zararli").forEach(word => {
+        if (!word.closest('.fill-blank')) { // Eğer bir boşluğun içinde değilse
+             word.classList.add("incorrect");
+             word.classList.remove("correct");
+        }
+    });
+}
