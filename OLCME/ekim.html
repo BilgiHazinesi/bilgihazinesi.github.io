@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-D Sınıfı Öğrenci Notları</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: #f9fafb;
+            padding: 24px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            padding: 32px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #bfdbfe;
+            font-size: 0.95rem;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .tab {
+            padding: 16px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .filters {
+            padding: 24px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .filter-item input,
+        .filter-item select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .filter-item input:focus,
+        .filter-item select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .range-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+        }
+
+        .filter-info {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .filter-info strong {
+            color: #1f2937;
+        }
+
+        .filter-info button {
+            background: none;
+            border: none;
+            color: #dc2626;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-left: 8px;
+        }
+
+        .view-content {
+            display: none;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead tr {
+            background: #f3f4f6;
+            border-bottom: 2px solid #d1d5db;
+        }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        th:hover {
+            background: #e5e7eb;
+        }
+
+        th.sortable::after {
+            content: ' ⇅';
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        th.sorted-asc::after {
+            content: ' ▲';
+            color: #2563eb;
+        }
+
+        th.sorted-desc::after {
+            content: ' ▼';
+            color: #2563eb;
+        }
+
+        th.center {
+            text-align: center;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #eff6ff;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        tbody tr:nth-child(even):hover {
+            background: #eff6ff;
+        }
+
+        tbody tr.selected {
+            background: #dbeafe !important;
+        }
+
+        td {
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            color: #1f2937;
+        }
+
+        td.center {
+            text-align: center;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #2563eb;
+        }
+
+        /* --- YENİ NOT HÜCRESİ STİLİ (TABLO İÇİN) --- */
+        .grade-cell {
+            text-align: center;
+            font-weight: bold;
+            color: #222; /* Koyu Metin */
+            /* Okunabilirlik için metne hafif beyaz gölge */
+            text-shadow: 0 0 3px #ffffffc0; 
+            font-size: 0.95rem;
+            /* Arkaplan gradyanı JS tarafından inline olarak atanacak */
+        }
+        
+
+        /* --- ESKİ NOT ROZETLERİ (KARŞILAŞTIRMA EKRANI İÇİN KORUNUYOR) --- */
+        .grade-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: 2px solid;
+        }
+        .grade-excellent {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+        .grade-good {
+            background: #fef9c3;
+            color: #854d0e;
+            border-color: #fde047;
+        }
+        .grade-average {
+            background: #fed7aa;
+            color: #9a3412;
+            border-color: #fdba74;
+        }
+        .grade-poor {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+        /* --- ESKİ STİLLER SONU --- */
+
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 24px;
+        }
+
+        .student-card {
+            background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+            border: 2px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .student-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .student-card h4 {
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .student-card .student-no {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #dc2626;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .remove-btn:hover {
+            color: #991b1b;
+        }
+
+        .grade-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .grade-row span:first-child {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .student-card .divider {
+            border-top: 2px solid #bfdbfe;
+            margin: 12px 0;
+            padding-top: 12px;
+        }
+
+        .student-card .avg-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .student-card .avg-row span:first-child {
+            font-weight: bold;
+            color: #374151;
+        }
+
+        .student-card .avg-row span:last-child {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: #9ca3af;
+            font-size: 0.95rem;
+        }
+
+        .analysis-content {
+            padding: 24px;
+        }
+
+        .analysis-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+            border: 2px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .stat-card h4 {
+            color: #1e40af;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .stat-row span:first-child {
+            color: #6b7280;
+        }
+
+        .stat-row span:last-child {
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #bfdbfe;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: #2563eb;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .ranking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 24px;
+        }
+
+        .ranking-card {
+            background: white;
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .ranking-card.top {
+            border-color: #86efac;
+        }
+
+        .ranking-card.support {
+            border-color: #fdba74;
+        }
+
+        .ranking-card h4 {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ranking-card.top h4 {
+            color: #166534;
+        }
+
+        .ranking-card.support h4 {
+            color: #9a3412;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+
+        .ranking-card.top .ranking-item {
+            background: #f0fdf4;
+        }
+
+        .ranking-card.support .ranking-item {
+            background: #fff7ed;
+        }
+
+        .ranking-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ranking-number {
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-width: 30px;
+        }
+
+        .ranking-card.top .ranking-number {
+            color: #166534;
+        }
+
+        .ranking-card.support .ranking-number {
+            color: #9a3412;
+        }
+
+        .ranking-name {
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .ranking-score {
+            font-weight: bold;
+        }
+
+        .ranking-card.top .ranking-score {
+            color: #166534;
+        }
+
+        .ranking-card.support .ranking-score {
+            color: #9a3412;
+        }
+
+        .sort-info {
+            padding: 12px 24px;
+            background: #eff6ff;
+            border-bottom: 1px solid #bfdbfe;
+            font-size: 0.9rem;
+            color: #1e40af;
+        }
+
+        @media (max-width: 768px) {
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ranking-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+            
+            .grade-cell {
+                font-size: 0.85rem;
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>4-D SINIFI ÖĞRENCİ NOTLARI</h1>
+                <p>Gelişmiş Analiz ve Karşılaştırma Sistemi</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchView('table')">📋 Öğrenci Listesi</button>
+                <button class="tab" onclick="switchView('compare')">📊 Karşılaştırma (<span id="selected-count">0</span>)</button>
+                <button class="tab" onclick="switchView('analysis')">📈 Detaylı Analiz</button>
+            </div>
+
+            <div class="filters">
+                <div class="filter-grid">
+                    <div class="filter-item">
+                        <input type="text" id="search-input" placeholder="🔍 Öğrenci ara..." oninput="applyFilters()">
+                    </div>
+                    
+                    <div class="filter-item">
+                        <select id="subject-filter" onchange="applyFilters()">
+                            <option value="all">Tüm Dersler (Ortalama)</option>
+                            <option value="fen">Fen Bilimleri</option>
+                            <option value="mat">Matematik</option>
+                            <option value="sosyal">Sosyal Bilgiler</option>
+                            <option value="turkce">Türkçe</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label class="range-label">Min. Not: <span id="min-label">0</span></label>
+                        <input type="range" id="min-grade" min="0" max="100" value="0" oninput="updateMinLabel(); applyFilters()">
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label class="range-label">Max. Not: <span id="max-label">100</span></label>
+                        <input type="range" id="max-grade" min="0" max="100" value="100" oninput="updateMaxLabel(); applyFilters()">
+                    </div>
+                </div>
+                <div class="filter-info">
+                    <strong id="filtered-count">24</strong> öğrenci gösteriliyor
+                    <span id="selection-info"></span>
+                </div>
+            </div>
+
+            <div id="sort-info" class="sort-info" style="display: none;"></div>
+
+            <div id="view-table" class="view-content active"></div>
+            <div id="view-compare" class="view-content"></div>
+            <div id="view-analysis" class="view-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const students = [
+            { no: 1, name: "EYLÜL MUTAF", fen: 100, mat: 65, sosyal: 85, turkce: 71 },
+            { no: 2, name: "KADİR BERKTAŞ", fen: 99, mat: 79, sosyal: 100, turkce: 85 },
+            { no: 3, name: "AYNUR BUDAK", fen: 90, mat: 100, sosyal: 82, turkce: 53 },
+            { no: 4, name: "MASAL DEFNE TEL", fen: 87, mat: 77, sosyal: 98, turkce: 87 },
+            { no: 5, name: "WAFA MAKANSSI", fen: 76, mat: 20, sosyal: 52, turkce: 63 },
+            { no: 6, name: "EYLÜL AFAT", fen: 99, mat: 70, sosyal: 78, turkce: 76 },
+            { no: 7, name: "ELİF ADA KEKEÇ", fen: 90, mat: 65, sosyal: 88, turkce: 76 },
+            { no: 8, name: "DENİZ KİMYON", fen: 94, mat: 67, sosyal: 100, turkce: 90 },
+            { no: 9, name: "İPEK MİMAROĞLU", fen: 90, mat: 45, sosyal: 74, turkce: 75 },
+            { no: 10, name: "HAMZA KAAN ÇEVEN", fen: 94, mat: 55, sosyal: 95, turkce: 51 },
+            { no: 11, name: "AHMET CEVDET KORKMAZ", fen: 86, mat: 85, sosyal: 93, turkce: 81 },
+            { no: 12, name: "BEYZA DAĞDELEN", fen: 91, mat: 35, sosyal: 79, turkce: 54 },
+            { no: 13, name: "NAZ KARABAĞLI", fen: 80, mat: 40, sosyal: 52, turkce: 46 },
+            { no: 14, name: "HÜSEYİN ÇAĞAN GÜRGAH", fen: 90, mat: 80, sosyal: 95, turkce: 77 },
+            { no: 15, name: "DURU BÜKÜN", fen: 91, mat: 20, sosyal: 60, turkce: 69 },
+            { no: 16, name: "YEKTA URAS DEMİRER", fen: 71, mat: 28, sosyal: 98, turkce: 70 },
+            { no: 17, name: "DURU AYKANAT", fen: 95, mat: 81, sosyal: 98, turkce: 84 },
+            { no: 18, name: "HAKAN AKDENİZ", fen: 100, mat: 83, sosyal: 100, turkce: 93 },
+            { no: 19, name: "DOĞA BORA", fen: 100, mat: 70, sosyal: 90, turkce: 89 },
+            { no: 20, name: "AHMET ARIN AGTÜRK", fen: 85, mat: 95, sosyal: 67, turkce: 64 },
+            { no: 21, name: "İDİL DEMİRCİ", fen: 94, mat: 94, sosyal: 81, turkce: 71 },
+            { no: 22, name: "DENİZ GÜNEY", fen: 93, mat: 100, sosyal: 97, turkce: 86 },
+            { no: 23, name: "GÜLNİHAL KARAKAŞ", fen: 95, mat: 80, sosyal: 87, turkce: 82 },
+            { no: 24, name: "NİL TİRYAKİ", fen: 100, mat: 60, sosyal: 74, turkce: 67 }
+        ];
+
+        let selectedStudents = [];
+        let currentView = 'table';
+        let currentSort = { column: null, direction: 'asc' };
+
+        function calculateAverage(student) {
+            return ((student.fen + student.mat + student.sosyal + student.turkce) / 4).toFixed(2);
+        }
+
+        // Karşılaştırma sekmesi için bu fonksiyonu saklıyoruz
+        function getGradeClass(grade) {
+            if (grade >= 85) return 'grade-excellent';
+            if (grade >= 70) return 'grade-good';
+            if (grade >= 50) return 'grade-average';
+            return 'grade-poor';
+        }
+
+        function updateMinLabel() {
+            document.getElementById('min-label').textContent = document.getElementById('min-grade').value;
+        }
+
+        function updateMaxLabel() {
+            document.getElementById('max-label').textContent = document.getElementById('max-grade').value;
+        }
+
+        function toggleStudent(no) {
+            const index = selectedStudents.indexOf(no);
+            if (index > -1) {
+                selectedStudents.splice(index, 1);
+            } else {
+                selectedStudents.push(no);
+            }
+            document.getElementById('selected-count').textContent = selectedStudents.length;
+            updateSelectionInfo();
+            renderCurrentView(); 
+        }
+
+        function clearSelection() {
+            selectedStudents = [];
+            document.getElementById('selected-count').textContent = '0';
+            updateSelectionInfo();
+            renderCurrentView(); 
+        }
+
+        function updateSelectionInfo() {
+            const info = document.getElementById('selection-info');
+            if (selectedStudents.length > 0) {
+                info.innerHTML = `<span style="margin-left: 16px;"><strong style="color: #2563eb;">${selectedStudents.length}</strong> öğrenci seçili 
+                    <button onclick="clearSelection()">Seçimi Temizle</button></span>`;
+            } else {
+                info.innerHTML = '';
+            }
+        }
+
+        function sortTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'desc'; 
+            }
+            applyFilters();
+        }
+
+        function getSortedStudents(studentsArray) {
+            if (!currentSort.column) return studentsArray;
+
+            const sorted = [...studentsArray].sort((a, b) => {
+                let aVal, bVal;
+
+                if (currentSort.column === 'name') {
+                    aVal = a.name.toLowerCase();
+                    bVal = b.name.toLowerCase();
+                    return currentSort.direction === 'asc' 
+                        ? aVal.localeCompare(bVal, 'tr')
+                        : bVal.localeCompare(aVal, 'tr');
+                } else if (currentSort.column === 'avg') {
+                    aVal = parseFloat(calculateAverage(a));
+                    bVal = parseFloat(calculateAverage(b));
+                } else {
+                    aVal = a[currentSort.column];
+                    bVal = b[currentSort.column];
+                }
+
+                if (currentSort.direction === 'asc') {
+                    return aVal - bVal;
+                } else {
+                    return bVal - aVal;
+                }
+            });
+
+            return sorted;
+        }
+
+        function updateSortInfo() {
+            const sortInfo = document.getElementById('sort-info');
+            if (currentSort.column) {
+                const columnNames = {
+                    name: 'İsim (Alfabetik)',
+                    fen: 'Fen Bilimleri',
+                    mat: 'Matematik',
+                    sosyal: 'Sosyal Bilgiler',
+                    turkce: 'Türkçe',
+                    avg: 'Ortalama'
+                };
+                const directionText = currentSort.direction === 'asc' ? 'Küçükten Büyüğe' : 'Büyükten Küçüğe';
+                const directionIcon = currentSort.direction === 'asc' ? '▲' : '▼';
+                
+                sortInfo.textContent = `Sıralama: ${columnNames[currentSort.column]} ${directionIcon} ${directionText}`;
+                sortInfo.style.display = 'block';
+            } else {
+                sortInfo.style.display = 'none';
+            }
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const subject = document.getElementById('subject-filter').value;
+            const minGrade = parseInt(document.getElementById('min-grade').value);
+            const maxGrade = parseInt(document.getElementById('max-grade').value);
+
+            let filtered = students.filter(student => {
+                const matchesSearch = student.name.toLowerCase().includes(searchTerm);
+                
+                let matchesGrade = true;
+                if (subject === 'all') {
+                    const avg = parseFloat(calculateAverage(student));
+                    matchesGrade = avg >= minGrade && avg <= maxGrade;
+                } else {
+                    const grade = student[subject];
+                    matchesGrade = grade >= minGrade && grade <= maxGrade;
+                }
+                
+                return matchesSearch && matchesGrade;
+            });
+
+            filtered = getSortedStudents(filtered);
+
+            document.getElementById('filtered-count').textContent = filtered.length;
+            updateSortInfo();
+            renderTable(filtered); 
+        }
+
+        // *** GÖRSELE GÖRE YENİDEN DÜZENLENMİŞ RENDER FONKSİYONU ***
+        function renderTable(filteredStudents = students) {
+            const getSortClass = (column) => {
+                if (currentSort.column === column) {
+                    return currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc';
+                }
+                return 'sortable';
+            };
+            
+            // Renk paleti (Görseldekine benzer)
+            const colors = {
+                fen: '#82c8ff',     // Açık Mavi
+                mat: '#ff78b4',     // Pembe
+                sosyal: '#96aaff',  // Mavimsi
+                turkce: '#ffb450',  // Turuncu
+                avg: '#8ce68c',      // Yeşil
+                empty: '#f3f4f6'    // Boş alan rengi (gri)
+            };
+
+            const tableHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="center">Seç</th>
+                                <th>No</th>
+                                <th class="${getSortClass('name')}" onclick="sortTable('name')">Öğrenci Adı</th>
+                                <th class="center ${getSortClass('fen')}" onclick="sortTable('fen')">Fen</th>
+                                <th class="center ${getSortClass('mat')}" onclick="sortTable('mat')">Mat</th>
+                                <th class="center ${getSortClass('sosyal')}" onclick="sortTable('sosyal')">Sosyal</th>
+                                <th class="center ${getSortClass('turkce')}" onclick="sortTable('turkce')">Türkçe</th>
+                                <th class="center ${getSortClass('avg')}" onclick="sortTable('avg')">Ort.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filteredStudents.map(student => {
+                                const avg = calculateAverage(student);
+                                // Not: 'background-size' kullanmak yerine gradyanın durak noktalarını 
+                                // ayarlamak daha temiz bir "bar" efekti yaratır.
+                                return `
+                                <tr class=" ${selectedStudents.includes(student.no) ? 'selected' : ''}">
+                                    <td class="center">
+                                        <input type="checkbox" ${selectedStudents.includes(student.no) ? 'checked' : ''} 
+                                               onclick="toggleStudent(${student.no})">
+                                    </td>
+                                    <td>${student.no}</td>
+                                    <td><strong>${student.name}</strong></td>
+                                    
+                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.fen} ${student.fen}%, ${colors.empty} ${student.fen}%);">
+                                        ${student.fen}
+                                    </td>
+                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.mat} ${student.mat}%, ${colors.empty} ${student.mat}%);">
+                                        ${student.mat}
+                                    </td>
+                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.sosyal} ${student.sosyal}%, ${colors.empty} ${student.sosyal}%);">
+                                        ${student.sosyal}
+                                    </td>
+                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.turkce} ${student.turkce}%, ${colors.empty} ${student.turkce}%);">
+                                        ${student.turkce}
+                                    </td>
+                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.avg} ${avg}%, ${colors.empty} ${avg}%);">
+                                        ${avg}
+                                    </td>
+                                </tr>
+                            `}).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            document.getElementById('view-table').innerHTML = tableHTML;
+        }
+
+        // Karşılaştırma sekmesi orijinal 'rozet' stilini kullanmaya devam ediyor
+        function renderCompare() {
+            const container = document.getElementById('view-compare');
+            const selected = students.filter(s => selectedStudents.includes(s.no));
+
+            if (selected.length === 0) {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">🤔</div>
+                    <h3>Karşılaştırma için Öğrenci Seçilmedi</h3>
+                    <p>Öğrenci listesinden en az bir öğrenci seçerek buraya ekleyebilirsiniz.</p>
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="compare-grid">
+                ${selected.map(s => {
+                    const avg = calculateAverage(s);
+                    return `
+                    <div class="student-card">
+                        <div class="student-card-header">
+                            <div>
+                                <h4>${s.name}</h4>
+                                <span class="student-no">No: ${s.no}</span>
+                            </div>
+                            <button class="remove-btn" title="Karşılaştırmadan Çıkar" onclick="toggleStudent(${s.no})">&times;</button>
+                        </div>
+                        <div class="grade-row">
+                            <span>Fen Bilimleri:</span>
+                            <span class="grade-badge ${getGradeClass(s.fen)}">${s.fen}</span>
+                        </div>
+                        <div class="grade-row">
+                            <span>Matematik:</span>
+                            <span class="grade-badge ${getGradeClass(s.mat)}">${s.mat}</span>
+                        </div>
+                        <div class="grade-row">
+                            <span>Sosyal Bilgiler:</span>
+                            <span class="grade-badge ${getGradeClass(s.sosyal)}">${s.sosyal}</span>
+                        </div>
+                        <div class="grade-row">
+                            <span>Türkçe:</span>
+                            <span class="grade-badge ${getGradeClass(s.turkce)}">${s.turkce}</span>
+                        </div>
+                        <div class="divider">
+                            <div class="avg-row">
+                                <span>Genel Ortalama:</span>
+                                <span>${avg}</span>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>`;
+        }
+
+        function renderAnalysis() {
+            const container = document.getElementById('view-analysis');
+            const totalStudents = students.length;
+            
+            const classAvg = (students.reduce((acc, s) => acc + parseFloat(calculateAverage(s)), 0) / totalStudents).toFixed(2);
+            const fenAvg = (students.reduce((acc, s) => acc + s.fen, 0) / totalStudents).toFixed(2);
+            const matAvg = (students.reduce((acc, s) => acc + s.mat, 0) / totalStudents).toFixed(2);
+            const sosyalAvg = (students.reduce((acc, s) => acc + s.sosyal, 0) / totalStudents).toFixed(2);
+            const turkceAvg = (students.reduce((acc, s) => acc + s.turkce, 0) / totalStudents).toFixed(2);
+
+            const passCount = students.filter(s => parseFloat(calculateAverage(s)) >= 50).length;
+            const passRate = ((passCount / totalStudents) * 100).toFixed(1);
+
+            const sortedByAvg = [...students].sort((a, b) => {
+                return parseFloat(calculateAverage(b)) - parseFloat(calculateAverage(a));
+            });
+
+            const top3 = sortedByAvg.slice(0, 3);
+            const bottom3 = sortedByAvg.slice(-3).reverse();
+
+
+            container.innerHTML = `
+                <div class="analysis-content">
+                    <div class="analysis-title">📊 Sınıf İstatistikleri</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h4>Genel Başarı</h4>
+                            <div class="stat-row">
+                                <span>Sınıf Ortalaması:</span>
+                                <span>${classAvg}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Başarılı Öğrenci:</span>
+                                <span>${passCount} / ${totalStudents}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Başarı Yüzdesi:</span>
+                                <span>${passRate}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" style="width: ${passRate}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Ders Ortalamaları</h4>
+                            <div class="stat-row">
+                                <span>Fen Bilimleri:</span>
+                                <span>${fenAvg}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Matematik:</span>
+                                <span>${matAvg}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Sosyal Bilgiler:</span>
+                                <span>${sosyalAvg}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Türkçe:</span>
+                                <span>${turkceAvg}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-title" style="margin-top: 32px;">🏆 Sıralamalar (Genel Ortalama)</div>
+                    <div class="ranking-grid">
+                        <div class="ranking-card top">
+                            <h4>En Başarılı 3 Öğrenci</h4>
+                            ${top3.map((s, i) => `
+                                <div class="ranking-item">
+                                    <div class="ranking-item-left">
+                                        <span class="ranking-number">#${i + 1}</span>
+                                        <span class="ranking-name">${s.name}</span>
+                                    </div>
+                                    <span class="ranking-score">${calculateAverage(s)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="ranking-card support">
+                            <h4>Destek Gereken 3 Öğrenci</h4>
+                            ${bottom3.map((s, i) => `
+                                <div class="ranking-item">
+                                    <div class="ranking-item-left">
+                                        <span class="ranking-number">#${i + 1}</span>
+                                        <span class="ranking-name">${s.name}</span>
+                                    </div>
+                                    <span class="ranking-score">${calculateAverage(s)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        function renderCurrentView() {
+            if (currentView === 'table') {
+                applyFilters(); 
+            } else if (currentView === 'compare') {
+                renderCompare(); 
+            } else if (currentView === 'analysis') {
+                renderAnalysis(); 
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="switchView('${view}')"]`).classList.add('active');
+
+            document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+
+            renderCurrentView();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyFilters(); 
+            renderAnalysis(); 
+        });
+    </script>
+</body>
+</html>
