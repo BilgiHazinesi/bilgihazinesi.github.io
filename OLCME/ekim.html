@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4-D Sınıfı Öğrenci Notları</title>
     <style>
+        /* CSS Değişkenleri (Renkleri kolayca yönetmek için) */
+        :root {
+            /* Görseldeki renklere yakın degrade paleti */
+            --color-fen-start: #70d0ff;
+            --color-fen-end: #b0e0ff;
+            
+            --color-mat-start: #ff70b0;
+            --color-mat-end: #ffc0d9;
+            
+            --color-sosyal-start: #9090ff;
+            --color-sosyal-end: #d0d0ff;
+            
+            --color-turkce-start: #ffb040;
+            --color-turkce-end: #ffe0b0;
+            
+            --color-avg-start: #70e070;
+            --color-avg-end: #c0f0c0;
+
+            --color-empty: #f3f4f6; /* Barın boş kısmı */
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -230,13 +251,13 @@
         }
 
         td {
-            padding: 12px 16px;
+            padding: 0; /* Padding'i grade-cell'e taşıdık */
             font-size: 0.9rem;
             color: #1f2937;
         }
-
-        td.center {
-            text-align: center;
+        
+        td:first-child, td:nth-child(2), td:nth-child(3) {
+            padding: 12px 16px; /* İlk 3 hücre (Seç, No, İsim) normal padding'e sahip olsun */
         }
 
         input[type="checkbox"] {
@@ -246,15 +267,19 @@
             accent-color: #2563eb;
         }
 
-        /* --- YENİ NOT HÜCRESİ STİLİ (TABLO İÇİN) --- */
+        /* --- YENİ 3B GÖRSEL STİLİ (TABLO İÇİN) --- */
         .grade-cell {
+            padding: 12px 16px;
             text-align: center;
             font-weight: bold;
-            color: #222; /* Koyu Metin */
-            /* Okunabilirlik için metne hafif beyaz gölge */
-            text-shadow: 0 0 3px #ffffffc0; 
+            color: #1a1a1a; /* Koyu renk metin */
+            /* Metni 'pop' yapmak için beyaz gölge */
+            text-shadow: 0 0 5px #ffffff; 
             font-size: 0.95rem;
-            /* Arkaplan gradyanı JS tarafından inline olarak atanacak */
+            position: relative;
+            /* 3D (derinlik) efekti için iç gölge */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+            /* Arkaplan gradyanı JS tarafından atanacak */
         }
         
 
@@ -587,12 +612,16 @@
             }
 
             th, td {
-                padding: 8px;
+                padding: 8px; /* Mobilde padding'i düşür */
             }
             
             .grade-cell {
                 font-size: 0.85rem;
-                padding: 10px 8px;
+                padding: 10px 8px; /* Not hücreleri için özel padding */
+            }
+            
+            td:first-child, td:nth-child(2), td:nth-child(3) {
+                 padding: 10px 8px; /* Diğer hücrelerle eşitle */
             }
         }
     </style>
@@ -783,7 +812,7 @@
                     turkce: 'Türkçe',
                     avg: 'Ortalama'
                 };
-                const directionText = currentSort.direction === 'asc' ? 'Küçükten Büyüğe' : 'Büyükten Küçüğe';
+                const directionText = currentSort.direction === 'asc' ? 'Küçükten Büyüğe' : 'Büyükten Büyüğe';
                 const directionIcon = currentSort.direction === 'asc' ? '▲' : '▼';
                 
                 sortInfo.textContent = `Sıralama: ${columnNames[currentSort.column]} ${directionIcon} ${directionText}`;
@@ -830,14 +859,14 @@
                 return 'sortable';
             };
             
-            // Renk paleti (Görseldekine benzer)
+            // Renk paleti (CSS Değişkenlerinden çekmek yerine doğrudan JS'de tanımlayalım)
             const colors = {
-                fen: '#82c8ff',     // Açık Mavi
-                mat: '#ff78b4',     // Pembe
-                sosyal: '#96aaff',  // Mavimsi
-                turkce: '#ffb450',  // Turuncu
-                avg: '#8ce68c',      // Yeşil
-                empty: '#f3f4f6'    // Boş alan rengi (gri)
+                fen:    { start: '#70d0ff', end: '#b0e0ff' }, // Mavi
+                mat:    { start: '#ff70b0', end: '#ffc0d9' }, // Pembe
+                sosyal: { start: '#9090ff', end: '#d0d0ff' }, // Mor/Mavi
+                turkce: { start: '#ffb040', end: '#ffe0b0' }, // Turuncu
+                avg:    { start: '#70e070', end: '#c0f0c0' }, // Yeşil
+                empty:  '#f3f4f6' // Boş alan rengi
             };
 
             const tableHTML = `
@@ -858,8 +887,14 @@
                         <tbody>
                             ${filteredStudents.map(student => {
                                 const avg = calculateAverage(student);
-                                // Not: 'background-size' kullanmak yerine gradyanın durak noktalarını 
-                                // ayarlamak daha temiz bir "bar" efekti yaratır.
+                                
+                                // Not: Gradyan, not yüzdesine kadar renkli, o noktadan sonra boşluk rengi olacak.
+                                const fenStyle = `background: linear-gradient(to right, ${colors.fen.start} 0%, ${colors.fen.end} ${student.fen}%, ${colors.empty} ${student.fen}% 100%);`;
+                                const matStyle = `background: linear-gradient(to right, ${colors.mat.start} 0%, ${colors.mat.end} ${student.mat}%, ${colors.empty} ${student.mat}% 100%);`;
+                                const sosyalStyle = `background: linear-gradient(to right, ${colors.sosyal.start} 0%, ${colors.sosyal.end} ${student.sosyal}%, ${colors.empty} ${student.sosyal}% 100%);`;
+                                const turkceStyle = `background: linear-gradient(to right, ${colors.turkce.start} 0%, ${colors.turkce.end} ${student.turkce}%, ${colors.empty} ${student.turkce}% 100%);`;
+                                const avgStyle = `background: linear-gradient(to right, ${colors.avg.start} 0%, ${colors.avg.end} ${avg}%, ${colors.empty} ${avg}% 100%);`;
+
                                 return `
                                 <tr class=" ${selectedStudents.includes(student.no) ? 'selected' : ''}">
                                     <td class="center">
@@ -869,19 +904,19 @@
                                     <td>${student.no}</td>
                                     <td><strong>${student.name}</strong></td>
                                     
-                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.fen} ${student.fen}%, ${colors.empty} ${student.fen}%);">
+                                    <td class="grade-cell" style="${fenStyle}">
                                         ${student.fen}
                                     </td>
-                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.mat} ${student.mat}%, ${colors.empty} ${student.mat}%);">
+                                    <td class="grade-cell" style="${matStyle}">
                                         ${student.mat}
                                     </td>
-                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.sosyal} ${student.sosyal}%, ${colors.empty} ${student.sosyal}%);">
+                                    <td class="grade-cell" style="${sosyalStyle}">
                                         ${student.sosyal}
                                     </td>
-                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.turkce} ${student.turkce}%, ${colors.empty} ${student.turkce}%);">
+                                    <td class="grade-cell" style="${turkceStyle}">
                                         ${student.turkce}
                                     </td>
-                                    <td class="grade-cell" style="background: linear-gradient(to right, ${colors.avg} ${avg}%, ${colors.empty} ${avg}%);">
+                                    <td class="grade-cell" style="${avgStyle}">
                                         ${avg}
                                     </td>
                                 </tr>
