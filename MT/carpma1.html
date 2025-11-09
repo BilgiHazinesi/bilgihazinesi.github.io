@@ -75,7 +75,7 @@
         .results-summary { background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 25px; }
         .results-summary p { font-size: clamp(1.1rem, 3.5vw, 1.3rem); margin: 10px 0; font-weight: 600; line-height: 1.5; }
 
-        /* --- DİNAMİK/KOMPAKT ÖĞRENME TABLOSU --- */
+        /* --- SÜPER-KOMPAKT DİNAMİK TABLO --- */
         #learn-screen.app-card { padding: 10px 2px; }
         #learn-grid-table-container { 
             max-width: 100%; padding: 0; margin: 10px 0; 
@@ -87,16 +87,15 @@
             display: grid; 
             grid-template-columns: repeat(11, 1fr); 
             grid-template-rows: repeat(12, auto); 
-            gap: 1px; user-select: none; 
+            gap: 0.5px; 
+            user-select: none; 
             background-color: var(--border-color); 
         }
         .grid-table-cell {
             font-family: 'Nunito', sans-serif; font-weight: 700; 
-            /* YENİ: Yazı tipi tekrar ayarlandı */
-            font-size: clamp(0.4rem, 2.5vw, 0.8rem); 
-            /* YENİ: aspect-ratio kaldırıldı! */
-            /* aspect-ratio: 1/1; */ 
-            padding: 2px 0; /* YENİ: Dikey boşluk eklendi (kare olmamasını sağlar) */
+            /* YENİ: Font ve padding daha da küçültüldü */
+            font-size: clamp(0.3rem, 2.5vw, 0.75rem); 
+            padding: 1px 0; 
             display: flex; justify-content: center; align-items: center; 
             background-color: var(--papyrus-bg-color-dark);
             border: none; border-radius: 0; 
@@ -104,21 +103,15 @@
         }
         .grid-header { 
             background-color: #e8d7bc; color: var(--accent-color); font-weight: 900; 
-            font-size: clamp(0.45rem, 2.8vw, 0.85rem); 
-            padding: 2px 0; /* YENİ: Dikey boşluk eklendi */
+            font-size: clamp(0.35rem, 2.8vw, 0.8rem); 
+            padding: 1px 0; 
         }
+        /* YENİ BİTTİ */
+        
         .grid-product-cell { cursor: pointer; color: var(--text-primary-color); }
         .grid-product-cell:hover { background-color: #fceecf; z-index: 3; transform: scale(1.1); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
         .grid-product-cell.area-highlight { background-color: #2e7d32; color: white; border: none; z-index: 2; }
         
-        .grid-product-cell.quiz-hidden {
-            color: transparent;
-            background-color: #fceecf;
-        }
-        .grid-product-cell.quiz-hidden:hover {
-            background-color: #fadaa0;
-            transform: scale(1.1);
-        }
         .learn-mode-toggle { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
         .learn-mode-toggle button { flex-grow: 1; background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); color: var(--text-secondary-color); }
         .learn-mode-toggle button.selected { background-color: var(--accent-color); color: white; }
@@ -128,9 +121,24 @@
             margin: 15px 0; min-height: 1.5em;
         }
         
+        /* YENİ: Bulmaca modunda BAŞLIKLARI GİZLE */
         #learn-screen.quiz-mode-active .grid-header {
             color: transparent;
             background-color: var(--papyrus-bg-color-dark);
+        }
+        
+        /* YENİ: Bulmaca modunda İÇERİĞİ GÖSTER ama arkaplanı ayarla */
+        #learn-screen.quiz-mode-active .grid-product-cell {
+            background-color: #fceecf; /* Tıklanabilir alan rengi */
+            color: var(--text-primary-color); /* Sayılar görünür */
+        }
+        #learn-screen.quiz-mode-active .grid-product-cell:hover {
+            background-color: #fadaa0;
+            transform: scale(1.1);
+        }
+        #learn-screen.quiz-mode-active .grid-product-cell.area-highlight {
+             background-color: #2e7d32; 
+             color: white;
         }
         
         .fact-overlay {
@@ -613,8 +621,8 @@
 
             startLearnQuiz: function() {
                 this.elements['learn-quiz-question'].style.display = 'block';
+                // YENİ: Başlıklar hariç tüm hücreler (sayılar görünür)
                 document.querySelectorAll('.grid-product-cell').forEach(cell => {
-                    cell.classList.add('quiz-hidden');
                     cell.classList.remove('area-highlight');
                 });
                 this.nextLearnQuestion();
@@ -623,7 +631,6 @@
             stopLearnQuiz: function() {
                 this.elements['learn-quiz-question'].style.display = 'none';
                 document.querySelectorAll('.grid-product-cell').forEach(cell => {
-                    cell.classList.remove('quiz-hidden');
                     cell.classList.remove('area-highlight');
                 });
                 if (this.learnTimer) clearTimeout(this.learnTimer);
@@ -636,7 +643,6 @@
                 this.elements['learn-quiz-question'].textContent = `${r} x ${c} = ?`;
                 
                 document.querySelectorAll('.grid-product-cell').forEach(cell => {
-                    cell.classList.add('quiz-hidden');
                     cell.classList.remove('area-highlight');
                 });
             },
@@ -650,12 +656,12 @@
                     
                     const actualTargetCell = document.querySelector(`.grid-product-cell[data-r="${correct_r}"][data-c="${correct_c}"]`);
 
+                    // YENİ: Sadece doğru alanı boya
                     document.querySelectorAll('.grid-product-cell').forEach(cell => {
                         const r = parseInt(cell.dataset.r);
                         const c = parseInt(cell.dataset.c);
                         if (r <= correct_r && c <= correct_c) {
                             cell.classList.add('area-highlight');
-                            cell.classList.remove('quiz-hidden');
                         }
                     });
 
@@ -771,6 +777,7 @@
                 if (key === 'DEL') {
                     this.state.currentGuess = this.state.currentGuess.slice(0, -1);
                 } else if (key === 'ENTER') {
+                    // YENİ: Sözlük kontrolü kaldırıldı
                     if (this.state.currentGuess.length === this.state.target.length) {
                         this.submitGuess(currentRow);
                     } else {
