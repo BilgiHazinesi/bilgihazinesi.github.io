@@ -17,8 +17,8 @@
     <style>
         :root {
             --wordle-correct: #538d4e;
-            --wordle-present: #b59f3b; /* Kullanıcının "turuncu" dediği sarı/hardal */
-            --wordle-absent: #3a3a3c;  /* Kullanıcının "siyah" dediği koyu gri */
+            --wordle-present: #b59f3b; 
+            --wordle-absent: #3a3a3c;  
             --wordle-text: #ffffff;
             --key-bg: #818384;
         }
@@ -75,32 +75,54 @@
         .results-summary { background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 25px; }
         .results-summary p { font-size: clamp(1.1rem, 3.5vw, 1.3rem); margin: 10px 0; font-weight: 600; line-height: 1.5; }
 
-        /* --- YENİ: KÜÇÜLTÜLMÜŞ ÖĞRENME TABLOSU --- */
+        /* --- YENİ: DİNAMİK/KOMPAKT ÖĞRENME TABLOSU --- */
         #learn-grid-table-container { 
-            max-width: 100%; overflow-x: auto; padding: 1px; margin: 10px 0; 
-            border: 1px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 4px; position: relative;
+            max-width: 100%; 
+            /* YENİ: Yatay kaydırma kaldırıldı */
+            /* overflow-x: auto; */ 
+            padding: 0; /* YENİ: Boşluk kaldırıldı */
+            margin: 10px 0; 
+            border: 1px solid var(--border-color); 
+            background: var(--papyrus-bg-color-light); 
+            border-radius: 4px; 
+            position: relative;
         }
         #learn-grid-table {
-            display: grid; grid-template-columns: auto repeat(10, 1fr); grid-template-rows: auto repeat(11, 1fr); 
-            gap: 1px; user-select: none; /* min-width kaldırıldı */
+            display: grid; 
+            /* YENİ: auto ve 10 adet 1fr sütun. 1fr'ler kalan alanı paylaşır. */
+            grid-template-columns: auto repeat(10, 1fr); 
+            grid-template-rows: auto repeat(11, 1fr); 
+            gap: 1px; /* YENİ: Hücreler arası boşluk (çizgi gibi) */
+            user-select: none; 
         }
         .grid-table-cell {
-            font-family: 'Nunito', sans-serif; font-weight: 700; 
-            /* YENİ: Yazı tipi daha da küçültüldü */
-            font-size: clamp(0.55rem, 2.2vw, 0.8rem); 
-            aspect-ratio: 1/1;
-            display: flex; justify-content: center; align-items: center; background-color: var(--papyrus-bg-color-dark);
-            border: 1px solid #e0d0b8; border-radius: 1px; /* YENİ: Kenarlıklar inceltildi */
+            font-family: 'Nunito', sans-serif; 
+            font-weight: 700; 
+            /* YENİ: Font boyutu dinamik ve daha küçük */
+            font-size: clamp(0.45rem, 2.5vw, 0.8rem); 
+            aspect-ratio: 1/1; /* Kare hücreleri koru */
+            display: flex; justify-content: center; align-items: center; 
+            background-color: var(--papyrus-bg-color-dark);
+            border: none; /* YENİ: Kenarlık yok, gap kullanılır */
+            border-radius: 0; /* YENİ: Kenar yok */
             transition: all 0.15s ease;
         }
         .grid-header { background-color: #e8d7bc; color: var(--accent-color); font-weight: 900; position: sticky; }
         .grid-header.col-header { top: 0; z-index: 2; }
         .grid-header.row-header { left: 0; z-index: 2; }
         .grid-product-cell { cursor: pointer; color: var(--text-primary-color); }
-        .grid-product-cell:hover { background-color: #fceecf; z-index: 3; transform: scale(1.1); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
-        .grid-product-cell.area-highlight { background-color: #2e7d32; color: white; border-color: #2e7d32; }
+        .grid-product-cell:hover { 
+            background-color: #fceecf; z-index: 3; 
+            transform: scale(1.1); 
+            box-shadow: 0 0 5px rgba(0,0,0,0.2); 
+            border: 1px solid var(--accent-color); /* YENİ: Hover'da kenarlık */
+        }
+        .grid-product-cell.area-highlight { 
+            background-color: #2e7d32; 
+            color: white; 
+            border: 1px solid #2e7d32; /* YENİ: Vurguda kenarlık */
+        }
         
-        /* YENİ: Animasyonlu yazı */
         .fact-overlay {
             position: absolute; background-color: rgba(255, 255, 255, 0.95); color: var(--accent-color);
             padding: 5px 10px; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 900;
@@ -111,10 +133,8 @@
         @keyframes popIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
         /* --- SÖZCÜK OYUNU STİLLERİ --- */
-        #wordle-grid {
-            display: grid; gap: 5px; margin-bottom: 20px; justify-content: center;
-        }
-        .wordle-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; } /* Varsayılan 5, JS ile değişecek */
+        #wordle-grid { display: grid; gap: 5px; margin-bottom: 20px; justify-content: center; }
+        .wordle-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; } 
         .wordle-tile {
             width: clamp(35px, 8vw, 50px); height: clamp(35px, 8vw, 50px);
             border: 2px solid var(--border-color); font-size: 1.5rem; font-weight: bold;
@@ -264,7 +284,8 @@
                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <button class="quiz-btn" onclick="app.showScreen('wordle-setup')" style="font-size: 0.8rem; padding: 5px 10px;"><i class="bi bi-x-lg"></i> Çık</button>
                     <h3 style="margin:0; color: var(--accent-color);">Sözcük Bulmaca</h3>
-                    <div style="width: 60px;"></div> </div>
+                    <div style="width: 60px;"></div>
+                 </div>
                  
                  <div id="wordle-grid-container">
                      <div id="wordle-grid">
@@ -284,7 +305,6 @@
         const app = {
             screens: ['main-menu', 'multiplication-setup', 'learn-screen', 'quiz-screen', 'results-screen', 'wordle-setup', 'wordle-game'],
             showScreen: function(screenId) {
-                // YENİ: Çarpma öğrenme zamanlayıcısını temizle
                 if (screenId !== 'learn-screen' && multiplicationGame.learnTimer) {
                     clearTimeout(multiplicationGame.learnTimer);
                     multiplicationGame.learnTimer = null;
@@ -298,7 +318,6 @@
                 const targetEl = document.getElementById(screenId);
                 if (targetEl) targetEl.style.display = 'block';
                 
-                // Ekran değişimlerinde özel başlatıcılar
                 if (screenId === 'learn-screen') multiplicationGame.initLearnGrid();
                 if (screenId === 'main-menu') { multiplicationGame.stop(); }
             }
@@ -308,13 +327,14 @@
         const multiplicationGame = {
             state: { isRunning: false, score: 0, time: 0, remaining: 0, level: 1, timer: null, problem: {} },
             elements: {}, 
-            learnTimer: null, // YENİ: Öğrenme tablosu zamanlayıcısı
+            learnTimer: null, 
 
             init: function() {
-                // Elementleri bul
                 ['setup-feedback', 'timer', 'score', 'level-display', 'timer-visual-bar', 'visual-model', 'repeated-addition', 
                  'multiplication-problem', 'word-problem-question', 'answer-input', 'quiz-feedback', 'result-level', 
-                 'result-score', 'learn-grid-table'].forEach(id => this.elements[id] = document.getElementById(id));
+                 'result-score', 'learn-grid-table'].forEach(id => {
+                     if (id) this.elements[id] = document.getElementById(id);
+                 });
             },
 
             selectTime: function(min, btn) {
@@ -332,9 +352,8 @@
                 this.state.isRunning = true;
                 
                 app.showScreen('quiz-screen');
-                // Sınıfları temizle ve doğru olanı ekle
                 const quizScreen = document.getElementById('quiz-screen');
-                quizScreen.className = 'app-card'; // Temel sınıfı koru
+                quizScreen.className = 'app-card'; 
                 quizScreen.classList.add(`level${lvl}-active`);
                 
                 this.updateUI();
@@ -344,7 +363,8 @@
 
             stop: function() {
                 this.state.isRunning = false;
-                clearInterval(this.state.timer);
+                if(this.state.timer) clearInterval(this.state.timer);
+                this.state.timer = null;
             },
 
             tick: function() {
@@ -448,7 +468,7 @@
             // --- İNTERAKTİF TABLO ---
             initLearnGrid: function() {
                 const container = this.elements['learn-grid-table'];
-                if (!container || container.childElementCount > 0) return; // Zaten oluşturulmuşsa tekrar yapma
+                if (!container || container.childElementCount > 0) return; 
                 
                 container.innerHTML = '';
                 for (let r = 0; r <= 11; r++) {
@@ -470,7 +490,6 @@
             },
 
             highlightArea: function(rows, cols) {
-                // YENİ: Önceki zamanlayıcıyı temizle
                 if (this.learnTimer) clearTimeout(this.learnTimer);
 
                 document.querySelectorAll('.grid-product-cell').forEach(cell => {
@@ -480,7 +499,6 @@
                 });
                 this.showFactOverlay(rows, cols);
 
-                // YENİ: 10 saniye sonra alanı temizle
                 this.learnTimer = setTimeout(() => {
                     document.querySelectorAll('.grid-product-cell.area-highlight').forEach(cell => cell.classList.remove('area-highlight'));
                     this.learnTimer = null;
@@ -510,7 +528,7 @@
             state: { target: "", guesses: [], currentGuess: "", gameOver: false, maxGuesses: 6 },
 
             start: function() {
-                this.state.target = this.WORDS[Math.floor(Math.random() * this.WORDS.length)];
+                this.state.target = this.WORDS[Math.floor(Math.random() * this.WORDS.length)].toLocaleUpperCase('tr-TR');
                 this.state.guesses = Array(6).fill(null);
                 this.state.currentGuess = "";
                 this.state.gameOver = false;
@@ -617,11 +635,10 @@
                     setTimeout(() => {
                         const tile = document.getElementById(`tile-${row}-${i}`);
                         
-                        // --- YENİ: HARF KAYBOLMA HATASI DÜZELTMESİ ---
-                        // Animasyondan önce metnin kalıcı olduğundan emin ol
-                        tile.textContent = guess[i]; 
-                        // --- DÜZELTME BİTTİ ---
-
+                        // --- DÜZELTME: Harflerin kalması için ---
+                        // tile.textContent zaten updateGridUI tarafından ayarlandı,
+                        // flip animasyonu metni silmemeli. CSS bu işi hallediyor.
+                        // Sadece flip ve status sınıflarını ekliyoruz.
                         tile.classList.add('flip');
                         tile.classList.add(status);
                         
