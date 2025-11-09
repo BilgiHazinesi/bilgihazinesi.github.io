@@ -157,11 +157,8 @@
             margin-left: auto; margin-right: auto;
             /* YENİ: justify-content kaldırıldı */
         }
-        .wordle-row { 
-            display: grid; 
-            grid-template-columns: repeat(5, 1fr); /* JS ezer */
-            gap: 4px;
-        } 
+        /* YENİ: .wordle-row kuralı SİLİNDİ */
+        
         .wordle-tile {
             width: 100%; height: auto;
             max-width: 50px;
@@ -173,6 +170,9 @@
             text-transform: uppercase; font-family: 'Nunito', sans-serif; 
             background-color: var(--papyrus-bg-color-light);
             transition: all 0.3s;
+            /* YENİ: Izgara öğeleri olarak ayarlandı */
+            grid-row: auto;
+            grid-column: auto;
         }
         
         .wordle-tile.filled { border-color: var(--text-secondary-color); animation: pop 0.1s; }
@@ -652,17 +652,19 @@
                     
                     if (this.learnTimer) clearTimeout(this.learnTimer);
                     
-                    const actualTargetCell = document.querySelector(`.grid-product-cell[data-r="${correct_r}"][data-c="${correct_c}"]`);
-
+                    // YENİ: Hangi hücreye tıklandıysa onun r/c'sini kullan
+                    const r_to_highlight = r_clicked;
+                    const c_to_highlight = c_clicked;
+                    
                     document.querySelectorAll('.grid-product-cell').forEach(cell => {
                         const r = parseInt(cell.dataset.r);
                         const c = parseInt(cell.dataset.c);
-                        if (r <= correct_r && c <= correct_c) {
+                        if (r <= r_to_highlight && c <= c_to_highlight) {
                             cell.classList.add('area-highlight');
                         }
                     });
 
-                    this.showFactOverlay(correct_r, correct_c, actualTargetCell); 
+                    this.showFactOverlay(r_to_highlight, c_to_highlight, targetCell); 
                     
                     this.learnTimer = setTimeout(() => this.nextLearnQuestion(), 2500);
                 } else {
@@ -692,7 +694,7 @@
                 "PALEONTOLOG": "KAYAÇLARIN İÇİNDEKİ CANLILARI İNCELERİM",
                 "MİNERAL": "VEN ŞEMASI VE TAŞLARI DÜŞÜN",
                 "VİTAMİN": "KENDİSİ BİR DÜZENLEYİCİ",
-                "PUSULA": "KRİSTOF KOLOMB'UN ÇOK İŞİNE YARAMIŞ", // Düzeltildi
+                "PUSULA": "KRİSTOF KOLOMB'UN ÇOK İŞİNE YARAMIŞ",
                 "GÜNEY": "KARINCILARIN YUVALARI ORAYA DÖNÜKTÜR",
                 "KUZEY": "YÜZÜM DOĞUYSA SOL KOLUM",
                 "LEJANT": "HARİTA VE KROKİLERDE",
@@ -728,17 +730,19 @@
                 grid.innerHTML = '';
                 const len = this.state.target.length;
                 
+                // YENİ: Ana ızgaranın sütunlarını ayarla
+                grid.style.gridTemplateColumns = `repeat(${len}, 1fr)`;
+                
                 for (let i = 0; i < this.state.maxGuesses; i++) {
-                    const row = document.createElement('div');
-                    row.className = 'wordle-row';
-                    row.style.gridTemplateColumns = `repeat(${len}, 1fr)`;
                     for (let j = 0; j < len; j++) {
                         const tile = document.createElement('div');
                         tile.className = 'wordle-tile';
                         tile.id = `tile-${i}-${j}`;
-                        row.appendChild(tile);
+                        // YENİ: Izgaradaki yerini ayarla
+                        tile.style.gridRow = i + 1;
+                        tile.style.gridColumn = j + 1;
+                        grid.appendChild(tile);
                     }
-                    grid.appendChild(row);
                 }
             },
 
