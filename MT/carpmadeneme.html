@@ -17,8 +17,8 @@
     <style>
         :root {
             --wordle-correct: #538d4e;
-            --wordle-present: #b59f3b;
-            --wordle-absent: #3a3a3c;
+            --wordle-present: #b59f3b; /* Kullanıcının "turuncu" dediği sarı/hardal */
+            --wordle-absent: #3a3a3c;  /* Kullanıcının "siyah" dediği koyu gri */
             --wordle-text: #ffffff;
             --key-bg: #818384;
         }
@@ -28,11 +28,9 @@
         header h1 a { font-family: 'Cinzel Decorative', cursive; color: var(--text-primary-color); font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 5px; text-decoration: none; }
         header p { font-size: clamp(0.9rem, 2.5vw, 1rem); margin-bottom: 20px; color: var(--text-secondary-color); }
         
-        /* KART STİLLERİ (Ortak) */
         .app-card { background-color: var(--papyrus-bg-color-dark); padding: clamp(15px, 4vw, 20px); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-color); margin: 0 auto 15px auto; max-width: 700px; position: relative; overflow: hidden; }
         .app-card h2 { font-family: 'Cinzel Decorative', cursive; color: var(--accent-color); margin-bottom: 15px; }
 
-        /* GİRİŞ GRUPLARI VE BUTONLAR */
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; margin-bottom: 6px; font-weight: 700; color: var(--text-secondary-color); font-size: 1rem; }
         .input-group input[type="text"] { width: 80%; max-width: 280px; padding: 8px; border: 2px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 8px; font-size: 1rem; font-family: 'Crimson Pro', serif; text-align: center; box-sizing: border-box; }
@@ -41,7 +39,6 @@
         .check-btn:hover { opacity: 0.9; }
         .next-btn { background-color: var(--text-secondary-color); color: white; }
         
-        /* ANA MENÜ SEÇİMLERİ */
         .mode-selection { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
         .mode-btn { padding: 15px 25px; font-size: 1.1rem; display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 120px; }
         .mode-btn i { font-size: 2rem; }
@@ -78,19 +75,23 @@
         .results-summary { background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 25px; }
         .results-summary p { font-size: clamp(1.1rem, 3.5vw, 1.3rem); margin: 10px 0; font-weight: 600; line-height: 1.5; }
 
-        /* --- ÖĞRENME TABLOSU STİLLERİ (KOMPAKT) --- */
+        /* --- YENİ: KÜÇÜLTÜLMÜŞ ÖĞRENME TABLOSU --- */
         #learn-grid-table-container { 
-            max-width: 100%; overflow-x: auto; padding: 2px; margin: 10px 0; 
-            border: 1px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 8px; position: relative;
+            max-width: 100%; overflow-x: auto; padding: 1px; margin: 10px 0; 
+            border: 1px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 4px; position: relative;
         }
         #learn-grid-table {
             display: grid; grid-template-columns: auto repeat(10, 1fr); grid-template-rows: auto repeat(11, 1fr); 
-            gap: 1px; min-width: 300px; user-select: none;
+            gap: 1px; user-select: none; /* min-width kaldırıldı */
         }
         .grid-table-cell {
-            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: clamp(0.7rem, 1.8vw, 0.9rem); aspect-ratio: 1/1;
+            font-family: 'Nunito', sans-serif; font-weight: 700; 
+            /* YENİ: Yazı tipi daha da küçültüldü */
+            font-size: clamp(0.55rem, 2.2vw, 0.8rem); 
+            aspect-ratio: 1/1;
             display: flex; justify-content: center; align-items: center; background-color: var(--papyrus-bg-color-dark);
-            border: 1px solid #e0d0b8; border-radius: 2px; transition: all 0.15s ease;
+            border: 1px solid #e0d0b8; border-radius: 1px; /* YENİ: Kenarlıklar inceltildi */
+            transition: all 0.15s ease;
         }
         .grid-header { background-color: #e8d7bc; color: var(--accent-color); font-weight: 900; position: sticky; }
         .grid-header.col-header { top: 0; z-index: 2; }
@@ -98,6 +99,8 @@
         .grid-product-cell { cursor: pointer; color: var(--text-primary-color); }
         .grid-product-cell:hover { background-color: #fceecf; z-index: 3; transform: scale(1.1); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
         .grid-product-cell.area-highlight { background-color: #2e7d32; color: white; border-color: #2e7d32; }
+        
+        /* YENİ: Animasyonlu yazı */
         .fact-overlay {
             position: absolute; background-color: rgba(255, 255, 255, 0.95); color: var(--accent-color);
             padding: 5px 10px; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 900;
@@ -156,7 +159,6 @@
         </header>
 
         <main>
-            <!-- ANA MENÜ EKRANI -->
             <div id="main-menu" class="app-card">
                 <h2>Ne Çalışmak İstersin?</h2>
                 <div class="mode-selection">
@@ -169,7 +171,6 @@
                 </div>
             </div>
 
-            <!-- ÇARPMA: KURULUM EKRANI -->
             <div id="multiplication-setup" class="app-card" style="display: none;">
                 <button class="quiz-btn" onclick="app.showScreen('main-menu')" style="float: left; font-size: 0.8rem; padding: 5px 10px;"><i class="bi bi-arrow-left"></i> Menü</button>
                 <div style="clear: both;"></div>
@@ -200,21 +201,18 @@
                 <p id="setup-feedback" class="feedback wrong"></p> 
             </div>
             
-            <!-- ÇARPMA: ÖĞRENME EKRANI -->
-            <div id="learn-screen" class="learn-card" style="display: none;">
+            <div id="learn-screen" class="app-card" style="display: none;">
                 <button class="quiz-btn" onclick="app.showScreen('multiplication-setup')" style="margin-bottom: 10px;"><i class="bi bi-arrow-left"></i> Geri</button>
                 <h2>İnteraktif Çarpım Tablosu</h2>
                 <p style="color: var(--text-secondary-color); font-size: 0.9rem; margin-bottom: 10px;">Sonucu ve alanını görmek için bir sayıya tıkla.</p>
                 
                 <div id="learn-grid-table-container">
                     <div id="learn-grid-table">
-                        <!-- JS ile doldurulacak -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
-            <!-- ÇARPMA: TEST EKRANI -->
-            <div id="quiz-screen" class="quiz-card" style="display: none;">
+            <div id="quiz-screen" class="app-card" style="display: none;">
                  <div class="quiz-header">
                      <div id="timer">00:00</div>
                      <div id="score-info">
@@ -245,8 +243,7 @@
                 <p id="quiz-feedback" class="feedback"></p>
             </div>
 
-            <!-- ÇARPMA: SONUÇ EKRANI -->
-             <div id="results-screen" class="results-card" style="display: none;">
+            <div id="results-screen" class="app-card" style="display: none;">
                  <h2>Süre Doldu!</h2>
                  <div class="results-summary">
                      <p><span>Seviye:</span> <strong id="result-level">-</strong></p>
@@ -255,7 +252,6 @@
                  <button class="quiz-btn next-btn" onclick="app.showScreen('multiplication-setup')">Tamam</button>
              </div>
 
-             <!-- SÖZCÜK OYUNU: ANA EKRAN -->
              <div id="wordle-setup" class="app-card" style="display: none;">
                 <button class="quiz-btn" onclick="app.showScreen('main-menu')" style="float: left; font-size: 0.8rem; padding: 5px 10px;"><i class="bi bi-arrow-left"></i> Menü</button>
                 <div style="clear: both;"></div>
@@ -264,23 +260,19 @@
                 <button class="quiz-btn check-btn" style="font-size: 1.3rem; padding: 15px 40px; margin-top: 20px;" onclick="wordleGame.start()">OYNA</button>
              </div>
 
-             <!-- SÖZCÜK OYUNU: OYUN EKRANI -->
              <div id="wordle-game" class="app-card" style="display: none; max-width: 550px;">
                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <button class="quiz-btn" onclick="app.showScreen('wordle-setup')" style="font-size: 0.8rem; padding: 5px 10px;"><i class="bi bi-x-lg"></i> Çık</button>
                     <h3 style="margin:0; color: var(--accent-color);">Sözcük Bulmaca</h3>
-                    <div style="width: 60px;"></div> <!-- Denge için boşluk -->
-                 </div>
+                    <div style="width: 60px;"></div> </div>
                  
                  <div id="wordle-grid-container">
                      <div id="wordle-grid">
-                         <!-- JS ile doldurulacak -->
-                     </div>
+                         </div>
                  </div>
 
                  <div id="wordle-keyboard">
-                     <!-- JS ile doldurulacak -->
-                 </div>
+                     </div>
                  <p id="wordle-feedback" class="feedback" style="min-height: 30px;"></p>
              </div>
 
@@ -292,8 +284,19 @@
         const app = {
             screens: ['main-menu', 'multiplication-setup', 'learn-screen', 'quiz-screen', 'results-screen', 'wordle-setup', 'wordle-game'],
             showScreen: function(screenId) {
-                this.screens.forEach(id => document.getElementById(id).style.display = 'none');
-                document.getElementById(screenId).style.display = 'block';
+                // YENİ: Çarpma öğrenme zamanlayıcısını temizle
+                if (screenId !== 'learn-screen' && multiplicationGame.learnTimer) {
+                    clearTimeout(multiplicationGame.learnTimer);
+                    multiplicationGame.learnTimer = null;
+                }
+                
+                this.screens.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+                
+                const targetEl = document.getElementById(screenId);
+                if (targetEl) targetEl.style.display = 'block';
                 
                 // Ekran değişimlerinde özel başlatıcılar
                 if (screenId === 'learn-screen') multiplicationGame.initLearnGrid();
@@ -304,8 +307,9 @@
         // --- ÇARPMA OYUNU MODÜLÜ ---
         const multiplicationGame = {
             state: { isRunning: false, score: 0, time: 0, remaining: 0, level: 1, timer: null, problem: {} },
-            elements: {}, // Element referanslarını burada saklayacağız
-            
+            elements: {}, 
+            learnTimer: null, // YENİ: Öğrenme tablosu zamanlayıcısı
+
             init: function() {
                 // Elementleri bul
                 ['setup-feedback', 'timer', 'score', 'level-display', 'timer-visual-bar', 'visual-model', 'repeated-addition', 
@@ -328,7 +332,11 @@
                 this.state.isRunning = true;
                 
                 app.showScreen('quiz-screen');
-                document.getElementById('quiz-screen').className = 'quiz-card level' + lvl + '-active';
+                // Sınıfları temizle ve doğru olanı ekle
+                const quizScreen = document.getElementById('quiz-screen');
+                quizScreen.className = 'app-card'; // Temel sınıfı koru
+                quizScreen.classList.add(`level${lvl}-active`);
+                
                 this.updateUI();
                 this.nextQuestion();
                 this.state.timer = setInterval(() => this.tick(), 1000);
@@ -368,16 +376,14 @@
                 this.elements['quiz-feedback'].className = 'feedback';
 
                 let p = {};
-                // Basitleştirilmiş soru üretimi
                 const r = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
                 switch(this.state.level) {
                     case 1: p = {n1: r(2,9), n2: r(2,10), type:'mult'}; break;
                     case 2: p = {n1: r(2,9), n2: r(2,10), type:'word_mult'}; break;
                     case 3: p = {n2: r(2,9), ans: r(2,10), type:'div'}; p.n1 = p.n2 * p.ans; break;
-                    case 4: p = {n1: r(2,8), n2: r(2,8), ans: r(2,9), type: r(0,3)}; break; // Karmaşık
+                    case 4: p = {n1: r(2,8), n2: r(2,8), ans: r(2,9), type: r(0,3)}; break;
                 }
                 
-                // Soru metnini hazırla
                 if (p.type === 'mult') {
                     p.q = `${p.n1} x ${p.n2} =`; p.a = p.n1 * p.n2;
                     this.showVisuals(p.n1, p.n2);
@@ -386,7 +392,7 @@
                 } else if (p.type === 'word_mult') {
                      const templates = [`${p.n1}'in ${p.n2} katı kaçtır?`, `Tanesi ${p.n1} TL olan kalemden ${p.n2} tane alırsam kaç öderim?`];
                      p.q = templates[Math.floor(Math.random()*templates.length)]; p.a = p.n1 * p.n2;
-                } else { // Seviye 4 karmaşık
+                } else { 
                     switch(p.type) {
                         case 0: p.q = `${p.n1} fazlasının ${p.n2} katı ${(p.ans+p.n1)*p.n2} olan sayı?`; p.a = p.ans; break;
                         case 1: p.ans += p.n1; p.q = `${p.n1} eksiğinin ${p.n2} katı ${(p.ans-p.n1)*p.n2} olan sayı?`; p.a = p.ans; break;
@@ -442,8 +448,9 @@
             // --- İNTERAKTİF TABLO ---
             initLearnGrid: function() {
                 const container = this.elements['learn-grid-table'];
+                if (!container || container.childElementCount > 0) return; // Zaten oluşturulmuşsa tekrar yapma
+                
                 container.innerHTML = '';
-                // 12x11 grid (başlıklar dahil)
                 for (let r = 0; r <= 11; r++) {
                     for (let c = 0; c <= 10; c++) {
                         const cell = document.createElement('div');
@@ -463,38 +470,43 @@
             },
 
             highlightArea: function(rows, cols) {
+                // YENİ: Önceki zamanlayıcıyı temizle
+                if (this.learnTimer) clearTimeout(this.learnTimer);
+
                 document.querySelectorAll('.grid-product-cell').forEach(cell => {
                     const r = parseInt(cell.dataset.r);
                     const c = parseInt(cell.dataset.c);
                     cell.classList.toggle('area-highlight', r <= rows && c <= cols);
                 });
                 this.showFactOverlay(rows, cols);
+
+                // YENİ: 10 saniye sonra alanı temizle
+                this.learnTimer = setTimeout(() => {
+                    document.querySelectorAll('.grid-product-cell.area-highlight').forEach(cell => cell.classList.remove('area-highlight'));
+                    this.learnTimer = null;
+                }, 10000);
             },
 
             showFactOverlay: function(r, c) {
-                // Eski overlay'i sil
                 const old = document.querySelector('.fact-overlay'); if (old) old.remove();
                 
                 const overlay = document.createElement('div');
                 overlay.className = 'fact-overlay';
                 overlay.textContent = `${r} x ${c} = ${r*c}`;
                 
-                // Hedef hücreyi bul (alanın sağ alt köşesi)
                 const targetCell = document.querySelector(`.grid-product-cell[data-r="${r}"][data-c="${c}"]`);
                 if (targetCell) {
                     this.elements['learn-grid-table'].appendChild(overlay);
-                    // Overlay'i hedef hücrenin tam ortasına konumlandır
                     overlay.style.left = (targetCell.offsetLeft + targetCell.offsetWidth / 2) + 'px';
                     overlay.style.top = (targetCell.offsetTop + targetCell.offsetHeight / 2) + 'px';
                 }
-                // 2 saniye sonra kaldır
                 setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 2000);
             }
         };
 
         // --- SÖZCÜK OYUNU MODÜLÜ ---
         const wordleGame = {
-            WORDS: ["BESİN", "DEVRE", "DÖNME", "DÜNYA", "FOSİL", "GÜNEŞ", "HACİM", "İSRAF", "KÜTLE", "KUVVET", "MADDE", "MADEN", "YAĞLAR", "BAYRAK", "BİREY", "BÜTÇE", "DEVLET", "HARİTA", "KONUM", "KROKİ", "KURUM", "KÜLTÜR", "MİRAS", "MUCİT", "BÖLGE"],
+            WORDS: ["BESİN", "DEVRE", "DÖNME", "DÜNYA", "FOSİL", "GÜNEŞ", "HACİM", "İSRAF", "KÜTLE", "KUVVET", "MADDE", "MADEN", "YAĞLAR", "BAYRAK", "BİREY", "BÜTÇE", "DEVLET", "HARİTA", "İSRAF", "KONUM", "KROKİ", "KURUM", "KÜLTÜR", "MİRAS", "MUCİT", "BÖLGE"],
             state: { target: "", guesses: [], currentGuess: "", gameOver: false, maxGuesses: 6 },
 
             start: function() {
@@ -516,7 +528,7 @@
                 for (let i = 0; i < 6; i++) {
                     const row = document.createElement('div');
                     row.className = 'wordle-row';
-                    row.style.gridTemplateColumns = `repeat(${len}, 1fr)`; // Dinamik sütun sayısı
+                    row.style.gridTemplateColumns = `repeat(${len}, 1fr)`;
                     for (let j = 0; j < len; j++) {
                         const tile = document.createElement('div');
                         tile.className = 'wordle-tile';
@@ -530,16 +542,12 @@
             buildKeyboard: function() {
                 const kb = document.getElementById('wordle-keyboard');
                 kb.innerHTML = '';
-                const rows = [
-                    "ERTYUIOPĞÜ",
-                    "ASDFGHJKLŞİ",
-                    "ZCVBNMÖÇ"
-                ];
+                const rows = [ "ERTYUIOPĞÜ", "ASDFGHJKLŞİ", "ZCVBNMÖÇ" ];
                 
                 rows.forEach((rowStr, i) => {
                     const rowEl = document.createElement('div');
                     rowEl.className = 'keyboard-row';
-                    if (i === 2) { // Enter ve Sil tuşlarını ekle
+                    if (i === 2) { 
                          const enter = document.createElement('button'); enter.className = 'key large'; enter.textContent = 'GİR'; enter.onclick = () => this.handleInput('ENTER'); rowEl.appendChild(enter);
                     }
                     for(let char of rowStr) {
@@ -577,8 +585,10 @@
             updateGridUI: function(row) {
                 for (let i = 0; i < this.state.target.length; i++) {
                     const tile = document.getElementById(`tile-${row}-${i}`);
-                    tile.textContent = this.state.currentGuess[i] || '';
-                    tile.classList.toggle('filled', !!this.state.currentGuess[i]);
+                    if (tile) {
+                        tile.textContent = this.state.currentGuess[i] || '';
+                        tile.classList.toggle('filled', !!this.state.currentGuess[i]);
+                    }
                 }
             },
 
@@ -587,18 +597,15 @@
                 const target = this.state.target;
                 const len = target.length;
                 
-                // Kontrol mantığı
                 let targetArr = target.split('');
                 let result = Array(len).fill('absent');
 
-                // 1. Tam eşleşmeleri bul (Yeşil)
                 for (let i = 0; i < len; i++) {
                     if (guess[i] === target[i]) {
                         result[i] = 'correct';
-                        targetArr[i] = null; // Kullanıldı
+                        targetArr[i] = null; 
                     }
                 }
-                // 2. Kısmi eşleşmeleri bul (Sarı)
                 for (let i = 0; i < len; i++) {
                     if (result[i] !== 'correct' && targetArr.includes(guess[i])) {
                         result[i] = 'present';
@@ -606,23 +613,25 @@
                     }
                 }
 
-                // UI Güncelle (Animasyonlu)
                 result.forEach((status, i) => {
                     setTimeout(() => {
                         const tile = document.getElementById(`tile-${row}-${i}`);
+                        
+                        // --- YENİ: HARF KAYBOLMA HATASI DÜZELTMESİ ---
+                        // Animasyondan önce metnin kalıcı olduğundan emin ol
+                        tile.textContent = guess[i]; 
+                        // --- DÜZELTME BİTTİ ---
+
                         tile.classList.add('flip');
                         tile.classList.add(status);
                         
-                        // Klavye rengini güncelle
                         const keyBtn = document.querySelector(`.key[data-key="${guess[i]}"]`);
                         if (keyBtn) {
-                            // Sadece daha iyi bir durum varsa güncelle (örn: sarıysa yeşil olabilir, ama yeşilse sarı olamaz)
                             if (status === 'correct') keyBtn.className = 'key correct';
                             else if (status === 'present' && !keyBtn.classList.contains('correct')) keyBtn.className = 'key present';
                             else if (status === 'absent' && !keyBtn.classList.contains('correct') && !keyBtn.classList.contains('present')) keyBtn.className = 'key absent';
                         }
 
-                        // Son harf animasyonu bitince oyun durumunu kontrol et
                         if (i === len - 1) this.checkWinLoss(row, guess);
                     }, i * 250);
                 });
@@ -648,7 +657,7 @@
             }
         };
 
-        // Klavye dinleyicisi (Wordle için fiziksel klavye desteği)
+        // Klavye dinleyicisi
         document.addEventListener('keydown', (e) => {
             if (document.getElementById('wordle-game').style.display === 'block') {
                 let key = e.key.toLocaleUpperCase('tr-TR');
