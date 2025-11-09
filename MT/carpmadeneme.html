@@ -92,14 +92,21 @@
         }
         .grid-table-cell {
             font-family: 'Nunito', sans-serif; font-weight: 700; 
-            font-size: clamp(0.35rem, 2.8vw, 0.8rem); 
-            aspect-ratio: 1/1; 
+            /* YENİ: Yazı tipi tekrar ayarlandı */
+            font-size: clamp(0.4rem, 2.5vw, 0.8rem); 
+            /* YENİ: aspect-ratio kaldırıldı! */
+            /* aspect-ratio: 1/1; */ 
+            padding: 2px 0; /* YENİ: Dikey boşluk eklendi (kare olmamasını sağlar) */
             display: flex; justify-content: center; align-items: center; 
             background-color: var(--papyrus-bg-color-dark);
             border: none; border-radius: 0; 
             transition: all 0.15s ease;
         }
-        .grid-header { background-color: #e8d7bc; color: var(--accent-color); font-weight: 900; font-size: clamp(0.4rem, 3vw, 0.85rem); }
+        .grid-header { 
+            background-color: #e8d7bc; color: var(--accent-color); font-weight: 900; 
+            font-size: clamp(0.45rem, 2.8vw, 0.85rem); 
+            padding: 2px 0; /* YENİ: Dikey boşluk eklendi */
+        }
         .grid-product-cell { cursor: pointer; color: var(--text-primary-color); }
         .grid-product-cell:hover { background-color: #fceecf; z-index: 3; transform: scale(1.1); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
         .grid-product-cell.area-highlight { background-color: #2e7d32; color: white; border: none; z-index: 2; }
@@ -119,6 +126,11 @@
             font-family: 'Nunito', sans-serif; font-weight: 900;
             font-size: clamp(1.5rem, 6vw, 2.5rem); color: var(--accent-color);
             margin: 15px 0; min-height: 1.5em;
+        }
+        
+        #learn-screen.quiz-mode-active .grid-header {
+            color: transparent;
+            background-color: var(--papyrus-bg-color-dark);
         }
         
         .fact-overlay {
@@ -378,7 +390,7 @@
                 ['setup-feedback', 'timer', 'score', 'level-display', 'timer-visual-bar', 'visual-model', 'repeated-addition', 
                  'multiplication-problem', 'word-problem-question', 'answer-input', 'quiz-feedback', 'result-level', 
                  'result-score', 'learn-grid-table', 'student-name', 'result-name',
-                 'learn-quiz-question', 'learn-mode-explore', 'learn-mode-quiz'
+                 'learn-quiz-question', 'learn-mode-explore', 'learn-mode-quiz', 'learn-grid-table-container'
                 ].forEach(id => {
                      if (id) this.elements[id] = document.getElementById(id);
                  });
@@ -577,7 +589,7 @@
                 const overlay = document.createElement('div');
                 overlay.className = 'fact-overlay';
                 overlay.textContent = `${r} x ${c} = ${r*c}`;
-                const container = document.getElementById('learn-grid-table-container');
+                const container = this.elements['learn-grid-table-container'];
                 if (targetCell && container) {
                     container.appendChild(overlay);
                     overlay.style.left = (targetCell.offsetLeft + targetCell.offsetWidth / 2) + 'px';
@@ -590,6 +602,7 @@
                 this.state.learnMode = mode;
                 this.elements['learn-mode-explore'].classList.toggle('selected', mode === 'explore');
                 this.elements['learn-mode-quiz'].classList.toggle('selected', mode === 'quiz');
+                document.getElementById('learn-screen').classList.toggle('quiz-mode-active', mode === 'quiz');
 
                 if (mode === 'quiz') {
                     this.startLearnQuiz();
@@ -628,11 +641,27 @@
                 });
             },
             
-            checkLearnQuizAnswer: function(r, c, product, targetCell) {
+            checkLearnQuizAnswer: function(r_clicked, c_clicked, product, targetCell) {
                 if (product === this.state.learnProblem.answer) {
-                    this.highlightArea(r, c, targetCell); 
-                    targetCell.classList.remove('quiz-hidden'); 
-                    setTimeout(() => this.nextLearnQuestion(), 2500);
+                    const correct_r = this.state.learnProblem.r;
+                    const correct_c = this.state.learnProblem.c;
+                    
+                    if (this.learnTimer) clearTimeout(this.learnTimer);
+                    
+                    const actualTargetCell = document.querySelector(`.grid-product-cell[data-r="${correct_r}"][data-c="${correct_c}"]`);
+
+                    document.querySelectorAll('.grid-product-cell').forEach(cell => {
+                        const r = parseInt(cell.dataset.r);
+                        const c = parseInt(cell.dataset.c);
+                        if (r <= correct_r && c <= correct_c) {
+                            cell.classList.add('area-highlight');
+                            cell.classList.remove('quiz-hidden');
+                        }
+                    });
+
+                    this.showFactOverlay(correct_r, correct_c, actualTargetCell); 
+                    
+                    this.learnTimer = setTimeout(() => this.nextLearnQuestion(), 2500);
                 } else {
                     targetCell.style.backgroundColor = 'red';
                     setTimeout(() => {
@@ -742,7 +771,6 @@
                 if (key === 'DEL') {
                     this.state.currentGuess = this.state.currentGuess.slice(0, -1);
                 } else if (key === 'ENTER') {
-                    // YENİ: Sözlük kontrolü kaldırıldı. Sadece uzunluk kontrol ediliyor.
                     if (this.state.currentGuess.length === this.state.target.length) {
                         this.submitGuess(currentRow);
                     } else {
