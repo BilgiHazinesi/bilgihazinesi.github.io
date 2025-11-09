@@ -91,6 +91,7 @@
             gap: 0; 
             user-select: none; 
             background-color: transparent; 
+            border-collapse: collapse;
         }
         .grid-table-cell {
             font-family: 'Nunito', sans-serif; font-weight: 700; 
@@ -151,20 +152,23 @@
         /* --- SÖZCÜK OYUNU STİLLERİ --- */
         #wordle-grid { 
             display: grid; gap: 4px;
-            margin-bottom: 15px; justify-content: center; 
+            margin-bottom: 15px; 
             width: 100%; max-width: 550px;
             margin-left: auto; margin-right: auto;
+            /* YENİ: justify-content eklendi (kısa kelimeler için) */
+            justify-content: center;
         }
         .wordle-row { 
             display: grid; 
-            grid-template-columns: repeat(5, 1fr); /* JS ezer */
+            /* grid-template-columns: repeat(5, 1fr); */ /* JS ezer */
             gap: 4px;
-            /* YENİ: justify-content kaldırıldı. Artık ızgara tam genişlikte */
+            /* YENİ: Genişlik, içeriğe göre ayarlanacak */
+            width: fit-content; 
         } 
         .wordle-tile {
-            width: 100%; /* YENİ: Genişlik 100% (1fr'lik sütunu doldur) */
+            /* YENİ: 'width' ve 'max-width' küçültüldü */
+            width: clamp(28px, 6.5vw, 36px); /* (7'de 2 küçültme) */
             height: auto;
-            max-width: 50px;
             aspect-ratio: 1 / 1;
             border: 2px solid var(--border-color); 
             font-size: clamp(0.7rem, 5vw, 1.5rem); 
@@ -652,17 +656,19 @@
                     
                     if (this.learnTimer) clearTimeout(this.learnTimer);
                     
-                    const actualTargetCell = document.querySelector(`.grid-product-cell[data-r="${correct_r}"][data-c="${correct_c}"]`);
-
+                    // YENİ: Tıklanan hücrenin r/c'sini al
+                    const r_to_highlight = r_clicked;
+                    const c_to_highlight = c_clicked;
+                    
                     document.querySelectorAll('.grid-product-cell').forEach(cell => {
                         const r = parseInt(cell.dataset.r);
                         const c = parseInt(cell.dataset.c);
-                        if (r <= correct_r && c <= correct_c) {
+                        if (r <= r_to_highlight && c <= c_to_highlight) {
                             cell.classList.add('area-highlight');
                         }
                     });
 
-                    this.showFactOverlay(correct_r, correct_c, actualTargetCell); 
+                    this.showFactOverlay(r_to_highlight, c_to_highlight, targetCell); 
                     
                     this.learnTimer = setTimeout(() => this.nextLearnQuestion(), 2500);
                 } else {
@@ -692,7 +698,7 @@
                 "PALEONTOLOG": "KAYAÇLARIN İÇİNDEKİ CANLILARI İNCELERİM",
                 "MİNERAL": "VEN ŞEMASI VE TAŞLARI DÜŞÜN",
                 "VİTAMİN": "KENDİSİ BİR DÜZENLEYİCİ",
-                "PUSULA": "KOLOB'UN ÇOK İŞİNE YARAMIŞ",
+                "PUSULA": "KRİSTOF KOLOMB'UN ÇOK İŞİNE YARAMIŞ",
                 "GÜNEY": "KARINCILARIN YUVALARI ORAYA DÖNÜKTÜR",
                 "KUZEY": "YÜZÜM DOĞUYSA SOL KOLUM",
                 "LEJANT": "HARİTA VE KROKİLERDE",
@@ -728,17 +734,17 @@
                 grid.innerHTML = '';
                 const len = this.state.target.length;
                 
+                grid.style.gridTemplateColumns = `repeat(${len}, 1fr)`;
+                
                 for (let i = 0; i < this.state.maxGuesses; i++) {
-                    const row = document.createElement('div');
-                    row.className = 'wordle-row';
-                    row.style.gridTemplateColumns = `repeat(${len}, 1fr)`;
                     for (let j = 0; j < len; j++) {
                         const tile = document.createElement('div');
                         tile.className = 'wordle-tile';
                         tile.id = `tile-${i}-${j}`;
-                        row.appendChild(tile);
+                        tile.style.gridRow = i + 1;
+                        tile.style.gridColumn = j + 1;
+                        grid.appendChild(tile);
                     }
-                    grid.appendChild(row);
                 }
             },
 
