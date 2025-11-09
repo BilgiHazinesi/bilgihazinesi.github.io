@@ -114,15 +114,35 @@
         @keyframes popIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
         /* --- SÖZCÜK OYUNU STİLLERİ --- */
-        #wordle-grid { display: grid; gap: 5px; margin-bottom: 20px; justify-content: center; }
-        .wordle-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; } 
+        #wordle-grid { 
+            display: grid; gap: 4px; /* YENİ: Boşluk azaltıldı */
+            margin-bottom: 15px; justify-content: center; 
+            width: 100%; max-width: 550px;
+            margin-left: auto; margin-right: auto;
+        }
+        .wordle-row { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); /* JS ezer */
+            gap: 4px; /* YENİ: Boşluk azaltıldı */
+            justify-content: center; 
+        } 
         .wordle-tile {
-            width: clamp(35px, 8vw, 50px); height: clamp(35px, 8vw, 50px);
-            border: 2px solid var(--border-color); font-size: 1.5rem; font-weight: bold;
+            /* YENİ: width/height kaldırıldı, max-width eklendi */
+            width: auto; height: auto;
+            max-width: 50px; /* Büyük ekran limiti */
+            aspect-ratio: 1 / 1; /* Kare yapar */
+            
+            border: 2px solid var(--border-color); 
+            /* YENİ: Dinamik font boyutu */
+            font-size: clamp(0.7rem, 5vw, 1.5rem); 
+            font-weight: bold;
             display: flex; justify-content: center; align-items: center;
-            text-transform: uppercase; font-family: 'Nunito', sans-serif; background-color: var(--papyrus-bg-color-light);
+            text-transform: uppercase; font-family: 'Nunito', sans-serif; 
+            background-color: var(--papyrus-bg-color-light);
             transition: all 0.3s;
         }
+        /* YENİ BİTTİ */
+        
         .wordle-tile.filled { border-color: var(--text-secondary-color); animation: pop 0.1s; }
         .wordle-tile.correct { background-color: var(--wordle-correct); color: var(--wordle-text); border-color: var(--wordle-correct); }
         .wordle-tile.present { background-color: var(--wordle-present); color: var(--wordle-text); border-color: var(--wordle-present); }
@@ -143,7 +163,6 @@
         .key.present { background-color: var(--wordle-present); color: var(--wordle-text); }
         .key.absent { background-color: var(--wordle-absent); color: var(--wordle-text); }
         #wordle-feedback button { margin-top: 15px; }
-        /* YENİ: İpucu stili */
         #wordle-hint { 
             font-size: 1rem; color: var(--text-secondary-color); 
             padding: 10px; background-color: var(--papyrus-bg-color-light); 
@@ -263,7 +282,7 @@
 
             <div id="results-screen" class="app-card" style="display: none;">
                  <h2>Süre Doldu!</h2>
-                 <div class="results-summary">
+                 <div classs="results-summary">
                      <p><span>Adın:</span> <strong id="result-name">[İsim]</strong></p>
                      <p><span>Seviye:</span> <strong id="result-level">-</strong></p>
                      <p><span>Skorun:</span> <strong id="result-score">0</strong></p>
@@ -331,7 +350,6 @@
             learnTimer: null, 
 
             init: function() {
-                // YENİ: student-name ve result-name eklendi
                 ['setup-feedback', 'timer', 'score', 'level-display', 'timer-visual-bar', 'visual-model', 'repeated-addition', 
                  'multiplication-problem', 'word-problem-question', 'answer-input', 'quiz-feedback', 'result-level', 
                  'result-score', 'learn-grid-table', 'student-name', 'result-name'].forEach(id => {
@@ -349,7 +367,6 @@
             start: function(lvl) {
                 if (this.state.time === 0) { this.elements['setup-feedback'].textContent = 'Süre seçiniz!'; return; }
                 
-                // YENİ: İsim al
                 this.state.studentName = this.elements['student-name'].value || "Öğrenci";
                 
                 this.state.level = lvl;
@@ -428,7 +445,6 @@
                 }
 
                 this.state.problem = p;
-                // YENİ: Soru elementlerini temizle
                 this.elements['multiplication-problem'].innerHTML = (this.state.level === 1 || this.state.level === 3) ? p.q : '';
                 this.elements['word-problem-question'].innerHTML = (this.state.level === 2 || this.state.level === 4) ? p.q : '';
             },
@@ -458,11 +474,9 @@
                     this.elements['quiz-feedback'].className = 'feedback correct';
                     setTimeout(() => this.nextQuestion(), 500);
                 } else {
-                    // YENİ: Geri bildirim mantığı güncellendi
                     this.elements['quiz-feedback'].innerHTML = `Yanlış!`;
                     this.elements['quiz-feedback'].className = 'feedback wrong';
                     
-                    // Aktif soru elementini bul ve doğru cevabı ekle
                     let qEl = (this.state.level === 1 || this.state.level === 3) ? this.elements['multiplication-problem'] : this.elements['word-problem-question'];
                     qEl.innerHTML += ` <span class="feedback correct" style="font-size: 1.2em; animation: pop 0.3s;">(${this.state.problem.a})</span>`;
                     
@@ -473,7 +487,6 @@
 
             end: function() {
                 this.stop();
-                // YENİ: İsim göster
                 this.elements['result-name'].textContent = this.state.studentName;
                 this.elements['result-level'].textContent = this.state.level;
                 this.elements['result-score'].textContent = this.state.score;
@@ -533,7 +546,6 @@
                 overlay.textContent = `${r} x ${c} = ${r*c}`;
                 
                 const targetCell = document.querySelector(`.grid-product-cell[data-r="${r}"][data-c="${c}"]`);
-                // YENİ: DÜZELTME - Konteyner'e ekle
                 const container = document.getElementById('learn-grid-table-container');
                 if (targetCell && container) {
                     container.appendChild(overlay);
@@ -546,7 +558,6 @@
 
         // --- SÖZCÜK OYUNU MODÜLÜ ---
         const wordleGame = {
-            // YENİ: Güncellenmiş kelime listesi (Obje olarak)
             WORDS_HINTS: {
                 "BÖLGE": "ÜLKEMİZİ YÖRESEL OLARAK PARÇA PARÇA DAHA İYİ TANIMAMIZI SAĞLAR",
                 "BESİN": "CANLILAR İÇİN ÖNEMLİ",
@@ -573,22 +584,20 @@
             state: { target: "", hint: "", guesses: [], currentGuess: "", gameOver: false, maxGuesses: 6 },
 
             start: function() {
-                // YENİ: Kelime ve ipucu seç
                 const allWords = Object.keys(this.WORDS_HINTS);
-                const randomWord = allWords[Math.floor(Math.random() * allWords.length)].toLocaleUpperCase('tr-TR');
+                const randomWordKey = allWords[Math.floor(Math.random() * allWords.length)];
                 
-                this.state.target = randomWord;
-                this.state.hint = this.WORDS_HINTS[randomWord];
+                this.state.target = randomWordKey.toLocaleUpperCase('tr-TR');
+                this.state.hint = this.WORDS_HINTS[randomWordKey];
                 
-                // YENİ: Dinamik hak sayısı
                 this.state.maxGuesses = this.state.target.length + 1; 
                 this.state.guesses = Array(this.state.maxGuesses).fill(null);
                 
                 this.state.currentGuess = "";
                 this.state.gameOver = false;
                 
-                // YENİ: İpucunu ekrana yaz
-                document.getElementById('wordle-hint').innerHTML = `<strong>İpucu:</strong> ${this.state.hint}`;
+                const hintEl = document.getElementById('wordle-hint');
+                if(hintEl) hintEl.innerHTML = `<strong>İpucu:</strong> ${this.state.hint}`;
                 
                 this.buildGrid();
                 this.buildKeyboard();
@@ -692,12 +701,13 @@
                 result.forEach((status, i) => {
                     setTimeout(() => {
                         const tile = document.getElementById(`tile-${row}-${i}`);
-                        
-                        // YENİ: DÜZELTME - Harfin kalmasını garantile
+                        if(!tile) return;
+
+                        // Harfin kalmasını garantile
                         tile.textContent = guess[i]; 
 
                         tile.classList.add('flip');
-                        // Gecikmeli olarak rengi ekle (animasyonun ortasında)
+                        
                         setTimeout(() => {
                             tile.classList.add(status);
                         }, 250); 
@@ -710,7 +720,7 @@
                         }
 
                         if (i === len - 1) this.checkWinLoss(row, guess);
-                    }, i * 350); // Animasyon süresini biraz arttırdım
+                    }, i * 350);
                 });
 
                 this.state.guesses[row] = guess;
