@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çarpma Egzersizi (4 Seviye + İnteraktif Öğrenme) - Bilgi Hazinesi</title> <base href="https://bilgihazinesi.github.io/">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:wght@400;500;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="stiller/stil.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        /* Önceki stiller... */
+        body { font-family: 'Crimson Pro', serif; }
+        .container { max-width: 900px; margin: 0 auto; text-align: center; padding: 15px; }
+        header h1 a { font-family: 'Cinzel Decorative', cursive; color: var(--text-primary-color); font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 5px; text-decoration: none; }
+        header p { font-size: clamp(0.9rem, 2.5vw, 1rem); margin-bottom: 20px; color: var(--text-secondary-color); }
+        .setup-card, .quiz-card, .results-card, .learn-card { background-color: var(--papyrus-bg-color-dark); padding: clamp(15px, 4vw, 20px); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-color); margin: 0 auto 15px auto; max-width: 700px; position: relative; overflow: hidden; }
+        .setup-card h2, .learn-card h2 { font-family: 'Cinzel Decorative', cursive; color: var(--accent-color); margin-bottom: 15px; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 6px; font-weight: 700; color: var(--text-secondary-color); font-size: 1rem; }
+        .input-group input[type="text"] { width: 80%; max-width: 280px; padding: 8px; border: 2px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 8px; font-size: 1rem; font-family: 'Crimson Pro', serif; text-align: center; box-sizing: border-box; }
+        .time-options button { margin: 4px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); color: var(--text-secondary-color); font-size: 0.9rem; font-family: 'Crimson Pro', serif; font-weight: 700; cursor: pointer; transition: all 0.3s ease; }
+        .time-options button.selected { background-color: var(--accent-color); color: white; border-color: var(--accent-color); }
+        .level-selection { margin-top: 20px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .level-button { padding: 10px 20px; font-size: 1rem; }
+        
+        /* YENİ: GÜNCELLENMİŞ Öğrenme Modülü Stilleri */
+        .learn-setup { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .learn-setup input[type="number"] { width: 70px; padding: 8px; border: 2px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 8px; font-size: 1.2rem; font-family: 'Nunito', sans-serif; text-align: center; -moz-appearance: textfield; }
+        .learn-setup input::-webkit-outer-spin-button, .learn-setup input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .learn-setup span { font-size: 1.5rem; font-weight: 700; color: var(--accent-color); }
+        
+        #learn-problem { font-size: 1.5rem; font-weight: 900; color: var(--text-primary-color); margin-bottom: 15px; min-height: 1.5em; font-family: 'Nunito', sans-serif; }
+        
+        /* YENİ: Öğrenme Cevap Grubu Stilleri */
+        .learn-answer-group { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        #learn-answer-input { width: 120px; padding: 10px; border: 2px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 8px; font-size: 1.5rem; font-family: 'Nunito', sans-serif; text-align: center; font-weight: 700; -moz-appearance: textfield; }
+        #learn-answer-input::-webkit-outer-spin-button, #learn-answer-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        #learn-check-btn { padding: 10px 18px; font-size: 1.2rem; }
+        #learn-feedback { min-height: 1.5em; margin-bottom: 15px; }
+        
+        #learn-grid { display: grid; grid-template-columns: repeat(11, 1fr); gap: 2px; margin: 0 auto; border: 2px solid var(--accent-color); padding: 4px; background-color: var(--papyrus-bg-color-light); max-width: 98%; overflow-x: auto; user-select: none; }
+        .grid-cell { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: clamp(0.6rem, 2vw, 0.8rem); aspect-ratio: 1/1; display: flex; justify-content: center; align-items: center; background-color: var(--papyrus-bg-color-dark); border: 1px solid var(--border-color); border-radius: 3px; color: var(--text-secondary-color); transition: all 0.3s ease; }
+        
+        /* YENİ: Hücre içindeki sayıyı gizlemek için span eklendi */
+        .grid-cell span { visibility: visible; transition: visibility 0.2s, color 0.2s; }
+        .grid-cell.hidden span { visibility: hidden; } /* Sayıyı gizle */
+
+        .grid-cell.highlighted { background-color: #fceecf; border-color: var(--accent-color); }
+        .grid-cell.highlighted:not(.hidden) span { color: var(--accent-color); } /* Sayı görünürken rengini ayarla */
+        
+        .grid-cell.dimmed { opacity: 0.2; background-color: var(--papyrus-bg-color-light); }
+        .grid-cell.dimmed span { visibility: hidden; } /* Sönük alanda sayıları her zaman gizle */
+
+        .grid-cell.answer { background-color: var(--accent-color); color: white; border-color: #a87b4f; transform: scale(1.15); font-size: clamp(0.7rem, 2.2vw, 0.9rem); z-index: 2; box-shadow: 0 0 8px rgba(0,0,0,0.4); }
+        .grid-cell.answer span { visibility: visible !important; color: white !important; } /* Cevap hücresi her zaman görünür ve beyaz */
+        
+        hr.dashed-divider { border: 0; border-top: 2px dashed var(--border-color); margin: 25px 0; }
+        /* Öğrenme Modülü Bitiş */
+        
+        .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; font-size: 1rem; font-weight: 700; color: var(--text-secondary-color); gap: 10px;}
+        #score-info { background-color: var(--papyrus-bg-color-light); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-color); text-align: right; font-size: clamp(0.8rem, 2vw, 0.9rem); line-height: 1.3;}
+        #score-info span { display: block; }
+        #score-info strong { color: var(--accent-color); font-size: 1.1em;}
+        #timer { background-color: var(--papyrus-bg-color-light); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); min-width: 60px; text-align: center; }
+        .timer-visual-container { height: 6px; background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); border-radius: 3px; overflow: hidden; margin-bottom: 10px;}
+        #timer-visual-bar { height: 100%; width: 100%; background: linear-gradient(to left, var(--accent-color), #a87b4f); border-radius: 3px; transition: width 1s linear; }
+        #repeated-addition { font-size: clamp(0.8rem, 2.5vw, 1rem); color: var(--text-secondary-color); margin-bottom: 8px; font-weight: 500; word-wrap: break-word; min-height: 1.3em; }
+        #visual-model { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: clamp(5px, 1vw, 8px); margin: 0 auto 10px auto; padding: 6px; border: 1px dashed var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); min-height: 40px; max-height: 80px; overflow-y: auto; max-width: 95%; }
+        .visual-group { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--papyrus-bg-color-dark); }
+        .visual-item { font-size: clamp(0.7rem, 2vw, 0.9rem); color: var(--accent-color); line-height: 1; }
+        #multiplication-problem { font-size: clamp(2rem, 7vw, 3rem); font-weight: 900; color: var(--accent-color); margin-bottom: 8px; font-family: 'Nunito', sans-serif; line-height: 1.1; min-height: 1.1em; }
+        #word-problem-question { font-size: clamp(1.1rem, 3.8vw, 1.4rem); font-weight: 700; line-height: 1.3; margin-bottom: 8px; color: var(--text-primary-color); font-family: 'Nunito', sans-serif; min-height: 2.6em; }
+        #answer-input { width: clamp(80px, 20vw, 120px); padding: 6px; border: 2px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 8px; font-size: clamp(1.2rem, 3.8vw, 1.5rem); font-family: 'Nunito', sans-serif; text-align: center; box-sizing: border-box; font-weight: 700; margin: 0 auto 8px auto; display: block; -moz-appearance: textfield; pointer-events: none; }
+        #answer-input::-webkit-outer-spin-button, #answer-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        #number-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(5px, 1.2vw, 8px); max-width: 220px; margin: 10px auto 5px auto; }
+        .numpad-btn { padding: clamp(6px, 2vw, 10px); font-size: clamp(1rem, 3vw, 1.2rem); font-weight: 700; font-family: 'Nunito', sans-serif; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); color: var(--text-primary-color); cursor: pointer; transition: background-color 0.1s; -webkit-tap-highlight-color: transparent; display: flex; justify-content: center; align-items: center; aspect-ratio: 1.4 / 1; }
+        .numpad-btn:active { background-color: var(--active-bg-color); transform: scale(0.95); }
+        .numpad-zero { grid-column: 1 / 2; } 
+        .numpad-clear { grid-column: 2 / 3; } 
+        .numpad-submit { grid-column: 3 / 4; background-color: var(--accent-color); color: white; border-color: var(--accent-color); font-size: 1.2em; } 
+        .numpad-submit:active { background-color: #a87b4f; } 
+        .numpad-btn i { font-size: 0.9em; }
+        @media (min-width: 500px) and (min-height: 300px) and (orientation: landscape) { #number-pad { grid-template-columns: repeat(6, 1fr); max-width: 380px; gap: clamp(6px, 1vw, 10px); margin-top: 5px; } .numpad-btn:nth-child(1){grid-column:1/2;grid-row:1/2;} .numpad-btn:nth-child(2){grid-column:2/3;grid-row:1/2;} .numpad-btn:nth-child(3){grid-column:3/4;grid-row:1/2;} .numpad-btn:nth-child(4){grid-column:1/2;grid-row:2/3;} .numpad-btn:nth-child(5){grid-column:2/3;grid-row:2/3;} .numpad-btn:nth-child(6){grid-column:3/4;grid-row:2/3;} .numpad-btn:nth-child(7){grid-column:4/5;grid-row:1/2;} .numpad-btn:nth-child(8){grid-column:5/6;grid-row:1/2;} .numpad-btn:nth-child(9){grid-column:6/7;grid-row:1/2;} .numpad-zero { grid-column: 4 / 5; grid-row: 2 / 3; } .numpad-clear { grid-column: 5 / 6; grid-row: 2 / 3; } .numpad-submit { grid-column: 6 / 7; grid-row: 2 / 3; aspect-ratio: 1.4 / 1; } }
+        
+        .level1-active #word-problem-question { display: none; }
+        .level2-active #repeated-addition, .level2-active #visual-model, .level2-active #multiplication-problem { display: none; }
+        .level3-active #repeated-addition, .level3-active #visual-model, .level3-active #word-problem-question { display: none; }
+        .level4-active #repeated-addition, .level4-active #visual-model, .level4-active #multiplication-problem { display: none; }
+
+        .feedback { font-weight: 700; margin-top: 8px; min-height: 24px; font-size: 1rem; }
+        .correct { color: #2e7d32; }
+        .wrong { color: #c62828; }
+        .results-card h2 { font-family: 'Cinzel Decorative', cursive; color: var(--accent-color); margin-bottom: 20px; font-size: clamp(1.8rem, 5vw, 2.5rem); }
+        .results-summary { background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 25px; }
+        .results-summary p { font-size: clamp(1.1rem, 3.5vw, 1.3rem); margin: 10px 0; font-weight: 600; line-height: 1.5; }
+        .results-summary strong { color: var(--accent-color); font-size: 1.2em; font-family: 'Nunito', sans-serif; display: inline-block; margin-left: 5px; }
+        .results-summary span { color: var(--text-secondary-color); font-weight: 500; }
+        .answer-animation { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5); background-color: rgba(46, 125, 50, 0.85); color: white; padding: 15px 30px; border-radius: 10px; font-size: clamp(2rem, 8vw, 4rem); font-weight: 900; font-family: 'Nunito', sans-serif; z-index: 10; opacity: 0; animation: fadeInGrowFadeOut 1.4s ease-out forwards; pointer-events: none; }
+        @keyframes fadeInGrowFadeOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 70% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }
+        
+    </style>
+</head>
+<body>
+
+    <div id="menu-container"></div>
+
+    <div class="container">
+        <header>
+            <h1><a href="https://bilgihazinesi.github.io/">Çarpma Egzersizi</a></h1>
+            <p>Çarpma işlemini farklı seviyelerde tekrar edelim veya öğrenelim.</p>
+        </header>
+
+        <main>
+            <div id="setup-screen" class="setup-card">
+                <h2>Çarpmayı Öğren</h2>
+                <p style="margin-bottom:15px; color: var(--text-secondary-color);">Çarpım tablosunu 110'luk tablo üzerinde interaktif olarak keşfet.</p> <button class="quiz-btn check-btn" onclick="multiplicationPractice.showLearnScreen()">Alan Modeli ile Öğren</button>
+                
+                <hr class="dashed-divider">
+
+                <h2>Egzersize Başla</h2>
+                <div class="input-group">
+                    <label for="student-name">Adın:</label>
+                    <input type="text" id="student-name" placeholder="Adını buraya yaz">
+                </div>
+                <div class="input-group">
+                     <label>Süre Seç:</label>
+                     <div class="time-options">
+                         <button data-time="2" onclick="multiplicationPractice.selectTime(2, this)">2 Dakika</button>
+                         <button data-time="3" onclick="multiplicationPractice.selectTime(3, this)">3 Dakika</button>
+                         <button data-time="4" onclick="multiplicationPractice.selectTime(4, this)">4 Dakika</button>
+                         <button data-time="5" onclick="multiplicationPractice.selectTime(5, this)">5 Dakika</button>
+                     </div>
+                </div>
+                 <div class="level-selection">
+                     <button class="quiz-btn check-btn level-button" onclick="multiplicationPractice.startExercise(1)">Seviye 1 (Görsel)</button>
+                     <button class="quiz-btn check-btn level-button" onclick="multiplicationPractice.startExercise(2)">Seviye 2 (Sözel)</button>
+                     <button class="quiz-btn check-btn level-button" onclick="multiplicationPractice.startExercise(3)">Seviye 3 (Bölme)</button>
+                     <button class="quiz-btn check-btn level-button" onclick="multiplicationPractice.startExercise(4)">Seviye 4 (Problem)</button>
+                 </div>
+                 <p id="setup-feedback" class="feedback wrong"></p> 
+            </div>
+            
+            <div id="learn-screen" class="learn-card" style="display: none;">
+                <h2>Çarpmayı Alan Modeli ile Öğren</h2>
+                <div class="learn-setup">
+                    <input type="number" id="learn-num1" min="1" max="10" value="3" oninput="multiplicationPractice.setupLearnProblem()">
+                    <span>x</span>
+                    <input type="number" id="learn-num2" min="1" max="11" value="4" oninput="multiplicationPractice.setupLearnProblem()">
+                </div>
+                
+                <div id="learn-problem" class="learn-info">3 x 4 = ?</div>
+                <div class="learn-answer-group">
+                    <input type="number" id="learn-answer-input" placeholder="?">
+                    <button id="learn-check-btn" class="quiz-btn check-btn">Kontrol Et</button>
+                </div>
+                <p id="learn-feedback" class="feedback"></p>
+                
+                <div id="learn-grid">
+                    </div>
+                <button class="quiz-btn next-btn" onclick="multiplicationPractice.showSetupScreen()" style="margin-top:20px;">Teste Geri Dön</button>
+            </div>
+            <div id="quiz-screen" class="quiz-card" style="display: none;">
+                 <div class="quiz-header">
+                     <div id="timer">00:00</div>
+                     <div id="score-info">
+                         <span id="level-display">Seviye: -</span>
+                         <span id="time-display">Süre: -</span>
+                         <span id="score">Skor: <strong>0</strong></span>
+                     </div>
+                 </div>
+                 <div class="timer-visual-container"><div id="timer-visual-bar"></div></div>
+                 <div id="visual-model"></div>
+                 <div id="repeated-addition">...</div> 
+                 <div id="multiplication-problem">? x ? =</div> 
+                 <div id="word-problem-question">Problem cümlesi...</div>
+                 <input type="text" id="answer-input" placeholder="" readonly> <div id="number-pad">
+                     <button class="numpad-btn" onclick="multiplicationPractice.appendToAnswer('1')">1</button>
+                     <button class="numpad-btn" onclick="multiplicationPractice.appendToAnswer('2')">2</button>
+                     <button class="numpad-btn" onclick="multiplicationPractice.appendToAnswer('3')">3</button>
+                     <button class="numpad-btn" onclick="multiplicationPractice.appendToAnswer('4')">4</button>
+                     <button class="numpad-btn" onclick="multiplicationPractice.appendToAnswer('5')">5</button>
+                     <button class="numpad-btn" onclick="multiplicationPractice.appendToAnswer('6')">6</button>
+                     <button class="numpad-btn" onclick="multiplicationPractice.appendToAnswer('7')">7</button>
+                     <button class="numpad-btn" onclick="multiplicationPractice.appendToAnswer('8')">8</button>
+                     <button class="numpad-btn" onclick="multiplicationPractice.appendToAnswer('9')">9</button>
+                     <button class="numpad-btn numpad-zero" onclick="multiplicationPractice.appendToAnswer('0')">0</button>
+                     <button class="numpad-btn numpad-clear" onclick="multiplicationPractice.clearAnswer()"><i class="bi bi-backspace"></i></button> 
+                     <button class="numpad-btn numpad-submit" onclick="multiplicationPractice.checkAnswer()"><i class="bi bi-check-lg"></i></button> 
+                 </div>
+                <p class="feedback" id="feedback"></p>
+            </div>
+
+             <div id="results-screen" class="results-card" style="display: none;">
+                 <h2>Süre Doldu!</h2>
+                 <div class="results-summary">
+                     <p><span>Adın:</span> <strong id="result-name">[İsim]</strong></p>
+                     <p><span>Seviye:</span> <strong id="result-level">[Seviye]</strong></p>
+                     <p><span>Süre:</span> <strong id="result-time">[Süre]</strong></p>
+                     <p><span>Skorun:</span> <strong id="result-score">[Skor]</strong></p>
+                 </div>
+                 <button class="quiz-btn next-btn" onclick="multiplicationPractice.restartExercise()">Yeniden Başla</button>
+             </div>
+        </main>
+    </div>
+
+    <script>
+        const multiplicationPractice = {
+            currentProblem: { num1: 0, num2: 0, answer: 0, questionText: "", type: 0 },
+            lastProblemKey: null, 
+            studentName: "Öğrenci", selectedTime: 0, selectedTimeText: "",
+            remainingTime: 0, timerInterval: null, score: 0, isExerciseRunning: false, currentLevel: 1, currentLevelText: "",
+            modelIcons: ['bi-star-fill', 'bi-heart-fill', 'bi-gem', 'bi-triangle-fill', 'bi-square-fill', 'bi-circle-fill', 'bi-brightness-high-fill'],
+            currentModelIcon: 'bi-star-fill', 
+            
+            // Element Referansları
+            setupScreenEl: null, nameInputEl: null, timeButtonsEl: null, setupFeedbackEl: null,
+            quizScreenEl: null, timerEl: null, scoreInfoEl: null, levelDisplayEl: null, timeDisplayEl: null, scoreDisplayEl: null, timerVisualBarEl: null, 
+            problemEl: null, additionEl: null, modelEl: null, wordProblemEl: null, 
+            inputEl: null, feedbackEl: null, numberPadEl: null,
+            resultsScreenEl: null, resultNameEl: null, resultLevelEl: null, resultTimeEl: null, resultScoreEl: null,
+            
+            // YENİ: Öğrenme Modülü Elementleri
+            learnScreenEl: null, learnGridEl: null, learnNum1El: null, learnNum2El: null,
+            learnProblemEl: null, learnAnswerInputEl: null, learnCheckBtnEl: null, learnFeedbackEl: null, // YENİ
+            gridCells: [], 
+
+            initialize: function() {
+                // ... Önceki element atamaları ...
+                this.setupScreenEl = document.getElementById('setup-screen'); this.nameInputEl = document.getElementById('student-name'); this.timeButtonsEl = document.querySelector('.time-options'); this.setupFeedbackEl = document.getElementById('setup-feedback');
+                this.quizScreenEl = document.getElementById('quiz-screen'); this.timerEl = document.getElementById('timer'); 
+                this.scoreInfoEl = document.getElementById('score-info'); this.levelDisplayEl = document.getElementById('level-display'); this.timeDisplayEl = document.getElementById('time-display'); this.scoreDisplayEl = document.getElementById('score').querySelector('strong'); 
+                this.timerVisualBarEl = document.getElementById('timer-visual-bar'); 
+                this.problemEl = document.getElementById('multiplication-problem'); this.additionEl = document.getElementById('repeated-addition'); this.modelEl = document.getElementById('visual-model'); this.wordProblemEl = document.getElementById('word-problem-question'); 
+                this.inputEl = document.getElementById('answer-input'); this.feedbackEl = document.getElementById('feedback'); this.numberPadEl = document.getElementById('number-pad'); 
+                this.resultsScreenEl = document.getElementById('results-screen'); 
+                this.resultNameEl = document.getElementById('result-name'); this.resultLevelEl = document.getElementById('result-level'); this.resultTimeEl = document.getElementById('result-time'); this.resultScoreEl = document.getElementById('result-score');
+
+                // YENİ: Öğrenme Modülü Elementlerini Bul
+                this.learnScreenEl = document.getElementById('learn-screen');
+                this.learnGridEl = document.getElementById('learn-grid');
+                this.learnNum1El = document.getElementById('learn-num1');
+                this.learnNum2El = document.getElementById('learn-num2');
+                this.learnProblemEl = document.getElementById('learn-problem'); // YENİ
+                this.learnAnswerInputEl = document.getElementById('learn-answer-input'); // YENİ
+                this.learnCheckBtnEl = document.getElementById('learn-check-btn'); // YENİ
+                this.learnFeedbackEl = document.getElementById('learn-feedback'); // YENİ
+
+                // GÜNCELLENDİ: Gerekli element listesi
+                const requiredElements = [
+                    this.setupScreenEl, this.quizScreenEl, this.resultsScreenEl, this.inputEl, this.timeButtonsEl, this.wordProblemEl, this.timerVisualBarEl, this.numberPadEl, this.scoreInfoEl, this.resultNameEl, this.resultLevelEl, this.resultTimeEl, this.resultScoreEl, 
+                    this.learnScreenEl, this.learnGridEl, this.learnNum1El, this.learnNum2El, this.learnProblemEl, this.learnAnswerInputEl, this.learnCheckBtnEl, this.learnFeedbackEl
+                ]; 
+                
+                if (requiredElements.some(el => !el)) { console.error("Elementler bulunamadı!"); document.querySelector('main').innerHTML = "<p style='color:red;'>Hata oluştu.</p>"; return; }
+                
+                 // ... Önceki event listener'lar ...
+                 document.addEventListener('keypress', (event) => { 
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        if (this.isExerciseRunning && !this.inputEl.disabled) {
+                            this.checkAnswer(); 
+                        } else if (this.learnScreenEl.style.display === 'block') {
+                            this.checkLearnAnswer(); // YENİ: Öğrenme ekranında Enter tuşu
+                        }
+                    }
+                 });
+                 document.addEventListener('click', (event) => { if (this.inputEl && !this.quizScreenEl.contains(event.target) && event.target !== this.inputEl && !this.numberPadEl.contains(event.target)) { this.inputEl.blur(); } });
+                 
+                 // YENİ: Öğrenme modülü için event listener
+                 this.learnCheckBtnEl.addEventListener('click', () => this.checkLearnAnswer());
+                 
+                 this.generateLearnGrid(); // Grid'i başta oluştur
+            },
+
+            selectTime: function(minutes, clickedButton) { /* ... değişiklik yok ... */ this.selectedTime = minutes * 60; this.selectedTimeText = `${minutes} Dakika`; this.timeButtonsEl.querySelectorAll('button').forEach(btn => btn.classList.remove('selected')); clickedButton.classList.add('selected'); this.setupFeedbackEl.textContent = ''; },
+
+            startExercise: function(level) { 
+                 if (this.selectedTime === 0) { this.setupFeedbackEl.textContent = 'Lütfen bir süre seçin!'; return; } 
+                 this.studentName = this.nameInputEl.value.trim() || "Öğrenci"; this.currentLevel = level; this.currentLevelText = `Seviye ${level}`;
+                 this.setupScreenEl.style.display = 'none'; this.resultsScreenEl.style.display = 'none'; this.quizScreenEl.style.display = 'block';
+                 this.learnScreenEl.style.display = 'none'; // YENİ
+                 
+                 this.quizScreenEl.classList.remove('level1-active', 'level2-active', 'level3-active', 'level4-active');
+                 this.quizScreenEl.classList.add(`level${level}-active`);
+                 
+                 this.score = 0; this.remainingTime = this.selectedTime; this.isExerciseRunning = true; this.lastProblemKey = null; 
+                 this.updateScoreDisplay(); this.updateTimerDisplay(); 
+                 this.startTimer(); this.loadQuestion(); 
+            },
+
+            loadQuestion: function() {
+                 if (!this.isExerciseRunning || !this.problemEl) return; 
+                 this.feedbackEl.textContent = ''; this.feedbackEl.className = 'feedback';
+                 this.inputEl.value = ''; this.inputEl.disabled = false;
+                 
+                 let attempts = 0; let newProblemKey = null;
+                 do {
+                     // GÜNCELLENDİ - Seviyelere göre soru oluşturma
+                     switch (this.currentLevel) {
+                         case 1: this.generateQuestionLevel1(); break;
+                         case 2: this.generateQuestionLevel2(); break;
+                         case 3: this.generateQuestionLevel3(); break; 
+                         case 4: this.generateQuestionLevel4(); break; 
+                         default: this.generateQuestionLevel1();
+                     }
+                     
+                     const n1 = this.currentProblem.num1; const n2 = this.currentProblem.num2;
+                      newProblemKey = `${Math.min(n1, n2)}x${Math.max(n1, n2)}_t${this.currentProblem.type}`; 
+                     attempts++;
+                 } while (newProblemKey === this.lastProblemKey && attempts < 10); 
+                 this.lastProblemKey = newProblemKey; 
+                 
+                 if(this.currentLevel === 1) { this.currentModelIcon = this.modelIcons[Math.floor(Math.random() * this.modelIcons.length)]; }
+                 this.displayQuestion();
+                 this.numberPadEl.style.display = 'grid'; 
+            },
+
+             generateQuestionLevel1: function() { /* ... değişiklik yok ... */
+                 let num1, num2; const useZeroOne = Math.random() < 0.08;
+                 if (useZeroOne) { num1 = Math.random() < 0.5 ? 0 : 1; num2 = Math.floor(Math.random() * 12); } 
+                 else { num1 = Math.floor(Math.random() * 9) + 2; num2 = Math.floor(Math.random() * 10) + 2; } 
+                 if (Math.random() < 0.5) { [num1, num2] = [num2, num1]; }
+                 if(!useZeroOne && (num1 > 10 || num2 > 10 || num1 < 2 || num2 < 2)){ num1 = Math.floor(Math.random() * 9) + 2; num2 = Math.floor(Math.random() * 10) + 2; }
+                 const answer = num1 * num2;
+                 this.currentProblem = { num1, num2, answer, questionText: `${num1} x ${num2} =`, type: 0 }; 
+             },
+             
+              generateQuestionLevel2: function() { /* ... değişiklik yok ... */
+                 let num1, num2, result, questionText = "", correctAnswer = 0, keyNum1, keyNum2; 
+                 const problemType = Math.floor(Math.random() * 4); 
+                 num1 = Math.floor(Math.random() * 9) + 2; num2 = Math.floor(Math.random() * 10) + 2; 
+                 result = num1 * num2; keyNum1 = num1; keyNum2 = num2; 
+                 switch (problemType) {
+                     case 0: 
+                          if (Math.random() < 0.05) { num1 = 1; num2 = Math.floor(Math.random() * 11) + 1; result = num1 * num2; keyNum1 = num1; keyNum2 = num2; } 
+                          else if (Math.random() < 0.05) { num1 = Math.floor(Math.random() * 9) + 2; num2 = 1; result = num1 * num2; keyNum1 = num1; keyNum2 = num2; }
+                          questionText = `${num1}'in ${num2} katı kaçtır?`; correctAnswer = result; break;
+                     case 1: questionText = `Kaç tane ${num1} toplarsak ${result} eder?`; correctAnswer = num2; break;
+                     case 2: questionText = `${num1}'in kaç katı ${result} eder?`; correctAnswer = num2; break;
+                     case 3: 
+                          num2 = Math.floor(Math.random() * 10) + 2; num1 = Math.floor(Math.random() * 10) + 2; 
+                          result = num1 * num2; questionText = `Hangi sayının ${num2} katı ${result} eder?`; 
+                          correctAnswer = num1; keyNum1 = num1; keyNum2 = num2; break;
+                 }
+                 this.currentProblem = { num1: keyNum1, num2: keyNum2, answer: correctAnswer, questionText: questionText, type: problemType }; 
+             },
+
+             // Seviye 3 (BÖLME)
+             generateQuestionLevel3: function() {
+                 const answer = Math.floor(Math.random() * 10) + 2; // 2-11
+                 const num2 = Math.floor(Math.random() * 9) + 2; // 2-10
+                 const num1 = num2 * answer; 
+                 this.currentProblem = { num1, num2, answer, questionText: `${num1} ÷ ${num2} =`, type: 0 };
+             },
+
+             // Seviye 4 (KARMAŞIK PROBLEM)
+             generateQuestionLevel4: function() {
+                let questionText = ""; let correctAnswer = 0; let keyNum1 = 0, keyNum2 = 0;
+                const problemType = Math.floor(Math.random() * 4);
+                const numA = Math.floor(Math.random() * 8) + 2; // 2-9
+                const numB = Math.floor(Math.random() * 8) + 2; // 2-9
+                let answer = Math.floor(Math.random() * 8) + 2; // 2-9 (Cevap X)
+                correctAnswer = answer; keyNum1 = numA; keyNum2 = numB; let result = 0;
+                switch (problemType) {
+                    case 0: // (X + a) * b = c
+                        result = (answer + numA) * numB;
+                        questionText = `${numA} fazlasının ${numB} katı ${result} olan sayı?`; break;
+                    case 1: // (X - a) * b = c
+                        answer = answer + numA; // X > a olmalı
+                        result = (answer - numA) * numB;
+                        questionText = `${numA} eksiğinin ${numB} katı ${result} olan sayı?`;
+                        correctAnswer = answer; break;
+                    case 2: // (X * b) + a = c
+                        result = (answer * numB) + numA;
+                        questionText = `${numB} katının ${numA} fazlası ${result} olan sayı?`; break;
+                    case 3: // (X * b) - a = c 
+                        result = (answer * numB) + numA; // (X*B) + A = C
+                        questionText = `${numB} katının ${numA} eksiği ${result - numA} olan sayı?`; // C - A = (X*B)
+                        correctAnswer = answer; break;
+                }
+                this.currentProblem = { num1: keyNum1, num2: keyNum2, answer: correctAnswer, questionText: questionText, type: problemType };
+             },
+
+             // GÜNCELLENDİ (Tüm seviyeleri yönetecek şekilde)
+             displayQuestion: function() {
+                 if (this.currentLevel === 1) {
+                     this.problemEl.textContent = this.currentProblem.questionText;
+                     this.displayLevel1Details(this.currentProblem.num1, this.currentProblem.num2);
+                 } else if (this.currentLevel === 2 || this.currentLevel === 4) {
+                     this.wordProblemEl.textContent = this.currentProblem.questionText;
+                     this.additionEl.textContent = ''; this.modelEl.innerHTML = '';
+                 } else if (this.currentLevel === 3) {
+                     this.problemEl.textContent = this.currentProblem.questionText;
+                     this.additionEl.textContent = ''; this.modelEl.innerHTML = '';
+                 }
+             },
+            
+             displayLevel1Details: function(num1, num2) { /* ... değişiklik yok ... */ this.additionEl.textContent = ''; this.modelEl.innerHTML = ''; const iconClass = this.currentModelIcon || 'bi-star-fill'; try { if (num1 === 0 || num2 === 0) { this.additionEl.textContent = `${num1} x ${num2} = 0`; } else if (num1 === 1) { this.additionEl.textContent = `1 tane ${num2} = ${num2}`; const groupDiv = document.createElement('div'); groupDiv.classList.add('visual-group'); for (let j = 0; j < num2 && j<15; j++) { const itemIcon = document.createElement('i'); itemIcon.classList.add('bi', iconClass, 'visual-item'); groupDiv.appendChild(itemIcon); } if (num2>0) this.modelEl.appendChild(groupDiv); } else if (num2 === 1) { this.additionEl.textContent = `${num1} tane 1 = ${num1 > 8 ? num1 : Array(num1).fill(1).join(' + ')}`; for (let i = 0; i < num1 && i<15; i++) { const groupDiv = document.createElement('div'); groupDiv.classList.add('visual-group'); const itemIcon = document.createElement('i'); itemIcon.classList.add('bi', iconClass, 'visual-item'); groupDiv.appendChild(itemIcon); this.modelEl.appendChild(groupDiv); } } else { const additionArray = Array(num1).fill(num2); if (num1 <= 6) {this.additionEl.textContent = `${num1} tane ${num2} = ${additionArray.join(' + ')}`;} else {this.additionEl.textContent = `${num1} tane ${num2}`; } for (let i = 0; i < num1 && i < 10; i++) { const groupDiv = document.createElement('div'); groupDiv.classList.add('visual-group'); for (let j = 0; j < num2 && j < 8; j++) { const itemIcon = document.createElement('i'); itemIcon.classList.add('bi', iconClass, 'visual-item'); groupDiv.appendChild(itemIcon); } if(num2 > 4 && window.innerWidth < 600) groupDiv.style.maxWidth = "70px"; else if(num2 > 5) groupDiv.style.maxWidth = "90px"; this.modelEl.appendChild(groupDiv); } } } catch(e){ console.error("Model oluşturulurken hata:", e); this.modelEl.innerHTML = "<small>Model yüklenemedi.</small>";} },
+
+             appendToAnswer: function(digit) { /* ... değişiklik yok ... */ if (this.inputEl && !this.inputEl.disabled) { if (this.inputEl.value.length < 4) { this.inputEl.value += digit; } } },
+             clearAnswer: function() { /* ... değişiklik yok ... */ if (this.inputEl) { this.inputEl.value = this.inputEl.value.slice(0, -1); } },
+
+            // GÜNCELLENDİ (Geri bildirim metinleri)
+            checkAnswer: function() {
+                 if (!this.inputEl || !this.feedbackEl || this.inputEl.disabled || !this.isExerciseRunning) return; 
+                 if (this.inputEl.value.trim() === "") { this.feedbackEl.textContent = 'Lütfen cevabınızı girin.'; this.feedbackEl.className = 'feedback wrong'; return; }
+                 const userAnswer = parseInt(this.inputEl.value);
+                 this.inputEl.disabled = true; 
+                 if (isNaN(userAnswer)) { this.feedbackEl.textContent = 'Geçersiz giriş.'; this.feedbackEl.className = 'feedback wrong'; setTimeout(() => this.loadQuestion(), 1000); return; }
+                 let feedbackText = ""; let isCorrect = (userAnswer === this.currentProblem.answer);
+                 let delay = isCorrect ? 400 : 1700; 
+                 if (isCorrect) { this.score++; this.updateScoreDisplay(); feedbackText = "Doğru!"; this.feedbackEl.className = 'feedback correct'; } 
+                 else { feedbackText = `Yanlış! Cevap: <strong>${this.currentProblem.answer}</strong>`; this.feedbackEl.className = 'feedback wrong'; this.showAnswerAnimation(); }
+                 if (this.currentLevel === 1) { const actualResult = this.currentProblem.num1 * this.currentProblem.num2; feedbackText += ` (${this.currentProblem.num1} x ${this.currentProblem.num2} = ${actualResult})`; } 
+                 else if (this.currentLevel === 3) { feedbackText += ` (${this.currentProblem.num1} ÷ ${this.currentProblem.num2} = ${this.currentProblem.answer})`; }
+                 this.feedbackEl.innerHTML = feedbackText; 
+                 if (this.remainingTime > 0) { setTimeout(() => this.loadQuestion(), delay); } 
+                 else { setTimeout(() => this.endExercise(), delay); } 
+            },
+            
+             // GÜNCELLENDİ (Animasyon metinleri)
+             showAnswerAnimation: function() {
+                 const oldAnimation = this.quizScreenEl.querySelector('.answer-animation'); 
+                 if(oldAnimation) oldAnimation.remove(); 
+                 const animationEl = document.createElement('div'); 
+                 animationEl.classList.add('answer-animation'); 
+                 if (this.currentLevel === 1) { animationEl.textContent = `${this.currentProblem.num1} x ${this.currentProblem.num2} = ${this.currentProblem.num1 * this.currentProblem.num2}`; } 
+                 else if (this.currentLevel === 3) { animationEl.textContent = `${this.currentProblem.num1} ÷ ${this.currentProblem.num2} = ${this.currentProblem.answer}`; } 
+                 else { animationEl.textContent = this.currentProblem.answer; }
+                 this.quizScreenEl.appendChild(animationEl); 
+                 setTimeout(() => { if (animationEl && animationEl.parentNode) { animationEl.remove(); } }, 1400); 
+             },
+             
+             startTimer: function() { /* ... değişiklik yok ... */ this.stopTimer(); this.timerInterval = setInterval(() => { this.remainingTime--; this.updateTimerDisplay(); if (this.remainingTime < 0) { this.remainingTime = 0; this.endExercise();} }, 1000); }, 
+             stopTimer: function() { /* ... değişiklik yok ... */ clearInterval(this.timerInterval); this.timerInterval = null; },
+             updateTimerDisplay: function() { /* ... değişiklik yok ... */ if (!this.timerEl || !this.timerVisualBarEl) return; const minutes = Math.floor(this.remainingTime / 60); const seconds = this.remainingTime % 60; this.timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`; const percentage = this.selectedTime > 0 ? (this.remainingTime / this.selectedTime) * 100 : 0; this.timerVisualBarEl.style.width = `${Math.max(0, percentage)}%`; if (percentage < 20) { this.timerVisualBarEl.style.background = '#c62828'; } else if (percentage < 50) { this.timerVisualBarEl.style.background = '#ffa000'; } else { this.timerVisualBarEl.style.background = 'linear-gradient(to left, var(--accent-color), #a87b4f)'; } },
+             updateScoreDisplay: function() { /* ... değişiklik yok ... */ if (!this.scoreInfoEl || !this.levelDisplayEl || !this.timeDisplayEl || !this.scoreDisplayEl) return; this.levelDisplayEl.textContent = this.currentLevelText; this.timeDisplayEl.textContent = `Süre: ${this.selectedTimeText}`; this.scoreDisplayEl.textContent = this.score; },
+             endExercise: function() { /* ... değişiklik yok ... */ this.isExerciseRunning = false; this.stopTimer(); if(this.resultNameEl) this.resultNameEl.textContent = this.studentName; if(this.resultLevelEl) this.resultLevelEl.textContent = this.currentLevelText; if(this.resultTimeEl) this.resultTimeEl.textContent = this.selectedTimeText; if(this.resultScoreEl) this.resultScoreEl.textContent = this.score; if(this.quizScreenEl) this.quizScreenEl.style.display = 'none'; if(this.resultsScreenEl) this.resultsScreenEl.style.display = 'block'; },
+             
+             restartExercise: function() { 
+                /* ... değişiklik yok, sadece learnScreenEl eklendi ... */
+                if(this.resultsScreenEl) this.resultsScreenEl.style.display = 'none'; 
+                if(this.quizScreenEl) this.quizScreenEl.style.display = 'none'; 
+                if(this.learnScreenEl) this.learnScreenEl.style.display = 'none'; // YENİ
+                if(this.setupScreenEl) this.setupScreenEl.style.display = 'block'; 
+                this.score = 0; this.remainingTime = 0; this.isExerciseRunning = false; this.currentLevel = 1; this.lastProblemKey = null; 
+                if(this.setupFeedbackEl) this.setupFeedbackEl.textContent = ''; 
+                if(this.timerVisualBarEl) { this.timerVisualBarEl.style.width = '100%'; this.timerVisualBarEl.style.background = 'linear-gradient(to left, var(--accent-color), #a87b4f)'; } 
+             },
+             
+             // --- YENİ GÜNCELLENMİŞ ÖĞRENME MODÜLÜ FONKSİYONLARI ---
+             
+             showLearnScreen: function() {
+                this.setupScreenEl.style.display = 'none';
+                this.quizScreenEl.style.display = 'none';
+                this.resultsScreenEl.style.display = 'none';
+                this.learnScreenEl.style.display = 'block';
+                this.setupLearnProblem(); // YENİ: Başlangıç problemini kur
+             },
+             
+             showSetupScreen: function() {
+                 this.setupScreenEl.style.display = 'block';
+                 this.learnScreenEl.style.display = 'none';
+             },
+             
+             generateLearnGrid: function() {
+                 this.learnGridEl.innerHTML = ''; 
+                 this.gridCells = []; 
+                 for (let i = 1; i <= 110; i++) {
+                     const cell = document.createElement('div');
+                     cell.classList.add('grid-cell', 'hidden'); // YENİ: Başlangıçta hepsi gizli
+                     cell.dataset.number = i; 
+                     cell.innerHTML = `<span>${i}</span>`; // YENİ: Sayıyı span içine al
+                     this.learnGridEl.appendChild(cell);
+                     this.gridCells.push(cell); 
+                 }
+             },
+             
+             // YENİ: showAreaModel'in interaktif versiyonu
+             setupLearnProblem: function() {
+                 let num1 = parseInt(this.learnNum1El.value); // Satırlar
+                 let num2 = parseInt(this.learnNum2El.value); // Sütunlar
+                 
+                 // Sınırları kontrol et
+                 if (isNaN(num1) || num1 < 1) { num1 = 1; this.learnNum1El.value = 1; }
+                 if (isNaN(num2) || num2 < 1) { num2 = 1; this.learnNum2El.value = 1; }
+                 if (num1 > 10) { num1 = 10; this.learnNum1El.value = 10; }
+                 if (num2 > 11) { num2 = 11; this.learnNum2El.value = 11; }
+                 
+                 this.learnProblemEl.textContent = `${num1} x ${num2} = ?`; // Problemi göster
+                 this.learnAnswerInputEl.value = ''; // Cevap kutusunu temizle
+                 this.learnFeedbackEl.textContent = ''; // Geri bildirimi temizle
+                 this.learnAnswerInputEl.disabled = false;
+                 this.learnCheckBtnEl.disabled = false;
+                 
+                 // Tüm hücrelerin stilini sıfırla ve sayıları gizle
+                 this.gridCells.forEach(cell => {
+                     cell.classList.remove('highlighted', 'dimmed', 'answer');
+                     cell.classList.add('hidden'); // Sayıları gizle
+                     
+                     const num = parseInt(cell.dataset.number);
+                     const row = Math.floor((num - 1) / 11) + 1; 
+                     const col = ((num - 1) % 11) + 1;
+                     
+                     // Alanın içindeyse 'highlighted', dışındaysa 'dimmed' yap
+                     if (row <= num1 && col <= num2) {
+                         cell.classList.add('highlighted');
+                         // 'hidden' class'ı hala aktif, bu yüzden CSS onu sarı ama boş gösterecek
+                     } else {
+                         cell.classList.add('dimmed');
+                     }
+                 });
+             },
+             
+             // YENİ: Öğrenme modülündeki cevabı kontrol et
+             checkLearnAnswer: function() {
+                let num1 = parseInt(this.learnNum1El.value);
+                let num2 = parseInt(this.learnNum2El.value);
+                const correctAnswer = num1 * num2;
+                const userAnswer = parseInt(this.learnAnswerInputEl.value);
+
+                if (isNaN(userAnswer)) {
+                    this.learnFeedbackEl.textContent = 'Lütfen bir sayı girin.';
+                    this.learnFeedbackEl.className = 'feedback wrong';
+                    return;
+                }
+
+                if (userAnswer === correctAnswer) {
+                    this.learnFeedbackEl.textContent = 'Harika! Doğru cevap.';
+                    this.learnFeedbackEl.className = 'feedback correct';
+                    this.learnAnswerInputEl.disabled = true; // Tekrar denemesin
+                    this.learnCheckBtnEl.disabled = true; // Butonu kapat
+                    
+                    // Cevap doğru, sayıları göster
+                    this.gridCells.forEach(cell => {
+                        if (cell.classList.contains('highlighted')) {
+                            cell.classList.remove('hidden'); // Gizliliği kaldır
+                            
+                            const num = parseInt(cell.dataset.number);
+                            if (num === correctAnswer) {
+                                cell.classList.add('answer'); // Son hücreyi vurgula
+                            }
+                        }
+                    });
+
+                } else {
+                    this.learnFeedbackEl.textContent = 'Hmm, tam değil. Tekrar dene!';
+                    this.learnFeedbackEl.className = 'feedback wrong';
+                }
+             }
+             // --- ÖĞRENME MODÜLÜ FONKSİYONLARI BİTTİ ---
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try { multiplicationPractice.initialize(); } catch (error) { console.error("Çarpma Egzersizi başlatılırken hata:", error); document.querySelector('main').innerHTML = "<p style='color:red; font-weight:bold; text-align:center;'>Etkinlik yüklenirken bir hata oluştu.</p>"; }
+        });
+
+    </script>
+
+    <script src="bilesenler/menu.js"></script>
+
+</body>
+</html>
