@@ -155,13 +155,20 @@
             margin-bottom: 15px; 
             width: 100%; max-width: 550px;
             margin-left: auto; margin-right: auto;
-            /* YENİ: justify-content kaldırıldı */
+            /* YENİ: justify-content eklendi (kısa kelimeler için) */
+            justify-content: center;
         }
-        /* YENİ: .wordle-row kuralı SİLİNDİ */
-        
+        .wordle-row { 
+            display: grid; 
+            /* grid-template-columns: repeat(5, 1fr); */ /* JS ezer */
+            gap: 4px;
+            /* YENİ: Genişlik, içeriğe göre ayarlanacak */
+            width: fit-content; 
+        } 
         .wordle-tile {
-            width: 100%; height: auto;
-            max-width: 50px;
+            /* YENİ: 'width' ve 'max-width' küçültüldü */
+            width: clamp(28px, 6.5vw, 36px); /* (7'de 2 küçültme) */
+            height: auto;
             aspect-ratio: 1 / 1;
             border: 2px solid var(--border-color); 
             font-size: clamp(0.7rem, 5vw, 1.5rem); 
@@ -170,9 +177,6 @@
             text-transform: uppercase; font-family: 'Nunito', sans-serif; 
             background-color: var(--papyrus-bg-color-light);
             transition: all 0.3s;
-            /* YENİ: Izgara öğeleri olarak ayarlandı */
-            grid-row: auto;
-            grid-column: auto;
         }
         
         .wordle-tile.filled { border-color: var(--text-secondary-color); animation: pop 0.1s; }
@@ -652,7 +656,7 @@
                     
                     if (this.learnTimer) clearTimeout(this.learnTimer);
                     
-                    // YENİ: Hangi hücreye tıklandıysa onun r/c'sini kullan
+                    // YENİ: Tıklanan hücrenin r/c'sini al
                     const r_to_highlight = r_clicked;
                     const c_to_highlight = c_clicked;
                     
@@ -730,7 +734,6 @@
                 grid.innerHTML = '';
                 const len = this.state.target.length;
                 
-                // YENİ: Ana ızgaranın sütunlarını ayarla
                 grid.style.gridTemplateColumns = `repeat(${len}, 1fr)`;
                 
                 for (let i = 0; i < this.state.maxGuesses; i++) {
@@ -738,7 +741,6 @@
                         const tile = document.createElement('div');
                         tile.className = 'wordle-tile';
                         tile.id = `tile-${i}-${j}`;
-                        // YENİ: Izgaradaki yerini ayarla
                         tile.style.gridRow = i + 1;
                         tile.style.gridColumn = j + 1;
                         grid.appendChild(tile);
