@@ -11,78 +11,356 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:wght@400;500;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="stiller/stil.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
         :root {
+            /* Glassmorphism için renk değişkenleri */
+            --glass-bg-light: rgba(255, 255, 255, 0.15); /* Açık cam arka plan */
+            --glass-bg-dark: rgba(255, 255, 255, 0.05); /* Koyu cam arka plan */
+            --glass-border: rgba(255, 255, 255, 0.2); /* Cam kenarlığı */
+            --glass-shadow: rgba(0, 0, 0, 0.2); /* Cam gölgesi */
+            --text-primary-color: #f0f0f0; /* Açık renk metin */
+            --text-secondary-color: #c0c0c0; /* İkincil metin rengi */
+            --accent-color: #8bb2eb; /* iOS mavisi gibi vurgu rengi */
+            --active-bg-color: rgba(255, 255, 255, 0.3); /* Aktif/hover durumu */
+
             --wordle-correct: #538d4e;
             --wordle-present: #b59f3b; 
             --wordle-absent: #3a3a3c;  
             --wordle-text: #ffffff;
-            --key-bg: #818384;
+            --key-bg: #d3d6da; /* Klavye tuşları için */
         }
 
-        body { font-family: 'Crimson Pro', serif; }
-        .container { max-width: 900px; margin: 0 auto; text-align: center; padding: 15px; }
-        header h1 a { font-family: 'Cinzel Decorative', cursive; color: var(--text-primary-color); font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 5px; text-decoration: none; }
-        header p { font-size: clamp(0.9rem, 2.5vw, 1rem); margin-bottom: 20px; color: var(--text-secondary-color); }
+        body { 
+            font-family: 'Crimson Pro', serif; 
+            background: linear-gradient(135deg, #001a33 0%, #1a0033 100%); /* Koyu ve derin bir gradyan */
+            color: var(--text-primary-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            text-align: center; 
+            padding: 15px; 
+            display: flex; /* Dikey ortalama için */
+            flex-direction: column; /* İçeriği dikey sırala */
+            justify-content: center; /* İçeriği ortala */
+            align-items: center; /* İçeriği ortala */
+        }
+        header h1 a { 
+            font-family: 'Cinzel Decorative', cursive; 
+            color: var(--text-primary-color); 
+            font-size: clamp(1.8rem, 5vw, 2.5rem); 
+            margin-bottom: 5px; 
+            text-decoration: none; 
+            text-shadow: 0 0 10px var(--accent-color); /* Hafif parlama */
+        }
+        header p { 
+            font-size: clamp(0.9rem, 2.5vw, 1rem); 
+            margin-bottom: 20px; 
+            color: var(--text-secondary-color); 
+        }
         
-        .app-card { background-color: var(--papyrus-bg-color-dark); padding: clamp(15px, 4vw, 20px); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-color); margin: 0 auto 15px auto; max-width: 700px; position: relative; overflow: hidden; }
-        .app-card h2 { font-family: 'Cinzel Decorative', cursive; color: var(--accent-color); margin-bottom: 15px; }
+        .app-card { 
+            /* Glassmorphism efektleri */
+            background-color: var(--glass-bg-light); /* Yarı saydam arka plan */
+            backdrop-filter: blur(10px) saturate(180%); /* Cam efekti */
+            -webkit-backdrop-filter: blur(10px) saturate(180%); /* Safari için */
+            border: 1px solid var(--glass-border); /* Hafif kenarlık */
+            box-shadow: 0 8px 32px 0 var(--glass-shadow); /* Derin gölge */
+            
+            border-radius: 18px; /* Daha yuvarlak köşeler */
+            padding: clamp(15px, 4vw, 25px); 
+            margin: 0 auto 15px auto; 
+            max-width: 700px; 
+            position: relative; 
+            overflow: hidden; 
+            transition: all 0.3s ease; /* Hover efekti için */
+        }
+        .app-card:hover {
+            background-color: var(--active-bg-color); /* Hafifçe daha opak */
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .app-card h2 { 
+            font-family: 'Cinzel Decorative', cursive; 
+            color: var(--accent-color); 
+            margin-bottom: 15px; 
+            text-shadow: 0 0 5px rgba(139, 178, 235, 0.4);
+        }
 
         .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; margin-bottom: 6px; font-weight: 700; color: var(--text-secondary-color); font-size: 1rem; }
-        .input-group input[type="text"] { width: 80%; max-width: 280px; padding: 8px; border: 2px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 8px; font-size: 1rem; font-family: 'Crimson Pro', serif; text-align: center; box-sizing: border-box; }
-        .quiz-btn { padding: 10px 20px; font-size: 1rem; cursor: pointer; transition: all 0.2s; border-radius: 8px; border: none; font-family: 'Nunito', sans-serif; font-weight: 700; }
-        .check-btn { background-color: var(--accent-color); color: white; }
-        .check-btn:hover { opacity: 0.9; }
-        .next-btn { background-color: var(--text-secondary-color); color: white; }
+        .input-group label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-weight: 700; 
+            color: var(--text-secondary-color); 
+            font-size: 1rem; 
+        }
+        .input-group input[type="text"] { 
+            width: 80%; 
+            max-width: 280px; 
+            padding: 10px; /* Daha geniş */
+            border: 1px solid var(--glass-border); /* Cam kenarlık */
+            background: var(--glass-bg-dark); /* Yarı saydam input */
+            color: var(--text-primary-color);
+            border-radius: 10px; /* Daha yuvarlak */
+            font-size: 1rem; 
+            font-family: 'Crimson Pro', serif; 
+            text-align: center; 
+            box-sizing: border-box; 
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: border-color 0.3s;
+        }
+        .input-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(139, 178, 235, 0.5);
+        }
+
+        .quiz-btn { 
+            padding: 12px 25px; /* Daha geniş */
+            font-size: 1rem; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            border-radius: 10px; /* Daha yuvarlak */
+            border: none; 
+            font-family: 'Nunito', sans-serif; 
+            font-weight: 700; 
+            background-color: var(--glass-bg-light); /* Varsayılan cam buton */
+            color: var(--text-primary-color);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .quiz-btn:hover { 
+            background-color: var(--active-bg-color); 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .check-btn { 
+            background-color: var(--accent-color); /* Vurgulu renk */
+            color: white; 
+            border: none; /* Accent butonda kenarlık yok */
+            box-shadow: 0 4px 10px rgba(139, 178, 235, 0.4);
+        }
+        .check-btn:hover { 
+            opacity: 0.9; 
+            background-color: var(--accent-color); /* Hover'da renk solmasın */
+        }
+        .next-btn { 
+            background-color: var(--text-secondary-color); /* Gri tonlu */
+            color: white; 
+            border: none;
+        }
+        .next-btn:hover {
+            opacity: 0.9;
+            background-color: var(--text-secondary-color);
+        }
         
         .mode-selection { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
-        .mode-btn { padding: 15px 25px; font-size: 1.1rem; display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 120px; }
-        .mode-btn i { font-size: 2rem; }
+        .mode-btn { 
+            padding: 15px 25px; 
+            font-size: 1.1rem; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 10px; 
+            min-width: 120px; 
+            background-color: var(--glass-bg-dark); /* Daha koyu cam buton */
+        }
+        .mode-btn i { font-size: 2rem; color: var(--accent-color); }
+        .mode-btn:hover i { color: white; }
 
         /* --- ÇARPMA OYUNU STİLLERİ --- */
-        .time-options button { margin: 4px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); color: var(--text-secondary-color); font-size: 0.9rem; font-family: 'Crimson Pro', serif; font-weight: 700; cursor: pointer; transition: all 0.3s ease; }
-        .time-options button.selected { background-color: var(--accent-color); color: white; border-color: var(--accent-color); }
+        .time-options button { 
+            margin: 4px; 
+            padding: 8px 12px; 
+            border: 1px solid var(--glass-border); 
+            border-radius: 8px; 
+            background-color: var(--glass-bg-dark); 
+            color: var(--text-secondary-color); 
+            font-size: 0.9rem; 
+            font-family: 'Crimson Pro', serif; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .time-options button.selected { 
+            background-color: var(--accent-color); 
+            color: white; 
+            border-color: var(--accent-color); 
+            box-shadow: 0 2px 8px rgba(139, 178, 235, 0.3);
+        }
         .level-selection { margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; font-size: 1rem; font-weight: 700; color: var(--text-secondary-color); gap: 10px;}
-        #score-info { background-color: var(--papyrus-bg-color-light); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-color); text-align: right; font-size: clamp(0.8rem, 2vw, 0.9rem); line-height: 1.3;}
+        .quiz-header { 
+            display: flex; justify-content: space-between; align-items: flex-start; 
+            margin-bottom: 5px; font-size: 1rem; font-weight: 700; 
+            color: var(--text-secondary-color); gap: 10px;
+            background-color: var(--glass-bg-dark); /* Quiz header da cam */
+            border-radius: 8px; padding: 10px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        #score-info { 
+            background-color: transparent; /* Zaten header'ın camı var */
+            padding: 0; 
+            border: none; 
+            text-align: right; 
+            font-size: clamp(0.8rem, 2vw, 0.9rem); 
+            line-height: 1.3;
+        }
         #score-info span { display: block; }
         #score-info strong { color: var(--accent-color); font-size: 1.1em;}
-        #timer { background-color: var(--papyrus-bg-color-light); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); min-width: 60px; text-align: center; }
-        .timer-visual-container { height: 6px; background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); border-radius: 3px; overflow: hidden; margin-bottom: 10px;}
-        #timer-visual-bar { height: 100%; width: 100%; background: linear-gradient(to left, var(--accent-color), #a87b4f); border-radius: 3px; transition: width 1s linear; }
-        #visual-model { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: clamp(2px, 0.5vw, 5px); margin: 0 auto 10px auto; padding: 6px; border: 1px dashed var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); min-height: 40px; max-height: 80px; overflow-y: auto; max-width: 95%; }
-        .visual-group { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1px; padding: 2px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--papyrus-bg-color-dark); }
+        #timer { 
+            background-color: transparent; /* Zaten header'ın camı var */
+            padding: 0; 
+            border: none; 
+            min-width: 60px; 
+            text-align: center; 
+        }
+        .timer-visual-container { 
+            height: 6px; 
+            background-color: var(--glass-bg-dark); /* Cam arka plan */
+            border: 1px solid var(--glass-border); 
+            border-radius: 3px; 
+            overflow: hidden; 
+            margin-bottom: 10px;
+        }
+        #timer-visual-bar { 
+            height: 100%; 
+            width: 100%; 
+            background: linear-gradient(to left, var(--accent-color), #a87b4f); 
+            border-radius: 3px; 
+            transition: width 1s linear; 
+        }
+        #visual-model { 
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center; 
+            gap: clamp(2px, 0.5vw, 5px); margin: 0 auto 10px auto; 
+            padding: 6px; 
+            border: 1px dashed var(--glass-border); /* Cam kenarlık */
+            border-radius: 8px; 
+            background-color: var(--glass-bg-dark); /* Cam arka plan */
+            min-height: 40px; max-height: 80px; overflow-y: auto; max-width: 95%; 
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .visual-group { 
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center; 
+            gap: 1px; padding: 2px; 
+            border: 1px solid var(--glass-border); 
+            border-radius: 4px; 
+            background-color: rgba(255, 255, 255, 0.1); /* Hafifçe daha opak */
+        }
         .visual-item { font-size: clamp(0.6rem, 1.5vw, 0.8rem); color: var(--accent-color); line-height: 1; }
-        #multiplication-problem { font-size: clamp(2rem, 7vw, 3rem); font-weight: 900; color: var(--accent-color); margin-bottom: 8px; font-family: 'Nunito', sans-serif; line-height: 1.1; min-height: 1.1em; }
-        #word-problem-question { font-size: clamp(1.1rem, 3.8vw, 1.4rem); font-weight: 700; line-height: 1.3; margin-bottom: 8px; color: var(--text-primary-color); font-family: 'Nunito', sans-serif; min-height: 2.6em; }
-        #answer-input { width: clamp(80px, 20vw, 120px); padding: 6px; border: 2px solid var(--border-color); background: var(--papyrus-bg-color-light); border-radius: 8px; font-size: clamp(1.2rem, 3.8vw, 1.5rem); font-family: 'Nunito', sans-serif; text-align: center; box-sizing: border-box; font-weight: 700; margin: 0 auto 8px auto; display: block; -moz-appearance: textfield; pointer-events: none; }
+        #multiplication-problem { 
+            font-size: clamp(2rem, 7vw, 3rem); 
+            font-weight: 900; 
+            color: var(--text-primary-color); /* Ana metin rengi */
+            margin-bottom: 8px; 
+            font-family: 'Nunito', sans-serif; 
+            line-height: 1.1; min-height: 1.1em; 
+        }
+        #word-problem-question { 
+            font-size: clamp(1.1rem, 3.8vw, 1.4rem); 
+            font-weight: 700; 
+            line-height: 1.3; margin-bottom: 8px; 
+            color: var(--text-primary-color); 
+            font-family: 'Nunito', sans-serif; 
+            min-height: 2.6em; 
+        }
+        #answer-input { 
+            width: clamp(80px, 20vw, 120px); 
+            padding: 10px; /* Daha geniş */
+            border: 1px solid var(--glass-border); 
+            background: var(--glass-bg-dark); 
+            border-radius: 10px; 
+            font-size: clamp(1.2rem, 3.8vw, 1.5rem); 
+            font-family: 'Nunito', sans-serif; 
+            text-align: center; 
+            box-sizing: border-box; 
+            font-weight: 700; 
+            margin: 0 auto 8px auto; 
+            display: block; 
+            -moz-appearance: textfield; 
+            pointer-events: none; 
+            color: var(--text-primary-color);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
         #answer-input::-webkit-outer-spin-button, #answer-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        #number-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(5px, 1.2vw, 8px); max-width: 220px; margin: 10px auto 5px auto; }
-        .numpad-btn { padding: clamp(6px, 2vw, 10px); font-size: clamp(1rem, 3vw, 1.2rem); font-weight: 700; font-family: 'Nunito', sans-serif; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--papyrus-bg-color-light); color: var(--text-primary-color); cursor: pointer; transition: background-color 0.1s; -webkit-tap-highlight-color: transparent; display: flex; justify-content: center; align-items: center; aspect-ratio: 1.4 / 1; }
+        #number-pad { 
+            display: grid; grid-template-columns: repeat(3, 1fr); 
+            gap: clamp(5px, 1.2vw, 8px); 
+            max-width: 220px; margin: 10px auto 5px auto; 
+        }
+        .numpad-btn { 
+            padding: clamp(6px, 2vw, 10px); 
+            font-size: clamp(1rem, 3vw, 1.2rem); 
+            font-weight: 700; 
+            font-family: 'Nunito', sans-serif; 
+            border: 1px solid var(--glass-border); 
+            border-radius: 10px; 
+            background-color: var(--glass-bg-dark); 
+            color: var(--text-primary-color); 
+            cursor: pointer; 
+            transition: background-color 0.1s; 
+            -webkit-tap-highlight-color: transparent; 
+            display: flex; justify-content: center; align-items: center; aspect-ratio: 1.4 / 1; 
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
         .numpad-btn:active { background-color: var(--active-bg-color); transform: scale(0.95); }
-        .numpad-submit { background-color: var(--accent-color); color: white; border-color: var(--accent-color); font-size: 1.2em; } 
+        .numpad-submit { 
+            background-color: var(--accent-color); 
+            color: white; 
+            border-color: var(--accent-color); 
+            font-size: 1.2em; 
+            box-shadow: 0 2px 8px rgba(139, 178, 235, 0.3);
+        } 
         .level1-active #word-problem-question { display: none; }
         .level2-active #repeated-addition, .level2-active #visual-model, .level2-active #multiplication-problem { display: none; }
         .level3-active #repeated-addition, .level3-active #visual-model, .level3-active #word-problem-question { display: none; }
         .level4-active #repeated-addition, .level4-active #visual-model, .level4-active #multiplication-problem { display: none; }
-        .feedback { font-weight: 700; margin-top: 8px; min-height: 24px; font-size: 1rem; }
-        .correct { color: #2e7d32; }
-        .wrong { color: #c62828; }
-        .results-summary { background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 25px; }
-        .results-summary p { font-size: clamp(1.1rem, 3.5vw, 1.3rem); margin: 10px 0; font-weight: 600; line-height: 1.5; }
+        .feedback { font-weight: 700; margin-top: 8px; min-height: 24px; font-size: 1rem; color: var(--text-primary-color);} /* Feedback metin rengi */
+        .correct { color: #85e085; } /* Açık yeşil */
+        .wrong { color: #ff8c8c; } /* Açık kırmızı */
+        .results-summary { 
+            background-color: var(--glass-bg-dark); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 10px; 
+            padding: 15px; 
+            margin-bottom: 25px; 
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .results-summary p { 
+            font-size: clamp(1.1rem, 3.5vw, 1.3rem); 
+            margin: 10px 0; 
+            font-weight: 600; 
+            line-height: 1.5; 
+            color: var(--text-primary-color);
+        }
 
         /* --- SÜPER-KOMPAKT DİNAMİK TABLO --- */
         #learn-screen.app-card { padding: 10px 2px; }
         #learn-grid-table-container { 
             max-width: 100%; padding: 0; margin: 10px 0; 
-            border: 0.5px solid white; 
-            background: var(--border-color); 
-            border-radius: 4px; position: relative;
+            border: 0.5px solid var(--glass-border); 
+            background: var(--glass-bg-dark); 
+            border-radius: 8px; position: relative;
             overflow: hidden; 
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
         #learn-grid-table {
             display: grid; 
@@ -99,22 +377,45 @@
             aspect-ratio: 1/1; 
             padding: 0; 
             display: flex; justify-content: center; align-items: center; 
-            background-color: var(--papyrus-bg-color-dark);
-            border: 0.5px solid white; 
+            background-color: rgba(255, 255, 255, 0.05); /* Hücreler için koyu cam */
+            border: 0.5px solid rgba(255, 255, 255, 0.1); 
             transition: all 0.15s ease;
+            color: var(--text-secondary-color);
         }
         .grid-header { 
-            background-color: #e8d7bc; color: var(--accent-color); font-weight: 900; 
+            background-color: rgba(139, 178, 235, 0.2); /* Vurgu renginde yarı saydam header */
+            color: var(--accent-color); 
+            font-weight: 900; 
             font-size: clamp(0.35rem, 2.8vw, 0.8rem); 
         }
         
         .grid-product-cell { cursor: pointer; color: var(--text-primary-color); }
-        .grid-product-cell:hover { background-color: #fceecf; z-index: 3; transform: scale(1.1); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
-        .grid-product-cell.area-highlight { background-color: #2e7d32; color: white; border-color: #2e7d32; z-index: 2; }
+        .grid-product-cell:hover { 
+            background-color: rgba(139, 178, 235, 0.4); /* Hover'da daha opak vurgu */
+            z-index: 3; 
+            transform: scale(1.1); 
+            box-shadow: 0 0 5px rgba(0,0,0,0.2); 
+            border-color: var(--accent-color);
+        }
+        .grid-product-cell.area-highlight { 
+            background-color: #538d4e; /* Wordle correct rengi */
+            color: white; 
+            border-color: #538d4e; 
+            z-index: 2; 
+        }
         
         .learn-mode-toggle { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
-        .learn-mode-toggle button { flex-grow: 1; background-color: var(--papyrus-bg-color-light); border: 1px solid var(--border-color); color: var(--text-secondary-color); }
-        .learn-mode-toggle button.selected { background-color: var(--accent-color); color: white; }
+        .learn-mode-toggle button { 
+            flex-grow: 1; 
+            background-color: var(--glass-bg-dark); 
+            border: 1px solid var(--glass-border); 
+            color: var(--text-secondary-color); 
+        }
+        .learn-mode-toggle button.selected { 
+            background-color: var(--accent-color); 
+            color: white; 
+            border-color: var(--accent-color); 
+        }
         #learn-quiz-question {
             font-family: 'Nunito', sans-serif; font-weight: 900;
             font-size: clamp(1.5rem, 6vw, 2.5rem); color: var(--accent-color);
@@ -123,27 +424,32 @@
         
         #learn-screen.quiz-mode-active .grid-header {
             color: transparent;
-            background-color: var(--papyrus-bg-color-dark);
+            background-color: rgba(255, 255, 255, 0.05); /* Header'lar da cam olsun */
         }
         
         #learn-screen.quiz-mode-active .grid-product-cell {
-            background-color: #fceecf; 
+            background-color: var(--glass-bg-dark); /* Quiz modunda hücreler de cam */
             color: var(--text-primary-color); 
         }
         #learn-screen.quiz-mode-active .grid-product-cell:hover {
-            background-color: #fadaa0;
+            background-color: rgba(139, 178, 235, 0.2); /* Quiz hover'ı da cam */
             transform: scale(1.1);
         }
         #learn-screen.quiz-mode-active .grid-product-cell.area-highlight {
-             background-color: #2e7d32; 
+             background-color: var(--wordle-correct); 
              color: white;
-             border-color: #2e7d32;
+             border-color: var(--wordle-correct);
         }
         
         .fact-overlay {
-            position: absolute; background-color: rgba(255, 255, 255, 0.95); color: var(--accent-color);
-            padding: 5px 10px; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 900;
-            font-size: clamp(1rem, 3vw, 1.5rem); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: absolute; 
+            background-color: rgba(255, 255, 255, 0.9); /* Neredeyse opak beyaz */
+            color: var(--accent-color);
+            padding: 5px 10px; 
+            border-radius: 8px; 
+            font-family: 'Nunito', sans-serif; font-weight: 900;
+            font-size: clamp(1rem, 3vw, 1.5rem); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             z-index: 10; pointer-events: none; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             border: 2px solid var(--accent-color); white-space: nowrap;
         }
@@ -159,21 +465,23 @@
         }
         .wordle-row { 
             display: grid; 
-            grid-template-columns: repeat(5, 1fr); /* JS ezer */
             gap: 4px;
-            width: fit-content; /* YENİ: Genişlik içeriğe göre */
+            width: fit-content; 
         } 
         .wordle-tile {
             width: clamp(28px, 6.5vw, 36px); 
             height: auto;
             aspect-ratio: 1 / 1;
-            border: 2px solid var(--border-color); 
+            border: 1px solid var(--glass-border); /* Cam kenarlık */
             font-size: clamp(0.7rem, 5vw, 1.5rem); 
             font-weight: bold;
             display: flex; justify-content: center; align-items: center;
             text-transform: uppercase; font-family: 'Nunito', sans-serif; 
-            background-color: var(--papyrus-bg-color-light);
+            background-color: var(--glass-bg-dark); /* Varsayılan cam arka plan */
+            color: var(--text-primary-color);
             transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
         
         .wordle-tile.filled { border-color: var(--text-secondary-color); animation: pop 0.1s; }
@@ -186,11 +494,17 @@
         .keyboard-row { display: flex; justify-content: center; gap: 4px; touch-action: manipulation; }
         .key {
             font-family: 'Nunito', sans-serif; font-weight: bold; padding: 0;
-            height: 45px; border-radius: 4px; cursor: pointer; user-select: none;
-            background-color: #d3d6da; color: black; flex: 1;
+            height: 45px; border-radius: 6px; cursor: pointer; user-select: none;
+            background-color: var(--glass-bg-dark); /* Klavye tuşları da cam */
+            color: var(--text-primary-color); 
+            flex: 1;
             display: flex; justify-content: center; align-items: center; text-transform: uppercase;
             font-size: 0.9rem; transition: background-color 0.3s;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
+        .key:active { background-color: var(--active-bg-color); transform: scale(0.95); }
         .key.large { flex: 1.5; font-size: 0.8rem; }
         .key.correct { background-color: var(--wordle-correct); color: var(--wordle-text); }
         .key.present { background-color: var(--wordle-present); color: var(--wordle-text); }
@@ -198,16 +512,29 @@
         #wordle-feedback button { margin-top: 15px; }
         #wordle-hint { 
             font-size: 1rem; color: var(--text-secondary-color); 
-            padding: 10px; background-color: var(--papyrus-bg-color-light); 
-            border: 1px dashed var(--border-color); border-radius: 8px;
+            padding: 10px; 
+            background-color: var(--glass-bg-dark); /* İpucu kutusu da cam */
+            border: 1px dashed var(--glass-border); 
+            border-radius: 8px;
             margin-bottom: 15px; text-align: left; line-height: 1.4;
             font-family: 'Crimson Pro', serif;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
         #wordle-hint strong { color: var(--accent-color); }
 
         @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes flip { 0% { transform: rotateX(0); } 50% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
-        .answer-animation { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5); background-color: rgba(46, 125, 50, 0.9); color: white; padding: 15px 30px; border-radius: 10px; font-size: clamp(2rem, 8vw, 4rem); font-weight: 900; font-family: 'Nunito', sans-serif; z-index: 20; opacity: 0; animation: fadeInGrowFadeOut 1.4s ease-out forwards; pointer-events: none; }
+        .answer-animation { 
+            position: absolute; top: 40%; left: 50%; 
+            transform: translate(-50%, -50%) scale(0.5); 
+            background-color: var(--accent-color); /* Vurgu rengi */
+            color: white; padding: 15px 30px; border-radius: 10px; 
+            font-size: clamp(2rem, 8vw, 4rem); font-weight: 900; 
+            font-family: 'Nunito', sans-serif; z-index: 20; opacity: 0; 
+            animation: fadeInGrowFadeOut 1.4s ease-out forwards; pointer-events: none; 
+            box-shadow: 0 8px 25px rgba(139, 178, 235, 0.5); /* Derin gölge */
+        }
         @keyframes fadeInGrowFadeOut { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 70% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } }
     </style>
 </head>
@@ -244,7 +571,7 @@
                     <i class="bi bi-grid-3x3"></i> İnteraktif Tabloyu Aç
                 </button>
                 
-                <hr style="border: 0; border-top: 2px dashed var(--border-color); margin: 25px 0;">
+                <hr style="border: 0; border-top: 2px dashed var(--glass-border); margin: 25px 0;">
 
                 <h3>Test Başlat</h3>
                 <div class="input-group">
@@ -693,7 +1020,7 @@
                 "KAYAÇ": "YER YÜZÜ DENİNCE AKLIMIZA GELİR",
                 "FOSİL": "GEÇMİŞİ AYDINLATIR",
                 "KROKİ": "GÖKYÜZÜNDEN AŞAĞI BAKTIĞINI DÜŞÜN",
-                "YAĞLAR": "VÜCUDUMUZUN GÜVENLİK GÖREVLİSİ",
+                "YAĞLAR": "VÜCUDUMUZUN GÜVENLİK GÖREVZİSİ",
                 "DENEY": "ACABA NASIL OLUR? BUNUN BİR... YAPALIM",
                 "BİLİM": "..... ADAMI DA VARDIR",
                 "DOĞAL": "DÜNYA VAROLDUĞUNDAN BERİ VAR OLANLAR",
