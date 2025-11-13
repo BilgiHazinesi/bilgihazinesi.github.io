@@ -5,12 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const generateBtn = document.getElementById('generate-btn');
     const gridContainer = document.getElementById('multiplication-grid');
 
-    // --- YENİ: Animasyon Butonları ---
     const startBtn = document.getElementById('start-btn');
     const nextStepBtn = document.getElementById('next-step-btn');
     const resetBtn = document.getElementById('reset-btn');
 
-    // --- YENİ: Animasyon Durum (State) Değişkenleri ---
+    // --- 2. Animasyon Durum (State) Değişkenleri ---
     let totalCols = 0;
     let num1Str = '';
     let num2Str = '';
@@ -18,10 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStepIndex = 0;
     let animationInterval = null;
 
-    // --- 2. Olay Dinleyicileri (Event Listeners) ---
+    // --- 3. Olay Dinleyicileri (Event Listeners) ---
     generateBtn.addEventListener('click', createProblem);
     
-    // --- YENİ: Animasyon Buton Olayları ---
     startBtn.addEventListener('click', runAnimation);
     nextStepBtn.addEventListener('click', doNextStep);
     resetBtn.addEventListener('click', () => {
@@ -29,28 +27,23 @@ document.addEventListener('DOMContentLoaded', () => {
         createProblem(); // Yeni problem yarat
     });
 
-    // --- 3. Ana Fonksiyonlar ---
+    // --- 4. Ana Fonksiyonlar ---
 
     // Problem oluştur ve animasyonu hazırla
     function createProblem() {
-        // --- YENİ: Animasyonu temizle ---
         clearInterval(animationInterval);
         animationQueue = [];
         currentStepIndex = 0;
         clearAllHighlights();
 
-        // Basamak sayılarını al
         const d1 = parseInt(digits1Select.value);
         const d2 = parseInt(digits2Select.value);
 
-        // Rastgele sayılar üret ve global değişkenlere kaydet
         num1Str = generateRandomNumber(d1).toString();
         num2Str = generateRandomNumber(d2).toString();
 
-        // Grid'i bu sayılara göre oluştur
         setupGrid(num1Str, num2Str);
         
-        // --- YENİ: Çözümü hesapla ve animasyon kuyruğunu doldur ---
         prepareAnimation(num1Str, num2Str);
     }
 
@@ -62,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Grid'i (tahtayı) oluşturan fonksiyon
-    // --- GÜNCELLENDİ: Hücrelere data-attributes eklendi ---
+    // --- DÜZELTİLMİŞ setupGrid çağrıları ---
     function setupGrid(num1Str, num2Str) {
         gridContainer.innerHTML = '';
 
@@ -70,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const len2 = num2Str.length;
         
         const maxResultLen = len1 + len2;
-        // Global totalCols'u ayarla
         totalCols = Math.max(len1, len2 + 1, maxResultLen) + 1; 
 
         gridContainer.style.gridTemplateColumns = `repeat(${totalCols}, 40px)`;
@@ -79,10 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let r = 0; r < len2; r++) {
             let padding = totalCols - len1;
             for (let i = 0; i < padding; i++) gridContainer.appendChild(createCell(''));
-            // Elde hücrelerine data-row ve data-col ekle
             for (let i = 0; i < len1; i++) {
-                const colIndex = len1 - 1 - i; // Sağdan sola sütun indeksi
-                gridContainer.appendChild(createCell('', 'cell-carry', `carry-${r}`, colIndex));
+                const colIndex = len1 - 1 - i;
+                // ÇAĞRI DÜZELTİLDİ: 'cell-carry' sınıfı sona eklendi
+                gridContainer.appendChild(createCell('', `carry-${r}`, colIndex, 'cell-carry'));
             }
         }
 
@@ -91,102 +83,99 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < paddingNum1; i++) gridContainer.appendChild(createCell(''));
         for (let i = 0; i < len1; i++) {
             const colIndex = len1 - 1 - i;
-            gridContainer.appendChild(createCell(num1Str[i], 'cell-num1', 'num1', colIndex));
+             // ÇAĞRI DÜZELTİLDİ: 'cell-num1' sınıfı sona eklendi
+            gridContainer.appendChild(createCell(num1Str[i], 'num1', colIndex, 'cell-num1'));
         }
 
         // 3. 'x' ve 2. Çarpan (num2)
         let paddingNum2 = totalCols - (len2 + 1);
         for (let i = 0; i < paddingNum2; i++) gridContainer.appendChild(createCell(''));
-        gridContainer.appendChild(createCell('x', 'cell-sign'));
+        gridContainer.appendChild(createCell('x', null, null, 'cell-sign'));
         
         for (let i = 0; i < len2; i++) {
-            const placeIndex = (len2 - 1) - i; // 0=birler, 1=onlar...
+            const placeIndex = (len2 - 1) - i;
             const colIndex = len2 - 1 - i;
-            gridContainer.appendChild(createCell(num2Str[i], 'cell-num2', `num2-digit-${placeIndex}`, 'num2', colIndex));
+             // ÇAĞRI DÜZELTİLDİ: Sınıflar sona eklendi
+            gridContainer.appendChild(createCell(num2Str[i], 'num2', colIndex, 'cell-num2', `num2-digit-${placeIndex}`));
         }
 
         // 4. Çizgi
-        for (let i = 0; i < totalCols; i++) gridContainer.appendChild(createCell('', 'cell-line'));
+        for (let i = 0; i < totalCols; i++) gridContainer.appendChild(createCell('', null, null, 'cell-line'));
         
         // 5. Kısmi Çarpımlar
         for (let i = 0; i < len2; i++) {
             const rowClass = `partial-row-${i}`;
             for (let j = 0; j < totalCols; j++) {
                 const colIndex = totalCols - 1 - j;
-                gridContainer.appendChild(createCell('', 'cell-partial', rowClass, `partial-${i}`, colIndex));
+                // ÇAĞRI DÜZELTİLDİ: Sınıflar sona eklendi
+                gridContainer.appendChild(createCell('', `partial-${i}`, colIndex, 'cell-partial', rowClass));
             }
         }
 
         // 6. Sonuç Çizgisi
         if (len2 > 1) {
-            for (let i = 0; i < totalCols; i++) gridContainer.appendChild(createCell('', 'cell-line'));
+            for (let i = 0; i < totalCols; i++) gridContainer.appendChild(createCell('', null, null, 'cell-line'));
         }
 
         // 7. Final Sonuç
         if (len2 > 1) {
             for (let i = 0; i < totalCols; i++) {
                 const colIndex = totalCols - 1 - i;
-                gridContainer.appendChild(createCell('', 'cell-result', 'result', colIndex));
+                // ÇAĞRI DÜZELTİLDİ: 'cell-result' sınıfı sona eklendi
+                gridContainer.appendChild(createCell('', 'result', colIndex, 'cell-result'));
             }
         }
     }
 
-    // --- 4. YENİ: Animasyon Motoru Fonksiyonları ---
+    // --- 5. YENİ: Animasyon Motoru Fonksiyonları ---
 
     /**
      * Çarpma işlemini adım adım hesaplar ve 'animationQueue' dizisini doldurur.
      */
     function prepareAnimation(num1Str, num2Str) {
-        const n1 = num1Str.split('').reverse().map(Number); // [6, 6, 4, 2]
-        const n2 = num2Str.split('').reverse().map(Number); // [2, 7, 6]
-        const partialProducts = []; // Kısmi çarpımların sonuçlarını tutacak
+        const n1 = num1Str.split('').reverse().map(Number);
+        const n2 = num2Str.split('').reverse().map(Number);
+        const partialProducts = []; 
 
-        // --- Adım A: Kısmi Çarpımları Hesapla ---
-        for (let i = 0; i < n2.length; i++) { // n2'nin her basamağı için (2, 7, 6)
+        // Adım A: Kısmi Çarpımları Hesapla
+        for (let i = 0; i < n2.length; i++) {
             const digit2 = n2[i];
-            const carryRowIndex = i; // Hangi elde satırını kullanacağız (0, 1, 2)
-            const partialRowIndex = i; // Hangi kısmi çarpım satırını kullanacağız
+            const carryRowIndex = i; 
+            const partialRowIndex = i; 
             let carry = 0;
             const currentPartialProduct = [];
 
-            // Adım: 2. çarpanın aktif basamağını vurgula
             animationQueue.push({ type: 'highlight', selector: `[data-row='num2'][data-col='${i}']` });
 
-            for (let j = 0; j < n1.length; j++) { // n1'in her basamağı için (6, 6, 4, 2)
+            for (let j = 0; j < n1.length; j++) {
                 const digit1 = n1[j];
 
-                // Adım: 1. çarpanın aktif basamağını vurgula
                 animationQueue.push({ type: 'highlight', selector: `[data-row='num1'][data-col='${j}']` });
 
                 const product = (digit1 * digit2) + carry;
                 const resultDigit = product % 10;
                 carry = Math.floor(product / 10);
 
-                // Adım: Kısmi çarpım sonucunu ilgili kareye yaz
-                const partialColIndex = j + i; // Basamak kaydırma (shift)
+                const partialColIndex = j + i;
                 animationQueue.push({ 
                     type: 'write', 
                     selector: `[data-row='partial-${partialRowIndex}'][data-col='${partialColIndex}']`, 
                     value: resultDigit 
                 });
-                currentPartialProduct[partialColIndex] = resultDigit; // Sonuçları toplama için sakla
+                currentPartialProduct[partialColIndex] = resultDigit; 
 
-                // Adım: Eldeyi ilgili kareye yaz (eğer 0'dan büyükse)
                 if (carry > 0) {
                     animationQueue.push({ 
                         type: 'write', 
-                        selector: `[data-row='carry-${carryRowIndex}'][data-col='${j + 1}']`, // Elde bir sonraki basamağa yazılır
+                        selector: `[data-row='carry-${carryRowIndex}'][data-col='${j + 1}']`,
                         value: carry 
                     });
                 }
                 
-                // Adım: Vurguları temizle (bir sonraki adıma hazırlan)
                 animationQueue.push({ type: 'clear' });
-                // Adım: 2. çarpanı tekrar vurgula (sabit kalsın)
                 animationQueue.push({ type: 'highlight', selector: `[data-row='num2'][data-col='${i}']` });
             }
 
-            // İç döngü bittiğinde hala elde varsa, onu da yaz
             if (carry > 0) {
                 const partialColIndex = n1.length + i;
                 animationQueue.push({ 
@@ -197,11 +186,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentPartialProduct[partialColIndex] = carry;
             }
             
-            partialProducts.push(currentPartialProduct); // Toplama için bu satırı kaydet
-            animationQueue.push({ type: 'clear' }); // 2. çarpan vurgusunu temizle
+            partialProducts.push(currentPartialProduct); 
+            animationQueue.push({ type: 'clear' });
         }
         
-        // --- Adım B: Final Toplamayı Hesapla (Eğer 2+ basamaklıysa) ---
+        // Adım B: Final Toplamayı Hesapla (Eğer 2+ basamaklıysa)
         if (n2.length > 1) {
             let carry = 0;
             const maxCols = totalCols - 1;
@@ -209,12 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let j = 0; j < maxCols; j++) {
                 let columnSum = carry;
                 
-                // Adım: Toplanacak sütunu vurgula
                 for (let i = 0; i < n2.length; i++) {
                     animationQueue.push({ type: 'highlight', selector: `[data-row='partial-${i}'][data-col='${j}']` });
                 }
 
-                // Sütundaki rakamları topla
                 for (let i = 0; i < partialProducts.length; i++) {
                     columnSum += partialProducts[i][j] || 0;
                 }
@@ -222,16 +209,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resultDigit = columnSum % 10;
                 carry = Math.floor(columnSum / 10);
 
-                // Adım: Sonucu ilgili kareye yaz
                 animationQueue.push({ 
                     type: 'write', 
                     selector: `[data-row='result'][data-col='${j}']`, 
                     value: resultDigit 
                 });
 
-                // (İsteğe bağlı: Toplama eldelerini göstermek için buraya kod eklenebilir)
-
-                // Adım: Sütun vurgularını temizle
                 animationQueue.push({ type: 'clear' });
             }
         }
@@ -245,17 +228,15 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(animationInterval);
             animationInterval = null;
             clearAllHighlights();
-            return; // Animasyon bitti
+            return; 
         }
 
         const step = animationQueue[currentStepIndex];
         
-        // Önceki adımların vurgularını temizle (eğer 'clear' değilse)
         if (step.type !== 'clear') {
             clearAllHighlights();
         }
 
-        // Adımı uygula
         executeStep(step);
         
         currentStepIndex++;
@@ -265,19 +246,16 @@ document.addEventListener('DOMContentLoaded', () => {
      * 'Başlat' butonuna basıldığında animasyonu otomatik oynatır.
      */
     function runAnimation() {
-        if (animationInterval) return; // Zaten çalışıyor
+        if (animationInterval) return;
         
-        // Animasyonu baştan başlatmak için sıfırla
         if (currentStepIndex >= animationQueue.length) {
             currentStepIndex = 0;
-            // Grid'i temizle (sadece sayıları bırak)
             document.querySelectorAll('.cell-carry, .cell-partial, .cell-result').forEach(cell => {
                 cell.textContent = '';
             });
         }
         
-        // 'doNextStep' fonksiyonunu her 500ms'de bir çalıştır
-        animationInterval = setInterval(doNextStep, 500); // Hızı buradan ayarlayabilirsiniz
+        animationInterval = setInterval(doNextStep, 500);
     }
 
     /**
@@ -297,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- 5. Yardımcı Fonksiyonlar (Helpers) ---
+    // --- 6. Yardımcı Fonksiyonlar (Helpers) ---
 
     // Tüm '.highlight-active' sınıflarını temizler
     function clearAllHighlights() {
@@ -307,26 +285,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Hücre oluşturan ana fonksiyon
-    // --- GÜNCELLENDİ: data-row ve data-col ekledi ---
-    function createCell(content = '', ...classes) {
+    // --- DÜZELTİLMİŞ createCell FONKSİYONU ---
+    function createCell(content = '', dataRow = null, dataCol = null, ...classes) {
         const cell = document.createElement('div');
         cell.classList.add('grid-cell');
         
-        let dataRow = null;
-        let dataCol = null;
-
-        classes.forEach(cls => {
-            if (cls.startsWith('carry-') || cls.startsWith('partial-') || cls.startsWith('num') || cls.startsWith('result')) {
-                dataRow = cls; // Örn: 'partial-0'
-            } else if (!isNaN(cls)) { // Eğer sınıf bir sayıysa
-                dataCol = cls;
-            } else {
-                cell.classList.add(cls);
-            }
-        });
+        // Düzeltme: Tüm 'classes' argümanlarını CSS sınıfı olarak ekle
+        if (classes.length > 0) {
+            cell.classList.add(...classes);
+        }
 
         // Veri etiketlerini ata
-        if (dataRow) cell.dataset.row = dataRow;
+        if (dataRow !== null) cell.dataset.row = dataRow;
         if (dataCol !== null) cell.dataset.col = dataCol;
 
         cell.textContent = content;
