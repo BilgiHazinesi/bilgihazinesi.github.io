@@ -20,7 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const num1 = generateRandomNumber(d1);
         const num2 = generateRandomNumber(d2);
 
-      // --- GÜNCELLENMİŞ SETUPGRID FONKSİYONU ---
+        // Grid'i (tahtayı) bu sayılara göre oluştur
+        setupGrid(num1.toString(), num2.toString());
+    }
+
+    function generateRandomNumber(digits) {
+        // 0 ile başlayan sayıları engelle (eğer 1 basamaklı değilse)
+        const min = (digits === 1) ? 0 : Math.pow(10, digits - 1);
+        const max = Math.pow(10, digits) - 1;
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // --- RENK TEMALI GÜNCEL SETUPGRID FONKSİYONU ---
     function setupGrid(num1Str, num2Str) {
         // Grid'i temizle
         gridContainer.innerHTML = '';
@@ -56,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gridContainer.appendChild(createCell(digit, 'cell-num1'));
         }
 
-        // 3. Satır: 'x' ve 2. Çarpan (num2) --- [BURASI GÜNCELLENDİ] ---
+        // 3. Satır: 'x' ve 2. Çarpan (num2)
         let paddingNum2 = totalCols - (len2 + 1); // +1 'x' işareti için
         for (let i = 0; i < paddingNum2; i++) {
             gridContainer.appendChild(createCell(''));
@@ -71,28 +82,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // Hücreyi 'cell-num2' ve dinamik 'num2-digit-X' sınıfıyla oluştur
             gridContainer.appendChild(createCell(digit, 'cell-num2', `num2-digit-${placeIndex}`));
         }
-        // --- [GÜNCELLEME SONU] ---
 
         // 4. Satır: Çizgi
         for (let i = 0; i < totalCols; i++) {
             gridContainer.appendChild(createCell('', 'cell-line'));
         }
         
-        // 5. Satırlar: Kısmi Çarpımlar --- [BURASI GÜNCELLENDİ] ---
+        // 5. Satırlar: Kısmi Çarpımlar
+        // (len2 = 3 ise; i=0, i=1, i=2 olacak)
+        // i=0 -> ilk kısmi çarpım satırı (birler basamağı için) -> partial-row-0 (Yeşil)
+        // i=1 -> ikinci kısmi çarpım satırı (onlar basamağı için) -> partial-row-1 (Mavi)
+        // i=2 -> üçüncü kısmi çarpım satırı (yüzler basamağı için) -> partial-row-2 (Pembe)
         for (let i = 0; i < len2; i++) {
-            // i = 0 (ilk satır) -> 'partial-row-0' (birler basamağı sonucu)
-            // i = 1 (ikinci satır) -> 'partial-row-1' (onlar basamağı sonucu)
-            
-            // Hangi satırda olduğumuzu belirleyen sınıf
             const rowClass = `partial-row-${i}`;
             
             for (let j = 0; j < totalCols; j++) {
-                // Hücreyi 'cell-partial' ve dinamik 'partial-row-X' sınıfıyla oluştur
                 gridContainer.appendChild(createCell('', 'cell-partial', rowClass));
             }
         }
-        // --- [GÜNCELLEME SONU] ---
-
 
         // 6. Satır: Sonuç Çizgisi (eğer 2 veya 3 basamaklıysa)
         if (len2 > 1) {
