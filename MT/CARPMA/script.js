@@ -13,8 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const animationControls = document.querySelector('.animation-controls');
     const checkingControls = document.querySelector('.checking-controls');
     const checkBtn = document.getElementById('check-btn');
-
-    // YENİ: Aşama 5 Elementleri
     const missingOptions = document.getElementById('missing-options');
 
     // --- 2. State (Durum) Değişkenleri ---
@@ -32,27 +30,21 @@ document.addEventListener('DOMContentLoaded', () => {
     nextStepBtn.addEventListener('click', doNextStep);
     resetBtn.addEventListener('click', () => {
         clearInterval(animationInterval);
-        createProblem(); // Sıfırla = Yeni Problem Yarat
+        createProblem();
     });
 
     checkBtn.addEventListener('click', checkSolution);
-
-    // GÜNCELLENDİ: Mod değiştirme artık "createProblem"i tetiklemiyor.
     missingDigitModeToggle.addEventListener('change', toggleMode);
-    // Verilmeyen yeri değişirse, mevcut problemi hemen güncelle
     document.querySelectorAll('input[name="missing-placement"]').forEach(radio => {
         radio.addEventListener('change', () => {
             if (missingDigitModeToggle.checked) {
-                switchToMissingMode(); // Sadece verilmeyen modunu yeniden uygula
+                switchToMissingMode();
             }
         });
     });
 
     // --- 4. Ana Fonksiyonlar ---
 
-    /**
-     * YENİ: "Rastgele Oluştur" butonu için ana fonksiyon.
-     */
     function createProblem() {
         clearInterval(animationInterval);
         animationQueue = [];
@@ -67,67 +59,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isMissingMode = missingDigitModeToggle.checked;
         
-        // 1. Grid'i kur
         setupGrid(num1Str, num2Str, isMissingMode);
-        
-        // 2. Çözümü hesapla
         prepareAnimation(num1Str, num2Str);
 
-        // 3. Mevcut moda göre grid'i doldur
         if (isMissingMode) {
             populateGridForMissingMode();
         } else {
             writeProblemNumbers();
         }
         
-        // 4. UI (Butonları) ayarla
         updateUiForMode(isMissingMode);
     }
 
-    /**
-     * YENİ: Mod değiştirme (sadece görünümü değiştirir, yeni problem yaratmaz)
-     */
     function toggleMode() {
         const isMissingMode = missingDigitModeToggle.checked;
-        updateUiForMode(isMissingMode);
-
+        
+        // ÖNEMLİ: Mod değiştiğinde grid'i yeniden kur (Eldeleri ve +'yı göstermek/gizlemek için)
+        // Yeniden kurma, mevcut sayıları korur
+        rebuildGridForMode(isMissingMode);
+        
         if (isMissingMode) {
-            switchToMissingMode(); // Mevcut problemi verilmeyenli hale getir
+            switchToMissingMode();
         } else {
-            switchToAnimationMode(); // Mevcut problemi animasyonlu hale getir
+            switchToAnimationMode();
         }
+        
+        updateUiForMode(isMissingMode);
+    }
+    
+    /**
+     * YENİ: Mod değiştirirken grid'i yeniden kuran fonksiyon
+     */
+    function rebuildGridForMode(isMissingMode) {
+        // Grid'i yeniden kur
+        setupGrid(num1Str, num2Str, isMissingMode);
+        // Çözümü yeniden hesapla (ama sadece arkaplanda)
+        prepareAnimation(num1Str, num2Str);
     }
 
-    /**
-     * YENİ: Görünümü Animasyon Moduna alır
-     */
     function switchToAnimationMode() {
-        clearAllInputs(); // Tüm <input> kutularını kaldır
-        clearAllResults(); // Kısmi çarpım ve sonuçları sil
-        writeProblemNumbers(); // 1. ve 2. çarpanı yaz
+        clearAllInputs();
+        clearAllResults();
+        writeProblemNumbers();
     }
 
-    /**
-     * YENİ: Görünümü Verilmeyen Moduna alır
-     */
     function switchToMissingMode() {
-        clearAllInputs(); // Öncekileri temizle
-        populateGridForMissingMode(); // Çözümü yaz ve bazılarını gizle
+        clearAllInputs();
+        populateGridForMissingMode();
     }
 
 
-    /**
-     * YENİ: Butonları ve seçenekleri moda göre ayarlar
-     */
     function updateUiForMode(isMissingMode) {
         if (isMissingMode) {
             animationControls.style.display = 'none';
             checkingControls.style.display = 'block';
-            missingOptions.style.display = 'flex'; // Seçenekleri göster
+            missingOptions.style.display = 'flex';
         } else {
             animationControls.style.display = 'flex';
             checkingControls.style.display = 'none';
-            missingOptions.style.display = 'none'; // Seçenekleri gizle
+            missingOptions.style.display = 'none';
         }
     }
 
@@ -137,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    // GÜNCELLENDİ: Rakamları düzenleyebilme (Aşama 5)
+    // --- GÜNCELLENDİ: '+' sembolü mantığı eklendi ---
     function setupGrid(num1Str, num2Str, isMissingMode) {
         gridContainer.innerHTML = '';
         const len1 = num1Str.length;
@@ -147,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         gridContainer.style.gridTemplateColumns = `repeat(${totalCols}, 40px)`;
 
-        // 1. Elde Satırları (Sadece animasyon modunda)
+        // 1. Elde Satırları
         if (!isMissingMode) {
             for (let r = 0; r < len2; r++) {
                 let padding = totalCols - len1;
@@ -164,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < paddingNum1; i++) gridContainer.appendChild(createCell(''));
         for (let i = 0; i < len1; i++) {
             const colIndex = len1 - 1 - i;
-            // YENİ: 'cell-editable' sınıfı ve click listener'ı eklendi
             const cell = createCell('', 'num1', colIndex, 'cell-num1', 'cell-editable');
             cell.addEventListener('click', makeCellEditable);
             gridContainer.appendChild(cell);
@@ -178,13 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < len2; i++) {
             const placeIndex = (len2 - 1) - i;
             const colIndex = len2 - 1 - i;
-            // YENİ: 'cell-editable' sınıfı ve click listener'ı eklendi
             const cell = createCell('', 'num2', colIndex, 'cell-num2', `num2-digit-${placeIndex}`, 'cell-editable');
             cell.addEventListener('click', makeCellEditable);
             gridContainer.appendChild(cell);
         }
 
-        // ... Kalan satırlar (çizgi, kısmi çarpım, sonuç) aynı ...
         // 4. Çizgi
         for (let i = 0; i < totalCols; i++) gridContainer.appendChild(createCell('', null, null, 'cell-line'));
         
@@ -193,7 +180,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const rowClass = `partial-row-${i}`;
             for (let j = 0; j < totalCols; j++) {
                 const colIndex = totalCols - 1 - j;
-                gridContainer.appendChild(createCell('', `partial-${i}`, colIndex, 'cell-partial', rowClass));
+                const cell = createCell('', `partial-${i}`, colIndex, 'cell-partial', rowClass);
+
+                // --- YENİ: Toplama (+) işareti ekle ---
+                // 'x' işaretinin sağa hizalı sütun indeksinin bir solu (len2 + 1)
+                const plusSignColIndex = len2 + 1; 
+                
+                // Sadece 2+ basamaklıysa VE son kısmi çarpım satırıysa VE doğru sütundaysa
+                if (len2 > 1 && i === len2 - 1 && colIndex === plusSignColIndex) {
+                    cell.textContent = '+';
+                    cell.classList.add('cell-sign'); // 'x' ile aynı stilde
+                }
+                // --- BİTİŞ ---
+                
+                gridContainer.appendChild(cell);
             }
         }
 
@@ -212,16 +212,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 5. Animasyon ve Çözüm Fonksiyonları ---
-    // (prepareAnimation, doNextStep, runAnimation, executeStep... bu fonksiyonlar aynı kaldı)
-    // ... (Bu fonksiyonlar bir önceki kod bloğundan kopyalanabilir, değişmediler) ...
-
     function prepareAnimation(num1Str, num2Str) {
-        // (Hiç değişmedi)
-        animationQueue = []; // Her hesaplamada kuyruğu sıfırla
-        solutionMap.clear(); // Her hesaplamada haritayı sıfırla
+        animationQueue = [];
+        solutionMap.clear();
 
-        const n1 = num1Str.split('').reverse().map(Number);
-        const n2 = num2Str.split('').reverse().map(Number);
+        // Sayıları doğrula (eğer harf girildiyse '0' yap)
+        const n1 = (num1Str.match(/^[0-9]+$/) ? num1Str : '0').split('').reverse().map(Number);
+        const n2 = (num2Str.match(/^[0-9]+$/) ? num2Str : '0').split('').reverse().map(Number);
+        
         const partialProducts = []; 
 
         // Adım A: Kısmi Çarpımlar
@@ -297,9 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (animationInterval) return;
         if (currentStepIndex >= animationQueue.length) {
             currentStepIndex = 0;
-            clearAllResults(); // Sadece sonuçları temizle
+            clearAllResults();
         }
-        // Problem sayıları zaten yazılı, tekrar yazmaya gerek yok
         animationInterval = setInterval(doNextStep, 500);
     }
 
@@ -317,18 +314,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- 6. Aşama 4 ve 5 Fonksiyonları (Verilmeyen Rakam ve Düzenleme) ---
+    // --- 6. Aşama 4 ve 5 Fonksiyonları ---
 
-    // GÜNCELLENDİ: "Verilmeyen Yeri" seçeneğini okur
     function populateGridForMissingMode() {
-        // 1. Önce tüm <input>ları temizle ve tüm sonuçları yaz
         clearAllInputs();
-        writeProblemNumbers(); // Çarpanları yaz
+        writeProblemNumbers();
 
-        // Kısmi çarpımları ve sonucu yaz (ipucları)
+        // Kısmi çarpımları ve sonucu yaz
         for (const [key, value] of solutionMap.entries()) {
             const parts = key.split('-');
             let selector = '';
+            // Eldeleri gösterme (key 'carry-' ile başlamıyorsa)
             if (key.startsWith('partial-')) {
                 selector = `[data-row='${parts[0]}-${parts[1]}'][data-col='${parts[2]}']`;
             } else if (key.startsWith('result-')) {
@@ -341,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 2. Hangi hücrelerin gizlenebileceğini belirle
+        // Hangi hücrelerin gizlenebileceğini belirle
         const placement = document.querySelector('input[name="missing-placement"]:checked').value;
         const allMultiplierCells = [];
 
@@ -356,14 +352,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 3. Bu hücrelerden bazılarını rastgele gizle
         allMultiplierCells.sort(() => 0.5 - Math.random());
         const numToHide = (allMultiplierCells.length > 4) ? 3 : 2; 
 
         for (let i = 0; i < numToHide && i < allMultiplierCells.length; i++) {
             const cell = allMultiplierCells[i];
-            const correctValue = cell.textContent; // Doğru cevabı DOM'dan al
-            createMissingDigitInput(cell, correctValue); // ve input'a çevir
+            const correctValue = cell.textContent;
+            createMissingDigitInput(cell, correctValue);
         }
     }
 
@@ -382,12 +377,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         cell.appendChild(input);
-        // Not: Bu modda hücreye tıklamayı engelle
         cell.removeEventListener('click', makeCellEditable); 
     }
 
     function checkSolution() {
-        // (Bu fonksiyon değişmedi)
         const inputs = document.querySelectorAll('.missing-digit-input');
         let allCorrect = true;
         
@@ -410,99 +403,79 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // GÜNCELLENDİ: Problemi DOM'a yazar
     function writeProblemNumbers() {
          num1Str.split('').forEach((digit, i) => {
             const colIndex = num1Str.length - 1 - i;
             const cell = document.querySelector(`[data-row='num1'][data-col='${colIndex}']`);
-            if (cell) cell.textContent = digit;
-            // YENİ: Düzenleme için click listener'ı tekrar ekle (mod değişiminden sonra)
-            if (cell) cell.addEventListener('click', makeCellEditable);
+            if (cell) {
+                cell.textContent = digit;
+                cell.addEventListener('click', makeCellEditable);
+            }
         });
         num2Str.split('').forEach((digit, i) => {
             const colIndex = num2Str.length - 1 - i;
             const cell = document.querySelector(`[data-row='num2'][data-col='${colIndex}']`);
-            if (cell) cell.textContent = digit;
-            // YENİ: Düzenleme için click listener'ı tekrar ekle (mod değişiminden sonra)
-            if (cell) cell.addEventListener('click', makeCellEditable);
+            if (cell) {
+                cell.textContent = digit;
+                cell.addEventListener('click', makeCellEditable);
+            }
         });
     }
 
-    // --- 7. YENİ: Rakam Düzenleme Fonksiyonları ---
+    // --- 7. Rakam Düzenleme Fonksiyonları ---
     
-    /**
-     * Normal modda bir çarpan hücresine tıklandığında tetiklenir.
-     */
     function makeCellEditable(event) {
-        // Verilmeyen modundaysa veya animasyon çalışıyorsa düzenleme yapma
-        if (missingDigitModeToggle.checked || animationInterval) {
-            return;
-        }
-
+        if (missingDigitModeToggle.checked || animationInterval) return;
         const cell = event.currentTarget;
-        
-        // Zaten input içindeyse tekrar tetikleme
         if (cell.querySelector('input')) return; 
 
         const currentValue = cell.textContent;
-        cell.innerHTML = ''; // Hücreyi boşalt
+        cell.innerHTML = '';
 
         const input = document.createElement('input');
         input.type = 'text';
         input.inputMode = 'numeric';
         input.pattern = '[0-9]';
         input.maxLength = 1;
-        input.classList.add('missing-digit-input'); // Aynı stili kullansın
+        input.classList.add('missing-digit-input');
         input.value = currentValue;
 
         input.addEventListener('blur', saveCellEdit);
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') e.target.blur(); // Enter'a basınca kaydet
+            if (e.key === 'Enter') e.target.blur();
         });
 
         cell.appendChild(input);
         input.focus();
     }
 
-    /**
-     * Rakam düzenleme <input>undan çıkıldığında (blur) tetiklenir.
-     */
     function saveCellEdit(event) {
         const input = event.target;
         const cell = input.parentElement;
-        let newValue = input.value.replace(/[^0-9]/g, ''); // Sadece rakam
+        let newValue = input.value.replace(/[^0-9]/g, '');
         
-        if (newValue === '') newValue = '0'; // Boş bırakırsa 0 yap
+        if (newValue === '') newValue = '0';
         
-        cell.textContent = newValue; // Hücreye yeni değeri yaz
-        
-        // Tıklama özelliğini geri ekle
+        cell.textContent = newValue;
         cell.addEventListener('click', makeCellEditable);
         
-        // Problemi yeniden hesapla
         recalculateProblemFromDOM();
     }
 
-    /**
-     * YENİ: DOM'daki rakamları okur ve problemi yeniden hesaplar
-     */
     function recalculateProblemFromDOM() {
-        // 1. DOM'dan yeni num1Str ve num2Str'yi oku
-        // (Sıralamayı düzeltmek için sağdan sola okuma)
         const num1Cells = Array.from(document.querySelectorAll("[data-row='num1']")).sort((a, b) => b.dataset.col - a.dataset.col);
         const num2Cells = Array.from(document.querySelectorAll("[data-row='num2']")).sort((a, b) => b.dataset.col - a.dataset.col);
         
         num1Str = num1Cells.map(cell => cell.textContent).join('');
         num2Str = num2Cells.map(cell => cell.textContent).join('');
 
-        // 2. Animasyon ve çözüm verilerini temizle
+        // Grid'i ve çözümü yeniden hesapla ama yeni problem YARATMA
         clearInterval(animationInterval);
         animationQueue = [];
         currentStepIndex = 0;
         solutionMap.clear();
-        clearAllResults();
+        clearAllResults(); // Sadece sonuçları temizle
         
-        // 3. Yeni sayılarla çözümü yeniden hesapla
         prepareAnimation(num1Str, num2Str);
     }
 
@@ -515,25 +488,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // YENİ: Tüm kısmi çarpım, sonuç ve elde hücrelerini temizler
     function clearAllResults() {
         document.querySelectorAll('.cell-carry, .cell-partial, .cell-result').forEach(cell => {
             cell.textContent = '';
         });
+        
+        // +'yı da temizle (eğer varsa)
+        // (Gerek yok, clearAllResults'tan sonra grid yeniden kuruluyor veya populate ediliyor)
     }
 
-    // YENİ: Tüm <input> kutularını kaldırır, değerini hücreye yazar
     function clearAllInputs() {
         document.querySelectorAll('.missing-digit-input').forEach(input => {
             const cell = input.parentElement;
             if (cell) {
-                // Verilmeyen modundan çıkarken, inputun cevabını değil,
-                // inputun doğru cevabını (data-correct) hücreye yaz.
-                // Eğer animasyon modundaysak, zaten textContent'e yazmıştık.
                 if (input.dataset.correct) {
                      cell.textContent = input.dataset.correct;
                 }
-                // Tıklamayı geri yükle
                 cell.addEventListener('click', makeCellEditable);
             }
         });
