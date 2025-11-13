@@ -20,18 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const num1 = generateRandomNumber(d1);
         const num2 = generateRandomNumber(d2);
 
-        // Grid'i (tahtayı) bu sayılara göre oluştur
-        setupGrid(num1.toString(), num2.toString());
-    }
-
-    function generateRandomNumber(digits) {
-        // 0 ile başlayan sayıları engelle (eğer 1 basamaklı değilse)
-        const min = (digits === 1) ? 0 : Math.pow(10, digits - 1);
-        const max = Math.pow(10, digits) - 1;
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    // --- YENİDEN DÜZENLENMİŞ SETUPGRID FONKSİYONU ---
+      // --- GÜNCELLENMİŞ SETUPGRID FONKSİYONU ---
     function setupGrid(num1Str, num2Str) {
         // Grid'i temizle
         gridContainer.innerHTML = '';
@@ -40,24 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const len2 = num2Str.length;
         
         // 1. En geniş sütun sayısını hesapla
-        //    (1. çarpan, 2. çarpan + 'x', veya sonuçtan en geniş olanı)
-        //    +1 solda boşluk (gutter) bırakmak için.
         const maxResultLen = len1 + len2;
         const totalCols = Math.max(len1, len2 + 1, maxResultLen) + 1;
 
         gridContainer.style.gridTemplateColumns = `repeat(${totalCols}, 40px)`;
 
-        // --- Grid Hücrelerini Oluştur (Tümü totalCols'a göre sağa hizalı) ---
+        // --- Grid Hücrelerini Oluştur ---
 
         // 1. Satırlar: Elde Satırları (2. çarpanın basamak sayısı kadar)
-        //    Bu satırlar 1. çarpan ile tam olarak hizalı olmalı
         for (let r = 0; r < len2; r++) {
-            // Sola boşluk (padding) ekle
             let padding = totalCols - len1;
             for (let i = 0; i < padding; i++) {
                 gridContainer.appendChild(createCell(''));
             }
-            // Elde hücrelerini ekle (1. çarpanın genişliği kadar)
             for (let i = 0; i < len1; i++) {
                 gridContainer.appendChild(createCell('', 'cell-carry'));
             }
@@ -72,28 +56,43 @@ document.addEventListener('DOMContentLoaded', () => {
             gridContainer.appendChild(createCell(digit, 'cell-num1'));
         }
 
-        // 3. Satır: 'x' ve 2. Çarpan (num2)
+        // 3. Satır: 'x' ve 2. Çarpan (num2) --- [BURASI GÜNCELLENDİ] ---
         let paddingNum2 = totalCols - (len2 + 1); // +1 'x' işareti için
         for (let i = 0; i < paddingNum2; i++) {
             gridContainer.appendChild(createCell(''));
         }
         gridContainer.appendChild(createCell('x', 'cell-sign'));
-        for (const digit of num2Str) {
-            gridContainer.appendChild(createCell(digit, 'cell-num2'));
+        
+        // Rakamları eklerken indekse göre renklendir
+        for (let i = 0; i < len2; i++) {
+            const digit = num2Str[i];
+            // Sağdan sola basamak indeksi (0=birler, 1=onlar, 2=yüzler)
+            const placeIndex = (len2 - 1) - i;
+            // Hücreyi 'cell-num2' ve dinamik 'num2-digit-X' sınıfıyla oluştur
+            gridContainer.appendChild(createCell(digit, 'cell-num2', `num2-digit-${placeIndex}`));
         }
+        // --- [GÜNCELLEME SONU] ---
 
-        // 4. Satır: Çizgi (Tüm sütunları kapla)
+        // 4. Satır: Çizgi
         for (let i = 0; i < totalCols; i++) {
             gridContainer.appendChild(createCell('', 'cell-line'));
         }
         
-        // 5. Satırlar: Kısmi Çarpımlar (num2'nin basamak sayısı kadar)
-        // (Animasyon aşamasında bu hücreler doğru 'shift' ile doldurulacak)
+        // 5. Satırlar: Kısmi Çarpımlar --- [BURASI GÜNCELLENDİ] ---
         for (let i = 0; i < len2; i++) {
+            // i = 0 (ilk satır) -> 'partial-row-0' (birler basamağı sonucu)
+            // i = 1 (ikinci satır) -> 'partial-row-1' (onlar basamağı sonucu)
+            
+            // Hangi satırda olduğumuzu belirleyen sınıf
+            const rowClass = `partial-row-${i}`;
+            
             for (let j = 0; j < totalCols; j++) {
-                gridContainer.appendChild(createCell('', 'cell-partial'));
+                // Hücreyi 'cell-partial' ve dinamik 'partial-row-X' sınıfıyla oluştur
+                gridContainer.appendChild(createCell('', 'cell-partial', rowClass));
             }
         }
+        // --- [GÜNCELLEME SONU] ---
+
 
         // 6. Satır: Sonuç Çizgisi (eğer 2 veya 3 basamaklıysa)
         if (len2 > 1) {
