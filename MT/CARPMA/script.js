@@ -31,97 +31,82 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    // --- YENİDEN DÜZENLENMİŞ SETUPGRID FONKSİYONU ---
     function setupGrid(num1Str, num2Str) {
         // Grid'i temizle
         gridContainer.innerHTML = '';
 
-        // --- Grid Boyutlarını Hesapla ---
-        // Toplam sütun sayısı: En uzun sayı (sonuç 12 basamaklı olabilir) + işlem işareti + eldeler
         const len1 = num1Str.length;
         const len2 = num2Str.length;
-        const maxResultLen = len1 + len2; // Sonuç max bu kadar basamaklı olabilir
         
-        // Ana işlem alanı için sütun sayısı (en uzun basamak + 2 boşluk)
-        const mainCols = Math.max(len1, len2 + 1, maxResultLen) + 1; // +1 sağ boşluk
-        // Eldeler için sütun sayısı (1. çarpan kadar)
-        const carryCols = len1;
-        const totalCols = mainCols + carryCols;
+        // 1. En geniş sütun sayısını hesapla
+        //    (1. çarpan, 2. çarpan + 'x', veya sonuçtan en geniş olanı)
+        //    +1 solda boşluk (gutter) bırakmak için.
+        const maxResultLen = len1 + len2;
+        const totalCols = Math.max(len1, len2 + 1, maxResultLen) + 1;
 
         gridContainer.style.gridTemplateColumns = `repeat(${totalCols}, 40px)`;
 
-        // --- Grid Hücrelerini Oluştur ---
+        // --- Grid Hücrelerini Oluştur (Tümü totalCols'a göre sağa hizalı) ---
 
-        // 1. Satır: 1. Çarpan (num1)
-        // Eldeler için boşluk bırak
-        for (let i = 0; i < mainCols; i++) gridContainer.appendChild(createCell(''));
-        // Elde başlığı (opsiyonel)
-        const eldeTitle = createCell('Eldeler', 'cell-title');
-        eldeTitle.style.gridColumn = `span ${carryCols}`;
-        //gridContainer.appendChild(eldeTitle);
-
-        // 2. Satır: Elde satırları (2. çarpanın basamak sayısı kadar)
+        // 1. Satırlar: Elde Satırları (2. çarpanın basamak sayısı kadar)
+        //    Bu satırlar 1. çarpan ile tam olarak hizalı olmalı
         for (let r = 0; r < len2; r++) {
-            // Ana işlem alanı boş
-            for (let i = 0; i < mainCols; i++) gridContainer.appendChild(createCell(''));
-            // Elde kareleri
-            for (let i = 0; i < carryCols; i++) gridContainer.appendChild(createCell('', 'cell-carry'));
+            // Sola boşluk (padding) ekle
+            let padding = totalCols - len1;
+            for (let i = 0; i < padding; i++) {
+                gridContainer.appendChild(createCell(''));
+            }
+            // Elde hücrelerini ekle (1. çarpanın genişliği kadar)
+            for (let i = 0; i < len1; i++) {
+                gridContainer.appendChild(createCell('', 'cell-carry'));
+            }
         }
 
-
-        // 3. Satır: 1. Çarpan (num1)
-        // Boşlukları (sağa yaslamak için) ekle
-        for (let i = 0; i < mainCols - len1; i++) gridContainer.appendChild(createCell(''));
-        // num1 rakamlarını ekle
+        // 2. Satır: 1. Çarpan (num1)
+        let paddingNum1 = totalCols - len1;
+        for (let i = 0; i < paddingNum1; i++) {
+            gridContainer.appendChild(createCell(''));
+        }
         for (const digit of num1Str) {
             gridContainer.appendChild(createCell(digit, 'cell-num1'));
         }
-        // Elde alanı boş
-        for (let i = 0; i < carryCols; i++) gridContainer.appendChild(createCell(''));
 
-
-        // 4. Satır: 'x' ve 2. Çarpan (num2)
-        // Boşlukları ekle
-        for (let i = 0; i < mainCols - len2 - 1; i++) gridContainer.appendChild(createCell(''));
-        // 'x' işareti
+        // 3. Satır: 'x' ve 2. Çarpan (num2)
+        let paddingNum2 = totalCols - (len2 + 1); // +1 'x' işareti için
+        for (let i = 0; i < paddingNum2; i++) {
+            gridContainer.appendChild(createCell(''));
+        }
         gridContainer.appendChild(createCell('x', 'cell-sign'));
-        // num2 rakamlarını ekle
         for (const digit of num2Str) {
             gridContainer.appendChild(createCell(digit, 'cell-num2'));
         }
-        // Elde alanı boş
-        for (let i = 0; i < carryCols; i++) gridContainer.appendChild(createCell(''));
 
-
-        // 5. Satır: Çizgi
-        for (let i = 0; i < mainCols; i++) gridContainer.appendChild(createCell('', 'cell-line'));
-        // Elde alanı boş
-        for (let i = 0; i < carryCols; i++) gridContainer.appendChild(createCell(''));
-
+        // 4. Satır: Çizgi (Tüm sütunları kapla)
+        for (let i = 0; i < totalCols; i++) {
+            gridContainer.appendChild(createCell('', 'cell-line'));
+        }
         
-        // 6. Satırlar: Kısmi Çarpımlar (num2'nin basamak sayısı kadar)
+        // 5. Satırlar: Kısmi Çarpımlar (num2'nin basamak sayısı kadar)
+        // (Animasyon aşamasında bu hücreler doğru 'shift' ile doldurulacak)
         for (let i = 0; i < len2; i++) {
-            // Her kısmi çarpım için (maxResultLen) kadar boş hücre oluştur
-            for (let j = 0; j < mainCols; j++) {
+            for (let j = 0; j < totalCols; j++) {
                 gridContainer.appendChild(createCell('', 'cell-partial'));
             }
-            // Elde alanı boş
-            for (let k = 0; k < carryCols; k++) gridContainer.appendChild(createCell(''));
         }
 
-        // 7. Satır: Sonuç Çizgisi (eğer 2 veya 3 basamaklıysa)
+        // 6. Satır: Sonuç Çizgisi (eğer 2 veya 3 basamaklıysa)
         if (len2 > 1) {
-            for (let i = 0; i < mainCols; i++) gridContainer.appendChild(createCell('', 'cell-line'));
-            // Elde alanı boş
-            for (let i = 0; i < carryCols; i++) gridContainer.appendChild(createCell(''));
+            for (let i = 0; i < totalCols; i++) {
+                gridContainer.appendChild(createCell('', 'cell-line'));
+            }
         }
 
-        // 8. Satır: Final Sonuç
+        // 7. Satır: Final Sonuç
         if (len2 > 1) {
-            for (let i = 0; i < mainCols; i++) {
+            for (let i = 0; i < totalCols; i++) {
                 gridContainer.appendChild(createCell('', 'cell-result'));
             }
-            // Elde alanı boş
-            for (let i = 0; i < carryCols; i++) gridContainer.appendChild(createCell(''));
         }
     }
 
