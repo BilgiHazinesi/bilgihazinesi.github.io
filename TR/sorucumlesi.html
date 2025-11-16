@@ -17,8 +17,17 @@
         body { font-family: 'Nunito', sans-serif; }
         .animate-fade-in { animation: fadeIn 0.5s ease-out; }
         .animate-spin-slow { animation: spin 3s linear infinite; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        /* Yanlış cevap için titreme animasyonu */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
     </style>
 </head>
 <body class="bg-slate-50 selection:bg-yellow-200">
@@ -27,7 +36,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- İkonlar (Lucide React yerine SVG olarak tanımlandı - Hata riskini sıfırlamak için) ---
+        // --- İkonlar ---
         const Icons = {
             BookOpen: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
             HelpCircle: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>,
@@ -185,18 +194,26 @@
         const StorySection = ({ onBack }) => {
             const [foundCount, setFoundCount] = useState(0);
             const [clickedIds, setClickedIds] = useState([]);
+            const [errorId, setErrorId] = useState(null);
 
-            const handleQuestionClick = (idx) => {
-                if (!clickedIds.includes(idx)) {
-                    setClickedIds([...clickedIds, idx]);
-                    setFoundCount(c => c + 1);
+            const handleSentenceClick = (idx, type) => {
+                if (type === 'question') {
+                    if (!clickedIds.includes(idx)) {
+                        setClickedIds([...clickedIds, idx]);
+                        setFoundCount(c => c + 1);
+                    }
+                } else {
+                    // Yanlış cevap animasyonu
+                    setErrorId(idx);
+                    // 500ms sonra shake efektini ve uyarısını kaldır
+                    setTimeout(() => setErrorId(null), 600);
                 }
             };
 
             return (
                 <div className="h-full flex flex-col p-4 max-w-4xl mx-auto overflow-y-auto pb-20">
                     <Header title="Kuşun Öğüdü" onBack={onBack} />
-                    <InstructionBox title="Etkinlik Yönergesi" text="Öğrencilerden metni sessizce veya sesli okumalarını isteyin. Daha sonra sırayla tahtaya kaldırarak metin içine gizlenmiş 4 adet soru cümlesini bulup tıklamalarını isteyin." icon={Icons.Users} />
+                    <InstructionBox title="Etkinlik Yönergesi" text="Öğrencilerin aşağıdaki kutucuklara dokunarak metin içine gizlenmiş 4 adet soru cümlesini bulmalarını isteyin. Tüm metinler tıklanabilir!" icon={Icons.Users} />
                     <div className="bg-white p-8 rounded-xl shadow-xl border-t-8 border-purple-600 mb-6">
                         <div className="flex justify-between items-center mb-6 bg-purple-50 p-4 rounded-lg border border-purple-100">
                             <p className="text-purple-900 font-bold flex items-center">
@@ -206,21 +223,51 @@
                         </div>
                         <div className="space-y-5 leading-loose text-lg">
                             {storyText.map((item, idx) => {
-                                let styleClass = "text-gray-700 font-serif";
-                                if (item.type === 'bird') styleClass = "text-blue-700 font-sans font-medium pl-4 border-l-4 border-blue-300 italic";
-                                else if (item.type === 'advice') styleClass = "text-green-800 font-mono font-bold bg-green-50 p-3 rounded-lg border border-green-200 text-center mx-8 shadow-sm transform -rotate-1";
-                                else if (item.type === 'question') {
-                                    const isFound = clickedIds.includes(idx);
-                                    return (
-                                        <div key={idx} onClick={() => handleQuestionClick(idx)} className={`p-3 rounded-lg transition-all cursor-pointer border-2 font-medium font-sans ${isFound ? 'bg-green-100 border-green-500 text-green-900 shadow-inner scale-100' : 'bg-white border-dashed border-gray-300 hover:bg-purple-50 hover:border-purple-400 text-gray-800 scale-[1.01]'}`}>
-                                            <div className="flex justify-between items-center">
-                                                <span>{item.text}</span>
-                                                {isFound && <span className="text-green-600 animate-bounce"><Icons.Check size={20} /></span>}
-                                            </div>
-                                        </div>
-                                    );
+                                // İçerik stilini koru (Kuş mavimsi, öğüt yeşil, vs.)
+                                let innerStyleClass = "text-gray-700 font-serif";
+                                if (item.type === 'bird') innerStyleClass = "text-blue-700 font-sans font-medium pl-2 border-l-4 border-blue-300 italic block";
+                                else if (item.type === 'advice') innerStyleClass = "text-green-800 font-mono font-bold bg-green-50 p-2 rounded border border-green-200 block text-center transform -rotate-1";
+                                else if (item.type === 'question') innerStyleClass = "font-medium font-sans text-gray-800";
+
+                                // Dış kutu durumu
+                                const isFound = clickedIds.includes(idx);
+                                const isError = errorId === idx;
+
+                                let containerClass = "relative p-4 rounded-xl border-2 transition-all cursor-pointer mb-4 shadow-sm hover:shadow-md ";
+                                
+                                if (isFound) {
+                                    containerClass += "bg-green-100 border-green-500 text-green-900 scale-[1.01]";
+                                } else if (isError) {
+                                    containerClass += "bg-red-50 border-red-400 animate-shake z-10";
+                                } else {
+                                    containerClass += "bg-white border-gray-200 hover:border-purple-300 hover:bg-purple-50";
                                 }
-                                return <div key={idx} className={styleClass}>{item.text}</div>;
+
+                                return (
+                                    <div 
+                                        key={idx} 
+                                        onClick={() => handleSentenceClick(idx, item.type)} 
+                                        className={containerClass}
+                                    >
+                                        <div className={isFound ? "" : innerStyleClass}>
+                                            {item.text}
+                                        </div>
+                                        
+                                        {/* Başarı İkonu */}
+                                        {isFound && (
+                                            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white p-1 rounded-full shadow border border-green-200 animate-bounce">
+                                                <span className="text-green-600"><Icons.Check size={24} /></span>
+                                            </div>
+                                        )}
+
+                                        {/* Hata Uyarısı */}
+                                        {isError && (
+                                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 whitespace-nowrap">
+                                                Tekrar Düşün 🤔
+                                            </div>
+                                        )}
+                                    </div>
+                                );
                             })}
                         </div>
                     </div>
@@ -360,6 +407,12 @@
                             <QuestionRow text="............ yaşlı adam yalnız olduğu için ona her gün uğruyordu?" placeholder="Kim?" color="border-purple-300 focus:border-purple-600 text-purple-700" />
                             <QuestionRow text="Emre, yaşlı adam yalnız olduğu için ............ her gün uğruyordu?" placeholder="Kime?" color="border-orange-300 focus:border-orange-600 text-orange-700" />
                             <QuestionRow text="Emre, yaşlı adam yalnız olduğu için ona ............ uğruyordu?" placeholder="Ne zaman?" color="border-teal-300 focus:border-teal-600 text-teal-700" />
+                        </div>
+                        <hr className="border-slate-200 border-dashed" />
+                        <div className="space-y-6">
+                             <div className="bg-slate-50 p-4 rounded-xl text-slate-800 text-lg shadow-inner border border-slate-200"><span className="bg-yellow-200 px-2 py-1 rounded mr-2 text-sm font-bold">CÜMLE 3</span>Yaşlı adam <span className="font-bold underline decoration-pink-500 decoration-4">buna</span> <span className="font-bold underline decoration-indigo-500 decoration-4">çok</span> seviniyordu.</div>
+                            <QuestionRow text="Yaşlı adam ............ çok seviniyordu?" placeholder="Neye?" color="border-pink-300 focus:border-pink-600 text-pink-700" />
+                            <QuestionRow text="Yaşlı adam buna ............ seviniyordu?" placeholder="Ne kadar?" color="border-indigo-300 focus:border-indigo-600 text-indigo-700" />
                         </div>
                         <div className="text-center pt-4"><button onClick={checkAnswers} className="bg-slate-800 text-white px-10 py-3 rounded-full font-bold shadow-lg hover:bg-black transition-all hover:scale-105">Cevapları Kontrol Et</button></div>
                     </div>
