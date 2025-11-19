@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dünya, Güneş ve Gölgeler - 4. Sınıf</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Üst Başlık */
+        header {
+            background: linear-gradient(90deg, #16213e 0%, #0f3460 100%);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
+        }
+        h1 { margin: 0; font-size: 1.8rem; color: #ffd700; }
+        p { margin: 5px 0 0; opacity: 0.8; font-size: 0.9rem; }
+
+        /* 3D Sahne Alanı */
+        #canvas-container {
+            width: 100%;
+            height: 50vh;
+            position: relative;
+            background: #000;
+        }
+        #overlay-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
+
+        /* Kontrol Paneli */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background: #16213e;
+        }
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #ff2e63; }
+
+        /* Gölge Simülasyonu Bölümü */
+        .shadow-section {
+            background-color: #f0f0f0; /* Gündüz rengi */
+            color: #333;
+            padding: 30px 20px;
+            text-align: center;
+            transition: background 0.5s;
+        }
+        .shadow-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        /* Gölge Görseli */
+        .scene-2d {
+            height: 200px;
+            border-bottom: 4px solid #4caf50;
+            position: relative;
+            margin-top: 40px;
+            overflow: hidden;
+        }
+        
+        .sun-2d {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #ffd700 40%, #ffa500 100%);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 10px; /* Başlangıç */
+            left: 0;
+            box-shadow: 0 0 20px #ffd700;
+            transition: bottom 0.1s, left 0.1s;
+        }
+
+        .stick-figure {
+            width: 10px;
+            height: 80px;
+            background: #333;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+        .stick-head {
+            width: 20px;
+            height: 20px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: -20px;
+            left: -5px;
+        }
+
+        .shadow {
+            height: 4px;
+            background: rgba(0,0,0,0.4);
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform-origin: left center; /* Gölge merkezden uzar */
+            width: 0px;
+            border-radius: 2px;
+        }
+
+        /* Bilgi Kartları Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #1a1a2e;
+        }
+        .card {
+            background: #0f3460;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #e94560;
+        }
+        .card h3 { color: #ffd700; margin-top: 0; }
+        
+        /* Range Slider Özelleştirme */
+        input[type=range] {
+            width: 80%;
+            margin: 20px 0;
+        }
+        .time-label { font-size: 1.2rem; font-weight: bold; color: #e94560; }
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>🌍 Dünya, Güneş ve Gölgeler ☀️</h1>
+    <p>4. Sınıf Fen Bilimleri - İnteraktif Öğrenme Aracı</p>
+</header>
+
+<div id="canvas-container">
+    <div id="overlay-info">
+        🔵 <b>Mavi Küre:</b> Dünya<br>
+        ☀️ <b>Sarı Küre:</b> Güneş<br>
+        🖱️ <b>Mouse:</b> Yakınlaş/Uzaklaş
+    </div>
+</div>
+<div class="controls">
+    <button onclick="toggleRotation()">Dönmeyi Durdur/Başlat</button>
+    <button onclick="resetCamera()">Kamerayı Sıfırla</button>
+</div>
+
+<div class="shadow-section">
+    <h2>📏 Gölge Boyu Laboratuvarı</h2>
+    <p>Güneşi hareket ettirerek gölgenin nasıl değiştiğini gözlemleyin.</p>
+    
+    <div class="shadow-container">
+        <div class="time-label" id="timeDisplay">Saat: 06:00 (Sabah)</div>
+        <input type="range" id="sunSlider" min="0" max="100" value="0" oninput="updateShadow()">
+        
+        <div class="scene-2d">
+            <div class="sun-2d" id="sun2d"></div>
+            <div class="stick-figure"><div class="stick-head"></div></div>
+            <div class="shadow" id="shadowBox"></div>
+            
+            <span style="position:absolute; bottom:5px; left:10px; font-weight:bold;">DOĞU (Van)</span>
+            <span style="position:absolute; bottom:5px; right:10px; font-weight:bold;">BATI (İzmir)</span>
+        </div>
+        
+        <p id="shadow-explanation" style="margin-top:20px; font-weight:bold; color:#0f3460;">
+            Güneş doğudan doğarken gölge batıya düşer ve çok uzundur.
+        </p>
+    </div>
+</div>
+
+<div class="info-grid">
+    <div class="card">
+        <h3>1. Dönme Hareketi (Gece-Gündüz)</h3>
+        <p>Dünya kendi etrafında bir topaç gibi döner. Bu hareket <b>24 saat</b> sürer. Güneş'i gören taraf Gündüz, görmeyen taraf Gece olur.</p>
+    </div>
+    <div class="card">
+        <h3>2. Dolanma Hareketi (Yıl)</h3>
+        <p>Dünya, Güneş'in etrafında elips şeklinde bir yolda dolanır. Bu hareket <b>365 gün 6 saat</b> sürer ve <b>Mevsimler</b> oluşur.</p>
+    </div>
+    <div class="card">
+        <h3>3. Ülkemizde Güneş</h3>
+        <p>Dünya batıdan doğuya doğru döndüğü için, ülkemizin doğusundaki iller (örneğin Iğdır, Van) güneşi, batıdaki illerden (İzmir, İstanbul) daha önce görür.</p>
+    </div>
+</div>
+
+<script>
+    // --- BÖLÜM 1: 3D THREE.JS KODLARI ---
+    const container = document.getElementById('canvas-container');
+    
+    // Sahne Kurulumu
+    const scene = new THREE.Scene();
+    // Yıldız efekti için basit partiküller eklenebilir ama şimdilik siyah yeterli
+    
+    // Kamera
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 20, 40);
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    // Kontroller (Mouse ile gezme)
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    // Işık (Güneş Işığı)
+    const pointLight = new THREE.PointLight(0xffffff, 1.5, 100);
+    pointLight.position.set(0, 0, 0);
+    scene.add(pointLight);
+    
+    const ambientLight = new THREE.AmbientLight(0x333333); // Azıcık ortam ışığı
+    scene.add(ambientLight);
+
+    // NESNELER
+    // 1. Güneş
+    const sunGeometry = new THREE.SphereGeometry(4, 32, 32);
+    const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffd700 }); // Işık yaysa da kendisi parlasın
+    const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+    scene.add(sun);
+
+    // 2. Dünya Grubu (Dolanma hareketi için pivot)
+    const earthOrbitGroup = new THREE.Group();
+    scene.add(earthOrbitGroup);
+
+    // 3. Dünya
+    const earthGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+    const earthMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0x2233ff, 
+        emissive: 0x112244,
+        specular: 0x111111,
+        shininess: 10
+    }); 
+    const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+    earth.position.set(15, 0, 0); // Güneşten uzaklık
+    
+    // Dünyaya basit bir "Türkiye" noktası ekleyelim (Kırmızı küçük kutu)
+    const trMarkerGeo = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    const trMarkerMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const turkey = new THREE.Mesh(trMarkerGeo, trMarkerMat);
+    turkey.position.set(1.4, 0.5, 0); // Dünyanın yüzeyinde bir yer
+    earth.add(turkey);
+
+    // Dünyayı eksen eğikliği ile eğelim (23 derece)
+    earth.rotation.z = 23.5 * (Math.PI / 180);
+
+    earthOrbitGroup.add(earth);
+
+    // Yörünge Çizgisi (Görsel referans)
+    const orbitGeometry = new THREE.RingGeometry(14.8, 15.2, 64);
+    const orbitMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, opacity: 0.1, transparent: true });
+    const orbitLine = new THREE.Mesh(orbitGeometry, orbitMaterial);
+    orbitLine.rotation.x = Math.PI / 2;
+    scene.add(orbitLine);
+
+    // Animasyon Değişkenleri
+    let isRotating = true;
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        if(isRotating) {
+            // Kendi ekseninde dönme (Gün)
+            earth.rotation.y += 0.02; 
+            
+            // Güneş etrafında dolanma (Yıl)
+            earthOrbitGroup.rotation.y += 0.005; 
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    // Fonksiyonlar
+    function toggleRotation() { isRotating = !isRotating; }
+    function resetCamera() { 
+        camera.position.set(0, 20, 40); 
+        controls.reset();
+    }
+
+    // Pencere boyutu değişirse
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+
+    // --- BÖLÜM 2: GÖLGE SİMÜLASYONU MANTIĞI ---
+    function updateShadow() {
+        const val = document.getElementById('sunSlider').value;
+        const sunElem = document.getElementById('sun2d');
+        const shadowElem = document.getElementById('shadowBox');
+        const timeLabel = document.getElementById('timeDisplay');
+        const explainText = document.getElementById('shadow-explanation');
+        
+        // Slider 0 - 100 arası
+        // 0 = Sabah (Doğu/Sol), 50 = Öğle (Tepe), 100 = Akşam (Batı/Sağ)
+        
+        // Güneşin Hareketi (Yarım daire rotası)
+        // X pozisyonu: %0 dan %100'e
+        // Y pozisyonu: Sinüs dalgası (Kenarlarda 10px, ortada 150px)
+        
+        const sunX = val; // Yüzde olarak
+        // Sinüs formülü: 0'da 0, 50'de 1, 100'de 0 verir.
+        // Math.sin( radyan ) -> 0 ile PI arası
+        const radians = (val / 100) * Math.PI;
+        const sunY = Math.sin(radians) * 140 + 10; // Yükseklik hesaplama
+        
+        sunElem.style.left = `calc(${sunX}% - 25px)`;
+        sunElem.style.bottom = `${sunY}px`;
+        
+        // Saat Hesaplama (Temsili)
+        // 0 -> 06:00, 50 -> 12:00, 100 -> 18:00
+        const totalMinutes = 6 * 60 + (val / 100) * (12 * 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = Math.floor(totalMinutes % 60);
+        const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        
+        let period = "";
+        if (val < 30) period = "(Sabah)";
+        else if (val > 70) period = "(AkşamÜstü)";
+        else period = "(Öğle)";
+        
+        timeLabel.innerText = `Saat: ${timeString} ${period}`;
+
+        // Gölge Hesaplama
+        // Işık kaynağına göre ters yöne düşmeli
+        const center = 50;
+        const distFromCenter = val - center; // -50 (sol) ile +50 (sağ) arası
+        
+        // Gölge boyu: Güneş tepedeyken (dist=0) gölge kısa, kenardayken uzun.
+        // Basit mantık: Gölge boyu merkeze uzaklıkla artar.
+        let shadowLength = distFromCenter * -4; // Eksi ile çarpıyoruz çünkü güneş soldaysa gölge sağa düşer
+        
+        // Gölgenin CSS transformu
+        // Eğer shadowLength pozitifse (Güneş solda/sabah) -> Gölge sağa (scaleX pozitif)
+        // Eğer shadowLength negatifse (Güneş sağda/akşam) -> Gölge sola (scaleX negatif)
+        
+        // Gölgeyi çizelim
+        // CSS'de width negatif olamaz, transform kullanacağız.
+        // Gölge div'i ortada (left: 50%).
+        
+        shadowElem.style.width = `${Math.abs(shadowLength)}px`;
+        
+        if (shadowLength > 0) {
+            // Sabah: Güneş solda, gölge sağa
+            shadowElem.style.transform = "translateX(0)"; 
+            shadowElem.style.backgroundColor = "rgba(0,0,0,0.4)"; // Normal gölge
+            explainText.innerText = "Güneş doğudayken (sabah), gölge batıya düşer ve uzundur.";
+        } else if (shadowLength < 0) {
+             // Akşam: Güneş sağda, gölge sola
+             // Sola uzaması için translateX(-100%) yapmamız lazım (genişliği kadar sola kaydır)
+            shadowElem.style.transform = "translateX(-100%)";
+            explainText.innerText = "Güneş batıdayken (akşam), gölge doğuya düşer ve uzundur.";
+        } else {
+            // Tam öğle
+            explainText.innerText = "Öğle vakti güneş tam tepededir, gölge en kısadır.";
+        }
+        
+        // Arka plan rengi (Sabah/Akşam turuncu, Öğle mavi)
+        if (val < 20 || val > 80) {
+            document.querySelector('.shadow-section').style.backgroundColor = "#ffeebb";
+        } else {
+            document.querySelector('.shadow-section').style.backgroundColor = "#e0f7fa";
+        }
+
+    }
+    
+    // Başlangıç ayarı
+    updateShadow();
+    
+</script>
+
+</body>
+</html>
