@@ -3,184 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dünya'nın Hareketleri ve Mevsimler</title>
+    <title>Dünya Hareketleri ve Gölge - Gelişmiş Versiyon</title>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #050510; color: white; overflow-x: hidden; }
         
-        /* Üst Bilgi */
+        /* Başlık Alanı */
         header {
-            background: linear-gradient(90deg, #000428 0%, #004e92 100%);
-            padding: 15px;
-            text-align: center;
-            border-bottom: 2px solid #ffd700;
+            background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
+            padding: 10px; text-align: center; border-bottom: 2px solid #ffd700;
         }
-        h1 { margin: 0; color: #ffd700; font-size: 1.5rem; }
-        p { margin: 5px; opacity: 0.8; font-size: 0.9rem; }
+        h1 { margin: 0; color: #ffd700; font-size: 1.4rem; }
+        p { margin: 5px; font-size: 0.9rem; color: #ccc; }
 
-        /* 3D Sahne */
+        /* -------------------------
+           BÖLÜM 1: 3D SAHNE
+           ------------------------- */
         #canvas-container {
-            width: 100%;
-            height: 55vh;
-            position: relative;
-            background: black;
-            overflow: hidden;
+            width: 100%; height: 50vh; position: relative; background: black; overflow: hidden;
         }
-        
-        /* Etiketler (Mevsimler/Aylar) */
-        .label {
-            position: absolute;
-            color: white;
-            font-weight: bold;
-            background: rgba(0,0,0,0.6);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            pointer-events: none;
-            white-space: nowrap;
-        }
-        .season-label {
-            font-size: 1rem;
-            color: #ffd700;
-            border: 1px solid #ffd700;
-        }
-
-        /* Kontrol Butonları */
         .controls-3d {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
         }
         button {
-            background: #e94560;
-            color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;
+            background: #ff512f; color: white; border: none; padding: 8px 20px; 
+            border-radius: 20px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 0 10px #ff512f;
         }
-        button:hover { background: #ff2e63; }
+        button:hover { background: #dd2476; }
 
-        /* GÖLGE SİMÜLASYONU (2. Bölüm) */
+        /* Etiketler */
+        .label {
+            position: absolute; color: white; background: rgba(0,0,0,0.7);
+            padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; pointer-events: none;
+        }
+        .season-label { color: #ffd700; border: 1px solid #ffd700; font-weight: bold; }
+
+        /* -------------------------
+           BÖLÜM 2: GÖLGE LABI
+           ------------------------- */
         .shadow-lab {
-            background-color: #e0e0e0;
-            color: #222;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border-top: 5px solid #444;
+            background-color: #eef2f3; color: #333; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            border-top: 5px solid #333;
         }
 
-        .flex-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            width: 100%;
-            max-width: 1000px;
+        .lab-container {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; width: 100%; max-width: 1100px;
         }
 
-        /* Kuşbakışı Görünüm (Dünya Dönüyor) */
-        .top-view {
-            width: 300px;
-            height: 300px;
-            position: relative;
-            background: #1a1a2e;
+        .view-box {
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .view-title { margin-bottom: 10px; font-weight: bold; color: #2c3e50; }
+
+        /* SOL: Kuşbakışı Dünya (Top View) */
+        .top-scene {
+            width: 250px; height: 250px; position: relative;
+            background: #1a1a2e; border-radius: 10px; border: 2px solid #555;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        /* CSS Dünya */
+        .earth-css {
+            width: 120px; height: 120px;
+            background: radial-gradient(circle at 30% 30%, #4facfe, #00f2fe);
             border-radius: 50%;
-            border: 2px solid #444;
-        }
-        
-        /* Yerden Görünüm (Gölge) */
-        .ground-view {
-            width: 400px;
-            height: 300px;
             position: relative;
-            background: skyblue; /* Gündüz rengi */
-            border: 4px solid #333;
-            border-radius: 10px;
-            overflow: hidden;
-            transition: background 0.5s;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5); /* Gece tarafı gölgesi */
+            /* Dönüş JS ile verilecek */
         }
-
-        /* Gölge Kontrolleri */
-        .shadow-controls {
-            width: 80%;
-            margin-top: 20px;
-            text-align: center;
-        }
-        input[type=range] { width: 100%; margin: 15px 0; cursor: pointer; }
         
-        .info-box {
-            background: #fff;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        /* Minik İnsan (Kuşbakışı Kafa) */
+        .tiny-human {
+            width: 8px; height: 8px; background: red; border-radius: 50%;
+            position: absolute; top: -4px; left: 56px; /* Tam tepe noktası */
+            z-index: 2;
+        }
+        
+        /* Minik İnsanın Gölgesi (Dünya üzerine düşen) */
+        .tiny-shadow {
+            position: absolute;
+            top: 0px; left: 58px; /* İnsanın dibinden başlar */
+            height: 4px; width: 0px; /* Uzunluk JS ile değişecek */
+            background: rgba(0,0,0,0.6);
+            transform-origin: left center;
+            border-radius: 2px;
+            z-index: 1;
         }
 
-        /* 2D Animasyon CSS Sınıfları */
-        .sun-fixed {
-            position: absolute;
-            right: -30px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 60px;
-            height: 60px;
+        /* Sabit Güneş (Kuşbakışı için referans) */
+        .sun-ref {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 2rem;
+        }
+
+        /* SAĞ: Yer Görünümü (Ground View) */
+        .ground-scene {
+            width: 450px; height: 250px; position: relative;
+            background: #87CEEB; /* Gökyüzü */
+            border: 4px solid #333; border-radius: 10px; overflow: hidden;
+        }
+
+        /* Hareketli Güneş */
+        .moving-sun {
+            width: 50px; height: 50px;
             background: radial-gradient(circle, #ffd700 40%, orange 100%);
             border-radius: 50%;
+            position: absolute;
+            bottom: -60px; left: -60px; /* Başlangıçta gizli */
             box-shadow: 0 0 30px #ffd700;
-            z-index: 10;
-        }
-        
-        .earth-top {
-            width: 100px;
-            height: 100px;
-            background: #2233ff;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%; left: 50%;
-            margin-top: -50px; margin-left: -50px;
-            /* Dönüş animasyonu JS ile yapılacak */
-        }
-        .earth-top::after { /* Kuzey Kutbu Noktası */
-            content: ''; position: absolute; top:45px; left:45px; width:10px; height:10px; background:white; border-radius:50%;
         }
 
-        .stick-man-top {
-            width: 10px; height: 10px; background: red; border-radius: 50%;
-            position: absolute;
-            top: -5px; left: 45px; /* Dünyanın kenarında */
-        }
-
-        .sun-rays {
-            position: absolute;
-            right: 30px; top: 50%;
-            width: 100px; height: 2px;
-            background: rgba(255, 215, 0, 0.5);
-            box-shadow: 0 0 10px yellow;
-        }
-
-        /* Yer Görünümü Elemanları */
-        .ground {
-            position: absolute; bottom: 0; width: 100%; height: 40px; background: #4caf50;
-        }
+        /* Yer, Adam ve Gölge */
+        .ground { position: absolute; bottom: 0; width: 100%; height: 40px; background: #4caf50; z-index: 10; }
         .stick-figure {
-            position: absolute; bottom: 40px; left: 50%; width: 10px; height: 60px; background: #333; transform: translateX(-50%);
+            position: absolute; bottom: 40px; left: 50%; width: 10px; height: 60px; 
+            background: #222; transform: translateX(-50%); z-index: 5;
         }
         .stick-head {
-            position: absolute; top: -20px; left: -5px; width: 20px; height: 20px; background: #333; border-radius: 50%;
+            position: absolute; top: -20px; left: -5px; width: 20px; height: 20px; 
+            background: #222; border-radius: 50%;
         }
-        .shadow {
-            position: absolute; bottom: 40px; left: 50%; 
-            height: 5px; background: rgba(0,0,0,0.5);
-            transform-origin: left center; /* Gölge ayaktan uzar */
-            border-radius: 5px;
+        .ground-shadow {
+            position: absolute; bottom: 40px; left: 50%; height: 6px; background: rgba(0,0,0,0.5);
+            width: 0; transform-origin: left center; border-radius: 10px;
         }
-        
+
+        /* Pusula */
         .compass {
-            position: absolute; bottom: 5px; width: 100%; text-align: center; font-weight: bold; font-size: 0.8rem; color: white;
+            position: absolute; bottom: 5px; width: 100%; display: flex; justify-content: space-between;
+            padding: 0 20px; box-sizing: border-box; font-weight: bold; color: white; font-size: 0.8rem;
         }
-        .compass span { margin: 0 40px; }
+
+        /* Slider Alanı */
+        .control-panel {
+            width: 80%; margin-top: 20px; text-align: center; background: white; padding: 15px;
+            border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        input[type=range] { width: 100%; cursor: pointer; }
+        #timeDisplay { font-size: 1.2rem; font-weight: bold; color: #d35400; }
 
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -189,73 +150,67 @@
 <body>
 
 <header>
-    <h1>🌍 Dünya'nın Hareketleri Simülasyonu</h1>
-    <p>1. Bölüm: Dolanma (Mevsimler) | 2. Bölüm: Dönme (Gece-Gündüz ve Gölge)</p>
+    <h1>🌍 Dünya'nın Gerçek Hareketleri & Gölge</h1>
+    <p>Mevsimler, Eksen Eğikliği ve Günlük Hareket</p>
 </header>
 
 <div id="canvas-container">
     <div class="controls-3d">
-        <button onclick="toggleOrbit()">Dolanmayı Durdur/Başlat</button>
+        <button onclick="toggleOrbit()">Yörünge Hareketini Durdur/Başlat</button>
     </div>
-    </div>
+</div>
 
 <div class="shadow-lab">
-    <h2>☀️ Gölge Boyu Laboratuvarı</h2>
-    <p style="max-width: 800px; text-align: center;">
-        <b>Kural:</b> Güneş sabittir. Dünya kendi etrafında döner. 
-        Slider'ı kaydırarak Dünya'yı döndürün ve gölgenin nasıl değiştiğini izleyin.
-        <br><span style="color: #e94560;">(Sağ Taraf = DOĞU, Sol Taraf = BATI)</span>
-    </p>
+    <div class="control-panel">
+        <div id="timeDisplay">Saat: 06:00 (Gündoğumu)</div>
+        <input type="range" id="daySlider" min="0" max="360" value="90" oninput="updateDayCycle()">
+        <p>Çubuğu kaydırarak zamanı ilerletin (Güneş Doğudan Batıya gider, sonra gece olur)</p>
+    </div>
 
-    <div class="flex-container">
-        <div style="text-align: center;">
-            <h4>Uzaydan Bakış (Kuzey Kutbu)</h4>
-            <div class="top-view">
-                <div class="sun-fixed"></div> <div class="sun-rays"></div>
-                <div class="earth-top" id="earthTop">
-                    <div class="stick-man-top"></div> <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:white; font-size:10px;">DÜNYA</div>
+    <div class="lab-container">
+        <div class="view-box">
+            <div class="view-title">1. Uzaydan Bakış (Kuzey Kutbu)</div>
+            <div class="top-scene">
+                <div class="sun-ref">☀️</div>
+                <div class="earth-css" id="earthTop">
+                    <div class="tiny-human"></div>
+                    <div class="tiny-shadow" id="topShadow"></div>
                 </div>
-                <div style="position:absolute; bottom:10px; width:100%; text-align:center; color:gray;">↩️ Dönüş Yönü</div>
+                <div style="position:absolute; bottom: 5px; color: #aaa; font-size: 0.8rem;">Dünya saat yönünün tersine döner ↺</div>
             </div>
+            <p style="font-size:0.8rem; max-width:250px; text-align:center;">
+                Dünya dönerken gölge her zaman Güneş'in tersi yönüne (Güneş sağdaysa sola) düşer.
+            </p>
         </div>
 
-        <div style="text-align: center;">
-            <h4>Yerden Görünüm (Bizim Gözümüzden)</h4>
-            <div class="ground-view" id="groundScene">
-                <div style="position:absolute; top:10px; right:10px; color:#ffd700; font-weight:bold;">☀️ GÜNEŞ (DOĞU)</div>
+        <div class="view-box">
+            <div class="view-title">2. Yerden Bakış (Bizim Gözümüzden)</div>
+            <div class="ground-scene" id="sky">
+                <div class="moving-sun" id="sunMove"></div>
                 
                 <div class="stick-figure"><div class="stick-head"></div></div>
-                
-                <div class="shadow" id="shadowBox"></div>
+                <div class="ground-shadow" id="groundShadow"></div>
 
                 <div class="ground">
                     <div class="compass">
-                        <span>BATI (Sol)</span> <span>DOĞU (Sağ)</span>
+                        <span>⬅️ BATI</span>
+                        <span>DOĞU ➡️</span>
                     </div>
                 </div>
-                
-                <div id="skyStatus" style="position:absolute; top:40%; width:100%; text-align:center; font-size:1.5rem; font-weight:bold; color:rgba(255,255,255,0.8);">GECE</div>
+                <div id="nightText" style="position:absolute; top:40%; width:100%; text-align:center; font-size:2rem; color:white; opacity:0;">🌑 GECE</div>
             </div>
         </div>
-    </div>
-
-    <div class="shadow-controls">
-        <div class="info-box" id="timeInfo">Saat: 00:00 (Gece)</div>
-        <input type="range" id="rotationSlider" min="0" max="360" value="180" oninput="updateShadowSystem()">
-        <p style="font-size: 0.9rem; color: #555;">Çubuğu kaydırarak Dünya'yı Batı'dan Doğu'ya döndürün.</p>
     </div>
 </div>
 
 <script>
     // ==========================================
-    // BÖLÜM 1: 3D THREE.JS (Yörünge & Mevsimler)
+    // BÖLÜM 1: 3D SAHNE (DOĞRU EKSEN EĞİKLİĞİ)
     // ==========================================
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    
-    // Kamera
     const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 40, 50);
+    camera.position.set(0, 40, 60); // Kamerayı biraz yukarı aldım
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -266,217 +221,262 @@
     controls.enableDamping = true;
 
     // Işıklar
-    const ambientLight = new THREE.AmbientLight(0x333333);
-    scene.add(ambientLight);
-    const pointLight = new THREE.PointLight(0xffffff, 2, 100);
-    scene.add(pointLight);
+    scene.add(new THREE.AmbientLight(0x333333));
+    const sunLight = new THREE.PointLight(0xffffff, 2, 150);
+    scene.add(sunLight);
 
-    // 1. GÜNEŞ (Merkezde)
-    const sunGeo = new THREE.SphereGeometry(4, 32, 32);
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
-    const sun = new THREE.Mesh(sunGeo, sunMat);
+    // 1. Güneş
+    const sun = new THREE.Mesh(
+        new THREE.SphereGeometry(4, 32, 32),
+        new THREE.MeshBasicMaterial({ color: 0xffd700 })
+    );
     scene.add(sun);
 
-    // 2. YÖRÜNGE (Elips Çizgisi)
-    // x = a * cos(t), z = b * sin(t) -> a > b (Elips)
-    const curve = new THREE.EllipseCurve(
-        0, 0,            // ax, aY (merkez)
-        25, 18,          // xRadius, yRadius (Genişlik ve Derinlik farkı - ELİPS)
-        0, 2 * Math.PI,  // Başlangıç, Bitiş açısı
-        false,           // Saat yönü
-        0                // Dönüş
-    );
+    // 2. Yörünge Çizgisi (Elips)
+    const curve = new THREE.EllipseCurve(0, 0, 30, 20, 0, 2 * Math.PI, false, 0);
     const points = curve.getPoints(100);
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.3, transparent: true });
-    const orbitEllipse = new THREE.Line(geometry, material);
-    orbitEllipse.rotation.x = Math.PI / 2; // Yatay düzleme yatır
-    scene.add(orbitEllipse);
+    const orbitLine = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(points),
+        new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.2, transparent: true })
+    );
+    orbitLine.rotation.x = Math.PI / 2;
+    scene.add(orbitLine);
 
-    // 3. DÜNYA (Eksen Eğikliği ile)
-    const earthGroup = new THREE.Group(); // Yörünge hareketi için grup
-    scene.add(earthGroup);
+    // 3. DÜNYA GRUBU (Yörüngede dönen ana taşıyıcı)
+    const earthOrbitGroup = new THREE.Group();
+    scene.add(earthOrbitGroup);
 
-    const earthGeo = new THREE.SphereGeometry(1.5, 32, 32);
-    const earthMat = new THREE.MeshPhongMaterial({ 
-        color: 0x2233ff, emissive: 0x112244, specular: 0x111111, shininess: 10 
-    });
-    const earth = new THREE.Mesh(earthGeo, earthMat);
-    // Eksen Eğikliği (23.5 derece) - Z ekseninde eğiyoruz
-    earth.rotation.z = 23.5 * (Math.PI / 180);
+    // 4. EKSEN EĞİKLİĞİ KONTEYNERİ (TILT GROUP)
+    // İşte püf noktası: Dünya'yı direkt döndürmüyoruz.
+    // Bu kutuyu 23.5 derece eğiyoruz. İçindeki Dünya normal dönüyor.
+    const earthTiltContainer = new THREE.Group();
+    // Dünya'yı yörünge grubunun içine değil, pozisyonlandırdıktan sonra sahneye ekleyeceğiz
+    // Ancak basitlik için burada her frame'de pozisyon güncelleyeceğiz.
+    scene.add(earthTiltContainer);
+
+    // 5. Dünya Mesh'i
+    const earth = new THREE.Mesh(
+        new THREE.SphereGeometry(1.5, 32, 32),
+        new THREE.MeshPhongMaterial({ color: 0x2233ff, emissive: 0x112244, specular: 0x111111, shininess: 15 })
+    );
     
-    // Dünyanın üzerine çizgi (Ekvator vb.)
-    const axisGeo = new THREE.CylinderGeometry(0.05, 0.05, 4, 8);
-    const axisMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const axisLine = new THREE.Mesh(axisGeo, axisMat);
-    axisLine.rotation.z = 23.5 * (Math.PI / 180); // Aynı eğiklik
-    earth.add(axisLine);
+    // Eksen Çubuğu (Görselleştirmek için)
+    const axisLine = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 5, 8),
+        new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    );
     
-    scene.add(earth); // Earth'ü doğrudan sahneye ekleyip pozisyonunu frame'de güncelleyeceğiz
+    // Dünya ve Çubuğu Eğik Konteynera ekle
+    earthTiltContainer.add(earth);
+    earthTiltContainer.add(axisLine);
 
-    // ETİKETLERİ OLUŞTURMA FONKSİYONU
+    // Konteynerı 23.5 Derece EĞİYORUZ (Z ekseninde)
+    earthTiltContainer.rotation.z = 23.5 * (Math.PI / 180);
+
+    // Etiket Oluşturucu
     function createLabel(text, x, z, isSeason) {
         const div = document.createElement('div');
         div.className = isSeason ? 'label season-label' : 'label';
         div.textContent = text;
-        div.style.top = '0px';
-        div.style.left = '0px';
         container.appendChild(div);
-        return { element: div, position: new THREE.Vector3(x, 0, z) };
+        return { element: div, pos: new THREE.Vector3(x, 0, z) };
     }
-
-    // Mevsim ve Ay Konumları (Elipsin açılarına göre - Three.js koordinat sistemi)
-    // Sağ: X+, Sol: X-, Üst: Z-, Alt: Z+
-    // 21 Haziran (Yaz - Kuzey Yarımküre için): Güneş ışınları dik gelir.
-    // Elipsin sağ tarafında eksen güneşe dönük olsun.
-    
     const labels = [
-        createLabel("21 Haziran (YAZ)", 25, 0, true),
-        createLabel("Haziran", 22, 5, false),
-        
-        createLabel("23 Eylül (SONBAHAR)", 0, 18, true),
-        createLabel("Eylül", -5, 16, false),
-        
-        createLabel("21 Aralık (KIŞ)", -25, 0, true),
-        createLabel("Aralık", -22, -5, false),
-        
-        createLabel("21 Mart (İLKBAHAR)", 0, -18, true),
-        createLabel("Mart", 5, -16, false)
+        createLabel("21 Haziran (Yaz)", 30, 0, true),
+        createLabel("21 Aralık (Kış)", -30, 0, true),
+        createLabel("23 Eylül (Sonbahar)", 0, 20, true),
+        createLabel("21 Mart (İlkbahar)", 0, -20, true)
     ];
 
-    // ANİMASYON DÖNGÜSÜ
     let orbitAngle = 0;
-    let isOrbiting = true;
+    let isRunning = true;
 
     function animate() {
         requestAnimationFrame(animate);
 
-        if (isOrbiting) {
+        if (isRunning) {
+            // Yörünge Hareketi
             orbitAngle += 0.005;
             if(orbitAngle > Math.PI * 2) orbitAngle = 0;
         }
 
-        // Eliptik Hareket Matematiği
-        // x = 25 * cos(angle), z = 18 * sin(angle)
-        earth.position.x = 25 * Math.cos(orbitAngle);
-        earth.position.z = 18 * Math.sin(orbitAngle);
+        // Dünyanın Konumunu Hesapla (Elips)
+        const x = 30 * Math.cos(orbitAngle);
+        const z = 20 * Math.sin(orbitAngle);
+        
+        // Eğik Konteynerı taşı
+        earthTiltContainer.position.set(x, 0, z);
 
-        // Kendi etrafında dönme
-        earth.rotation.y += 0.05;
+        // DÜNYA KENDİ EKSENİNDE DÖNÜYOR
+        // Sadece Y eksenini döndürüyoruz. Konteyner eğik olduğu için
+        // Dünya da eğik ekseni etrafında dönüyor!
+        earth.rotation.y += 0.03; 
 
         controls.update();
         renderer.render(scene, camera);
 
-        // Etiketlerin Ekrandaki Yerini Güncelleme
+        // Etiketleri güncelle
         labels.forEach(lbl => {
-            const screenPos = lbl.position.clone();
-            screenPos.project(camera);
-            
-            const x = (screenPos.x * .5 + .5) * container.clientWidth;
-            const y = (-(screenPos.y * .5) + .5) * container.clientHeight;
-
-            lbl.element.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+            const v = lbl.pos.clone();
+            v.project(camera);
+            const lx = (v.x * .5 + .5) * container.clientWidth;
+            const ly = (-(v.y * .5) + .5) * container.clientHeight;
+            lbl.element.style.transform = `translate(-50%, -50%) translate(${lx}px, ${ly}px)`;
         });
     }
     animate();
-    
-    function toggleOrbit() { isOrbiting = !isOrbiting; }
+    function toggleOrbit() { isRunning = !isRunning; }
     window.addEventListener('resize', () => {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
     });
 
+
     // ==========================================
-    // BÖLÜM 2: GÖLGE LABORATUVARI (DOM / JS)
+    // BÖLÜM 2: GELİŞMİŞ GÖLGE SİMÜLASYONU
     // ==========================================
     
-    function updateShadowSystem() {
-        const sliderVal = parseInt(document.getElementById('rotationSlider').value);
-        // Slider 0 -> 360 derece.
-        // 0 Derece: Gece yarısı (Güneş'in tam tersi)
-        // 90 Derece: Sabah (Güneş doğuyor)
-        // 180 Derece: Öğle (Güneş tam tepede/karşıda)
-        // 270 Derece: Akşam (Güneş batıyor)
-        // 360 Derece: Gece yarısı
+    function updateDayCycle() {
+        const val = parseInt(document.getElementById('daySlider').value);
+        // Slider 0 - 360 derece.
+        // 0: Gece Yarısı
+        // 90: Sabah 06:00 (Doğudan Doğuş)
+        // 180: Öğle 12:00 (Tepe)
+        // 270: Akşam 18:00 (Batıdan Batış)
+        // 360: Gece Yarısı
         
-        // 1. TOP VIEW (DÜNYA DÖNÜYOR)
-        const earthDiv = document.getElementById('earthTop');
-        // Dünyayı döndür.
-        // Not: Dünya saat yönünün tersine döner.
-        // Slider arttıkça (zaman ilerledikçe) açı artmalı.
-        earthDiv.style.transform = `rotate(${-sliderVal}deg)`;
+        // Saat Göstergesi
+        const hours = Math.floor((val / 360) * 24);
+        const mins = Math.floor(((val / 360) * 24 * 60) % 60);
+        document.getElementById('timeDisplay').innerText = 
+            `Saat: ${hours.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}`;
 
-        // 2. GROUND VIEW (GÖLGE HESABI)
-        const shadowBox = document.getElementById('shadowBox');
-        const skyStatus = document.getElementById('skyStatus');
-        const groundScene = document.getElementById('groundScene');
-        const timeInfo = document.getElementById('timeInfo');
-        
-        // Saat Hesabı (Basit orantı)
-        // 0 = 00:00, 180 = 12:00
-        let hour = Math.floor((sliderVal / 360) * 24);
-        let minute = Math.floor(((sliderVal / 360) * 24 * 60) % 60);
-        timeInfo.innerText = `Saat: ${hour.toString().padStart(2,'0')}:${minute.toString().padStart(2,'0')}`;
+        // --- KISIM A: YER GÖRÜNÜMÜ (Güneş Doğudan Batıya) ---
+        const sunElem = document.getElementById('sunMove');
+        const skyElem = document.getElementById('sky');
+        const groundShadow = document.getElementById('groundShadow');
+        const nightText = document.getElementById('nightText');
 
-        // Gündüz mü Gece mi?
-        // Güneş Sağda (Doğu).
-        // Dönüş sırasında açı 90 ile 270 arasındaysa Güneş'i görürüz.
-        // 90 (Sabah 06:00) - 270 (Akşam 18:00) arası gündüz.
+        // Güneşin Pozisyonu (Yerden Bakış)
+        // Güneş Doğudan (Sağdan) doğar -> Ekranın %100'ü (Sağ)
+        // Batıdan (Soldan) batar -> Ekranın %0'ı (Sol)
+        // 90 derecede Sağda başlamalı, 270 derecede Solda bitmeli.
         
-        if (sliderVal >= 80 && sliderVal <= 280) {
-            // --- GÜNDÜZ ---
-            groundScene.style.backgroundColor = "#87CEEB"; // Açık Mavi
-            skyStatus.innerText = "";
-            shadowBox.style.opacity = "1";
+        if (val >= 80 && val <= 280) {
+            // GÜNDÜZ
+            skyElem.style.backgroundColor = "#87CEEB"; // Mavi
+            nightText.style.opacity = 0;
+            sunElem.style.opacity = 1;
+            groundShadow.style.opacity = 1;
+
+            // Güneş Hareketi Hesaplama
+            // 80 (Sabah) -> Left %90 (Doğu/Sağ)
+            // 180 (Öğle) -> Left %50 (Tepe)
+            // 280 (Akşam) -> Left %10 (Batı/Sol)
             
-            // Gölge Hesabı
-            // Öğle vakti (180) gölge en kısa (veya 0).
-            // 90'da (Sabah) gölge Batı'ya (Sola) düşer.
-            // 270'de (Akşam) gölge Doğu'ya (Sağa) düşer.
+            // Normalizasyon: (val - 80) / 200 => 0 ile 1 arası
+            const progress = (val - 80) / 200; 
             
-            // Merkezden uzaklık (180 merkez)
-            let dist = sliderVal - 180; // -90 (sabah) ile +90 (akşam) arası
+            // X Pozisyonu: Sağdan Sola gitmeli. Yani %90'dan %10'a.
+            // left = 90% - (progress * 80%)
+            const sunLeft = 90 - (progress * 80);
             
-            // Gölge Yönü ve Uzunluğu
-            // Sabah (dist negatif): Güneş doğuda, gölge batıya (sola).
-            // CSS'de sol için transform negatif, sağ için pozitif kullanabiliriz ama
-            // burada gölgeyi "left: 50%" noktasından uzatıyoruz.
+            // Y Pozisyonu: Yay çizmeli (Sinüs)
+            const sunBottom = Math.sin(progress * Math.PI) * 180 + 20; 
+
+            sunElem.style.left = `${sunLeft}%`;
+            sunElem.style.bottom = `${sunBottom}px`;
+
+            // Gölge Hesaplama (Yer)
+            // Güneş Sağdaysa (Büyük left değeri), Gölge Sola düşer.
+            const distFromCenter = val - 180; // -100 (Sabah) ile +100 (Akşam)
             
-            // Matematik:
-            // Sabah (80-170): Gölge Batı'ya (Sola) uzamalı.
-            // Öğle (170-190): Gölge çok kısa.
-            // Akşam (190-280): Gölge Doğu'ya (Sağa) uzamalı.
+            // Sabah (dist negatif): Güneş doğuda, gölge BATIA (Sola).
+            // Akşam (dist pozitif): Güneş batıda, gölge DOĞUYA (Sağa).
             
-            let shadowLength = dist * 2; // Katsayı ile gölgeyi uzat
+            // Gölge uzunluğu merkezden uzaklaştıkça artar.
+            let sLen = distFromCenter * 1.5;
             
-            // Güneş Doğu'da (Sağda).
-            // Sabah: Güneş sağda, gölge SOLA düşer.
-            // dist (-90) -> shadowLength (-180). Negatif değer SOLA gitmeli.
-            
-            if (shadowLength < 0) {
-                // Gölge Sola (Batı)
-                shadowBox.style.width = `${Math.abs(shadowLength)}px`;
-                shadowBox.style.transform = "translateX(-100%)"; // Sola yasla
-                timeInfo.innerHTML += " <br> (Sabah - Gölge Batı'ya)";
-            } else {
-                // Gölge Sağa (Doğu)
-                shadowBox.style.width = `${Math.abs(shadowLength)}px`;
-                shadowBox.style.transform = "translateX(0)"; // Sağa uzasın
-                timeInfo.innerHTML += " <br> (Öğleden Sonra - Gölge Doğu'ya)";
+            if (sLen < 0) { // Sabah -> Gölge Sola
+                groundShadow.style.width = `${Math.abs(sLen)}px`;
+                groundShadow.style.transform = "translateX(-100%)"; 
+            } else { // Akşam -> Gölge Sağa
+                groundShadow.style.width = `${sLen}px`;
+                groundShadow.style.transform = "translateX(0)";
             }
-
+            
         } else {
-            // --- GECE ---
-            groundScene.style.backgroundColor = "#0f172a"; // Koyu Lacivert
-            skyStatus.innerText = "🌑 GECE";
-            shadowBox.style.opacity = "0"; // Gece gölge yok
-            timeInfo.innerHTML += " <br> (Güneş Yok)";
+            // GECE
+            skyElem.style.backgroundColor = "#0f172a"; // Lacivert
+            nightText.style.opacity = 1;
+            sunElem.style.opacity = 0; // Güneş görünmez
+            groundShadow.style.opacity = 0; // Gölge yok
+        }
+
+        // --- KISIM B: UZAY GÖRÜNÜMÜ (Dünya Döner, Gölge Üzerine Düşer) ---
+        const earthCss = document.getElementById('earthTop');
+        const topShadow = document.getElementById('topShadow');
+
+        // Dünya saat yönünün tersine döner.
+        // Saat 0 -> 0 derece.
+        // Saat 12 -> 180 derece.
+        earthCss.style.transform = `rotate(${-val}deg)`; 
+
+        // GÖLGE MANTIĞI (Top View)
+        // Güneş SAĞDA sabit. Işık Sağdan geliyor.
+        // Gölge her zaman cismin SOLUNA düşmeli (Global olarak).
+        // Ama cisim (Dünya ve İnsan) dönüyor!
+        // İnsan döndükçe, gölgenin "div"i de onunla döner.
+        // Gölgenin her zaman Sola bakması için, Dünya'nın dönüşünün TERSİNE dönmesi gerekir.
+        // Yani: shadowRotation = -earthRotation.
+        
+        // Sadece Gündüz Saatlerinde (Güneşi görüyor) gölge var.
+        // İnsan Dünya'nın tepesinde (başlangıç 0 derece).
+        // Güneş Sağda (90 derece yönünde).
+        // 90 derece (Sabah) -> İnsan güneşe bakar.
+        // 270 derece (Akşam) -> İnsan güneşten kaçar.
+        
+        if (val >= 80 && val <= 280) {
+            topShadow.style.opacity = 1;
+            
+            // Gölge her zaman Sola (Batıya) bakmalı çünkü Güneş Sağda (Doğuda).
+            // Global açısı 180 (Sol) olmalı.
+            // Parent (Dünya) açısı: -val
+            // Child (Gölge) açısı ne olmalı ki toplamı 180 olsun?
+            // ChildAngle + (-val) = 180 => ChildAngle = 180 + val
+            
+            // Düzeltme: Güneş tam sağda (ekranın sağı).
+            // Işık vektörü: <--- (Sola doğru).
+            // Gölge vektörü: <--- (Sola doğru).
+            // Gölge her zaman ekranda SOLA (Left) bakmalı.
+            // CSS'de rotate(0) sağa bakar. rotate(180) sola bakar.
+            // Hedef rotasyon: 180 derece (global).
+            // Mevcut rotasyon (parent): -val.
+            // Gerekli local rotasyon: val + 180.
+            
+            topShadow.style.transform = `rotate(${val + 180}deg)`;
+            
+            // Gölge Boyu (Top View)
+            // Güneş tam tepedeyken (insan güneşin hizasındayken) gölge uzun.
+            // İnsan merkeze geldiğinde (öğle) gölge kısa? Hayır, bu kuşbakışı.
+            // Kuşbakışında gölge boyu, insanın dünya üzerindeki eğimine bağlıdır.
+            // Basit modelleme için:
+            // Öğle vakti (180) -> İnsan güneşe dik (En yakın) -> Gölge insanın arkasına düşer.
+            // Ama 2D düzlemde bunu "boyu kısalır" olarak gösterelim.
+            
+            let dist = Math.abs(val - 180); // 0 (Öğle) -> 90 (Ufuk)
+            let shadowLenTop = (dist / 90) * 40; // Kenarlarda uzun, ortada kısa
+            
+            topShadow.style.width = `${shadowLenTop}px`;
+            
+        } else {
+            topShadow.style.opacity = 0; // Gece gölge yok
         }
     }
-
-    // Başlangıçta çalıştır
-    updateShadowSystem();
+    
+    // Başlangıç
+    updateDayCycle();
 
 </script>
 </body>
