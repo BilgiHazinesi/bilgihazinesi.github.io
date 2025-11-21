@@ -72,24 +72,32 @@
 
         /* NORMAL (Bitişik) GÖRÜNÜM MODU İÇİN STİLLER */
         .number-wrapper.continuous-mode {
-            gap: 2px; /* Gruplar arası boşluğu azalt */
+            gap: 2px;
         }
         .number-wrapper.continuous-mode .digit-group {
             background: transparent;
-            padding: 0;
-            margin: 0;
-            border: none;
+            padding: 0; margin: 0; border: none;
         }
         .number-wrapper.continuous-mode .group-label {
-            display: none; /* Etiketleri gizle */
+            display: none;
         }
         .number-wrapper.continuous-mode .swap-icon-overlay {
-            display: none !important; /* İkonları gizle */
+            display: none !important;
         }
-        /* Bitişik modda rakam kutuları biraz daha sade dursun */
+        
+        /* ÖNEMLİ: Bitişik modda renkleri sıfırla (Tek Renk Kuralı) */
         .number-wrapper.continuous-mode .digit-box {
             border-bottom-width: 2px;
             margin: 0 1px;
+            color: #2d3436 !important; /* Koyu Gri */
+            border-bottom-color: #b2bec3 !important; /* Nötr Gri */
+        }
+        
+        /* Bitişik modda seçilince yine parlasın */
+        .number-wrapper.continuous-mode .digit-box.active {
+            background: #ffeaa7 !important;
+            color: #d35400 !important;
+            border-bottom-color: #e67e22 !important;
         }
 
         /* AYRIK (BÖLÜK) MODU STİLLERİ */
@@ -131,14 +139,12 @@
 
         .digit-box.active { background: #ffeaa7; color: #d35400; border-bottom-color: #e67e22; }
         
-        /* Renkler sadece Bölük Modunda veya Analizde belirgin olsun */
+        /* Renkler sadece Bölük Modunda Görünür (continuous-mode classı yokken) */
         .g-birler .digit-box { color: #00b894; }
         .g-binler .digit-box { color: #0984e3; }
         .g-milyon .digit-box { color: #d63031; }
         .g-milyar .digit-box { color: #6c5ce7; }
         
-        /* Bitişik modda renkleri biraz daha standart yapabiliriz, ama renkli kalması okunabilirliği artırır. O yüzden bırakıyoruz. */
-
         /* --- ORTA & ALT KISIMLAR --- */
         .tab-nav { display: flex; background: #dfe6e9; padding: 5px; flex-shrink: 0; }
         .tab-btn {
@@ -190,7 +196,6 @@
         input:checked + .slider:before { transform: translateX(22px); }
         .btn-big { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--accent); color: white; font-size: 1rem; font-weight: bold; margin-top: 10px; cursor: pointer; }
 
-        /* Manual Input Styles */
         .manual-input-group { display: flex; gap: 10px; width: 100%; margin-top: 5px; }
         .manual-input { flex: 1; padding: 10px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1.1rem; font-weight: bold; }
         .btn-manual { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
@@ -222,9 +227,10 @@
             width: 100%; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 15px;
         }
 
+        /* FOOTER (Sabitlendi) */
         .app-footer {
-            text-align: center; padding: 8px; color: rgba(45, 52, 54, 0.3);
-            font-size: 0.85rem; font-weight: bold; background: var(--bg);
+            text-align: center; padding: 15px; color: rgba(45, 52, 54, 0.3);
+            font-size: 0.9rem; font-weight: bold; background: var(--bg);
             flex-shrink: 0; font-family: 'Patrick Hand', cursive; letter-spacing: 1px;
         }
 
@@ -334,7 +340,7 @@
     let currentNumberStr = "";
     let currentGroups = [];
     let isSwapMode = false;
-    let isGroupedMode = false; // Varsayılan: Bitişik görünüm
+    let isGroupedMode = false;
     let selectedSwapIndex = null;
     let tempAnalysisData = {};
 
@@ -358,12 +364,9 @@
         }
     }
 
-    // --- YENİ: Görünüm Modu Değiştirme ---
     function toggleGrouping() {
         isGroupedMode = document.getElementById('toggle-grouping').checked;
         renderDisplay();
-        
-        // Eğer gruplama kapandıysa swap modu da zorla kapanmalı
         if (!isGroupedMode && isSwapMode) {
             document.getElementById('toggle-swap').checked = false;
             toggleSwapMode();
@@ -383,12 +386,10 @@
         document.querySelectorAll('.digit-group').forEach(g => g.classList.remove('selected-for-swap'));
         
         if(isSwapMode) {
-            // Swap modu açıldıysa mecburen Gruplama da açılmalı
             if(!isGroupedMode) {
                 isGroupedMode = true;
                 document.getElementById('toggle-grouping').checked = true;
             }
-
             document.getElementById('swap-indicator').style.display = 'block';
             wrapper.classList.add('swap-mode-active');
             document.getElementById('intro-msg').innerHTML = "<i class='fas fa-exchange-alt'></i> Yer değiştirmek için <b>herhangi iki bölüğe</b> dokun.";
@@ -402,8 +403,7 @@
             renderDisplay(); 
             document.getElementById('intro-msg').innerHTML = "<i class='fas fa-hand-pointer'></i> Analiz etmek için bir rakama dokun!";
         }
-        
-        renderDisplay(); // Mod değiştiği için yeniden çiz
+        renderDisplay();
     }
 
     function generateNumber() {
@@ -413,26 +413,14 @@
         setNumberAndRefresh(numStr);
     }
 
-    // --- YENİ: Elle Sayı Girme ---
     function applyManualNumber() {
         let val = document.getElementById('manual-number-input').value;
-        // Sadece rakamları al
         val = val.replace(/[^0-9]/g, '');
-        
-        if(val.length === 0) {
-            alert("Lütfen bir sayı girin.");
-            return;
-        }
-        // 12 basamak sınırı
+        if(val.length === 0) { alert("Lütfen bir sayı girin."); return; }
         if(val.length > 12) val = val.slice(0, 12);
-        
-        // Başındaki sıfırları temizle (tek 0 hariç)
         if(val.length > 1 && val.startsWith('0')) val = parseInt(val).toString();
-
         setNumberAndRefresh(val);
-        // Inputu temizle
         document.getElementById('manual-number-input').value = "";
-        // Kullanıcıyı analiz sayfasına götür
         switchTab('analiz');
     }
 
@@ -573,7 +561,6 @@
         const wrapper = document.getElementById('display-wrapper');
         wrapper.innerHTML = '';
 
-        // Mod kontrolü
         if(isGroupedMode) wrapper.classList.remove('continuous-mode');
         else wrapper.classList.add('continuous-mode');
 
@@ -587,27 +574,20 @@
             
             let gDiv = document.createElement('div');
             gDiv.className = `digit-group ${pClass}`;
-            
-            // Gruba tıklama (Sadece swap modu açıksa çalışsın)
             gDiv.onclick = (e) => { if(isSwapMode) handleSwap(gIndex); };
-            
             let icon = document.createElement('div');
             icon.className = 'swap-icon-overlay';
             icon.innerHTML = '<i class="fas fa-exchange-alt"></i>';
             gDiv.appendChild(icon);
-            
             let lbl = document.createElement('div');
             lbl.className = 'group-label';
             lbl.innerText = pName;
             gDiv.appendChild(lbl);
-            
             let row = document.createElement('div');
             row.className = 'digits-row';
-            
             let digits = groupVal.split('');
             let rightOffset = 0;
             for(let k = gIndex + 1; k < currentGroups.length; k++) rightOffset += 3;
-            
             digits.forEach((digit, dIdx) => {
                 let box = document.createElement('div');
                 box.className = 'digit-box';
@@ -622,7 +602,6 @@
             wrapper.appendChild(gDiv);
         });
         
-        // Labels switch kontrolü (Sadece gruplu modda çalışır aslında, ama yine de çağıralım)
         toggleLabels();
         adjustFontSize();
     }
