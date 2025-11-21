@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>4-D Mobil Sayı Atölyesi</title>
+    <title>4-D Sayı Laboratuvarı</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -30,7 +30,7 @@
             background: var(--white); padding: 10px 0;
             border-bottom: 1px solid #ddd;
             box-shadow: var(--shadow); z-index: 10;
-            flex-shrink: 0; min-height: 160px; /* Alanı biraz büyüttük */
+            flex-shrink: 0; min-height: 150px;
             display: flex; flex-direction: column;
         }
 
@@ -50,13 +50,13 @@
         /* DİNAMİK KONTEYNER */
         .display-container {
             flex: 1; display: flex; justify-content: center; align-items: center;
-            padding: 0; width: 100%; overflow: hidden; /* Taşmayı gizle */
+            padding: 0; width: 100%; overflow: hidden;
         }
 
         .number-wrapper {
             display: flex; justify-content: center; align-items: flex-end;
             gap: 6px; transition: transform 0.3s ease-out;
-            transform-origin: center center; /* Merkezden küçült */
+            transform-origin: center center;
             padding: 0 10px;
         }
 
@@ -66,25 +66,21 @@
             position: relative; padding: 6px;
             background: #f8f9fa; border-radius: 10px;
             border: 3px solid transparent; transition: all 0.2s;
+            cursor: pointer; /* Her zaman tıklanabilir olsun */
         }
 
         /* Taşıma Modu Aktifken Grubun Görünümü */
         .swap-mode-active .digit-group {
             background: white; 
-            border: 3px dashed #b2bec3; /* Kesikli çizgi ile taşınabilir olduğunu hissettir */
-            cursor: pointer;
+            border: 3px dashed #b2bec3;
         }
         
-        /* Seçili Grup Efekti */
         .digit-group.selected-for-swap {
-            background: #fff3cd;
-            border: 3px solid #e17055; 
-            transform: translateY(-10px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
-            z-index: 100;
+            background: #fff3cd; border: 3px solid #e17055; 
+            transform: translateY(-10px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 100;
         }
 
-        /* Taşıma İkonu (Bölük üstünde çıkar) */
+        /* Taşıma İkonu */
         .swap-icon-overlay {
             display: none; position: absolute; top: -15px;
             background: var(--swap-highlight); color: white;
@@ -98,26 +94,25 @@
         .group-label {
             font-size: 0.7rem; font-weight: 800; color: #aaa; text-transform: uppercase; 
             letter-spacing: 1px; margin-bottom: 4px; text-align: center; width: 100%;
-            white-space: nowrap; pointer-events: none; /* Tıklamayı engelle, alt geçsin */
+            white-space: nowrap; pointer-events: none;
         }
         .labels-hidden .group-label { opacity: 0; visibility: hidden; }
 
-        .digits-row { display: flex; gap: 3px; pointer-events: none; /* Swap modunda tıklamayı kolaylaştırır */ }
-        /* Normal modda pointer events açık olmalı, JS ile yöneteceğiz */
+        /* DÜZELTME: pointer-events: none kaldırıldı */
+        .digits-row { display: flex; gap: 3px; }
 
         .digit-box {
             width: 38px; height: 52px;
             background: #f1f2f6; border-radius: 6px;
             display: flex; justify-content: center; align-items: center;
             font-size: 2rem; font-weight: 900; color: var(--primary);
-            border-bottom: 4px solid #dcdde1; user-select: none;
+            border-bottom: 4px solid #dcdde1; user-select: none; cursor: pointer;
         }
 
         .digit-box.active {
             background: #ffeaa7; color: #d35400; border-bottom-color: #e67e22; 
         }
         
-        /* Renkler */
         .g-birler .digit-box { color: #00b894; }
         .g-binler .digit-box { color: #0984e3; }
         .g-milyon .digit-box { color: #d63031; }
@@ -142,7 +137,6 @@
         .card-val { font-family: 'Patrick Hand', cursive; font-size: 1.5rem; color: var(--primary); font-weight: bold; }
         .big-text { font-size: 2.2rem; color: #0984e3; }
 
-        /* Merdiven */
         .ladder-container { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; padding-bottom: 40px; }
         .ladder-step {
             padding: 5px 10px; border-radius: 6px 0 0 6px; color: white;
@@ -152,7 +146,6 @@
         }
         @keyframes slideIn { from{transform: scaleX(0); opacity:0;} to{transform: scaleX(1); opacity:1;} }
 
-        /* Ayarlar */
         .setting-row {
             display: flex; justify-content: space-between; align-items: center;
             background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; box-shadow: var(--shadow);
@@ -262,7 +255,6 @@
         isSwapMode = document.getElementById('toggle-swap').checked;
         const wrapper = document.getElementById('display-wrapper');
         
-        // Reset selections
         selectedSwapIndex = null;
         document.querySelectorAll('.digit-group').forEach(g => g.classList.remove('selected-for-swap'));
         
@@ -276,7 +268,7 @@
         } else {
             document.getElementById('swap-indicator').style.display = 'none';
             wrapper.classList.remove('swap-mode-active');
-            renderDisplay();
+            renderDisplay(); // UI'yı sıfırla
             document.getElementById('intro-msg').innerHTML = "<i class='fas fa-hand-pointer'></i> Bir rakama dokun!";
         }
     }
@@ -285,12 +277,10 @@
         const digits = parseInt(document.getElementById('digit-select').value);
         let numStr = Math.floor(Math.random() * 9 + 1).toString();
         for(let i=1; i<digits; i++) { numStr += Math.floor(Math.random() * 10).toString(); }
-        
         currentNumberStr = numStr;
         updateGroupsFromString(numStr);
         renderDisplay();
         renderLadder();
-        
         document.getElementById('detail-panel').style.display = 'none';
         document.getElementById('intro-msg').style.display = 'block';
         if(!isSwapMode) switchTab('analiz');
@@ -332,15 +322,13 @@
             let gDiv = document.createElement('div');
             gDiv.className = `digit-group ${pClass}`;
             
-            // GRUBA TIKLAMA (Hem Taşıma Hem Analiz için köprü)
+            // GRUBA TIKLAMA (Sadece Swap Modunda çalışsın)
             gDiv.onclick = (e) => {
                 if(isSwapMode) {
                     handleSwap(gIndex);
-                    // Olayı yayılmasını engellemeye gerek yok çünkü container'dayız
                 }
             };
 
-            // İKON (Görsel Süs)
             let icon = document.createElement('div');
             icon.className = 'swap-icon-overlay';
             icon.innerHTML = '<i class="fas fa-exchange-alt"></i>';
@@ -364,13 +352,13 @@
                 box.innerText = digit;
                 let power = rightOffset + (digits.length - 1 - dIdx);
                 
-                // Rakam Tıklaması
+                // RAKAM TIKLAMA (Swap Mode kapalıysa çalışsın)
                 box.onclick = (e) => {
                     if(!isSwapMode) {
                         selectDigit(power, digit, box);
-                        e.stopPropagation(); // Gruba gitmesin
+                        e.stopPropagation(); // Gruba (üst katmana) gitmesini engelle
                     }
-                    // Eğer Swap Mode ise, event gDiv'e (parent) gidecek ve orada yakalanacak
+                    // Swap mode açıksa e.stopPropagation() yapmıyoruz, böylece event yukarı (gruba) gidiyor ve swap tetikleniyor.
                 };
                 row.appendChild(box);
             });
@@ -379,20 +367,15 @@
         });
 
         toggleLabels();
-        adjustFontSize(); 
+        adjustFontSize();
     }
 
-    // --- DİNAMİK BOYUTLANDIRMA ---
     function adjustFontSize() {
         const wrapper = document.getElementById('display-wrapper');
         const container = document.querySelector('.display-container');
-        
-        wrapper.style.transform = 'scale(1)'; // Reset
-        
+        wrapper.style.transform = 'scale(1)';
         let containerWidth = container.offsetWidth;
         let contentWidth = wrapper.offsetWidth;
-        
-        // Mobilde kenar boşlukları için biraz daha küçültelim (0.9)
         if (contentWidth > containerWidth) {
             let scale = (containerWidth / contentWidth) * 0.92; 
             wrapper.style.transform = `scale(${scale})`;
@@ -400,30 +383,22 @@
             wrapper.style.transform = 'scale(1)';
         }
     }
-    
     window.addEventListener('resize', adjustFontSize);
 
     function handleSwap(index) {
         const groups = document.querySelectorAll('.digit-group');
-        
-        // Reset current animations
         if (selectedSwapIndex === index) {
-            // Deselect
             groups[index].classList.remove('selected-for-swap');
             selectedSwapIndex = null;
             return;
         }
-
         if (selectedSwapIndex === null) {
-            // First Selection
             selectedSwapIndex = index;
             groups[index].classList.add('selected-for-swap');
         } else {
-            // Second Selection -> SWAP
             let temp = currentGroups[selectedSwapIndex];
             currentGroups[selectedSwapIndex] = currentGroups[index];
             currentGroups[index] = temp;
-            
             selectedSwapIndex = null;
             rebuildString();
             renderDisplay();
@@ -458,7 +433,6 @@
             let step = document.createElement('div');
             step.className = 'ladder-step';
             step.style.backgroundColor = rainbowColors[p % rainbowColors.length];
-            // Mobilde genişlik ayarı daha hassas olmalı
             step.style.width = (30 + (p*6) > 100 ? 100 : 30 + (p*6)) + "%";
             step.style.animationDelay = (i*0.05) + "s";
             step.innerHTML = `<span>${d} x 10<sup>${p}</sup></span><span>${v.toLocaleString('tr-TR')}</span>`;
