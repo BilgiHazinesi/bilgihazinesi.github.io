@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4-D Bölük ve Basamak Atölyesi</title>
+    <title>4-D Sayı Laboratuvarı</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -11,8 +11,12 @@
             --bg-color: #dfe6e9;
             --primary: #2d3436;
             --accent: #0984e3;
-            --selected: #e17055;
-            --success: #00b894;
+            --selected: #e17055; /* Turuncu */
+            --highlight: #ffeaa7;
+            --birler: #00b894; /* Yeşil */
+            --binler: #0984e3; /* Mavi */
+            --milyon: #d63031; /* Kırmızı */
+            --milyar: #6c5ce7; /* Mor */
         }
 
         body, html {
@@ -21,100 +25,117 @@
         }
 
         #app-container {
-            position: relative; width: 100vw; height: 100vh;
+            width: 100vw; height: 100vh;
             background-color: var(--bg-color); display: flex; flex-direction: column;
         }
 
-        /* Header */
+        /* --- Header & Controls --- */
         header {
-            height: 80px; background: white; display: flex; align-items: center;
-            justify-content: space-between; padding: 0 40px;
-            border-bottom: 4px solid #b2bec3; font-size: 1.8rem; font-weight: 900; color: var(--primary);
+            height: 70px; background: white; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 30px;
+            border-bottom: 4px solid #b2bec3;
         }
-
-        /* Kontrol Paneli */
-        .controls {
-            padding: 20px; display: flex; gap: 20px; justify-content: center; background: #f1f2f6;
+        .title { font-size: 1.6rem; font-weight: 900; color: var(--primary); }
+        
+        .controls { display: flex; gap: 10px; }
+        select, button {
+            padding: 8px 15px; font-size: 1rem; border-radius: 10px; border: 2px solid #b2bec3;
+            cursor: pointer; font-weight: bold; font-family: 'Nunito', sans-serif;
         }
+        .btn-gen { background: var(--accent); color: white; border: none; box-shadow: 0 3px 0 #06528f; }
+        .btn-gen:active { transform: translateY(3px); box-shadow: none; }
 
-        .btn {
-            padding: 12px 30px; border: none; border-radius: 15px;
-            font-size: 1.2rem; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: 0.2s; color: white;
-        }
-        .btn:active { transform: translateY(4px); box-shadow: none; }
-        .btn-gen { background: var(--accent); }
-        .btn-reset { background: var(--primary); }
-
-        select {
-            padding: 10px 20px; font-size: 1.2rem; border-radius: 10px; border: 2px solid #b2bec3; font-weight: bold;
-        }
-
-        /* Ana Alan */
+        /* --- Main Layout --- */
         main {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px; perspective: 1000px;
+            flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 20px;
         }
 
-        /* Bölük Kutuları */
-        .boluk-container {
-            display: flex; gap: 20px; margin-bottom: 40px; align-items: center;
+        /* 1. SAYI GÖSTERİM ALANI (En Üst) */
+        .number-display-area {
+            height: 140px; background: white; border-radius: 20px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 4px solid #fff;
+            overflow-x: auto;
+        }
+        
+        .period-group {
+            display: flex; align-items: center; padding: 0 10px;
+            border-right: 2px dashed #ccc; position: relative;
+        }
+        .period-group:last-child { border-right: none; }
+        .period-label {
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            font-size: 0.8rem; font-weight: 800; color: #b2bec3; text-transform: uppercase;
+            background: white; padding: 0 5px; border-radius: 5px;
         }
 
-        .boluk-wrapper {
-            display: flex; flex-direction: column; align-items: center; gap: 10px;
-            transition: all 0.5s ease;
-        }
-
-        .boluk-label {
-            font-size: 1.1rem; font-weight: 800; color: #636e72; text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .boluk-box {
-            width: 160px; height: 120px;
-            background: white; border-radius: 15px;
+        .digit-box {
+            width: 60px; height: 80px; margin: 0 2px;
             display: flex; justify-content: center; align-items: center;
             font-size: 3.5rem; font-weight: 900; color: var(--primary);
-            border: 5px solid #b2bec3; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            cursor: pointer; position: relative; overflow: hidden;
+            cursor: pointer; border-radius: 10px; transition: all 0.2s;
+            user-select: none;
+        }
+        .digit-box:hover { background: #f1f2f6; transform: scale(1.1); }
+        .digit-box.active {
+            background: var(--selected); color: white;
+            box-shadow: 0 5px 15px rgba(225, 112, 85, 0.4); transform: scale(1.15);
         }
 
-        .boluk-box:hover { transform: translateY(-5px); border-color: var(--accent); }
+        /* Renk Kodlaması (Rakamlar için) */
+        .c-birler { color: var(--birler); }
+        .c-binler { color: var(--binler); }
+        .c-milyon { color: var(--milyon); }
+        .c-milyar { color: var(--milyar); }
 
-        /* Seçili Durum */
-        .boluk-box.selected {
-            border-color: var(--selected); background: #ffeaa7;
-            animation: pulse 1s infinite;
+        /* --- Bottom Section (Panel & Ladder) --- */
+        .bottom-section {
+            flex: 1; display: flex; gap: 20px; min-height: 0; /* Overflow fix */
         }
 
-        /* Bölük İsimleri Renkleri */
-        .type-birler { border-bottom: 5px solid #00b894; }
-        .type-binler { border-bottom: 5px solid #0984e3; }
-        .type-milyon { border-bottom: 5px solid #e17055; }
-        .type-milyar { border-bottom: 5px solid #6c5ce7; }
-
-        /* Okunuş Alanı */
-        .reading-area {
-            background: white; padding: 20px 40px; border-radius: 20px;
-            font-size: 1.8rem; font-weight: bold; color: #2d3436;
-            text-align: center; width: 80%; min-height: 60px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 3px solid #dfe6e9;
-            font-family: 'Patrick Hand', cursive;
+        /* 2. SOL PANEL (Detay & Analiz) */
+        .info-panel {
+            flex: 1; background: white; border-radius: 20px; padding: 20px;
+            display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow-y: auto;
         }
 
-        .info-text {
-            margin-top: 15px; font-size: 1.2rem; color: #636e72;
+        .panel-card {
+            background: #f8f9fa; border-radius: 15px; padding: 15px; border-left: 5px solid #ccc;
+        }
+        .card-title { font-size: 0.9rem; color: #636e72; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .card-value { font-size: 1.4rem; font-weight: bold; color: var(--primary); font-family: 'Patrick Hand', cursive; }
+
+        /* Seçili Rakam Kartı */
+        .selected-digit-info {
+            background: #ffeaa7; border-color: #fdcb6e; animation: popIn 0.3s ease;
+        }
+        @keyframes popIn { from{opacity:0; transform:scale(0.9);} to{opacity:1; transform:scale(1);} }
+
+        /* 3. SAĞ PANEL (Merdiven & Çözümleme) */
+        .ladder-panel {
+            flex: 1; background: #2d3436; border-radius: 20px; padding: 20px;
+            color: white; overflow-y: auto; display: flex; flex-direction: column;
+        }
+        
+        .ladder-row {
+            display: flex; justify-content: flex-end; align-items: center;
+            font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: bold;
+            padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+        .ladder-row:hover { background: rgba(255,255,255,0.1); padding-right: 10px; }
+        .ladder-val { color: #ffeaa7; }
+        .ladder-plus { margin-right: 15px; color: #00b894; font-size: 1rem; }
+        .ladder-total { 
+            border-top: 3px solid white; text-align: right; margin-top: 10px; padding-top: 10px; 
+            font-size: 2rem; color: #00b894;
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(225, 112, 85, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(225, 112, 85, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(225, 112, 85, 0); }
+        .expanded-text {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-top: 15px;
+            font-family: 'Patrick Hand', cursive; font-size: 1.2rem; line-height: 1.6; color: #dfe6e9;
         }
-
-        /* Basamakları küçük gösterme */
-        .digit { display: inline-block; width: 30%; text-align: center; }
 
     </style>
 </head>
@@ -122,220 +143,286 @@
 
 <div id="app-container">
     <header>
-        <span><i class="fas fa-cubes"></i> 4-D Bölük Atölyesi</span>
-        <span style="font-size:1rem; color:#636e72">Tasarım: BilgiHazinesi</span>
+        <div class="title"><i class="fas fa-microscope"></i> Sayı Laboratuvarı</div>
+        <div class="controls">
+            <select id="digit-count">
+                <option value="4">4 Basamaklı</option>
+                <option value="5">5 Basamaklı</option>
+                <option value="6">6 Basamaklı</option>
+                <option value="7">7 Basamaklı</option>
+                <option value="9" selected>9 Basamaklı</option>
+                <option value="12">12 Basamaklı</option>
+            </select>
+            <button class="btn-gen" onclick="generateNewNumber()"><i class="fas fa-sync-alt"></i> Sayı Üret</button>
+        </div>
     </header>
 
-    <div class="controls">
-        <select id="digit-select">
-            <option value="7">7 Basamaklı (Milyonlar)</option>
-            <option value="9">9 Basamaklı (Milyonlar)</option>
-            <option value="10">10 Basamaklı (Milyarlar)</option>
-            <option value="12" selected>12 Basamaklı (Milyarlar)</option>
-        </select>
-        <button class="btn btn-gen" onclick="generateNumber()"><i class="fas fa-random"></i> Sayı Üret</button>
-    </div>
-
     <main>
-        <div class="boluk-container" id="boluk-area">
+        <div class="number-display-area" id="display-area">
             </div>
 
-        <div class="reading-area" id="reading-text">
-            Sayının okunuşu burada görünecek...
-        </div>
-        
-        <div class="info-text">
-            <i class="fas fa-info-circle"></i> İpucu: Yerlerini değiştirmek için iki farklı bölüğe sırasıyla tıklayın.
+        <div class="bottom-section">
+            <div class="info-panel">
+                
+                <div class="panel-card selected-digit-info" id="digit-detail-box">
+                    <div class="card-title"><i class="fas fa-hand-pointer"></i> Seçilen Rakam İncelemesi</div>
+                    <div id="detail-content">Bir rakama tıklayın...</div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="card-title">Sayı Değerleri Toplamı</div>
+                    <div class="card-value" id="sum-face-value">0</div>
+                </div>
+                <div class="panel-card">
+                    <div class="card-title">Basamak Değerleri Toplamı</div>
+                    <div class="card-value" id="sum-place-value" style="color:var(--birler)">0</div>
+                    <div style="font-size:0.8rem; color:#999">(Sayı kendisine eşittir)</div>
+                </div>
+                <div class="panel-card">
+                    <div class="card-title">Okunuş</div>
+                    <div class="card-value" id="read-text" style="font-size:1.1rem; line-height:1.3">...</div>
+                </div>
+            </div>
+
+            <div class="ladder-panel">
+                <div style="text-align:center; margin-bottom:10px; color:#b2bec3; font-size:0.9rem;">BASAMAK MERDİVENİ</div>
+                <div id="ladder-container">
+                    </div>
+                <div class="ladder-total" id="ladder-sum"></div>
+
+                <div class="expanded-text" id="expanded-form">
+                    </div>
+            </div>
         </div>
     </main>
 </div>
 
 <script>
-    // Uygulama Durumu
-    let currentNumberParts = {
-        milyarlar: 0,
-        milyonlar: 0,
-        binler: 0,
-        birler: 0
-    };
-    
-    let selectedPart = null; // Seçili olan bölük adı
-    let isBillionsActive = true;
+    // Global Değişken
+    let currentNumberStr = ""; 
 
-    const partsOrder = ['milyarlar', 'milyonlar', 'binler', 'birler'];
-    const partLabels = {
-        'milyarlar': 'Milyarlar Bölüğü',
-        'milyonlar': 'Milyonlar Bölüğü',
-        'binler': 'Binler Bölüğü',
-        'birler': 'Birler Bölüğü'
-    };
-    const partColors = {
-        'milyarlar': 'type-milyar',
-        'milyonlar': 'type-milyon',
-        'binler': 'type-binler',
-        'birler': 'type-birler'
-    };
+    // Bölük İsimleri ve Renk Sınıfları
+    const periods = [
+        { name: "Birler", class: "c-birler", limit: 3 },
+        { name: "Binler", class: "c-binler", limit: 6 },
+        { name: "Milyonlar", class: "c-milyon", limit: 9 },
+        { name: "Milyarlar", class: "c-milyar", limit: 12 }
+    ];
 
-    function generateNumber() {
-        const digits = parseInt(document.getElementById('digit-select').value);
+    const basamakAdlari = [
+        "Birler", "Onlar", "Yüzler",
+        "Binler", "On Binler", "Yüz Binler",
+        "Milyonlar", "On Milyonlar", "Yüz Milyonlar",
+        "Milyarlar", "On Milyarlar", "Yüz Milyarlar"
+    ];
+
+    function generateNewNumber() {
+        const digits = parseInt(document.getElementById('digit-count').value);
         
-        // Sıfırlama
-        selectedPart = null;
+        // İlk basamak 0 olamaz
+        let numStr = Math.floor(Math.random() * 9 + 1).toString(); 
         
-        // Rastgele Bölük Üretimi (1-999 arası veya 000)
-        // Baştaki sayı 0 olamaz mantığı
+        for(let i=1; i<digits; i++) {
+            numStr += Math.floor(Math.random() * 10).toString();
+        }
         
-        let p1, p2, p3, p4;
+        currentNumberStr = numStr;
+        renderScreen();
+        
+        // Otomatik olarak en büyük basamağı seçelim
+        selectDigit(0, currentNumberStr[0], digits-1);
+    }
 
-        if (digits <= 9) {
-            currentNumberParts.milyarlar = null; // Yok
-            // 7 basamak: Milyonlar 1-9 arası, diğerleri 0-999
-            // 9 basamak: Milyonlar 100-999
-            let minM = digits === 7 ? 1 : 100;
-            let maxM = digits === 7 ? 9 : 999;
-            
-            currentNumberParts.milyonlar = Math.floor(Math.random() * (maxM - minM + 1)) + minM;
-            currentNumberParts.binler = Math.floor(Math.random() * 1000);
-            currentNumberParts.birler = Math.floor(Math.random() * 1000);
-        } else {
-            // 10-12 basamak
-            let minB = digits === 10 ? 1 : 100;
-            let maxB = digits === 10 ? 9 : 999;
+    function renderScreen() {
+        const displayArea = document.getElementById('display-area');
+        displayArea.innerHTML = '';
 
-            currentNumberParts.milyarlar = Math.floor(Math.random() * (maxB - minB + 1)) + minB;
-            currentNumberParts.milyonlar = Math.floor(Math.random() * 1000);
-            currentNumberParts.binler = Math.floor(Math.random() * 1000);
-            currentNumberParts.birler = Math.floor(Math.random() * 1000);
+        // Sayıyı ters çevirip 3'erli grupla, sonra tekrar düzelt (Bölükleme mantığı)
+        // Ancak render ederken soldan sağa (büyükten küçüğe) gitmeliyiz.
+        
+        let len = currentNumberStr.length;
+        let tempHtml = "";
+        
+        // Tersten döngü kurarak grupları belirle (Milyar -> Milyon -> Bin -> Bir)
+        // Basit yöntem: Stringi 3'erli parçalara sağdan bölmek yerine, matematiksel indeks kullanalım.
+        
+        // Bölükleri oluşturmak için sağdan sola 3'erli say
+        let groups = [];
+        let currentGroup = [];
+        for(let i=len-1; i>=0; i--) {
+            currentGroup.unshift({ val: currentNumberStr[i], originalIndex: i }); // Başa ekle
+            if(currentGroup.length === 3 || i === 0) {
+                groups.unshift(currentGroup); // Grubu başa ekle
+                currentGroup = [];
+            }
         }
 
-        renderBolukler();
-        updateReading();
-    }
+        // Ekrana Bas
+        groups.forEach((group, groupIdx) => {
+            // Hangi bölük olduğunu bul (groups.length - 1 - groupIdx)
+            let periodIndex = groups.length - 1 - groupIdx;
+            let pInfo = periods[periodIndex];
 
-    // Sayıyı 3 haneli string formatına çevirir (054 gibi)
-    function formatPart(num) {
-        if(num === null) return "";
-        return num.toString().padStart(3, '0');
-    }
-
-    // Görseli Oluştur
-    function renderBolukler() {
-        const container = document.getElementById('boluk-area');
-        container.innerHTML = '';
-
-        partsOrder.forEach(key => {
-            // Eğer Milyarlar null ise (yani 9 basamak seçildiyse) onu çizme
-            if(currentNumberParts[key] === null) return;
-
-            let val = currentNumberParts[key];
-            let formattedVal = formatPart(val);
-
-            let wrapper = document.createElement('div');
-            wrapper.className = 'boluk-wrapper';
+            let groupDiv = document.createElement('div');
+            groupDiv.className = 'period-group';
             
-            // Etiket
             let label = document.createElement('div');
-            label.className = 'boluk-label';
-            label.innerText = partLabels[key];
-            
-            // Kutu
-            let box = document.createElement('div');
-            box.className = `boluk-box ${partColors[key]}`;
-            box.onclick = () => handlePartClick(key);
-            box.id = `box-${key}`;
-            
-            // İçerik (Rakamlar)
-            box.innerHTML = formattedVal;
+            label.className = 'period-label';
+            label.innerText = pInfo.name + " Bölüğü";
+            groupDiv.appendChild(label);
 
-            wrapper.appendChild(box);
-            wrapper.appendChild(label);
-            container.appendChild(wrapper);
+            group.forEach(digitObj => {
+                let dDiv = document.createElement('div');
+                dDiv.className = `digit-box ${pInfo.class}`;
+                dDiv.innerText = digitObj.val;
+                dDiv.id = `digit-${digitObj.originalIndex}`;
+                
+                // Basamak İndeksi (Sağdan sola 0,1,2...)
+                let power = len - 1 - digitObj.originalIndex;
+                
+                dDiv.onclick = () => selectDigit(digitObj.originalIndex, digitObj.val, power);
+                groupDiv.appendChild(dDiv);
+            });
+
+            displayArea.appendChild(groupDiv);
         });
+
+        updateAnalysis();
+        renderLadder();
     }
 
-    // Tıklama ve Yer Değiştirme Mantığı
-    function handlePartClick(key) {
-        if (selectedPart === null) {
-            // İlk seçim
-            selectedPart = key;
-            document.getElementById(`box-${key}`).classList.add('selected');
-        } else if (selectedPart === key) {
-            // Seçimi iptal et (aynısına tıkladı)
-            document.getElementById(`box-${key}`).classList.remove('selected');
-            selectedPart = null;
-        } else {
-            // İkinci seçim: Yer Değiştir
-            swapParts(selectedPart, key);
-            selectedPart = null;
+    function selectDigit(index, val, power) {
+        // Görsel seçim efekti
+        document.querySelectorAll('.digit-box').forEach(b => b.classList.remove('active'));
+        let selectedBox = document.getElementById(`digit-${index}`);
+        if(selectedBox) selectedBox.classList.add('active');
+
+        // Hesaplamalar
+        let numericVal = parseInt(val);
+        let placeVal = numericVal * Math.pow(10, power);
+        let basamakIsmi = basamakAdlari[power];
+
+        // Sol Panele Yaz
+        let html = `
+            <table style="width:100%; border-collapse:collapse;">
+                <tr><td style="color:#636e72">Basamak Adı:</td><td style="font-weight:bold; color:#2d3436">${basamakIsmi} Basamağı</td></tr>
+                <tr><td style="color:#636e72">Sayı Değeri:</td><td style="font-weight:bold; color:#0984e3; font-size:1.2rem">${val}</td></tr>
+                <tr><td style="color:#636e72">Basamak Değeri:</td><td style="font-weight:bold; color:#d63031; font-size:1.2rem">${formatNumber(placeVal)}</td></tr>
+            </table>
+            <div style="margin-top:10px; font-size:0.9rem; color:#636e72">
+                <i class="fas fa-lightbulb" style="color:#f1c40f"></i> İpucu: ${val} tane ${Math.pow(10, power).toLocaleString()} eder.
+            </div>
+        `;
+        document.getElementById('detail-content').innerHTML = html;
+    }
+
+    function updateAnalysis() {
+        let sumFace = 0;
+        let sumPlace = 0; // Büyük sayılarda BigInt gerekebilir ama 12 basamak JS Number sınırında güvenli (9 katrilyona kadar)
+        
+        for(let char of currentNumberStr) {
+            sumFace += parseInt(char);
         }
+
+        document.getElementById('sum-face-value').innerText = sumFace;
+        document.getElementById('sum-place-value').innerText = formatNumber(parseInt(currentNumberStr));
+        document.getElementById('read-text').innerHTML = numberToText(parseInt(currentNumberStr));
     }
 
-    function swapParts(key1, key2) {
-        // Değerleri değiştir
-        let temp = currentNumberParts[key1];
-        currentNumberParts[key1] = currentNumberParts[key2];
-        currentNumberParts[key2] = temp;
+    function renderLadder() {
+        const container = document.getElementById('ladder-container');
+        container.innerHTML = '';
+        const expandedContainer = document.getElementById('expanded-form');
+        
+        let len = currentNumberStr.length;
+        let expandedArr = [];
 
-        // Yeniden çiz
-        renderBolukler();
-        updateReading();
+        for(let i=0; i<len; i++) {
+            let digit = parseInt(currentNumberStr[i]);
+            let power = len - 1 - i;
+            let placeVal = digit * Math.pow(10, power);
+
+            if(placeVal > 0 || len < 5) { // 0 olan basamakları çok kalabalık olmasın diye göstermeyebiliriz ama eğitim için gösterelim
+                let row = document.createElement('div');
+                row.className = 'ladder-row';
+                // Hizalama için boşluk yerine flex-end kullanıyoruz ama görsel olarak basamakları ayıralım
+                row.innerHTML = `<span class="ladder-plus">+</span> <span class="ladder-val">${formatNumber(placeVal)}</span>`;
+                container.appendChild(row);
+
+                // Çözümleme Metni
+                // Örnek: (5 x 10000)
+                expandedArr.push(`(${digit} x ${Math.pow(10, power).toLocaleString()})`);
+            }
+        }
+        
+        document.getElementById('ladder-sum').innerText = formatNumber(parseInt(currentNumberStr));
+        
+        // Çözümleme Yazısı
+        expandedContainer.innerHTML = `<strong>Çözümleme:</strong><br>` + expandedArr.join(' + ');
     }
 
-    // Türkçeye Çevirme Fonksiyonu (Basitleştirilmiş)
+    // Yardımcılar
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
     function numberToText(num) {
-        if (num === 0) return "";
-        const ones = ["", "Bir", "İki", "Üç", "Dört", "Beş", "Altı", "Yedi", "Sekiz", "Dokuz"];
-        const tens = ["", "On", "Yirmi", "Otuz", "Kırk", "Elli", "Altmış", "Yetmiş", "Seksen", "Doksan"];
+        // Basit okunuş fonksiyonu (önceki koddan)
+        // Not: Tam kapsamlı bir kütüphane yerine temel mantık
+        // Çok büyük sayılar için detaylı fonksiyon gerekir, burada özet geçiyorum:
+        // Önceki kodunuzdaki fonksiyonu buraya entegre edebilirsiniz. 
+        // Şimdilik placeholder:
+        return "Sayının okunuşu bu alanda görünecek."; 
         
-        let yuzler = Math.floor(num / 100);
-        let onlar = Math.floor((num % 100) / 10);
-        let birler = num % 10;
-        
+        // Not: Bu kısım çok uzamasın diye önceki fonksiyonu kopyalayabilirsiniz.
+        // Eğer isterseniz buraya tam fonksiyonu eklerim.
+    }
+
+    // Türkçe Okunuş Algoritması (Güncellenmiş)
+    const birler = ["", "Bir", "İki", "Üç", "Dört", "Beş", "Altı", "Yedi", "Sekiz", "Dokuz"];
+    const onlar = ["", "On", "Yirmi", "Otuz", "Kırk", "Elli", "Altmış", "Yetmiş", "Seksen", "Doksan"];
+    const binler = ["", "Bin", "Milyon", "Milyar", "Trilyon"];
+
+    function convertGroup(n) {
         let str = "";
-        
-        if (yuzler > 1) str += ones[yuzler] + " Yüz ";
-        else if (yuzler === 1) str += "Yüz ";
-        
-        if (onlar > 0) str += tens[onlar] + " ";
-        if (birler > 0) str += ones[birler];
-        
+        let y = Math.floor(n / 100);
+        let o = Math.floor((n % 100) / 10);
+        let b = n % 10;
+        if (y === 1) str += "Yüz ";
+        else if (y > 1) str += birler[y] + " Yüz ";
+        str += onlar[o] + " ";
+        str += birler[b] + " ";
         return str.trim();
     }
 
-    function updateReading() {
-        let text = "";
-        
-        // Milyarlar
-        if(currentNumberParts.milyarlar !== null && currentNumberParts.milyarlar > 0) {
-            text += numberToText(currentNumberParts.milyarlar) + " <span style='color:#6c5ce7'>Milyar</span> ";
+    // Override numberToText for real implementation
+    numberToText = function(num) {
+        if (num === 0) return "Sıfır";
+        let strNum = num.toString();
+        let groups = [];
+        while(strNum.length > 0) {
+            groups.push(strNum.slice(-3));
+            strNum = strNum.slice(0, -3);
         }
         
-        // Milyonlar
-        if(currentNumberParts.milyonlar > 0) {
-            text += numberToText(currentNumberParts.milyonlar) + " <span style='color:#e17055'>Milyon</span> ";
+        let result = "";
+        for(let i=groups.length-1; i>=0; i--) {
+            let gVal = parseInt(groups[i]);
+            if(gVal > 0) {
+                let gText = convertGroup(gVal);
+                let suffix = binler[i];
+                
+                // "Bir Bin" istisnası
+                if(i === 1 && gVal === 1) gText = ""; 
+                
+                result += gText + " " + suffix + " ";
+            }
         }
-        
-        // Binler
-        if(currentNumberParts.binler > 0) {
-            // Özel durum: "Bir Bin" denmez, sadece "Bin" denir (eğer sayı sadece 1 ise)
-            if(currentNumberParts.binler === 1) text += " <span style='color:#0984e3'>Bin</span> ";
-            else text += numberToText(currentNumberParts.binler) + " <span style='color:#0984e3'>Bin</span> ";
-        } else if (currentNumberParts.binler === 0 && (currentNumberParts.milyonlar > 0 || currentNumberParts.milyarlar > 0)) {
-            // Binler bölüğü 000 ise okunmaz
-        }
-        
-        // Birler
-        if(currentNumberParts.birler > 0) {
-            text += numberToText(currentNumberParts.birler);
-        }
-
-        if(text === "") text = "Sıfır";
-
-        document.getElementById('reading-text').innerHTML = text;
+        return result.trim();
     }
 
     // Başlangıç
-    generateNumber();
+    generateNewNumber();
 
 </script>
 </body>
