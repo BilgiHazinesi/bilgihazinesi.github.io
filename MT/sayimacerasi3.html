@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>4-D Sayı Laboratuvarı</title>
+    <title>4-D Sınıfı Sayı ve Zeka Laboratuvarı</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -15,6 +15,7 @@
             --white: #ffffff;
             --shadow: 0 4px 12px rgba(0,0,0,0.1);
             --swap-highlight: #e17055;
+            --success: #00b894;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -66,10 +67,9 @@
             position: relative; padding: 6px;
             background: #f8f9fa; border-radius: 10px;
             border: 3px solid transparent; transition: all 0.2s;
-            cursor: pointer; /* Her zaman tıklanabilir olsun */
+            cursor: pointer;
         }
 
-        /* Taşıma Modu Aktifken Grubun Görünümü */
         .swap-mode-active .digit-group {
             background: white; 
             border: 3px dashed #b2bec3;
@@ -80,7 +80,6 @@
             transform: translateY(-10px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 100;
         }
 
-        /* Taşıma İkonu */
         .swap-icon-overlay {
             display: none; position: absolute; top: -15px;
             background: var(--swap-highlight); color: white;
@@ -98,7 +97,6 @@
         }
         .labels-hidden .group-label { opacity: 0; visibility: hidden; }
 
-        /* DÜZELTME: pointer-events: none kaldırıldı */
         .digits-row { display: flex; gap: 3px; }
 
         .digit-box {
@@ -122,7 +120,7 @@
         .tab-nav { display: flex; background: #dfe6e9; padding: 5px; flex-shrink: 0; }
         .tab-btn {
             flex: 1; padding: 10px; border: none; background: transparent;
-            font-weight: 800; font-size: 0.9rem; color: #636e72;
+            font-weight: 800; font-size: 0.85rem; color: #636e72; /* Biraz küçüldü sığması için */
             border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center;
         }
         .tab-btn.active { background: var(--white); color: var(--tab-active); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -158,6 +156,35 @@
         input:checked + .slider:before { transform: translateX(22px); }
         .btn-big { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--accent); color: white; font-size: 1rem; font-weight: bold; margin-top: 10px; cursor: pointer; }
 
+        /* --- TEST (QUIZ) STİLLERİ --- */
+        .quiz-container { display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px; }
+        .quiz-card {
+            background: white; border-radius: 12px; overflow: hidden;
+            box-shadow: var(--shadow); border-left: 5px solid var(--accent);
+            animation: fadeIn 0.5s;
+        }
+        .q-header {
+            padding: 15px; background: #f9f9f9; font-weight: bold; color: #2d3436; font-size: 1.1rem;
+            border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px;
+        }
+        .q-header i { color: var(--accent); }
+        .q-body { padding: 15px; text-align: center; }
+        .answer-box {
+            margin-top: 10px; padding: 10px; background: #dff9fb; border-radius: 8px;
+            color: #009432; font-weight: bold; font-size: 1.2rem; display: none;
+            font-family: 'Patrick Hand', cursive;
+        }
+        .reveal-btn {
+            background: #b2bec3; color: white; border: none; padding: 8px 20px;
+            border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 5px;
+        }
+        .reveal-btn:hover { background: #636e72; }
+        .btn-refresh {
+            background: #00b894; color: white; border: none; padding: 10px; border-radius: 10px;
+            width: 100%; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 15px;
+        }
+        .btn-refresh:active { transform: translateY(3px); }
+
     </style>
 </head>
 <body>
@@ -177,10 +204,12 @@
     <div class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('analiz')"><i class="fas fa-microscope"></i> Analiz</button>
         <button class="tab-btn" onclick="switchTab('merdiven')"><i class="fas fa-stream"></i> Merdiven</button>
+        <button class="tab-btn" onclick="switchTab('test')"><i class="fas fa-puzzle-piece"></i> Test</button>
         <button class="tab-btn" onclick="switchTab('ayarlar')"><i class="fas fa-cogs"></i> Ayarlar</button>
     </div>
 
     <div class="content-area">
+        
         <div id="tab-analiz" class="tab-content active">
             <div class="info-card" id="intro-msg" style="background:#fff3cd; color:#856404;">
                 <i class="fas fa-hand-pointer"></i> Bir rakama dokun!
@@ -201,6 +230,12 @@
         <div id="tab-merdiven" class="tab-content">
             <div class="ladder-container" id="ladder-area"></div>
             <div class="info-card"><div class="card-label">Çözümleme</div><div class="card-val" id="lbl-cozumleme" style="font-size:0.9rem; text-align:left;">...</div></div>
+        </div>
+
+        <div id="tab-test" class="tab-content">
+            <button class="btn-refresh" onclick="generateQuiz()"><i class="fas fa-sync-alt"></i> Yeni Sorular Getir</button>
+            <div id="quiz-list" class="quiz-container">
+                </div>
         </div>
 
         <div id="tab-ayarlar" class="tab-content">
@@ -233,16 +268,24 @@
     let isSwapMode = false;
     let selectedSwapIndex = null;
     const basamakAdlari = ["Birler", "Onlar", "Yüzler", "Binler", "On Binler", "Yüz Binler", "Milyonlar", "On Milyonlar", "Yüz Milyonlar", "Milyarlar", "On Milyarlar", "Yüz Milyarlar"];
+    const bolukAdlari = ["Birler", "Binler", "Milyonlar", "Milyarlar"];
     const rainbowColors = ["#e17055", "#00b894", "#0984e3", "#6c5ce7", "#fdcb6e", "#d63031"];
 
     function switchTab(tabName) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
         document.getElementById(`tab-${tabName}`).classList.add('active');
+        
         const btns = document.querySelectorAll('.tab-btn');
         if(tabName === 'analiz') btns[0].classList.add('active');
         if(tabName === 'merdiven') btns[1].classList.add('active');
-        if(tabName === 'ayarlar') btns[2].classList.add('active');
+        if(tabName === 'test') btns[2].classList.add('active');
+        if(tabName === 'ayarlar') btns[3].classList.add('active');
+
+        // Test sekmesine geçilirse ve liste boşsa soru üret
+        if(tabName === 'test' && document.getElementById('quiz-list').innerHTML.trim() === "") {
+            generateQuiz();
+        }
     }
 
     function toggleLabels() {
@@ -268,7 +311,7 @@
         } else {
             document.getElementById('swap-indicator').style.display = 'none';
             wrapper.classList.remove('swap-mode-active');
-            renderDisplay(); // UI'yı sıfırla
+            renderDisplay(); 
             document.getElementById('intro-msg').innerHTML = "<i class='fas fa-hand-pointer'></i> Bir rakama dokun!";
         }
     }
@@ -281,6 +324,10 @@
         updateGroupsFromString(numStr);
         renderDisplay();
         renderLadder();
+        // Yeni sayı üretilince test listesini temizle ki kullanıcı yenisine bassın veya otomatik bassın
+        document.getElementById('quiz-list').innerHTML = ""; 
+        if(document.getElementById('tab-test').classList.contains('active')) generateQuiz();
+
         document.getElementById('detail-panel').style.display = 'none';
         document.getElementById('intro-msg').style.display = 'block';
         if(!isSwapMode) switchTab('analiz');
@@ -306,6 +353,118 @@
         updateGroupsFromString(currentNumberStr);
     }
 
+    // --- SORU ÜRETME MOTORU ---
+    function generateQuiz() {
+        const container = document.getElementById('quiz-list');
+        container.innerHTML = "";
+        const questions = [];
+        const len = currentNumberStr.length;
+
+        // Yardımcı fonksiyonlar
+        const getRandomDigitIndex = () => Math.floor(Math.random() * len);
+        const getBasamakName = (idx) => basamakAdlari[len - 1 - idx];
+        const getDigitVal = (idx) => parseInt(currentNumberStr[idx]);
+        const getBasamakVal = (idx) => getDigitVal(idx) * Math.pow(10, len - 1 - idx);
+        
+        // 10 Soru Döngüsü
+        for(let k=0; k<10; k++) {
+            let type = Math.floor(Math.random() * 5); // 0-4 arası tipler
+            let qObj = {q: "", a: ""};
+
+            // Tip 0: Belirli bir basamağın basamak değeri
+            if (type === 0) {
+                let idx = getRandomDigitIndex();
+                qObj.q = `<strong>${getBasamakName(idx)}</strong> basamağındaki rakamın basamak değeri kaçtır?`;
+                qObj.a = getBasamakVal(idx).toLocaleString('tr-TR');
+            }
+            // Tip 1: Belirli bir bölüğün sayı değerleri toplamı
+            else if (type === 1) {
+                // Rastgele bir bölük seç (Mevcut bölük sayısına göre)
+                let grpIdx = Math.floor(Math.random() * currentGroups.length);
+                let periodName = bolukAdlari[currentGroups.length - 1 - grpIdx];
+                let grpVal = currentGroups[grpIdx];
+                let sum = grpVal.split('').reduce((a,b) => a+parseInt(b), 0);
+                qObj.q = `<strong>${periodName}</strong> bölüğündeki rakamların sayı değerleri toplamı kaçtır?`;
+                qObj.a = sum;
+            }
+            // Tip 2: Sayı değeri en büyük/en küçük olan rakam
+            else if (type === 2) {
+                let maxVal = -1;
+                let maxIdx = -1;
+                for(let i=0; i<len; i++) {
+                    if(parseInt(currentNumberStr[i]) > maxVal) {
+                        maxVal = parseInt(currentNumberStr[i]);
+                        maxIdx = i;
+                    }
+                }
+                let subType = Math.random() > 0.5;
+                if(subType) {
+                    qObj.q = `Sayı değeri <strong>en büyük</strong> olan rakam hangi basamaktadır?`;
+                    qObj.a = getBasamakName(maxIdx) + " Basamağı";
+                } else {
+                    qObj.q = `Sayı değeri <strong>en büyük</strong> olan rakamın basamak değeri kaçtır?`;
+                    qObj.a = getBasamakVal(maxIdx).toLocaleString('tr-TR');
+                }
+            }
+            // Tip 3: Bölük Değiştirme (Sadece yeterli bölük varsa)
+            else if (type === 3 && currentGroups.length >= 2) {
+                let idx1 = Math.floor(Math.random() * currentGroups.length);
+                let idx2 = Math.floor(Math.random() * currentGroups.length);
+                while(idx1 === idx2) idx2 = Math.floor(Math.random() * currentGroups.length);
+                
+                let p1 = bolukAdlari[currentGroups.length - 1 - idx1];
+                let p2 = bolukAdlari[currentGroups.length - 1 - idx2];
+                
+                // Sanal değişim
+                let tempGroups = [...currentGroups];
+                let temp = tempGroups[idx1];
+                tempGroups[idx1] = tempGroups[idx2];
+                tempGroups[idx2] = temp;
+                
+                let newNum = "";
+                tempGroups.forEach((g, i) => {
+                   if(i>0) newNum += g.toString().padStart(3, '0');
+                   else newNum += g;
+                });
+                
+                qObj.q = `<strong>${p1}</strong> ile <strong>${p2}</strong> bölüğü yer değiştirirse hangi sayı oluşur?`;
+                qObj.a = parseInt(newNum).toLocaleString('tr-TR'); // Formatlı göster
+            }
+            // Tip 4: Genel toplam soruları
+            else {
+                let subType = Math.random();
+                if(subType < 0.33) {
+                    qObj.q = "Bu sayının basamak değerleri toplamı kaçtır?";
+                    qObj.a = parseInt(currentNumberStr).toLocaleString('tr-TR') + " (Sayının kendisidir)";
+                } else if (subType < 0.66) {
+                     let totalSum = currentNumberStr.split('').reduce((a,b)=>a+parseInt(b),0);
+                     qObj.q = "Bu sayının sayı değerleri toplamı kaçtır?";
+                     qObj.a = totalSum;
+                } else {
+                    let idx = getRandomDigitIndex();
+                    qObj.q = `<strong>${getBasamakName(idx)}</strong> basamağındaki rakam kaçtır?`;
+                    qObj.a = currentNumberStr[idx];
+                }
+            }
+            questions.push(qObj);
+        }
+
+        // Soruları Ekrana Bas
+        questions.forEach((item, index) => {
+            let card = document.createElement('div');
+            card.className = 'quiz-card';
+            card.innerHTML = `
+                <div class="q-header"><i class="fas fa-question-circle"></i> Soru ${index+1}</div>
+                <div class="q-body">
+                    <div style="font-size:1.1rem; margin-bottom:10px;">${item.q}</div>
+                    <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'; this.style.display='none'">Cevabı Gör</button>
+                    <div class="answer-box">${item.a}</div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
     function renderDisplay() {
         const wrapper = document.getElementById('display-wrapper');
         wrapper.innerHTML = '';
@@ -322,11 +481,8 @@
             let gDiv = document.createElement('div');
             gDiv.className = `digit-group ${pClass}`;
             
-            // GRUBA TIKLAMA (Sadece Swap Modunda çalışsın)
             gDiv.onclick = (e) => {
-                if(isSwapMode) {
-                    handleSwap(gIndex);
-                }
+                if(isSwapMode) handleSwap(gIndex);
             };
 
             let icon = document.createElement('div');
@@ -352,13 +508,11 @@
                 box.innerText = digit;
                 let power = rightOffset + (digits.length - 1 - dIdx);
                 
-                // RAKAM TIKLAMA (Swap Mode kapalıysa çalışsın)
                 box.onclick = (e) => {
                     if(!isSwapMode) {
                         selectDigit(power, digit, box);
-                        e.stopPropagation(); // Gruba (üst katmana) gitmesini engelle
+                        e.stopPropagation();
                     }
-                    // Swap mode açıksa e.stopPropagation() yapmıyoruz, böylece event yukarı (gruba) gidiyor ve swap tetikleniyor.
                 };
                 row.appendChild(box);
             });
