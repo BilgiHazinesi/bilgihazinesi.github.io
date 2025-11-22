@@ -172,13 +172,13 @@
         .ladder-container { 
             display: flex; 
             flex-direction: row; 
-            align-items: flex-end; /* Sütunları en alta yasla */
+            align-items: flex-end; 
             justify-content: center;
             gap: 8px; 
             height: 400px;
             overflow-x: auto; 
             padding-bottom: 0; 
-            border-bottom: 4px solid #b2bec3; /* Zemin */
+            border-bottom: 4px solid #b2bec3; 
             margin-top: 30px;
         }
 
@@ -189,7 +189,6 @@
             flex: 1;
             max-width: 50px; 
             min-width: 35px;
-            /* ÖNEMLİ: Yükseklik %100 olsun ki flex-end ile hizalansın */
             height: 100%; 
             justify-content: flex-end; 
         }
@@ -225,12 +224,11 @@
             text-shadow: 0 0 2px rgba(255,255,255,0.7);
         }
 
-        /* Etiket Alanı (Sabit Yükseklik = Mükemmel Hizalama) */
         .ls-footer-label {
             margin-top: 5px; 
-            height: 90px; /* Etiketler için sabit alan ayırıyoruz */
+            height: 90px; 
             display: flex;
-            align-items: flex-start; /* Etiketler hemen çizginin altından başlasın */
+            align-items: flex-start; 
             justify-content: center;
             
             font-size: 0.65rem;
@@ -241,7 +239,6 @@
         }
         
         .ls-footer-label span {
-            /* Metni döndür */
             writing-mode: vertical-lr;
             transform: rotate(180deg);
             white-space: nowrap;
@@ -249,7 +246,6 @@
         
         @keyframes growUp { from{height: 0; opacity:0;} to{opacity:1;} }
 
-        /* YAZMA KONTROL BAR (YENİ) */
         .write-control-bar {
             display: flex; gap: 10px; margin-bottom: 20px; 
             background: #dfe6e9; padding: 10px; border-radius: 10px;
@@ -358,7 +354,11 @@
                 </div>
                 <div style="display:flex; gap:10px;">
                     <div class="info-card" style="flex:1"><div class="card-label">Sayı Değeri</div><div class="card-val big-text" id="lbl-sayi-degeri">0</div></div>
-                    <div class="info-card" style="flex:1"><div class="card-label">Basamak Değeri</div><div class="card-val big-text" id="lbl-basamak-degeri" style="font-size:1.4rem; color:#d63031">0</div></div>
+                    <div class="info-card" style="flex:1">
+                        <div class="card-label">Basamak Değeri</div>
+                        <div class="card-val big-text" id="lbl-basamak-degeri" style="font-size:1.4rem; color:#d63031">0</div>
+                        <div id="lbl-basamak-uslu" style="font-size:1.1rem; color:#636e72; margin-top:5px; font-family:'Courier New', monospace;"></div>
+                    </div>
                 </div>
                 <div class="info-card">
                     <div class="card-label">Birim Analizi</div>
@@ -615,6 +615,7 @@
         renderDisplay();
         renderLadder();
         generateQuiz();
+        generateWriteChallengeFromTab(); // Yazma sorusunu da yenile (varsa)
         resetAnalysisView();
         isSwapMode = false; document.getElementById('toggle-swap').checked = false;
         isDigitSwapMode = false; document.getElementById('toggle-digit-swap').checked = false;
@@ -649,14 +650,17 @@
         let basamakDegeri = parseInt(val) * Math.pow(10, power);
         let basamakIsmi = basamakAdlari[power] || "";
         
-        // DOĞRU EK KULLANIMI
         let correctSuffix = birimEkleri[basamakIsmi] || "Birim";
         let unitStr = `${val} tane ${correctSuffix}`;
+        
+        // Üslü Gösterim
+        let expStr = `${val} x 10<sup>${power}</sup>`;
 
         tempAnalysisData = {
             name: basamakIsmi + " Basamağı",
             faceVal: val,
             placeVal: basamakDegeri.toLocaleString('tr-TR'),
+            expVal: expStr,
             unitVal: unitStr,
             read: numberToText(parseInt(currentNumberStr))
         };
@@ -670,15 +674,15 @@
         document.getElementById('lbl-basamak-adi').innerText = tempAnalysisData.name;
         document.getElementById('lbl-sayi-degeri').innerText = tempAnalysisData.faceVal;
         document.getElementById('lbl-basamak-degeri').innerText = tempAnalysisData.placeVal;
+        document.getElementById('lbl-basamak-uslu').innerHTML = tempAnalysisData.expVal;
         document.getElementById('lbl-birim-analizi').innerText = tempAnalysisData.unitVal;
         document.getElementById('lbl-okunus').innerText = tempAnalysisData.read;
         document.getElementById('analysis-preview').style.display = 'none';
         document.getElementById('detail-panel').style.display = 'block';
     }
 
-    // --- YENİ: YAZMA MODU (OKUNUŞTAN SAYIYA) ---
+    // --- YAZMA MODU ---
     function generateWriteChallengeFromTab() {
-        // Tab içindeki özel select'i kullan
         const digits = parseInt(document.getElementById('write-digit-select').value);
         let numStr = Math.floor(Math.random() * 9 + 1).toString();
         for(let i=1; i<digits; i++) { numStr += Math.floor(Math.random() * 10).toString(); }
@@ -692,10 +696,7 @@
     function checkWriteAnswer() {
         let userInput = document.getElementById('write-input').value;
         let feedback = document.getElementById('write-feedback');
-        
-        // Sadece rakamları al, boşlukları temizle
         userInput = userInput.replace(/[^0-9]/g, '');
-        
         if(userInput === currentWriteTarget) {
             feedback.innerHTML = "<span style='color:#00b894'><i class='fas fa-check-circle'></i> Harika! Doğru Bildin.</span>";
         } else {
@@ -915,7 +916,6 @@
         }
     }
 
-    // --- DÜZELTİLMİŞ MERDİVEN RENDER ---
     function renderLadder() {
         const container = document.getElementById('ladder-area');
         container.innerHTML = '';
@@ -933,15 +933,15 @@
             let bar = document.createElement('div');
             bar.className = 'ladder-bar-inner';
             bar.style.backgroundColor = rainbowColors[p % rainbowColors.length];
-            bar.style.height = (25 + (p * 6)) + "%"; 
+            // Boy farkı belirgin olsun
+            bar.style.height = (5 + (p * 8.5)) + "%"; 
             bar.style.animationDelay = (i*0.05) + "s";
             
             bar.innerHTML = `<span class="ls-val-rotated">${d} x 10<sup>${p}</sup> = ${v.toLocaleString('tr-TR')}</span>`;
             
-            // Etiketi aşağıya düzgün yerleştir (döndürülmüş metin)
             let label = document.createElement('div');
             label.className = 'ls-footer-label';
-            label.innerHTML = `<span>${basamakAdlari[p]}</span>`; // Span içine aldık
+            label.innerHTML = `<span>${basamakAdlari[p]}</span>`; 
 
             wrapper.appendChild(bar);
             wrapper.appendChild(label);
