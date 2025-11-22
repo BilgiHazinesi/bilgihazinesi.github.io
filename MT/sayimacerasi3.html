@@ -18,6 +18,11 @@
             --digit-swap-highlight: #d35400;
             --success: #00b894;
             --error: #d63031;
+            
+            /* Dinamik Boyutlandırma Değişkenleri */
+            --digit-box-width: 4.5vmin; /* Ekranın kısa kenarına göre boyutlan */
+            --digit-box-height: 6.5vmin;
+            --digit-font-size: 2.5vmin;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -30,24 +35,37 @@
 
         /* --- ÜST KISIM --- */
         .top-section {
-            background: var(--white); padding: 10px 0;
+            background: var(--white); padding: 1vh 0;
             border-bottom: 1px solid #ddd;
             box-shadow: var(--shadow); z-index: 10;
-            flex-shrink: 0; min-height: 140px;
-            display: flex; flex-direction: column;
+            flex-shrink: 0; 
+            min-height: 25vh; /* Ekranın %25'i */
+            display: flex; flex-direction: column; gap: 10px;
         }
 
-        .top-bar {
-            display: flex; justify-content: flex-end; align-items: center; padding: 0 15px; margin-bottom: 5px; height: 30px;
+        /* HIZLI KONTROL PANELİ (YENİ) */
+        .quick-controls {
+            display: flex; justify-content: center; gap: 15px; padding: 0 20px;
         }
         
-        .mode-indicator {
-            font-size: 0.8rem; font-weight: bold; padding: 5px 12px; border-radius: 15px;
-            background: #ffeaa7; color: #d35400; display: none; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            animation: pulse 1.5s infinite;
+        .qc-btn {
+            padding: 8px 15px; border-radius: 20px; border: 2px solid transparent;
+            font-weight: 800; font-size: 0.9rem; cursor: pointer; 
+            background: #f1f2f6; color: #636e72; transition: all 0.2s;
+            display: flex; align-items: center; gap: 5px;
         }
-        @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.05);} 100%{transform:scale(1);} }
+        
+        .qc-btn:hover { background: #dfe6e9; }
+        
+        .qc-btn.active-swap {
+            background: var(--swap-highlight); color: white; border-color: #c0392b;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+        }
+        
+        .qc-btn.active-digit {
+            background: var(--digit-swap-highlight); color: white; border-color: #e67e22;
+            box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3);
+        }
 
         /* DİNAMİK KONTEYNER */
         .display-container {
@@ -57,27 +75,27 @@
 
         .number-wrapper {
             display: flex; justify-content: center; align-items: flex-end;
-            gap: 6px; transition: transform 0.3s ease-out;
+            gap: 0.8vmin; transition: transform 0.3s ease-out;
             transform-origin: center center;
-            padding: 0 10px;
+            padding: 0 2vw;
         }
 
-        /* --- GRUP VE RAKAM STILLERI --- */
+        /* --- GRUP VE RAKAM STILLERI (AKILLI TAHTA İÇİN BÜYÜTÜLDÜ) --- */
         .digit-group {
             display: flex; flex-direction: column; align-items: center;
-            position: relative; padding: 6px;
-            background: #f8f9fa; border-radius: 10px;
-            border: 3px solid transparent; transition: all 0.3s;
+            position: relative; padding: 0.5vmin;
+            background: #f8f9fa; border-radius: 1vmin;
+            border: 0.3vmin solid transparent; transition: all 0.3s;
             cursor: pointer;
         }
 
         /* NORMAL (Bitişik) GÖRÜNÜM MODU */
-        .number-wrapper.continuous-mode { gap: 2px; }
+        .number-wrapper.continuous-mode { gap: 0.2vmin; }
         .number-wrapper.continuous-mode .digit-group { background: transparent; padding: 0; margin: 0; border: none; }
         .number-wrapper.continuous-mode .group-label { display: none; }
         .number-wrapper.continuous-mode .swap-icon-overlay { display: none !important; }
         .number-wrapper.continuous-mode .digit-box {
-            border-bottom-width: 2px; margin: 0 1px;
+            border-bottom-width: 0.3vmin; margin: 0 0.1vmin;
             color: #2d3436 !important; border-bottom-color: #b2bec3 !important;
         }
         .number-wrapper.continuous-mode .digit-box.active {
@@ -85,38 +103,38 @@
         }
 
         /* AYRIK (BÖLÜK) MODU */
-        .swap-mode-active .digit-group { background: white; border: 3px dashed #b2bec3; }
+        .swap-mode-active .digit-group { background: white; border: 0.3vmin dashed #b2bec3; }
         .digit-group.selected-for-swap {
-            background: #fff3cd; border: 3px solid #e17055; 
-            transform: translateY(-10px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 100;
+            background: #fff3cd; border: 0.3vmin solid #e17055; 
+            transform: translateY(-1vmin); box-shadow: 0 1vmin 2vmin rgba(0,0,0,0.2); z-index: 100;
         }
 
         .swap-icon-overlay {
-            display: none; position: absolute; top: -15px;
+            display: none; position: absolute; top: -2vmin;
             background: var(--swap-highlight); color: white;
-            width: 30px; height: 30px; border-radius: 50%;
+            width: 3.5vmin; height: 3.5vmin; border-radius: 50%;
             justify-content: center; align-items: center;
-            font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 1.5vmin; box-shadow: 0 0.5vmin 1vmin rgba(0,0,0,0.2);
         }
         .swap-mode-active .swap-icon-overlay { display: flex; }
         .selected-for-swap .swap-icon-overlay { background: #00b894; transform: scale(1.2); }
 
         .group-label {
-            font-size: 0.7rem; font-weight: 800; color: #aaa; text-transform: uppercase; 
-            letter-spacing: 1px; margin-bottom: 4px; text-align: center; width: 100%;
+            font-size: 1.2vmin; font-weight: 800; color: #aaa; text-transform: uppercase; 
+            letter-spacing: 1px; margin-bottom: 0.5vmin; text-align: center; width: 100%;
             white-space: nowrap; pointer-events: none;
         }
         .labels-hidden .group-label { opacity: 0; visibility: hidden; }
 
-        .digits-row { display: flex; gap: 3px; }
-        .number-wrapper.continuous-mode .digits-row { gap: 1px; }
+        .digits-row { display: flex; gap: 0.4vmin; }
+        .number-wrapper.continuous-mode .digits-row { gap: 0.1vmin; }
 
         .digit-box {
-            width: 38px; height: 52px;
-            background: #f1f2f6; border-radius: 6px;
+            width: var(--digit-box-width); height: var(--digit-box-height);
+            background: #f1f2f6; border-radius: 0.8vmin;
             display: flex; justify-content: center; align-items: center;
-            font-size: 2rem; font-weight: 900; color: var(--primary);
-            border-bottom: 4px solid #dcdde1; user-select: none; cursor: pointer;
+            font-size: var(--digit-font-size); font-weight: 900; color: var(--primary);
+            border-bottom: 0.5vmin solid #dcdde1; user-select: none; cursor: pointer;
             transition: all 0.2s;
         }
         .digit-box.active { background: #ffeaa7; color: #d35400; border-bottom-color: #e67e22; }
@@ -127,8 +145,8 @@
             background: var(--digit-swap-highlight) !important;
             color: white !important;
             border-bottom-color: #a04000 !important;
-            transform: translateY(-5px);
-            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            transform: translateY(-0.5vmin);
+            box-shadow: 0 0.5vmin 1vmin rgba(0,0,0,0.2);
             animation: pulseDigit 1s infinite;
         }
         @keyframes pulseDigit { 0%{opacity:1;} 50%{opacity:0.7;} 100%{opacity:1;} }
@@ -141,58 +159,59 @@
         /* --- ORTA & ALT KISIMLAR --- */
         .tab-nav { display: flex; background: #dfe6e9; padding: 5px; flex-shrink: 0; overflow-x: auto; }
         .tab-btn {
-            flex: 1; padding: 8px 5px; border: none; background: transparent;
-            font-weight: 800; font-size: 0.75rem; color: #636e72;
+            flex: 1; padding: 10px 5px; border: none; background: transparent;
+            font-weight: 800; font-size: 1rem; color: #636e72; /* Font büyüdü */
             border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center;
-            min-width: 60px;
+            min-width: 80px;
         }
-        .tab-btn i { font-size: 1.1rem; margin-bottom: 3px; }
+        .tab-btn i { font-size: 1.4rem; margin-bottom: 5px; }
         .tab-btn.active { background: var(--white); color: var(--tab-active); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        .content-area { flex: 1; overflow-y: auto; padding: 15px; background: #f8f9fa; position: relative; }
-        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .content-area { flex: 1; overflow-y: auto; padding: 2vmin; background: #f8f9fa; position: relative; }
+        .tab-content { display: none; animation: fadeIn 0.3s; height: 100%; } /* Height eklendi */
         .tab-content.active { display: block; }
         @keyframes fadeIn { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
 
-        .info-card { background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 10px; text-align: center; }
-        .card-label { color: #b2bec3; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; }
-        .card-val { font-family: 'Patrick Hand', cursive; font-size: 1.5rem; color: var(--primary); font-weight: bold; }
-        .big-text { font-size: 2.2rem; color: #0984e3; }
+        .info-card { background: white; padding: 2vmin; border-radius: 1.5vmin; box-shadow: var(--shadow); margin-bottom: 1.5vmin; text-align: center; }
+        .card-label { color: #b2bec3; font-weight: 800; font-size: 1rem; text-transform: uppercase; }
+        .card-val { font-family: 'Patrick Hand', cursive; font-size: 2rem; color: var(--primary); font-weight: bold; }
+        .big-text { font-size: 3rem; color: #0984e3; }
 
         .btn-reveal-analysis {
-            width: 100%; padding: 20px; border: none; border-radius: 15px;
-            background: var(--success); color: white; font-size: 1.3rem; font-weight: 900;
-            cursor: pointer; box-shadow: 0 5px 0 #009432; transition: 0.2s;
+            width: 100%; padding: 2vmin; border: none; border-radius: 1.5vmin;
+            background: var(--success); color: white; font-size: 1.5rem; font-weight: 900;
+            cursor: pointer; box-shadow: 0 0.5vmin 0 #009432; transition: 0.2s;
             animation: pulseGreen 2s infinite;
         }
-        .btn-reveal-analysis:active { transform: translateY(4px); box-shadow: none; }
+        .btn-reveal-analysis:active { transform: translateY(0.4vmin); box-shadow: none; }
         @keyframes pulseGreen { 0%{transform:scale(1);} 50%{transform:scale(1.02);} 100%{transform:scale(1);} }
 
-        /* --- MERDİVEN --- */
+        /* --- MERDİVEN HİZALAMA --- */
         .ladder-container { 
             display: flex; flex-direction: row; align-items: flex-end; justify-content: center;
-            gap: 8px; height: 400px; overflow-x: auto; padding-bottom: 0; 
-            border-bottom: 4px solid #b2bec3; margin-top: 30px;
+            gap: 1vmin; height: 45vh; /* Ekran yüksekliğine göre */
+            overflow-x: auto; padding-bottom: 0; 
+            border-bottom: 0.4vmin solid #b2bec3; margin-top: 2vmin;
         }
         .ladder-column-wrapper {
             display: flex; flex-direction: column; align-items: center; flex: 1;
-            max-width: 50px; min-width: 35px; height: 100%; justify-content: flex-end; 
+            max-width: 6vmin; min-width: 4vmin; height: 100%; justify-content: flex-end; 
         }
         .ladder-bar-inner {
-            width: 100%; border-radius: 8px 8px 0 0; color: #000000; 
-            overflow: visible; font-weight: bold; font-family: 'Nunito', sans-serif; font-size: 0.9rem;
-            box-shadow: 2px -2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+            width: 100%; border-radius: 1vmin 1vmin 0 0; color: #000000; 
+            overflow: visible; font-weight: bold; font-family: 'Nunito', sans-serif; font-size: 1.1rem;
+            box-shadow: 0.2vmin -0.2vmin 0.5vmin rgba(0,0,0,0.1); display: flex; flex-direction: column;
             align-items: center; justify-content: flex-end; animation: growUp 0.5s backwards;
             border: 1px solid rgba(0,0,0,0.1); position: relative; transition: height 0.5s;
-            padding-bottom: 5px; margin-bottom: 0; 
+            padding-bottom: 0.5vmin; margin-bottom: 0; 
         }
         .ls-val-rotated {
             writing-mode: vertical-lr; transform: rotate(180deg); white-space: nowrap;
-            padding: 5px 0; text-align: left; text-shadow: 0 0 2px rgba(255,255,255,0.7);
+            padding: 0.5vmin 0; text-align: left; text-shadow: 0 0 2px rgba(255,255,255,0.7);
         }
         .ls-footer-label {
-            margin-top: 5px; height: 90px; display: flex; align-items: flex-start; 
-            justify-content: center; font-size: 0.65rem; font-weight: 800; color: #636e72;
+            margin-top: 0.5vmin; height: 12vh; display: flex; align-items: flex-start; 
+            justify-content: center; font-size: 0.8rem; font-weight: 800; color: #636e72;
             text-transform: uppercase; letter-spacing: 0.5px;
         }
         .ls-footer-label span { writing-mode: vertical-lr; transform: rotate(180deg); white-space: nowrap; }
@@ -200,100 +219,106 @@
 
         /* YAZMA KONTROL BAR */
         .write-control-bar {
-            display: flex; gap: 10px; margin-bottom: 20px; 
-            background: #dfe6e9; padding: 10px; border-radius: 10px;
+            display: flex; gap: 1vmin; margin-bottom: 2vmin; 
+            background: #dfe6e9; padding: 1.5vmin; border-radius: 1.5vmin;
         }
-        .write-control-bar select { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #b2bec3; }
-        .write-control-bar button { flex: 1; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;}
+        .write-control-bar select { flex: 1; padding: 1vmin; border-radius: 1vmin; border: 1px solid #b2bec3; font-size: 1.2rem; }
+        .write-control-bar button { flex: 1; background: var(--accent); color: white; border: none; border-radius: 1vmin; font-weight: bold; cursor: pointer; font-size: 1.2rem; }
 
-        /* --- ŞİFRE (İSİM) MODU STİLLERİ --- */
+        /* ŞİFRE (İSİM) MODU - DİNAMİK RESİZE */
         .alphabet-strip {
-            display: flex; gap: 5px; overflow-x: auto; padding: 10px;
-            background: #2d3436; margin-bottom: 15px; border-radius: 8px;
+            display: flex; gap: 0.5vmin; overflow-x: auto; padding: 1vmin;
+            background: #2d3436; margin-bottom: 2vmin; border-radius: 1vmin;
         }
         .alpha-box {
-            min-width: 30px; height: 40px; background: white; border-radius: 4px;
+            min-width: 4vmin; height: 5vmin; background: white; border-radius: 0.5vmin;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            font-size: 0.8rem; font-weight: bold;
+            font-size: 1rem; font-weight: bold;
         }
         .alpha-letter { color: var(--primary); }
-        .alpha-num { color: var(--accent); font-size: 0.7rem; }
+        .alpha-num { color: var(--accent); font-size: 0.8rem; }
         
         .cipher-result {
-            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px;
+            display: flex; flex-wrap: wrap; gap: 1vmin; justify-content: center; margin-top: 2vmin;
+            width: 100%;
         }
+        /* Dinamik Kart Boyutu */
         .cipher-card {
-            width: 60px; height: 80px; background: white; border-radius: 10px;
-            box-shadow: 0 4px 0 #b2bec3; border: 2px solid #dfe6e9;
+            flex: 1 1 auto; /* Esnek genişlik */
+            min-width: 5vmin; max-width: 8vmin; /* Sınırlar */
+            aspect-ratio: 3/4; /* Oran koruma */
+            background: white; border-radius: 1.5vmin;
+            box-shadow: 0 0.5vmin 0 #b2bec3; border: 0.2vmin solid #dfe6e9;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             animation: popIn 0.3s backwards;
         }
-        .cc-letter { font-size: 1.8rem; font-weight: 900; color: var(--primary); }
-        .cc-val { font-size: 1.2rem; font-weight: bold; color: #d63031; margin-top: 5px; font-family: 'Courier New', monospace; }
+        .cc-letter { font-size: 3vmin; font-weight: 900; color: var(--primary); }
+        .cc-val { font-size: 2vmin; font-weight: bold; color: #d63031; margin-top: 0.5vmin; font-family: 'Courier New', monospace; }
         
         .cipher-total {
-            margin-top: 20px; padding: 15px; background: #ffeaa7; border-radius: 10px;
-            text-align: center; font-size: 1.2rem; font-weight: bold; color: #d35400;
-            border: 2px dashed #fdcb6e;
+            margin-top: 2vmin; padding: 2vmin; background: #ffeaa7; border-radius: 1.5vmin;
+            text-align: center; font-size: 1.5rem; font-weight: bold; color: #d35400;
+            border: 0.3vmin dashed #fdcb6e;
         }
-
         @keyframes popIn { from{transform:scale(0); opacity:0;} to{transform:scale(1); opacity:1;} }
 
         /* AYARLAR */
         .setting-row {
             display: flex; justify-content: space-between; align-items: center;
-            background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; box-shadow: var(--shadow);
+            background: white; padding: 2vmin; border-radius: 1.5vmin; margin-bottom: 1vmin; box-shadow: var(--shadow);
+            font-size: 1.2rem;
         }
-        .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent); }
-        input:checked + .slider:before { transform: translateX(22px); }
-        .btn-big { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--accent); color: white; font-size: 1rem; font-weight: bold; margin-top: 10px; cursor: pointer; }
-
-        .manual-input-group { display: flex; gap: 10px; width: 100%; margin-top: 5px; }
-        .manual-input { flex: 1; padding: 10px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1.1rem; font-weight: bold; }
-        .btn-manual { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        input:checked + .slider:before { transform: translateX(26px); }
         
-        .quiz-container { display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px; }
+        .btn-big { width: 100%; padding: 2vmin; border: none; border-radius: 1.5vmin; background: var(--accent); color: white; font-size: 1.3rem; font-weight: bold; margin-top: 1vmin; cursor: pointer; }
+
+        .manual-input-group { display: flex; gap: 1vmin; width: 100%; margin-top: 1vmin; }
+        .manual-input { flex: 1; padding: 1.5vmin; border: 2px solid #dfe6e9; border-radius: 1vmin; font-size: 1.3rem; font-weight: bold; }
+        .btn-manual { background: var(--primary); color: white; border: none; padding: 0 3vmin; border-radius: 1vmin; font-weight: bold; cursor: pointer; font-size: 1.5rem;}
+        
+        .quiz-container { display: flex; flex-direction: column; gap: 1.5vmin; padding-bottom: 30px; }
         .quiz-card {
-            background: white; border-radius: 12px; overflow: hidden;
-            box-shadow: var(--shadow); border-left: 5px solid var(--accent);
+            background: white; border-radius: 1.5vmin; overflow: hidden;
+            box-shadow: var(--shadow); border-left: 0.8vmin solid var(--accent);
             animation: fadeIn 0.5s;
         }
         .q-header {
-            padding: 15px; background: #f9f9f9; font-weight: bold; color: #2d3436; font-size: 1.1rem;
+            padding: 2vmin; background: #f9f9f9; font-weight: bold; color: #2d3436; font-size: 1.3rem;
             border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px;
         }
         .q-header i { color: var(--accent); }
-        .q-body { padding: 15px; text-align: center; }
+        .q-body { padding: 2vmin; text-align: center; }
         .answer-box {
-            margin-top: 10px; padding: 10px; background: #dff9fb; border-radius: 8px;
-            color: #009432; font-weight: bold; font-size: 1.2rem; display: none;
+            margin-top: 1vmin; padding: 1.5vmin; background: #dff9fb; border-radius: 1vmin;
+            color: #009432; font-weight: bold; font-size: 1.5rem; display: none;
             font-family: 'Patrick Hand', cursive;
         }
         .reveal-btn {
-            background: #b2bec3; color: white; border: none; padding: 8px 20px;
-            border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 5px;
+            background: #b2bec3; color: white; border: none; padding: 1vmin 3vmin;
+            border-radius: 3vmin; font-weight: bold; cursor: pointer; margin-top: 1vmin; font-size: 1.1rem;
         }
         .reveal-btn:hover { background: #636e72; }
         .btn-refresh {
-            background: #00b894; color: white; border: none; padding: 10px; border-radius: 10px;
-            width: 100%; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 15px;
+            background: #00b894; color: white; border: none; padding: 2vmin; border-radius: 1.5vmin;
+            width: 100%; font-weight: bold; font-size: 1.3rem; cursor: pointer; margin-bottom: 2vmin;
         }
 
         .write-challenge-text {
-            font-size: 1.2rem; color: #2d3436; font-weight: 800; 
-            line-height: 1.5; margin-bottom: 20px; min-height: 60px;
-            background: #f1f2f6; padding: 15px; border-radius: 10px;
-            border-left: 5px solid #0984e3;
+            font-size: 1.5rem; color: #2d3436; font-weight: 800; 
+            line-height: 1.5; margin-bottom: 2vmin; min-height: 8vh;
+            background: #f1f2f6; padding: 2vmin; border-radius: 1.5vmin;
+            border-left: 0.8vmin solid #0984e3;
         }
 
         /* FOOTER */
         .app-footer {
             text-align: center; padding: 15px; color: rgba(45, 52, 54, 0.3);
-            font-size: 0.9rem; font-weight: bold; background: var(--bg);
+            font-size: 1rem; font-weight: bold; background: var(--bg);
             flex-shrink: 0; font-family: 'Patrick Hand', cursive; letter-spacing: 1px;
         }
 
@@ -302,8 +327,13 @@
 <body>
 
     <div class="top-section">
-        <div class="top-bar">
-            <div class="mode-indicator" id="swap-indicator">MOD GÖSTERGESİ</div>
+        <div class="quick-controls">
+            <button class="qc-btn" id="qc-swap" onclick="toggleSwapMode()">
+                <i class="fas fa-exchange-alt"></i> BÖLÜK TAŞI
+            </button>
+            <button class="qc-btn" id="qc-digit" onclick="toggleDigitSwapMode()">
+                <i class="fas fa-random"></i> RAKAM TAŞI
+            </button>
         </div>
         
         <div class="display-container">
@@ -357,13 +387,13 @@
                     <div class="card-label">Birim Analizi</div>
                     <div class="card-val" id="lbl-birim-analizi" style="font-size:1.4rem; color:#e17055">...</div>
                 </div>
-                <div class="info-card"><div class="card-label">Okunuş</div><div class="card-val" id="lbl-okunus" style="font-size:1rem; line-height:1.3">...</div></div>
+                <div class="info-card"><div class="card-label">Okunuş</div><div class="card-val" id="lbl-okunus" style="font-size:1.5rem; line-height:1.3">...</div></div>
             </div>
         </div>
 
         <div id="tab-merdiven" class="tab-content">
             <div class="ladder-container" id="ladder-area"></div>
-            <div class="info-card" style="margin-top:20px;"><div class="card-label">Çözümleme</div><div class="card-val" id="lbl-cozumleme" style="font-size:0.9rem; text-align:left;">...</div></div>
+            <div class="info-card" style="margin-top:20px;"><div class="card-label">Çözümleme</div><div class="card-val" id="lbl-cozumleme" style="font-size:1.2rem; text-align:left;">...</div></div>
         </div>
 
         <div id="tab-yazma" class="tab-content">
@@ -385,53 +415,37 @@
             <div class="quiz-card" style="text-align:center; padding:20px;">
                 <div style="color:#636e72; font-weight:bold; margin-bottom:10px;">Aşağıda okunuşu verilen sayıyı rakamla yaz:</div>
                 <div id="write-challenge-text" class="write-challenge-text">...</div>
-                <input type="number" id="write-input" class="manual-input" style="text-align:center; font-size:1.5rem; width:90%; margin:0 auto 15px auto; display:block;" placeholder="Örn: 10250">
+                <input type="number" id="write-input" class="manual-input" style="text-align:center; font-size:2rem; width:90%; margin:0 auto 15px auto; display:block;" placeholder="Örn: 10250">
                 <button class="btn-big" onclick="checkWriteAnswer()" style="background:#0984e3; margin-bottom:10px;">KONTROL ET</button>
-                <div id="write-feedback" style="height:40px; font-weight:bold; font-size:1.2rem; margin-top:10px;"></div>
+                <div id="write-feedback" style="height:40px; font-weight:bold; font-size:1.5rem; margin-top:10px;"></div>
             </div>
         </div>
 
         <div id="tab-sifre" class="tab-content">
-            <div class="alphabet-strip" id="alphabet-strip">
-                </div>
-            
+            <div class="alphabet-strip" id="alphabet-strip"></div>
             <div class="quiz-card" style="padding:20px;">
                 <div style="color:#636e72; font-weight:bold; margin-bottom:10px; text-align:center;">İsmini yaz ve şifreni öğren:</div>
                 <div class="manual-input-group">
                     <input type="text" id="name-input" class="manual-input" placeholder="İsim Giriniz (Örn: ZEYNAL)" style="text-transform:uppercase;">
                     <button class="btn-manual" onclick="encryptName()"><i class="fas fa-magic"></i> ŞİFRELE</button>
                 </div>
-                
                 <div class="cipher-result" id="cipher-result"></div>
                 <div class="cipher-total" id="cipher-total" style="display:none;"></div>
             </div>
         </div>
 
         <div id="tab-ayarlar" class="tab-content">
-            
             <div class="setting-row">
                 <span><i class="fas fa-columns"></i> Sayıyı Bölüklere Ayır</span>
                 <label class="switch"><input type="checkbox" id="toggle-grouping" onchange="toggleGrouping()"><span class="slider"></span></label>
             </div>
-
             <div class="setting-row">
                 <span><i class="fas fa-eye-slash"></i> Bölük İsimlerini Gizle</span>
                 <label class="switch"><input type="checkbox" id="toggle-labels" onchange="toggleLabels()"><span class="slider"></span></label>
             </div>
-
-            <div class="setting-row" style="background:#fff8e1; border:1px solid #ffeaa7">
-                <span><i class="fas fa-exchange-alt"></i> Bölük Taşıma Modu</span>
-                <label class="switch"><input type="checkbox" id="toggle-swap" onchange="toggleSwapMode()"><span class="slider"></span></label>
-            </div>
-
-            <div class="setting-row" style="background:#ffe0b2; border:1px solid #f5c6cb">
-                <span><i class="fas fa-random"></i> Rakamları Taşıma Modu</span>
-                <label class="switch"><input type="checkbox" id="toggle-digit-swap" onchange="toggleDigitSwapMode()"><span class="slider"></span></label>
-            </div>
-
             <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:5px;">
                 <span><i class="fas fa-sort-numeric-up"></i> Rastgele Sayı Üret:</span>
-                <select id="digit-select" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc;">
+                <select id="digit-select" style="width:100%; padding:1.5vmin; border-radius:1vmin; border:1px solid #ccc; font-size:1.2rem;">
                     <option value="2">2 Basamaklı</option>
                     <option value="3">3 Basamaklı</option>
                     <option value="4">4 Basamaklı</option>
@@ -446,7 +460,6 @@
                 </select>
                 <button class="btn-big" onclick="generateNumber()">Yeni Sayı Üret</button>
             </div>
-
             <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:5px;">
                 <span><i class="fas fa-keyboard"></i> Sayıyı Elle Gir:</span>
                 <div class="manual-input-group">
@@ -454,7 +467,6 @@
                     <button class="btn-manual" onclick="applyManualNumber()"><i class="fas fa-check"></i></button>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -477,10 +489,9 @@
     const birimEkleri = {"Birler": "Birlik", "Onlar": "Onluk", "Yüzler": "Yüzlük", "Binler": "Binlik", "On Binler": "On Binlik", "Yüz Binler": "Yüz Binlik", "Milyonlar": "Milyonluk", "On Milyonlar": "On Milyonluk", "Yüz Milyonlar": "Yüz Milyonluk", "Milyarlar": "Milyarlık", "On Milyarlar": "On Milyarlık", "Yüz Milyarlar": "Yüz Milyarlık"};
     const turkishAlphabet = ['A','B','C','Ç','D','E','F','G','Ğ','H','I','İ','J','K','L','M','N','O','Ö','P','R','S','Ş','T','U','Ü','V','Y','Z'];
 
-    // BAŞLANGIÇTA TEST SEKME AKTİF
     function init() {
         generateNumber();
-        switchTab('test'); // İlk açılışta test
+        switchTab('test');
         fillAlphabetStrip();
     }
 
@@ -489,7 +500,6 @@
         document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
         document.getElementById(`tab-${tabName}`).classList.add('active');
         
-        // Buton aktiflik
         const btns = document.querySelectorAll('.tab-btn');
         if(tabName === 'test') btns[0].classList.add('active');
         if(tabName === 'analiz') btns[1].classList.add('active');
@@ -509,9 +519,10 @@
     function toggleGrouping() {
         isGroupedMode = document.getElementById('toggle-grouping').checked;
         renderDisplay();
+        // Mod çakışmalarını engelle
         if (!isGroupedMode && isSwapMode) {
-            document.getElementById('toggle-swap').checked = false;
-            toggleSwapMode();
+            isSwapMode = false;
+            updateControlsUI();
         }
     }
 
@@ -521,52 +532,65 @@
         else wrapper.classList.remove('labels-hidden');
     }
 
-    function toggleSwapMode() {
-        isSwapMode = document.getElementById('toggle-swap').checked;
+    // --- YENİ MERKEZİ MOD YÖNETİMİ ---
+    
+    function updateControlsUI() {
+        const btnSwap = document.getElementById('qc-swap');
+        const btnDigit = document.getElementById('qc-digit');
         const wrapper = document.getElementById('display-wrapper');
-        const indicator = document.getElementById('swap-indicator');
-        selectedSwapIndex = null;
-        document.querySelectorAll('.digit-group').forEach(g => g.classList.remove('selected-for-swap'));
         
+        // Reset classes
+        btnSwap.classList.remove('active-swap');
+        btnDigit.classList.remove('active-digit');
+        wrapper.classList.remove('swap-mode-active', 'digit-swap-active');
+        
+        // Reset selections
+        selectedSwapIndex = null;
+        selectedDigitIndex = null;
+        document.querySelectorAll('.digit-group').forEach(g => g.classList.remove('selected-for-swap'));
+        document.querySelectorAll('.digit-box').forEach(b => b.classList.remove('selected-for-digit-swap'));
+
         if(isSwapMode) {
-            if(isDigitSwapMode) { isDigitSwapMode = false; document.getElementById('toggle-digit-swap').checked = false; selectedDigitIndex = null; }
-            if(!isGroupedMode) { isGroupedMode = true; document.getElementById('toggle-grouping').checked = true; }
-            indicator.innerHTML = "<i class='fas fa-exchange-alt'></i> BÖLÜK TAŞIMA MODU";
-            indicator.style.display = 'block';
+            btnSwap.classList.add('active-swap');
             wrapper.classList.add('swap-mode-active');
             document.getElementById('intro-msg').innerHTML = "Yer değiştirmek için <b>herhangi iki bölüğe</b> dokun.";
-            resetAnalysisView();
-            switchTab('analiz');
+            // Swap açılınca gruplama da açılmalı
+            if(!isGroupedMode) {
+                isGroupedMode = true;
+                document.getElementById('toggle-grouping').checked = true;
+                renderDisplay();
+            }
+        } else if(isDigitSwapMode) {
+            btnDigit.classList.add('active-digit');
+            wrapper.classList.add('digit-swap-active');
+            document.getElementById('intro-msg').innerHTML = "Yer değiştirmek için <b>herhangi iki rakama</b> sırayla dokun.";
         } else {
-            if(!isDigitSwapMode) indicator.style.display = 'none';
-            wrapper.classList.remove('swap-mode-active');
-            renderDisplay(); 
             document.getElementById('intro-msg').innerHTML = "<i class='fas fa-hand-pointer'></i> Analiz etmek için bir rakama dokun!";
         }
-        renderDisplay();
+        
+        resetAnalysisView();
+    }
+
+    function toggleSwapMode() {
+        if(isSwapMode) {
+            isSwapMode = false;
+        } else {
+            isSwapMode = true;
+            isDigitSwapMode = false; // Diğerini kapat
+            switchTab('analiz'); // İşlem yapmak için analize git
+        }
+        updateControlsUI();
     }
 
     function toggleDigitSwapMode() {
-        isDigitSwapMode = document.getElementById('toggle-digit-swap').checked;
-        const wrapper = document.getElementById('display-wrapper');
-        const indicator = document.getElementById('swap-indicator');
-        selectedDigitIndex = null;
-
         if(isDigitSwapMode) {
-            if(isSwapMode) { isSwapMode = false; document.getElementById('toggle-swap').checked = false; selectedSwapIndex = null; wrapper.classList.remove('swap-mode-active'); }
-            indicator.innerHTML = "<i class='fas fa-random'></i> RAKAM TAŞIMA MODU";
-            indicator.style.display = 'block';
-            wrapper.classList.add('digit-swap-active');
-            document.getElementById('intro-msg').innerHTML = "Yer değiştirmek için <b>herhangi iki rakama</b> sırayla dokun.";
-            resetAnalysisView();
-            switchTab('analiz');
+            isDigitSwapMode = false;
         } else {
-            if(!isSwapMode) indicator.style.display = 'none';
-            wrapper.classList.remove('digit-swap-active');
-            renderDisplay();
-            document.getElementById('intro-msg').innerHTML = "<i class='fas fa-hand-pointer'></i> Analiz etmek için bir rakama dokun!";
+            isDigitSwapMode = true;
+            isSwapMode = false; // Diğerini kapat
+            switchTab('analiz');
         }
-        renderDisplay();
+        updateControlsUI();
     }
     
     function resetAnalysisView() {
@@ -601,12 +625,11 @@
         renderLadder();
         generateQuiz();
         generateWriteChallengeFromTab();
-        resetAnalysisView();
-        isSwapMode = false; document.getElementById('toggle-swap').checked = false;
-        isDigitSwapMode = false; document.getElementById('toggle-digit-swap').checked = false;
-        document.getElementById('swap-indicator').style.display = 'none';
-        document.getElementById('display-wrapper').classList.remove('swap-mode-active', 'digit-swap-active');
-        // Test varsayılan kalsın veya kullanıcıyı analizde bırakalım, karışıklık olmasın diye burayı ellemiyoruz
+        
+        // Modları sıfırla
+        isSwapMode = false; 
+        isDigitSwapMode = false; 
+        updateControlsUI();
     }
 
     function updateGroupsFromString(str) {
@@ -660,7 +683,6 @@
         document.getElementById('detail-panel').style.display = 'block';
     }
 
-    // --- YAZMA MODU ---
     function generateWriteChallengeFromTab() {
         const digits = parseInt(document.getElementById('write-digit-select').value);
         let numStr = Math.floor(Math.random() * 9 + 1).toString();
@@ -678,7 +700,6 @@
         else feedback.innerHTML = `<span style='color:#d63031'><i class='fas fa-times-circle'></i> Yanlış. Doğru cevap: ${currentWriteTarget}</span>`;
     }
 
-    // --- ŞİFRE MODU ---
     function fillAlphabetStrip() {
         const strip = document.getElementById('alphabet-strip');
         let html = "";
@@ -692,20 +713,12 @@
         const name = document.getElementById('name-input').value.toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ]/g, '');
         const resultArea = document.getElementById('cipher-result');
         const totalArea = document.getElementById('cipher-total');
-        
         if(name.length === 0) { alert("Lütfen bir isim girin."); return; }
-        
-        let html = "";
-        let total = 0;
-        
+        let html = ""; let total = 0;
         for(let char of name) {
             let val = turkishAlphabet.indexOf(char) + 1;
-            if(val > 0) {
-                total += val;
-                html += `<div class="cipher-card"><div class="cc-letter">${char}</div><div class="cc-val">${val}</div></div>`;
-            }
+            if(val > 0) { total += val; html += `<div class="cipher-card"><div class="cc-letter">${char}</div><div class="cc-val">${val}</div></div>`; }
         }
-        
         resultArea.innerHTML = html;
         totalArea.style.display = 'block';
         totalArea.innerHTML = `Toplam Şifre Değeri: ${total}`;
@@ -716,15 +729,8 @@
         container.innerHTML = "";
         const questions = [];
         const len = currentNumberStr.length;
-        let equalCount = 0;
-        for(let i=0; i<len; i++) {
-            let d = parseInt(currentNumberStr[i]);
-            let p = len - 1 - i;
-            let placeVal = d * Math.pow(10, p);
-            if(d === placeVal) equalCount++;
-        }
-        let digitCounts = {};
-        for(let d of currentNumberStr) { digitCounts[d] = (digitCounts[d] || 0) + 1; }
+        let equalCount = 0; for(let i=0; i<len; i++) { let d = parseInt(currentNumberStr[i]); let p = len - 1 - i; let placeVal = d * Math.pow(10, p); if(d === placeVal) equalCount++; }
+        let digitCounts = {}; for(let d of currentNumberStr) { digitCounts[d] = (digitCounts[d] || 0) + 1; }
         let repeatingDigits = Object.keys(digitCounts).filter(d => digitCounts[d] > 1);
         const getRandomDigitIndex = () => Math.floor(Math.random() * len);
         const getBasamakName = (idx) => basamakAdlari[len - 1 - idx];
@@ -736,29 +742,18 @@
             let qObj = {q: "", a: ""};
             if (type === 7) { qObj.q = "Basamak değeri ile sayı değeri eşit olan kaç rakam vardır?"; qObj.a = equalCount.toString(); }
             else if (type === 5 && repeatingDigits.length > 0) {
-                let d = repeatingDigits[Math.floor(Math.random() * repeatingDigits.length)];
-                qObj.q = `Sayıda tekrar eden <strong>${d}</strong> rakamlarının <u>sayı değerleri</u> toplamı kaçtır?`;
-                qObj.a = parseInt(d) * digitCounts[d];
+                let d = repeatingDigits[Math.floor(Math.random() * repeatingDigits.length)]; qObj.q = `Sayıda tekrar eden <strong>${d}</strong> rakamlarının <u>sayı değerleri</u> toplamı kaçtır?`; qObj.a = parseInt(d) * digitCounts[d];
             } else if (type === 6 && repeatingDigits.length > 0) {
-                let d = repeatingDigits[Math.floor(Math.random() * repeatingDigits.length)];
-                let sum = 0; for(let i=0; i<len; i++) { if(currentNumberStr[i] === d) sum += parseInt(d) * Math.pow(10, len-1-i); }
-                qObj.q = `Sayıda tekrar eden <strong>${d}</strong> rakamlarının <u>basamak değerleri</u> toplamı kaçtır?`;
-                qObj.a = sum.toLocaleString('tr-TR');
+                let d = repeatingDigits[Math.floor(Math.random() * repeatingDigits.length)]; let sum = 0; for(let i=0; i<len; i++) { if(currentNumberStr[i] === d) sum += parseInt(d) * Math.pow(10, len-1-i); } qObj.q = `Sayıda tekrar eden <strong>${d}</strong> rakamlarının <u>basamak değerleri</u> toplamı kaçtır?`; qObj.a = sum.toLocaleString('tr-TR');
             } else if (type === 0) {
                 let idx = getRandomDigitIndex(); qObj.q = `<strong>${getBasamakName(idx)}</strong> basamağındaki rakamın basamak değeri kaçtır?`; qObj.a = getBasamakVal(idx).toLocaleString('tr-TR');
             } else if (type === 1) {
-                let grpIdx = Math.floor(Math.random() * currentGroups.length);
-                let periodName = bolukAdlari[currentGroups.length - 1 - grpIdx];
-                let grpVal = currentGroups[grpIdx];
-                let sum = grpVal.split('').reduce((a,b) => a+parseInt(b), 0);
-                qObj.q = `<strong>${periodName}</strong> bölüğündeki rakamların sayı değerleri toplamı kaçtır?`; qObj.a = sum;
+                let grpIdx = Math.floor(Math.random() * currentGroups.length); let periodName = bolukAdlari[currentGroups.length - 1 - grpIdx]; let grpVal = currentGroups[grpIdx]; let sum = grpVal.split('').reduce((a,b) => a+parseInt(b), 0); qObj.q = `<strong>${periodName}</strong> bölüğündeki rakamların sayı değerleri toplamı kaçtır?`; qObj.a = sum;
             } else if (type === 2) {
                 let maxVal = -1, maxIdx = -1; for(let i=0; i<len; i++) { if(parseInt(currentNumberStr[i]) > maxVal) { maxVal = parseInt(currentNumberStr[i]); maxIdx = i; } }
-                if(Math.random() > 0.5) { qObj.q = `Sayı değeri <strong>en büyük</strong> olan rakam hangi basamaktadır?`; qObj.a = getBasamakName(maxIdx) + " Basamağı"; }
-                else { qObj.q = `Sayı değeri <strong>en büyük</strong> olan rakamın basamak değeri kaçtır?`; qObj.a = getBasamakVal(maxIdx).toLocaleString('tr-TR'); }
+                if(Math.random() > 0.5) { qObj.q = `Sayı değeri <strong>en büyük</strong> olan rakam hangi basamaktadır?`; qObj.a = getBasamakName(maxIdx) + " Basamağı"; } else { qObj.q = `Sayı değeri <strong>en büyük</strong> olan rakamın basamak değeri kaçtır?`; qObj.a = getBasamakVal(maxIdx).toLocaleString('tr-TR'); }
             } else if (type === 3 && currentGroups.length >= 2) {
-                let idx1 = Math.floor(Math.random() * currentGroups.length); let idx2 = Math.floor(Math.random() * currentGroups.length);
-                while(idx1 === idx2) idx2 = Math.floor(Math.random() * currentGroups.length);
+                let idx1 = Math.floor(Math.random() * currentGroups.length); let idx2 = Math.floor(Math.random() * currentGroups.length); while(idx1 === idx2) idx2 = Math.floor(Math.random() * currentGroups.length);
                 let p1 = bolukAdlari[currentGroups.length - 1 - idx1]; let p2 = bolukAdlari[currentGroups.length - 1 - idx2];
                 let tempGroups = [...currentGroups]; let temp = tempGroups[idx1]; tempGroups[idx1] = tempGroups[idx2]; tempGroups[idx2] = temp;
                 let newNum = ""; tempGroups.forEach((g, i) => { if(i>0) newNum += g.toString().padStart(3, '0'); else newNum += g; });
@@ -777,27 +772,20 @@
     }
 
     function renderDisplay() {
-        const wrapper = document.getElementById('display-wrapper');
-        wrapper.innerHTML = '';
+        const wrapper = document.getElementById('display-wrapper'); wrapper.innerHTML = '';
         if(isGroupedMode) wrapper.classList.remove('continuous-mode'); else wrapper.classList.add('continuous-mode');
         currentGroups.forEach((groupVal, gIndex) => {
-            let periodIdx = currentGroups.length - 1 - gIndex;
-            let pName = "", pClass = "";
-            if(periodIdx === 0) { pName = "BİRLER"; pClass = "g-birler"; }
-            else if(periodIdx === 1) { pName = "BİNLER"; pClass = "g-binler"; }
-            else if(periodIdx === 2) { pName = "MİLYONLAR"; pClass = "g-milyon"; }
-            else if(periodIdx === 3) { pName = "MİLYARLAR"; pClass = "g-milyar"; }
+            let periodIdx = currentGroups.length - 1 - gIndex; let pName = "", pClass = "";
+            if(periodIdx === 0) { pName = "BİRLER"; pClass = "g-birler"; } else if(periodIdx === 1) { pName = "BİNLER"; pClass = "g-binler"; } else if(periodIdx === 2) { pName = "MİLYONLAR"; pClass = "g-milyon"; } else if(periodIdx === 3) { pName = "MİLYARLAR"; pClass = "g-milyar"; }
             let gDiv = document.createElement('div'); gDiv.className = `digit-group ${pClass}`;
             gDiv.onclick = (e) => { if(isSwapMode) handleSwap(gIndex); };
             let icon = document.createElement('div'); icon.className = 'swap-icon-overlay'; icon.innerHTML = '<i class="fas fa-exchange-alt"></i>'; gDiv.appendChild(icon);
             let lbl = document.createElement('div'); lbl.className = 'group-label'; lbl.innerText = pName; gDiv.appendChild(lbl);
             let row = document.createElement('div'); row.className = 'digits-row';
-            let digits = groupVal.split('');
-            let rightOffset = 0; for(let k = gIndex + 1; k < currentGroups.length; k++) rightOffset += 3;
+            let digits = groupVal.split(''); let rightOffset = 0; for(let k = gIndex + 1; k < currentGroups.length; k++) rightOffset += 3;
             digits.forEach((digit, dIdx) => {
                 let box = document.createElement('div'); box.className = 'digit-box'; box.innerText = digit;
-                let power = rightOffset + (digits.length - 1 - dIdx);
-                let stringIndex = currentNumberStr.length - 1 - power;
+                let power = rightOffset + (digits.length - 1 - dIdx); let stringIndex = currentNumberStr.length - 1 - power;
                 box.onclick = (e) => {
                     if(isDigitSwapMode) { handleDigitSwap(stringIndex, box); e.stopPropagation(); }
                     else if(!isSwapMode) { selectDigit(power, digit, box); e.stopPropagation(); }
@@ -810,13 +798,9 @@
     }
 
     function adjustFontSize() {
-        const wrapper = document.getElementById('display-wrapper');
-        const container = document.querySelector('.display-container');
-        wrapper.style.transform = 'scale(1)';
-        let containerWidth = container.offsetWidth;
-        let contentWidth = wrapper.offsetWidth;
-        if (contentWidth > containerWidth) { let scale = (containerWidth / contentWidth) * 0.92; wrapper.style.transform = `scale(${scale})`; }
-        else { wrapper.style.transform = 'scale(1)'; }
+        const wrapper = document.getElementById('display-wrapper'); const container = document.querySelector('.display-container');
+        wrapper.style.transform = 'scale(1)'; let containerWidth = container.offsetWidth; let contentWidth = wrapper.offsetWidth;
+        if (contentWidth > containerWidth) { let scale = (containerWidth / contentWidth) * 0.92; wrapper.style.transform = `scale(${scale})`; } else { wrapper.style.transform = 'scale(1)'; }
     }
     window.addEventListener('resize', adjustFontSize);
 
@@ -840,7 +824,9 @@
         for(let i=0; i<len; i++) {
             let d = parseInt(currentNumberStr[i]); let p = len - 1 - i; let v = d * Math.pow(10, p);
             let wrapper = document.createElement('div'); wrapper.className = 'ladder-column-wrapper';
-            let bar = document.createElement('div'); bar.className = 'ladder-bar-inner'; bar.style.backgroundColor = rainbowColors[p % rainbowColors.length]; bar.style.height = (5 + (p * 8.5)) + "%"; bar.style.animationDelay = (i*0.05) + "s";
+            let bar = document.createElement('div'); bar.className = 'ladder-bar-inner'; bar.style.backgroundColor = rainbowColors[p % rainbowColors.length]; 
+            bar.style.height = (5 + (p * 8.5)) + "%"; 
+            bar.style.animationDelay = (i*0.05) + "s";
             bar.innerHTML = `<span class="ls-val-rotated">${d} x 10<sup>${p}</sup> = ${v.toLocaleString('tr-TR')}</span>`;
             let label = document.createElement('div'); label.className = 'ls-footer-label'; label.innerHTML = `<span>${basamakAdlari[p]}</span>`;
             wrapper.appendChild(bar); wrapper.appendChild(label); container.appendChild(wrapper);
