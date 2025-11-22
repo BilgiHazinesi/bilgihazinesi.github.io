@@ -17,6 +17,7 @@
             --swap-highlight: #e17055;
             --digit-swap-highlight: #d35400;
             --success: #00b894;
+            --error: #d63031;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -132,19 +133,20 @@
         }
         @keyframes pulseDigit { 0%{opacity:1;} 50%{opacity:0.7;} 100%{opacity:1;} }
 
-        
         .g-birler .digit-box { color: #00b894; }
         .g-binler .digit-box { color: #0984e3; }
         .g-milyon .digit-box { color: #d63031; }
         .g-milyar .digit-box { color: #6c5ce7; }
 
         /* --- ORTA & ALT KISIMLAR --- */
-        .tab-nav { display: flex; background: #dfe6e9; padding: 5px; flex-shrink: 0; }
+        .tab-nav { display: flex; background: #dfe6e9; padding: 5px; flex-shrink: 0; overflow-x: auto; }
         .tab-btn {
-            flex: 1; padding: 10px; border: none; background: transparent;
-            font-weight: 800; font-size: 0.85rem; color: #636e72;
+            flex: 1; padding: 8px 5px; border: none; background: transparent;
+            font-weight: 800; font-size: 0.75rem; color: #636e72;
             border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+            min-width: 60px;
         }
+        .tab-btn i { font-size: 1.1rem; margin-bottom: 3px; }
         .tab-btn.active { background: var(--white); color: var(--tab-active); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
         .content-area { flex: 1; overflow-y: auto; padding: 15px; background: #f8f9fa; position: relative; }
@@ -170,13 +172,13 @@
         .ladder-container { 
             display: flex; 
             flex-direction: row; 
-            align-items: flex-end; /* Tüm sütunlar ALTTA hizalı */
+            align-items: flex-end; 
             justify-content: center;
             gap: 8px; 
             height: 400px;
             overflow-x: auto; 
-            padding-bottom: 0; /* Alt çizgiye sıfır */
-            border-bottom: 4px solid #b2bec3; /* ZEMİN ÇİZGİSİ */
+            padding-bottom: 0; 
+            border-bottom: 4px solid #b2bec3; 
             margin-top: 30px;
         }
 
@@ -188,19 +190,18 @@
             max-width: 50px; 
             min-width: 35px;
             height: 100%; 
-            justify-content: flex-end; /* Sütunu ve etiketi en aşağı it */
+            justify-content: flex-end; 
         }
 
-        /* Renkli Sütun */
         .ladder-bar-inner {
             width: 100%;
-            border-radius: 8px 8px 0 0; /* Alt köşe düz olsun, zemine otursun */
+            border-radius: 8px 8px 0 0;
             color: #000000; 
             overflow: visible;
             font-weight: bold; 
             font-family: 'Nunito', sans-serif; 
             font-size: 0.9rem;
-            box-shadow: 2px -2px 5px rgba(0,0,0,0.1); /* Gölge yukarı doğru */
+            box-shadow: 2px -2px 5px rgba(0,0,0,0.1); 
             display: flex; 
             flex-direction: column;
             align-items: center;
@@ -210,7 +211,7 @@
             position: relative;
             transition: height 0.5s;
             padding-bottom: 5px;
-            margin-bottom: 0; /* Boşluk yok */
+            margin-bottom: 0; 
         }
 
         .ls-val-rotated {
@@ -223,7 +224,7 @@
         }
 
         .ls-footer-label {
-            margin-top: 8px; /* Çizginin altında kalsın */
+            margin-top: 8px;
             font-size: 0.65rem;
             font-weight: 800;
             color: #636e72;
@@ -237,7 +238,6 @@
         }
         
         @keyframes growUp { from{height: 0; opacity:0;} to{opacity:1;} }
-
 
         .setting-row {
             display: flex; justify-content: space-between; align-items: center;
@@ -282,6 +282,14 @@
             width: 100%; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 15px;
         }
 
+        /* YAZMA MODU İÇİN ÖZEL */
+        .write-challenge-text {
+            font-size: 1.2rem; color: #2d3436; font-weight: 800; 
+            line-height: 1.5; margin-bottom: 20px; min-height: 60px;
+            background: #f1f2f6; padding: 15px; border-radius: 10px;
+            border-left: 5px solid #0984e3;
+        }
+
         /* FOOTER */
         .app-footer {
             text-align: center; padding: 15px; color: rgba(45, 52, 54, 0.3);
@@ -308,6 +316,7 @@
         <button class="tab-btn active" onclick="switchTab('analiz')"><i class="fas fa-microscope"></i> Analiz</button>
         <button class="tab-btn" onclick="switchTab('merdiven')"><i class="fas fa-stream"></i> Merdiven</button>
         <button class="tab-btn" onclick="switchTab('test')"><i class="fas fa-puzzle-piece"></i> Test</button>
+        <button class="tab-btn" onclick="switchTab('yazma')"><i class="fas fa-pen-alt"></i> Yazma</button>
         <button class="tab-btn" onclick="switchTab('ayarlar')"><i class="fas fa-cogs"></i> Ayarlar</button>
     </div>
 
@@ -350,6 +359,22 @@
         <div id="tab-test" class="tab-content">
             <button class="btn-refresh" onclick="generateQuiz()"><i class="fas fa-sync-alt"></i> Yeni Sorular Getir</button>
             <div id="quiz-list" class="quiz-container"></div>
+        </div>
+
+        <div id="tab-yazma" class="tab-content">
+            <div class="quiz-card" style="text-align:center; padding:20px;">
+                <div style="color:#636e72; font-weight:bold; margin-bottom:10px;">Aşağıda okunuşu verilen sayıyı rakamla yaz:</div>
+                
+                <div id="write-challenge-text" class="write-challenge-text">...</div>
+                
+                <input type="number" id="write-input" class="manual-input" style="text-align:center; font-size:1.5rem; width:90%; margin:0 auto 15px auto; display:block;" placeholder="Örn: 10250">
+                
+                <button class="btn-big" onclick="checkWriteAnswer()" style="background:#0984e3; margin-bottom:10px;">KONTROL ET</button>
+                
+                <div id="write-feedback" style="height:40px; font-weight:bold; font-size:1.2rem; margin-top:10px;"></div>
+                
+                <button class="reveal-btn" onclick="generateWriteChallenge()" style="background:#636e72; margin-top:20px; width:100%;">Yeni Soru</button>
+            </div>
         </div>
 
         <div id="tab-ayarlar" class="tab-content">
@@ -414,6 +439,9 @@
     let selectedDigitIndex = null;
     let selectedSwapIndex = null;
     let tempAnalysisData = {};
+    
+    // Yazma Modu için
+    let currentWriteTarget = "";
 
     const basamakAdlari = ["Birler", "Onlar", "Yüzler", "Binler", "On Binler", "Yüz Binler", "Milyonlar", "On Milyonlar", "Yüz Milyonlar", "Milyarlar", "On Milyarlar", "Yüz Milyarlar"];
     const bolukAdlari = ["Birler", "Binler", "Milyonlar", "Milyarlar"];
@@ -428,10 +456,14 @@
         if(tabName === 'analiz') btns[0].classList.add('active');
         if(tabName === 'merdiven') btns[1].classList.add('active');
         if(tabName === 'test') btns[2].classList.add('active');
-        if(tabName === 'ayarlar') btns[3].classList.add('active');
+        if(tabName === 'yazma') btns[3].classList.add('active');
+        if(tabName === 'ayarlar') btns[4].classList.add('active');
 
         if(tabName === 'test' && document.getElementById('quiz-list').innerHTML.trim() === "") {
             generateQuiz();
+        }
+        if(tabName === 'yazma' && document.getElementById('write-challenge-text').innerText === "...") {
+            generateWriteChallenge();
         }
     }
 
@@ -541,6 +573,7 @@
         renderDisplay();
         renderLadder();
         generateQuiz();
+        generateWriteChallenge(); // Yazma sorusunu da yenile
         resetAnalysisView();
         isSwapMode = false; document.getElementById('toggle-swap').checked = false;
         isDigitSwapMode = false; document.getElementById('toggle-digit-swap').checked = false;
@@ -575,15 +608,9 @@
         let basamakDegeri = parseInt(val) * Math.pow(10, power);
         let basamakIsmi = basamakAdlari[power] || "";
         
-        // Birim Analizi Stringi (Örn: 5 tane On Binlik)
-        // Basamak isminin sonundaki "ı, i, u, ü" vb. atıp "lik/lık" eki getirmek karmaşık olabilir.
-        // Basitçe: "5 tane On Binlik" formatı.
-        // Basamak ismini temizle: "On Binler" -> "On Bin"
-        let cleanName = basamakIsmi; // Genelde çoğul gelir "Birler", "Onlar"
-        // Basit Türkçe mantığı: "ler/lar" atılır.
+        let cleanName = basamakIsmi; 
         if(cleanName.endsWith("ler")) cleanName = cleanName.slice(0, -3);
         if(cleanName.endsWith("lar")) cleanName = cleanName.slice(0, -3);
-        
         let unitStr = `${val} tane ${cleanName}lik`;
 
         tempAnalysisData = {
@@ -609,20 +636,43 @@
         document.getElementById('detail-panel').style.display = 'block';
     }
 
+    // --- YAZMA MODU (OKUNUŞTAN SAYIYA) ---
+    function generateWriteChallenge() {
+        // Ayarlardaki basamak sayısını kullan
+        const digits = parseInt(document.getElementById('digit-select').value);
+        let numStr = Math.floor(Math.random() * 9 + 1).toString();
+        for(let i=1; i<digits; i++) { numStr += Math.floor(Math.random() * 10).toString(); }
+        
+        currentWriteTarget = numStr;
+        document.getElementById('write-challenge-text').innerText = numberToText(parseInt(numStr));
+        document.getElementById('write-input').value = "";
+        document.getElementById('write-feedback').innerText = "";
+    }
+
+    function checkWriteAnswer() {
+        let userInput = document.getElementById('write-input').value;
+        let feedback = document.getElementById('write-feedback');
+        
+        // Sadece rakamları al, boşlukları temizle
+        userInput = userInput.replace(/[^0-9]/g, '');
+        
+        if(userInput === currentWriteTarget) {
+            feedback.innerHTML = "<span style='color:#00b894'><i class='fas fa-check-circle'></i> Harika! Doğru Bildin.</span>";
+        } else {
+            feedback.innerHTML = `<span style='color:#d63031'><i class='fas fa-times-circle'></i> Yanlış. Doğru cevap: ${currentWriteTarget}</span>`;
+        }
+    }
+
     function generateQuiz() {
         const container = document.getElementById('quiz-list');
         container.innerHTML = "";
         const questions = [];
         const len = currentNumberStr.length;
         
-        // Eşitlik Sayısı Bulma
         let equalCount = 0;
         for(let i=0; i<len; i++) {
             let d = parseInt(currentNumberStr[i]);
-            let p = len - 1 - i; // power
-            // Basamak değeri = d * 10^p. Sayı değeri = d.
-            // Eşit olması için: d * 10^p = d.
-            // Bu iki durumda olur: 1) d=0 (0=0). 2) p=0 (Birler basamağı, d*1 = d).
+            let p = len - 1 - i;
             let placeVal = d * Math.pow(10, p);
             if(d === placeVal) equalCount++;
         }
@@ -635,12 +685,10 @@
         const getDigitVal = (idx) => parseInt(currentNumberStr[idx]);
         const getBasamakVal = (idx) => getDigitVal(idx) * Math.pow(10, len - 1 - idx);
         
-        // 10 Soru Döngüsü
         for(let k=0; k<10; k++) {
-            let type = Math.floor(Math.random() * 8); // Tip sayısı arttı
+            let type = Math.floor(Math.random() * 8);
             let qObj = {q: "", a: ""};
             
-            // Tip 7: Basamak Değeri = Sayı Değeri olan kaç rakam var?
             if (type === 7) {
                 qObj.q = "Basamak değeri ile sayı değeri eşit olan kaç rakam vardır?";
                 qObj.a = equalCount.toString();
