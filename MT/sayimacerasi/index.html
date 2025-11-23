@@ -3,241 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zeynal Öğretmen - Final Sürüm</title>
+    <title>Zeynal Öğretmenin Sayı Atölyesi</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Patrick+Hand&display=swap" rel="stylesheet">
     <style>
+        /* --- TEMEL AYARLAR --- */
         :root {
             --primary: #2d3436;
             --accent: #0984e3;
             --bg: #f4f7f6;
             --white: #ffffff;
+            --success: #00b894;
             --shadow: 0 4px 10px rgba(0,0,0,0.1);
+            
             /* Renkler */
-            --c0: #00b894; /* Birler */
-            --c1: #0984e3; /* Binler */
-            --c2: #d63031; /* Milyon */
-            --c3: #6c5ce7; /* Milyar */
+            --c-bir: #00b894; --c-bin: #0984e3; --c-mil: #d63031; --c-milyar: #6c5ce7;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         body {
             height: 100vh; width: 100vw;
-            background-color: var(--bg); font-family: 'Nunito', sans-serif;
-            display: flex; flex-direction: column; overflow: hidden;
+            background: var(--bg); font-family: 'Nunito', sans-serif;
+            display: flex; flex-direction: column; overflow: hidden; /* ASLA KAYDIRMA YOK */
         }
 
-        /* --- 1. SAYI SAHNESİ (SÜNGER ALANI) --- */
+        /* --- 1. SÜNGER SAYI PANELİ --- */
         .stage {
             background: var(--white);
-            flex-shrink: 0;
-            height: 25vh; min-height: 140px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 10px 2vw; /* Yanlardan hafif boşluk */
-            box-shadow: var(--shadow); z-index: 20; position: relative;
+            height: 25vh; /* Ekranın çeyreği */
+            min-height: 130px;
+            display: flex; flex-direction: column; position: relative;
+            box-shadow: var(--shadow); z-index: 20;
+            padding: 5px 2vw; /* Yanlardan %2 boşluk */
         }
 
-        /* Ana Konteyner: Tüm alanı kaplar, esnektir */
-        .number-flex-container {
-            display: flex;
-            width: 100%;
-            height: 100%;
+        .mode-pill {
+            position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+            background: #ffeaa7; color: #d35400; font-size: 0.7rem; font-weight: 900;
+            padding: 3px 12px; border-radius: 20px; display: none; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
+
+        /* Esnek Taşıyıcı */
+        .number-flex {
+            display: flex; 
+            width: 100%; height: 100%;
             align-items: flex-end; /* Aşağı yasla */
             justify-content: center; /* Ortala */
         }
 
-        /* BÖLÜK GRUBU (Flex Item) */
-        .d-group {
-            display: flex;
-            flex: 1; /* Eşit genişlikte yayıl */
-            justify-content: center;
-            align-items: flex-end;
-            height: 100%;
-            transition: all 0.3s ease;
-            margin: 0 1px; /* Varsayılan bitişik */
+        /* Her bir rakamın alanı (SÜNGER ETKİSİ BURADA) */
+        .digit-wrapper {
+            flex: 1; /* Mevcut alanı eşit paylaş */
+            display: flex; flex-direction: column; justify-content: flex-end;
+            margin: 0 1px; /* Çok ince boşluk */
+            height: 85%; /* Panelin %85'ini kullan */
+            min-width: 0; /* Küçülmeye izin ver! */
             position: relative;
-            border-radius: 8px;
         }
 
-        /* Gruplama Modu (Boşlukları aç) */
-        .mode-grouped .d-group { margin: 0 1.5vw; } /* Ekran genişliğine göre boşluk */
+        /* Gruplama boşluğu */
+        .spacer { margin-right: 1.5vw !important; }
 
-        /* Bölük Taşıma Modu */
-        .mode-swap .d-group { border: 2px dashed #ccc; background: #fff; cursor: pointer; }
-        .d-group.selected-swap { background: #fff3cd; border-color: #d35400; transform: translateY(-10px); z-index: 10; }
-
-        /* RAKAM KUTUSU (Flex Item) */
-        .d-box {
-            flex: 1; /* Grup içinde eşit dağıl */
-            height: 60%; /* Sahnenin %60'ı kadar yüksek */
-            background: #f1f2f6;
-            border-right: 1px solid rgba(0,0,0,0.05); /* Hafif ayrım */
-            border-bottom: 4px solid #b2bec3;
-            border-radius: 4px;
+        /* Kutu */
+        .box {
+            width: 100%; height: 100%;
+            background: #f1f2f6; border-radius: 6px;
+            border-bottom: 0.5vh solid #b2bec3;
             display: flex; justify-content: center; align-items: center;
-            font-weight: 900; color: var(--primary);
-            cursor: pointer; user-select: none;
-            
-            /* SİHİRLİ FONT: Ekran genişliğine göre otomatik ayarlanır */
-            font-size: clamp(1rem, 4vw, 3rem); 
-            transition: all 0.2s;
+            color: var(--primary); font-weight: 900; cursor: pointer;
+            /* Responsive Font: Genişliğe göre otomatik ayarla */
+            font-size: clamp(1rem, 4vw, 4rem); 
+            transition: 0.2s;
         }
-        
-        .d-group:first-child .d-box:first-child { border-top-left-radius: 8px; }
-        .d-group:last-child .d-box:last-child { border-top-right-radius: 8px; border-right: none; }
 
-        /* Aktif / Seçili Durumlar */
-        .d-box.active { background: #ffeaa7 !important; color: #d35400 !important; border-bottom-color: #e67e22 !important; transform: translateY(-10%); }
-        .d-box.target { background: #d35400 !important; color: white !important; transform: scale(1.1); z-index: 10; border-radius: 4px; }
+        /* Seçimler */
+        .box.active { background: #ffeaa7 !important; color: #d35400 !important; border-color: #e67e22 !important; transform: translateY(-10%); }
+        .box.target { background: #d35400 !important; color: white !important; transform: scale(1.1); z-index: 5; }
+        .swap-target .box { border: 2px dashed #333; opacity: 0.5; background: white; }
 
-        /* RENKLENDİRME (Sadece Gruplu Modda) */
-        .mode-grouped .g-0 .d-box { color: var(--c0); border-bottom-color: var(--c0); }
-        .mode-grouped .g-1 .d-box { color: var(--c1); border-bottom-color: var(--c1); }
-        .mode-grouped .g-2 .d-box { color: var(--c2); border-bottom-color: var(--c2); }
-        .mode-grouped .g-3 .d-box { color: var(--c3); border-bottom-color: var(--c3); }
+        /* Renkler */
+        .colored .g-0 .box { color: var(--c-bir); border-color: var(--c-bir); }
+        .colored .g-1 .box { color: var(--c-bin); border-color: var(--c-bin); }
+        .colored .g-2 .box { color: var(--c-mil); border-color: var(--c-mil); }
+        .colored .g-3 .box { color: var(--c-milyar); border-color: var(--c-milyar); }
 
         /* Etiketler */
         .grp-lbl {
-            position: absolute; bottom: -25px; width: 200%; left: -50%; text-align: center;
-            font-size: clamp(0.5rem, 1.5vw, 0.8rem); font-weight: 800; color: #b2bec3; text-transform: uppercase;
-            display: none; pointer-events: none;
+            position: absolute; bottom: -22px; width: 200%; left: -50%;
+            text-align: center; font-size: clamp(0.5rem, 1.2vw, 0.8rem); 
+            font-weight: 800; color: #b2bec3; text-transform: uppercase;
+            display: none; white-space: nowrap;
         }
-        .mode-grouped .grp-lbl { display: block; }
-
-        /* Mod Rozeti */
-        .status-badge {
-            position: absolute; top: 5px; right: 10px;
-            font-size: 0.7rem; background: #ffeaa7; color: #d35400;
-            padding: 3px 10px; border-radius: 15px; font-weight: bold;
-            display: none; animation: pulse 1.5s infinite;
-        }
+        .grouped .grp-lbl { display: block; }
 
         /* --- 2. MENÜ --- */
-        .nav { display: flex; background: #dfe6e9; padding: 5px; flex-shrink: 0; overflow-x: auto; }
-        .nav-btn {
+        .tabs { display: flex; background: #dfe6e9; padding: 5px; flex-shrink: 0; overflow-x: auto; }
+        .tab-btn {
             flex: 1; min-width: 65px; padding: 10px; border: none; background: transparent;
-            font-weight: 800; font-size: 0.8rem; color: #636e72; border-radius: 8px;
-            display: flex; flex-direction: column; align-items: center; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #636e72; font-weight: 800; font-size: 0.8rem; border-radius: 8px; cursor: pointer;
         }
-        .nav-btn.active { background: var(--white); color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .nav-btn i { font-size: 1.2rem; margin-bottom: 3px; }
+        .tab-btn i { font-size: 1.2rem; margin-bottom: 4px; }
+        .tab-btn.active { background: var(--white); color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         /* --- 3. İÇERİK --- */
-        .main { flex: 1; overflow-y: auto; padding: 15px; position: relative; }
+        .content { flex: 1; overflow-y: auto; padding: 15px; background: #f8f9fa; position: relative; }
         .page { display: none; animation: fade 0.3s; }
         .page.active { display: block; }
         @keyframes fade { from{opacity:0} to{opacity:1} }
 
-        /* UI Elemanları */
+        /* Ortak Elemanlar */
         .card { background: var(--white); padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 15px; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--accent); color: white; font-weight: bold; font-size: 1rem; cursor: pointer; }
-        .btn:active { transform: scale(0.98); }
-        
-        /* Ayarlar */
-        .row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-weight: bold; box-shadow: var(--shadow); }
-        .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--accent); }
-        input:checked + .slider:before { transform: translateX(22px); }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--accent); color: white; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .btn-sec { background: #636e72; width: auto; padding: 8px 20px; font-size: 0.9rem; }
+        .lbl { font-size: 0.8rem; color: #b2bec3; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .val { font-family: 'Patrick Hand'; font-size: 1.6rem; color: var(--primary); font-weight: bold; line-height: 1.2; }
 
-        /* Merdiven */
-        .ladder-area { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 300px; overflow-x: auto; border-bottom: 4px solid #b2bec3; margin-top: 20px; }
-        .l-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 40px; flex: 1; max-width: 70px; }
-        .l-bar { width: 100%; border-radius: 5px 5px 0 0; background: #fab1a0; height: 0; animation: grow 0.6s forwards; border: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; }
+        /* Test */
+        .quiz-item { border-bottom: 1px solid #eee; padding: 12px 0; }
+        .ans-box { display: none; background: #e0fcf6; color: var(--success); padding: 8px; text-align: center; border-radius: 6px; font-weight: bold; font-size: 1.2rem; margin-top: 5px; font-family: 'Patrick Hand'; }
+
+        /* Merdiven (Hizalı) */
+        .ladder-area {
+            display: flex; align-items: flex-end; justify-content: center; gap: 4px;
+            height: 300px; overflow-x: auto; padding-bottom: 0;
+            border-bottom: 4px solid #b2bec3; margin-top: 20px;
+        }
+        .l-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 40px; flex: 1; max-width: 60px; }
+        .l-bar {
+            width: 100%; border-radius: 5px 5px 0 0; background: #fab1a0;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 2px -2px 5px rgba(0,0,0,0.1); height: 0; animation: grow 0.6s forwards;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
         .l-txt { writing-mode: vertical-lr; transform: rotate(180deg); font-weight: bold; font-size: 0.8rem; padding: 5px 0; white-space: nowrap; color: black; }
-        .l-lbl { margin-top: 5px; height: 90px; display: flex; align-items: flex-start; font-size: 0.65rem; font-weight: 800; color: #636e72; }
+        .l-lbl { margin-top: 5px; height: 90px; display: flex; align-items: flex-start; justify-content: center; font-size: 0.6rem; font-weight: 800; color: #636e72; }
         .l-lbl span { writing-mode: vertical-lr; transform: rotate(180deg); white-space: nowrap; }
         @keyframes grow { to { height: var(--h); } }
 
-        /* Diğer */
-        .quiz-item { padding: 10px 0; border-bottom: 1px solid #eee; }
-        .ans-box { display: none; background: #e0fcf6; color: var(--success); padding: 8px; text-align: center; border-radius: 6px; font-weight: bold; margin-top: 5px; font-family: 'Patrick Hand'; font-size: 1.2rem; }
+        /* Şifre & Yazma */
         .alpha-scroll { display: flex; gap: 4px; overflow-x: auto; padding: 10px; background: #2d3436; border-radius: 8px; margin-bottom: 15px; }
-        .alpha-box { min-width: 35px; height: 45px; background: white; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; font-size: 0.8rem; }
-        
-        .footer { text-align: center; padding: 15px; color: #b2bec3; font-family: 'Patrick Hand'; font-weight: bold; }
+        .alpha-card { min-width: 35px; height: 45px; background: white; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
+        .cipher-res { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 15px; }
+        .c-box { width: 50px; height: 70px; background: white; border: 2px solid #eee; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; }
+        .inp { width: 100%; padding: 10px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 1.2rem; font-weight: bold; }
+
+        /* Ayarlar */
+        .row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; font-weight: bold; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .footer { text-align: center; padding: 15px; color: #b2bec3; font-weight: bold; font-size: 0.85rem; font-family: 'Patrick Hand'; background: var(--bg); }
     </style>
 </head>
 <body>
 
     <div class="stage">
-        <div id="badge" class="mode-badge">MOD</div>
-        <div class="number-flex-container" id="stage-container">
+        <div id="badge" class="mode-pill">MOD</div>
+        <div class="number-flex" id="num-stage">
             </div>
     </div>
 
-    <div class="nav">
-        <button class="nav-btn active" onclick="nav('test')"><i class="fas fa-puzzle-piece"></i> Test</button>
-        <button class="nav-btn" onclick="nav('analiz')"><i class="fas fa-microscope"></i> Analiz</button>
-        <button class="nav-btn" onclick="nav('merdiven')"><i class="fas fa-stream"></i> Merdiven</button>
-        <button class="nav-btn" onclick="nav('yazma')"><i class="fas fa-pen-alt"></i> Yazma</button>
-        <button class="nav-btn" onclick="nav('sifre')"><i class="fas fa-user-secret"></i> Şifre</button>
-        <button class="nav-btn" onclick="nav('ayarlar')"><i class="fas fa-cogs"></i> Ayarlar</button>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="nav('test')"><i class="fas fa-puzzle-piece"></i> Test</button>
+        <button class="tab-btn" onclick="nav('analiz')"><i class="fas fa-microscope"></i> Analiz</button>
+        <button class="tab-btn" onclick="nav('merdiven')"><i class="fas fa-stream"></i> Merdiven</button>
+        <button class="tab-btn" onclick="nav('yazma')"><i class="fas fa-pen-alt"></i> Yazma</button>
+        <button class="tab-btn" onclick="nav('sifre')"><i class="fas fa-user-secret"></i> Şifre</button>
+        <button class="tab-btn" onclick="nav('ayarlar')"><i class="fas fa-cogs"></i> Ayarlar</button>
     </div>
 
-    <div class="main">
+    <div class="content">
         
         <div id="p-test" class="page active">
             <button class="btn" style="background:#00b894" onclick="genQuiz()">Yeni Sorular Getir</button>
-            <div id="quiz-list" style="margin-top:15px"></div>
+            <div id="quiz-box" style="margin-top:15px"></div>
         </div>
 
         <div id="p-analiz" class="page">
-            <div class="card" id="an-intro" style="background:#fff3cd; color:#d35400; text-align:center">Analiz için yukarıdan bir rakama dokun!</div>
-            <div id="an-reveal" style="display:none; text-align:center; margin:20px 0">
+            <div class="card" id="an-intro" style="background:#fff3cd; color:#d35400; text-align:center">
+                <i class="fas fa-hand-pointer"></i> Analiz için yukarıdan bir rakama dokun!
+            </div>
+            <div id="an-rev" style="display:none; text-align:center; margin:20px 0">
                 <button class="btn" style="width:auto; padding:10px 30px" onclick="showAn()">ANALİZİ GÖR</button>
             </div>
             <div id="an-data" style="display:none">
-                <div class="card"><div style="color:#999; font-size:0.8rem; font-weight:800">BASAMAK ADI</div><div style="font-family:'Patrick Hand'; font-size:1.5rem; font-weight:bold; color:#2d3436" id="v-name">...</div></div>
+                <div class="card"><div class="lbl">Basamak Adı</div><div class="val" id="v-name">...</div></div>
                 <div style="display:flex; gap:10px">
-                    <div class="card" style="flex:1"><div style="color:#999; font-size:0.8rem; font-weight:800">SAYI DEĞERİ</div><div style="font-size:2rem; font-weight:900; color:#0984e3" id="v-face">0</div></div>
+                    <div class="card" style="flex:1"><div class="lbl">Sayı Değeri</div><div class="val" style="font-size:2rem" id="v-face">0</div></div>
                     <div class="card" style="flex:1">
-                        <div style="color:#999; font-size:0.8rem; font-weight:800">BASAMAK DEĞERİ</div>
-                        <div style="font-size:1.2rem; font-weight:900; color:#d63031" id="v-place">0</div>
-                        <div id="v-exp" style="font-size:0.9rem; color:#888; font-family:'Courier New'; margin-top:5px"></div>
+                        <div class="lbl">Basamak Değeri</div>
+                        <div class="val" style="color:#d63031; font-size:1.2rem" id="v-place">0</div>
+                        <div id="v-exp" style="font-size:0.9rem; color:#888; text-align:center; font-family:'Courier New'; margin-top:5px"></div>
                     </div>
                 </div>
-                <div class="card"><div style="color:#999; font-size:0.8rem; font-weight:800">BİRİM ANALİZİ</div><div style="font-family:'Patrick Hand'; font-size:1.4rem; font-weight:bold; color:#e17055" id="v-unit">...</div></div>
-                <div class="card"><div style="color:#999; font-size:0.8rem; font-weight:800">OKUNUŞ</div><div style="font-family:'Patrick Hand'; font-size:1.1rem; font-weight:bold" id="v-read">...</div></div>
+                <div class="card"><div class="lbl">Birim Analizi</div><div class="val" style="color:#e17055" id="v-unit">...</div></div>
+                <div class="card"><div class="lbl">Okunuş</div><div class="val" style="font-size:1.1rem" id="v-read">...</div></div>
             </div>
         </div>
 
         <div id="p-merdiven" class="page">
             <div class="ladder-area" id="ladder-cnt"></div>
-            <div class="card" style="margin-top:20px">
-                <div style="color:#999; font-size:0.8rem; font-weight:800">ÇÖZÜMLEME</div>
-                <div id="ladder-txt" style="font-family:'Patrick Hand'; font-size:1rem; font-weight:bold; color:#2d3436"></div>
-            </div>
+            <div class="card" style="margin-top:20px"><div class="lbl">Çözümleme</div><div class="val" style="font-size:1rem; text-align:left" id="ladder-txt">...</div></div>
         </div>
 
         <div id="p-yazma" class="page">
             <div class="card">
                 <div style="display:flex; gap:5px; margin-bottom:10px">
-                    <select id="w-sel" style="padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold; flex:1">
+                    <select id="wr-sel" class="inp" style="flex:1; font-weight:bold">
                         <option value="4">4 Basamak</option><option value="6">6 Basamak</option><option value="9" selected>9 Basamak</option><option value="12">12 Basamak</option>
                     </select>
                     <button class="btn" style="width:auto; margin:0" onclick="newWrite()">Soru</button>
                 </div>
-                <div style="color:#999; font-size:0.8rem; font-weight:800">BU SAYIYI YAZ:</div>
-                <div id="w-q" style="background:#f1f2f6; padding:15px; border-radius:8px; font-weight:bold; margin:10px 0; border-left:4px solid #0984e3">...</div>
-                <input type="number" id="w-in" style="width:100%; padding:15px; font-size:1.5rem; border-radius:8px; border:2px solid #eee; text-align:center; font-weight:bold" placeholder="Cevap">
-                <button class="btn" style="background:#636e72; margin-top:10px" onclick="checkWrite()">KONTROL</button>
-                <div id="w-fb" style="margin-top:10px; text-align:center; font-weight:bold; font-size:1.2rem"></div>
+                <div class="lbl">BU SAYIYI YAZ:</div>
+                <div id="wr-q" style="background:#f1f2f6; padding:15px; border-radius:8px; font-weight:bold; margin:10px 0; border-left:4px solid #0984e3">...</div>
+                <input type="number" id="wr-in" class="inp" style="text-align:center; font-size:1.5rem" placeholder="Cevap">
+                <button class="btn" style="background:#636e72" onclick="checkWrite()">KONTROL ET</button>
+                <div id="wr-fb" style="margin-top:10px; text-align:center; font-weight:bold; font-size:1.2rem"></div>
             </div>
         </div>
 
         <div id="p-sifre" class="page">
-            <div class="alpha-scroll" id="alpha-box"></div>
+            <div class="alpha-scroll" id="alpha-ref"></div>
             <div class="card">
                 <div style="display:flex; gap:5px">
-                    <input type="text" id="c-in" style="width:100%; padding:10px; text-transform:uppercase; border-radius:8px; border:2px solid #eee; font-weight:bold" placeholder="İSİM GİR (ÖRN: ALİ)">
-                    <button class="btn" style="width:auto; margin:0" onclick="doCipher()">HESAPLA</button>
+                    <input type="text" id="cip-in" class="inp" placeholder="İSİM GİR" style="text-transform:uppercase">
+                    <button class="btn" style="width:auto; margin:0" onclick="doCipher()">ŞİFRELE</button>
                 </div>
-                <div id="c-res" style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:15px"></div>
-                <div id="c-sum" style="text-align:center; margin-top:20px; font-size:1.5rem; font-weight:900; color:#d35400"></div>
+                <div class="cipher-res" id="cip-out"></div>
+                <div id="cip-sum" style="text-align:center; margin-top:20px; font-weight:900; font-size:1.5rem; color:#d35400"></div>
             </div>
         </div>
 
@@ -245,18 +245,18 @@
             <div class="row">
                 <span>Rastgele Sayı:</span>
                 <div style="display:flex; gap:5px">
-                    <select id="g-sel" style="padding:5px; font-weight:bold; border-radius:5px"><option value="3">3</option><option value="6">6</option><option value="9" selected>9</option><option value="12">12</option></select>
-                    <button style="padding:5px 10px; background:#0984e3; color:white; border:none; border-radius:5px; font-weight:bold" onclick="genNum()">ÜRET</button>
+                    <select id="gen-sel" style="padding:5px; border-radius:5px; font-weight:bold"><option value="3">3</option><option value="6">6</option><option value="9" selected>9</option><option value="12">12</option></select>
+                    <button style="padding:5px 10px; background:var(--accent); color:white; border:none; border-radius:5px; font-weight:bold" onclick="genNum()">ÜRET</button>
                 </div>
             </div>
             <div class="row">
                 <span>Elle Gir:</span>
                 <div style="display:flex; gap:5px">
-                    <input type="number" id="m-in" placeholder="123" style="width:80px; padding:5px; border:1px solid #ccc; border-radius:5px">
+                    <input type="number" id="man-in" class="inp" style="width:100px; padding:5px" placeholder="123">
                     <button style="padding:5px 10px; background:#2d3436; color:white; border:none; border-radius:5px; font-weight:bold" onclick="manNum()">OK</button>
                 </div>
             </div>
-            <hr style="margin:15px 0; border:0; border-top:1px solid #ccc">
+            <hr style="margin:10px 0; border:0; border-top:1px solid #ccc">
             <div class="row"><span>Gruplandır (Renkli)</span><label class="switch"><input type="checkbox" id="tg-grp" onchange="render()"><span class="slider"></span></label></div>
             <div class="row" style="background:#fff0f0"><span>Bölük Taşıma Modu</span><label class="switch"><input type="checkbox" id="tg-swp" onchange="togMode('swap')"><span class="slider"></span></label></div>
             <div class="row" style="background:#fff8e1"><span>Rakam Taşıma Modu</span><label class="switch"><input type="checkbox" id="tg-dig" onchange="togMode('digit')"><span class="slider"></span></label></div>
@@ -271,42 +271,36 @@
     let S = { num: "", mode: null, sel: null, temp: {} };
     const names = ["Birler","Onlar","Yüzler","Binler","On Binler","Yüz Binler","Milyonlar","On Milyonlar","Yüz Milyonlar","Milyarlar","On Milyarlar","Yüz Milyarlar"];
     const pNames = ["Birler","Binler","Milyonlar","Milyarlar"];
-    const suffixes = {"Birler":"Birlik","Onlar":"Onluk","Yüzler":"Yüzlük","Binler":"Binlik","On Binler":"On Binlik","Yüz Binler":"Yüz Binlik","Milyonlar":"Milyonluk","On Milyonlar":"On Milyonluk","Yüz Milyonlar":"Yüz Milyonluk","Milyarlar":"Milyarlık","On Milyarlar":"On Milyarlık","Yüz Milyarlar":"Yüz Milyarlık"};
+    const suffix = {"Birler":"Birlik","Onlar":"Onluk","Yüzler":"Yüzlük","Binler":"Binlik","On Binler":"On Binlik","Yüz Binler":"Yüz Binlik","Milyonlar":"Milyonluk","On Milyonlar":"On Milyonluk","Yüz Milyonlar":"Yüz Milyonluk","Milyarlar":"Milyarlık","On Milyarlar":"On Milyarlık","Yüz Milyarlar":"Yüz Milyarlık"};
     const colors = ["#fab1a0","#55efc4","#74b9ff","#a29bfe","#ffeaa7","#ff7675"];
     const abc = "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ";
 
-    // START
+    // INIT
     window.onload = () => {
-        genNum(); 
+        genNum();
         fillAlpha();
-        nav('test');
+        nav('test'); 
     };
 
-    // CORE RENDER (SÜNGER SİSTEMİ)
+    // RENDER (SÜNGER)
     function render() {
-        const cnt = document.getElementById('stage-container');
+        const cnt = document.getElementById('num-stage');
         cnt.innerHTML = "";
         
         let isGrp = document.getElementById('tg-grp').checked;
         if(S.mode === 'swap') isGrp = true;
-        
-        // Container Class
-        cnt.className = isGrp ? "number-flex-container mode-grouped colored" : "number-flex-container";
+        cnt.className = isGrp ? "number-flex mode-grouped colored" : "number-flex";
 
         let parts = []; let t = S.num;
         while(t.length > 0) { parts.unshift(t.slice(-3)); t=t.slice(0,-3); }
 
         parts.forEach((part, pIdx) => {
-            let rIdx = parts.length - 1 - pIdx;
+            let rIdx = parts.length - 1 - pIdx; // 0=Birler
             
-            // Bölük Grubu (Flex Item)
-            let grp = document.createElement('div');
-            grp.className = `d-group g-${rIdx}`;
-            
-            if(S.mode === 'swap') {
-                grp.onclick = () => doSwap(pIdx);
-                if(S.sel === pIdx) grp.classList.add('selected-swap');
-            }
+            // Wrapper
+            let wrap = document.createElement('div');
+            wrap.className = "digit-wrapper";
+            if(pIdx < parts.length-1 && isGrp) wrap.className += " spacer";
 
             // Rakamlar
             let chars = part.split('');
@@ -317,59 +311,40 @@
                 let realIdx = S.num.length - 1 - pow;
 
                 let box = document.createElement('div');
-                box.className = "d-box";
+                box.className = `box g-${rIdx}`;
                 box.innerText = d;
-                
-                // MOD STİLLERİ
-                if(S.mode === 'digit' && S.sel === realIdx) box.classList.add('target');
-                if(S.mode === 'swap' && S.sel === pIdx) box.classList.add('active');
 
-                // TIKLAMA
+                // Stiller
+                if(S.mode === 'digit' && S.sel === realIdx) box.classList.add('target');
+                if(S.mode === 'swap' && S.sel === pIdx) { box.classList.add('active'); wrap.classList.add('swap-target'); }
+
                 box.onclick = (e) => {
                     e.stopPropagation();
                     if(S.mode === 'swap') doSwap(pIdx);
                     else if(S.mode === 'digit') doDigit(realIdx);
                     else prepAn(pow, d, box);
                 };
-
-                grp.appendChild(box);
+                
+                wrap.appendChild(box);
             });
 
             // Etiket
             if(isGrp) {
                 let lbl = document.createElement('div');
                 lbl.className = "grp-lbl"; lbl.innerText = pNames[rIdx];
-                grp.appendChild(lbl);
+                wrap.appendChild(lbl);
             }
-
-            cnt.appendChild(grp);
+            cnt.appendChild(wrap);
         });
 
-        // Badge
         let b = document.getElementById('badge');
         if(S.mode) { b.style.display='block'; b.innerText = S.mode==='swap'?"BÖLÜK TAŞIMA":"RAKAM TAŞIMA"; }
         else b.style.display='none';
     }
 
-    // STATE UPDATE
-    function updateAll(n) {
-        S.num = n; S.mode=null; S.sel=null;
-        // Reset Toggles
-        document.getElementById('tg-grp').checked=false;
-        document.getElementById('tg-swp').checked=false;
-        document.getElementById('tg-dig').checked=false;
-        render(); mkLadder(); mkQuiz(); newWrite();
-        
-        // UI Reset
-        document.getElementById('an-intro').style.display='block';
-        document.getElementById('an-intro').innerHTML="Analiz için yukarıdan bir rakama dokun!";
-        document.getElementById('an-reveal').style.display='none';
-        document.getElementById('an-data').style.display='none';
-        document.querySelectorAll('.d-box').forEach(b=>b.classList.remove('active'));
-    }
-
+    // LOGIC
     function genNum() {
-        let d = document.getElementById('g-sel').value;
+        let d = document.getElementById('gen-sel').value;
         let n = Math.floor(Math.random()*9+1).toString();
         for(let i=1; i<d; i++) n+=Math.floor(Math.random()*10);
         updateAll(n);
@@ -378,17 +353,27 @@
         let v = document.getElementById('m-in').value.slice(0,12);
         if(v) { updateAll(v); nav('analiz'); }
     }
+    function updateAll(n) {
+        S.num = n; S.mode=null; S.sel=null;
+        document.getElementById('tg-grp').checked=false;
+        document.getElementById('tg-swp').checked=false;
+        document.getElementById('tg-dig').checked=false;
+        render(); mkLadder(); mkQuiz(); newWrite();
+        
+        document.getElementById('an-intro').style.display='block';
+        document.getElementById('an-reveal').style.display='none';
+        document.getElementById('an-data').style.display='none';
+        document.querySelectorAll('.box').forEach(b=>b.classList.remove('active'));
+    }
 
     // MODES
     function togMode(m) {
         let sSwp = document.getElementById('tg-swp');
         let sDig = document.getElementById('tg-dig');
         if(m==='swap') {
-            if(sSwp.checked) { S.mode='swap'; sDig.checked=false; S.sel=null; document.getElementById('tg-grp').checked=true; nav('analiz'); document.getElementById('an-intro').innerHTML="İki bölüğe tıkla."; }
-            else S.mode=null;
+            if(sSwp.checked) { S.mode='swap'; sDig.checked=false; S.sel=null; document.getElementById('tg-grp').checked=true; nav('analiz'); document.getElementById('an-intro').innerHTML="İki bölüğe tıkla."; } else S.mode=null;
         } else {
-            if(sDig.checked) { S.mode='digit'; sSwp.checked=false; S.sel=null; nav('analiz'); document.getElementById('an-intro').innerHTML="İki rakama tıkla."; }
-            else S.mode=null;
+            if(sDig.checked) { S.mode='digit'; sSwp.checked=false; S.sel=null; nav('analiz'); document.getElementById('an-intro').innerHTML="İki rakama tıkla."; } else S.mode=null;
         }
         render();
     }
@@ -396,7 +381,7 @@
     function doSwap(idx) {
         if(S.sel===null) { S.sel=idx; render(); }
         else {
-            let parts=[]; let t=S.num; while(t.length>0){parts.unshift(t.slice(-3)); t=t.slice(0,-3);}
+            let parts=[]; let t=S.num; while(t.length>0){parts.unshift(t.slice(-3));t=t.slice(0,-3);}
             let tmp=parts[S.sel]; parts[S.sel]=parts[idx]; parts[idx]=tmp;
             let r=parts.map((p,i)=>i===0?p:p.padStart(3,'0')).join('');
             updateAll(parseInt(r).toString());
@@ -414,12 +399,12 @@
 
     // ANALIZ
     function prepAn(pow, val, el) {
-        document.querySelectorAll('.d-box').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.box').forEach(b=>b.classList.remove('active'));
         el.classList.add('active');
         let name = names[pow]; let pv = parseInt(val)*Math.pow(10,pow);
         S.temp = {
             name: name+" Basamağı", face: val, place: pv.toLocaleString('tr-TR'),
-            exp: `${val} x 10<sup>${pow}</sup>`, unit: `${val} tane ${suffixes[name]||name}`,
+            exp: `${val} x 10<sup>${pow}</sup>`, unit: `${val} tane ${suffix[name]||name}`,
             read: numToText(parseInt(S.num))
         };
         document.getElementById('an-intro').style.display='none';
@@ -455,7 +440,7 @@
 
     // TEST
     function mkQuiz() {
-        const c = document.getElementById('quiz-list'); c.innerHTML="";
+        const c = document.getElementById('quiz-box'); c.innerHTML="";
         let len=S.num.length;
         let eq=0; for(let i=0; i<len; i++){if(parseInt(S.num[i])*Math.pow(10,len-1-i)==parseInt(S.num[i]))eq++;}
         for(let k=0; k<10; k++) {
@@ -463,15 +448,15 @@
             if(t==0) { let i=Math.floor(Math.random()*len); let p=len-1-i; q=`${names[p]} basamağındaki rakam?`; a=S.num[i]; }
             else if(t==1) { let i=Math.floor(Math.random()*len); let p=len-1-i; q=`${names[p]} basamağının değeri?`; a=(parseInt(S.num[i])*Math.pow(10,p)).toLocaleString(); }
             else if(t==2) { q="Sayı değerleri toplamı?"; a=S.num.split('').reduce((x,y)=>x+parseInt(y),0); }
-            else if(t==3) { q="Basamak değeri sayı değerine eşit olan kaç rakam var?"; a=eq; }
+            else if(t==3) { q="Basamak değeri ile sayı değeri eşit olan kaç rakam var?"; a=eq; }
             else { q="Bu sayı kaç basamaklıdır?"; a=len; }
             let d=document.createElement('div'); d.className='quiz-item';
-            d.innerHTML=`<div class="q-txt">${k+1}) ${q}</div><button class="btn btn-sec" onclick="this.nextElementSibling.style.display='block'">CEVAP</button><div class="ans-box">${a}</div>`;
+            d.innerHTML=`<div class="q-txt">${k+1}) ${q}</div><button class="btn-sec" onclick="this.nextElementSibling.style.display='block'">CEVAP</button><div class="ans-box">${a}</div>`;
             c.appendChild(d);
         }
     }
 
-    // YAZMA & ŞİFRE
+    // YAZMA
     let wAns="";
     function newWrite() {
         let d=document.getElementById('w-sel').value; let n=Math.floor(Math.random()*9+1).toString(); for(let i=1;i<d;i++)n+=Math.floor(Math.random()*10);
@@ -482,13 +467,15 @@
         let f=document.getElementById('w-fb');
         if(u===wAns) {f.innerText="DOĞRU!"; f.style.color="green";} else {f.innerText="YANLIŞ"; f.style.color="red";}
     }
+
+    // SIFRE
     function fillAlpha() {
         let h=""; abc.split('').forEach((c,i)=>h+=`<div class="alpha-box"><div>${c}</div><div style="color:red">${i+1}</div></div>`);
-        document.getElementById('alpha-box').innerHTML=h;
+        document.getElementById('alpha-ref').innerHTML=h;
     }
     function doCipher() {
         let n=document.getElementById('c-in').value.toUpperCase();
-        let r=document.getElementById('c-res'); r.innerHTML=""; let sum=0;
+        let r=document.getElementById('c-out'); r.innerHTML=""; let sum=0;
         for(let c of n) { let i=abc.indexOf(c)+1; if(i>0){sum+=i; r.innerHTML+=`<div class="c-box"><div style="font-size:1.2rem">${c}</div><div style="color:red">${i}</div></div>`;}}
         document.getElementById('c-sum').innerText="TOPLAM: "+sum;
     }
@@ -497,13 +484,14 @@
     function nav(id) {
         document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
         document.getElementById('p-'+id).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
         event.currentTarget?.classList.add('active');
-        if(id==='test' && document.getElementById('quiz-list').innerHTML==="") mkQuiz();
+        if(id==='test' && document.getElementById('quiz-box').innerHTML==="") mkQuiz();
         if(id==='yazma' && document.getElementById('w-q').innerText==="...") newWrite();
     }
     function numToText(n){if(n==0)return"Sıfır";const o=["","Bir","İki","Üç","Dört","Beş","Altı","Yedi","Sekiz","Dokuz"];const t=["","On","Yirmi","Otuz","Kırk","Elli","Altmış","Yetmiş","Seksen","Doksan"];const p=["","Bin","Milyon","Milyar"];let s=n.toString(),out="",parts=[];while(s.length>0){parts.push(s.slice(-3));s=s.slice(0,-3)}for(let i=parts.length-1;i>=0;i--){let x=parseInt(parts[i]);if(x>0){let y=Math.floor(x/100),te=Math.floor((x%100)/10),un=x%10;if(y==1)out+="Yüz ";else if(y>1)out+=o[y]+" Yüz ";out+=t[te]+" "+o[un]+" ";if(i==1&&x==1)out="";out+=p[i]+" "}}return out.trim()}
 
+    window.onload = () => { genNum(); fillAlpha(); nav('test'); document.querySelector('.tab-btn').classList.add('active'); };
 </script>
 </body>
 </html>
