@@ -1,162 +1,152 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f4f4f4;
+    background-color: #f0f2f5;
     padding: 20px;
 }
 
 .control-panel {
     background: #fff;
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     margin-bottom: 20px;
     display: flex;
+    flex-wrap: wrap;
     gap: 15px;
     align-items: center;
+    justify-content: center;
+    max-width: 900px;
 }
 
-#missing-options {
+.input-group {
     display: flex;
-    gap: 10px;
-    background-color: #f0f0f0;
-    padding: 5px 10px;
-    border-radius: 6px;
+    flex-direction: column;
 }
 
+.input-group input {
+    padding: 8px;
+    font-size: 1.1rem;
+    width: 100px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+#generate-btn { background-color: #2196F3; color: white; }
+#generate-btn:hover { background-color: #1976D2; }
+
+.mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ffebee;
+    padding: 8px 15px;
+    border-radius: 8px;
+    border: 1px solid #ffcdd2;
+}
+
+/* GRID YAPISI */
 .grid-container {
     display: grid;
     margin-top: 20px;
-    border: 2px solid #999;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-/* Grid'deki her bir kare (hücre) */
 .grid-cell {
-    width: 40px;
-    height: 40px;
-    border: 1px solid #ccc;
+    width: 45px;
+    height: 45px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    user-select: none; 
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #333;
+    user-select: none;
+    position: relative;
 }
 
-/* --- Hücre Tipleri --- */
-
-/* 1. Çarpan (RENK KALDIRILDI) */
-.cell-num1 { 
-    /* background-color: #e0f7fa; <-- SİLİNDİ */
-}
-
-/* 'x' ve '+' işareti */
-.cell-sign { font-weight: bold; }
-
-/* Toplam Sonuç (Yeşil) */
-.cell-result { 
-    background-color: #C8E6C9; /* AÇIK YEŞİL */
-    font-weight: bold; 
-}
-
-/* Eldeler (LİLA OLARAK GÜNCELLENDİ) */
+/* HÜCRE TİPLERİ */
 .cell-carry {
-    background-color: #E1BEE7; /* LİLA */
+    background-color: #F3E5F5; /* Lila */
+    font-size: 1rem;
+    color: #8E24AA;
+    border-radius: 50%;
+    width: 35px; height: 35px;
+    margin: auto;
+}
+
+.cell-add-carry {
     font-size: 0.9rem;
-    color: #6A1B9A;
+    color: #757575;
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    margin: auto;
 }
 
-/* Yatay Çizgi */
-.cell-line {
-    border: 0;
-    border-top: 3px solid #333;
-    height: 10px;
-    background-color: transparent !important;
+.cell-sign { font-size: 1.5rem; color: #555; }
+.cell-result { background-color: #E8F5E9; color: #2E7D32; border-radius: 4px; }
+.cell-line { border-top: 2px solid #333; height: 1px; align-self: center; width: 100%; }
+
+/* Renkli Basamaklar */
+.num2-digit-0 { background-color: #E3F2FD; color: #1565C0; border-radius: 4px; }
+.partial-row-0 { background-color: #E3F2FD; color: #1565C0; }
+
+.num2-digit-1 { background-color: #FCE4EC; color: #C2185B; border-radius: 4px; }
+.partial-row-1 { background-color: #FCE4EC; color: #C2185B; }
+
+.num2-digit-2 { background-color: #FFF3E0; color: #E65100; border-radius: 4px; }
+.partial-row-2 { background-color: #FFF3E0; color: #E65100; }
+
+/* İnteraktif Özellikler */
+.cell-clickable {
+    cursor: pointer;
+    border: 2px dashed transparent;
 }
-
-/* 2. Çarpan ve Kısmi Çarpımlar (Boş) */
-.cell-num2 { }
-.cell-partial { }
-
-
-/* --- DİNAMİK RENK TEMALARI --- */
-
-/* Tema 1 (Birler Basamağı - Açık Mavi) */
-.num2-digit-0 { background-color: #BBDEFB; font-weight: bold; }
-.partial-row-0 { background-color: #E3F2FD; }                 
-
-/* Tema 2 (Onlar Basamağı - Pembe) */
-.num2-digit-1 { background-color: #F8BBD0; font-weight: bold; }
-.partial-row-1 { background-color: #FCE4EC; }                 
-
-/* Tema 3 (Yüzler Basamağı - Açık Turuncu) */
-.num2-digit-2 { background-color: #FFCCBC; font-weight: bold; }
-.partial-row-2 { background-color: #FBE9E7; }                 
-
-
-/* --- Animasyon ve Düzenleme Stilleri --- */
-
-.cell-editable {
-    cursor: text;
-    transition: background-color 0.2s;
-}
-
-.cell-editable:hover {
-    background-color: #ffffd4 !important;
+.cell-clickable:hover {
+    border-color: #aaa;
+    background-color: #f0f0f0;
 }
 
 .highlight-active {
-    background-color: #ffeb3b !important;
+    box-shadow: 0 0 0 3px #FFD700 inset;
     transform: scale(1.1);
-    transition: all 0.2s ease;
+    z-index: 10;
+    transition: 0.1s;
 }
 
-/* Verilmeyen Rakam Modu Stilleri */
-.checking-controls {
-    margin-top: 15px;
-}
-
-.checking-controls button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.checking-controls button:hover {
-    background-color: #45a049;
-}
-
+/* Input Kutuları */
 .missing-digit-input {
-    width: 90%;
-    height: 90%;
-    text-align: center;
-    font-size: 1.1rem;
-    border: 2px dashed #0288d1;
-    border-radius: 4px;
-    -moz-appearance: textfield;
+    width: 90%; height: 90%;
+    text-align: center; font-size: 1.3rem;
+    border: 2px dashed #2196F3;
+    border-radius: 4px; outline: none;
 }
-.missing-digit-input::-webkit-outer-spin-button,
-.missing-digit-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
+.missing-digit-input.correct { background-color: #E8F5E9; border-color: #4CAF50; }
+.missing-digit-input.incorrect { background-color: #FFEBEE; border-color: #F44336; }
 
-.missing-digit-input.correct {
-    border-color: #4CAF50;
-    background-color: #E8F5E9;
-    color: #388E3C;
-}
-
-.missing-digit-input.incorrect {
-    border-color: #F44336;
-    background-color: #FFEBEE;
-    color: #D32F2F;
-}
+/* Butonlar */
+.animation-controls, .checking-controls { margin-top: 15px; display: flex; gap: 10px; }
+.action-btn { color: white; }
+#start-btn { background-color: #4CAF50; }
+#next-step-btn { background-color: #FF9800; }
+#show-answer-btn { background-color: #00BCD4; } /* YENİ BUTON RENGİ (CYAN) */
+#reset-btn { background-color: #9E9E9E; }
+#check-btn { background-color: #673AB7; }
