@@ -1,648 +1,535 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>4. Sınıf: Neden-Sonuç Dedektifleri | Web 2.0</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&family=Nunito:wght@400;700&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. Sınıf: Büyük Dedektiflik Bürosu</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600&family=Nunito:wght@400;700&display=swap');
 
-    :root {
-        --primary: #FF6B6B;
-        --secondary: #4ECDC4;
-        --accent: #FFE66D;
-        --dark: #2C3E50;
-        --light: #F7F9FC;
-        --success: #2ECC71;
-        --error: #E74C3C;
-    }
+        :root {
+            --bg-color: #f0f8ff;
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --card-bg: #ffffff;
+            --text: #2b2d42;
+        }
 
-    body {
-        font-family: 'Nunito', sans-serif;
-        background-color: #E0F7FA;
-        margin: 0;
-        padding: 0;
-        color: var(--dark);
-        background-image: radial-gradient(#4ECDC4 1px, transparent 1px);
-        background-size: 20px 20px;
-    }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234361ee' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
 
-    /* --- ÜST PANEL (HUD) --- */
-    .hud-bar {
-        background: white;
-        padding: 15px 30px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        border-bottom: 5px solid var(--primary);
-    }
+        /* --- GİRİŞ EKRANI --- */
+        #welcome-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #4361ee, #7209b7);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
 
-    .hud-title h1 {
-        margin: 0;
-        font-family: 'Fredoka', sans-serif;
-        color: var(--primary);
-        font-size: 24px;
-    }
+        .detective-badge {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: bounceIn 1s;
+        }
 
-    .score-board {
-        background: var(--dark);
-        color: var(--accent);
-        padding: 10px 20px;
-        border-radius: 30px;
-        font-weight: bold;
-        font-size: 1.2rem;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
+        .name-input {
+            padding: 15px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            border: none;
+            width: 300px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'Fredoka', sans-serif;
+        }
 
-    /* --- NAVİGASYON --- */
-    .nav-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-        max-width: 1000px;
-        margin: 20px auto;
-        padding: 0 20px;
-    }
+        .start-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Fredoka', sans-serif;
+            box-shadow: 0 10px 0 #b5179e;
+            transition: transform 0.1s;
+        }
+        .start-btn:active { transform: translateY(5px); box-shadow: 0 5px 0 #b5179e; }
 
-    .nav-card {
-        background: white;
-        padding: 15px;
-        border-radius: 15px;
-        text-align: center;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-        border-bottom: 4px solid #ddd;
-    }
+        /* --- ANA ARAYÜZ --- */
+        #main-app { display: none; max-width: 1200px; margin: 0 auto; padding-bottom: 50px; }
 
-    .nav-card:hover {
-        transform: translateY(-5px);
-        border-bottom-color: var(--secondary);
-    }
+        header {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-    .nav-card.active {
-        background: var(--secondary);
-        color: white;
-        border-bottom-color: #2A9D8F;
-    }
+        .student-info { font-weight: bold; font-size: 1.2rem; color: var(--primary); }
+        .score-box { background: var(--accent); color: white; padding: 5px 20px; border-radius: 20px; font-weight: bold; }
 
-    .nav-icon {
-        font-size: 2rem;
-        margin-bottom: 10px;
-        color: var(--primary);
-    }
-    
-    .nav-card.active .nav-icon { color: white; }
+        /* --- NAVİGASYON KARTLARI --- */
+        .nav-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
 
-    /* --- ANA KONTEYNER --- */
-    .main-stage {
-        max-width: 1000px;
-        margin: 0 auto 50px auto;
-        padding: 20px;
-        min-height: 60vh;
-    }
+        .nav-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 5px solid #e0e0e0;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .game-section {
-        display: none;
-        animation: slideIn 0.5s ease;
-    }
+        .nav-card:hover { transform: translateY(-10px); border-bottom-color: var(--primary); }
+        .nav-card.completed { border-color: var(--success); background: #e0fbfc; }
+        .nav-card.completed::after { content: '✔'; position: absolute; top: 10px; right: 10px; color: var(--success); font-weight: bold; font-size: 1.5rem; }
+        
+        .nav-icon { font-size: 3rem; margin-bottom: 10px; display: block; }
+        .nav-title { font-family: 'Fredoka', sans-serif; font-weight: 600; color: var(--text); }
 
-    .game-section.active { display: block; }
+        /* --- BÖLÜMLER --- */
+        .section-container {
+            display: none;
+            background: white;
+            margin: 20px;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .section-container.active { display: block; animation: slideInUp 0.5s; }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: #ff5c5c;
+            color: white;
+            border: none;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
 
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+        h2 { color: var(--secondary); font-family: 'Fredoka', sans-serif; border-bottom: 3px solid #eee; padding-bottom: 15px; }
 
-    /* --- MODÜL 1: SİHİRLİ BULUTLAR (Görsel 249) --- */
-    .cloud-wrapper {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 30px;
-        padding: 40px;
-    }
+        /* --- ÖZEL BİLEŞENLER --- */
+        
+        /* 1. Bulutlar */
+        .cloud-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+        .cloud-word {
+            background: #caf0f8; border: 3px solid #00b4d8; color: #0077b6;
+            padding: 20px 40px; border-radius: 50px; font-weight: bold; font-size: 1.3rem;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .cloud-word:hover { transform: scale(1.1) rotate(5deg); background: #00b4d8; color: white; }
 
-    .cloud-item {
-        background: white;
-        width: 150px;
-        height: 100px;
-        border-radius: 50%;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'Fredoka', sans-serif;
-        font-size: 1.2rem;
-        color: var(--primary);
-        box-shadow: 5px 5px 0px rgba(0,0,0,0.1);
-        border: 2px solid var(--secondary);
-        cursor: pointer;
-        transition: all 0.3s;
-    }
+        /* 2. Hikaye Okuma */
+        .story-layout { display: flex; gap: 30px; flex-wrap: wrap; }
+        .story-text { 
+            flex: 2; font-size: 1.15rem; line-height: 1.8; 
+            padding: 20px; background: #fffbf0; border-radius: 15px; border-left: 5px solid orange; 
+            max-height: 400px; overflow-y: auto;
+        }
+        .story-questions { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .highlight { background-color: yellow; font-weight: bold; }
 
-    .cloud-item::before, .cloud-item::after {
-        content: '';
-        position: absolute;
-        background: white;
-        border-radius: 50%;
-    }
-    .cloud-item::before { width: 80px; height: 80px; top: -30px; left: 15px; border-top: 2px solid var(--secondary); }
-    .cloud-item::after { width: 70px; height: 70px; top: -25px; right: 15px; border-top: 2px solid var(--secondary); }
-    
-    .cloud-item:hover {
-        transform: scale(1.1) rotate(-5deg);
-        background: var(--accent);
-        color: var(--dark);
-    }
+        /* 3. Etkileşimli Sorular */
+        .question-box {
+            background: #f8f9fa; border: 2px solid #e9ecef;
+            padding: 20px; border-radius: 15px; margin-bottom: 20px;
+        }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .opt-btn {
+            padding: 15px; border: 2px solid #ddd; background: white; border-radius: 10px;
+            cursor: pointer; text-align: left; transition: 0.2s; font-weight: 600;
+        }
+        .opt-btn:hover { background: #eef; border-color: var(--primary); }
+        .opt-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
+        .opt-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
 
-    /* --- MODÜL 2: İNTERAKTİF HİKAYE KARTLARI (Cesur Kral & Sevgi) --- */
-    .story-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
+        /* 4. Tablo Doldurma */
+        .orange-table { width: 100%; border-collapse: collapse; border-radius: 15px; overflow: hidden; }
+        .orange-table th { background: #fb8500; color: white; padding: 15px; }
+        .orange-table td { background: #ffb703; padding: 10px; border-bottom: 1px solid white; }
+        .orange-table tr:nth-child(even) td { background: #ffc300; }
+        .table-input { width: 95%; padding: 10px; border-radius: 10px; border: none; }
 
-    .story-card {
-        background: white;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
+        /* 5. Sertifika */
+        #certificate {
+            display: none; text-align: center; padding: 40px;
+            background: url('https://img.freepik.com/free-vector/luxury-certificate-template_23-2148939744.jpg'); /* Temsili */
+            background-size: cover; border: 10px solid gold;
+        }
 
-    .story-header {
-        background: var(--primary);
-        color: white;
-        padding: 15px;
-        font-weight: bold;
-        text-align: center;
-    }
-
-    .story-content {
-        padding: 20px;
-        font-size: 1.1rem;
-        line-height: 1.6;
-        height: 200px;
-        overflow-y: auto;
-    }
-
-    .story-action {
-        padding: 15px;
-        background: #f1f1f1;
-        text-align: center;
-    }
-
-    .btn-action {
-        background: var(--secondary);
-        color: white;
-        border: none;
-        padding: 10px 25px;
-        border-radius: 25px;
-        font-weight: bold;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: transform 0.1s;
-    }
-    .btn-action:active { transform: scale(0.95); }
-
-    /* --- MODÜL 3: TABLO DOLDURMA (Görsel IMG_1513 replikası) --- */
-    .cause-effect-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-
-    .ce-header {
-        background: #ED8936; /* Görseldeki turuncu renk */
-        color: white;
-        font-weight: bold;
-        padding: 15px;
-        text-align: center;
-        width: 50%;
-    }
-
-    .ce-cell {
-        padding: 15px;
-        border-bottom: 1px solid #eee;
-        background: #FFFaf0; /* Görseldeki bej rengi */
-    }
-
-    .ce-input {
-        width: 90%;
-        padding: 10px;
-        border: 2px dashed #ccc;
-        border-radius: 8px;
-        background: white;
-        font-family: inherit;
-    }
-    
-    .ce-input:focus {
-        border-color: var(--secondary);
-        outline: none;
-    }
-
-    /* --- MODÜL 4: EŞLEŞTİRME OYUNU --- */
-    .match-grid {
-        display: grid;
-        grid-template-columns: 1fr 100px 1fr;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .match-col {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .match-item {
-        background: white;
-        padding: 15px;
-        border-radius: 10px;
-        border: 2px solid #ddd;
-        cursor: pointer;
-        text-align: center;
-        transition: all 0.2s;
-        font-weight: 600;
-    }
-
-    .match-item.selected {
-        border-color: var(--primary);
-        background: #FFF3E0;
-        transform: scale(1.02);
-    }
-
-    .match-item.matched {
-        border-color: var(--success);
-        background: #D4EDDA;
-        opacity: 0.7;
-        pointer-events: none;
-    }
-
-    /* --- MODÜL 5: DİJİTAL TEST --- */
-    .quiz-card {
-        background: white;
-        border-radius: 15px;
-        padding: 30px;
-        text-align: center;
-        max-width: 700px;
-        margin: 0 auto;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-
-    .quiz-img-container {
-        background: #f0f0f0;
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 20px;
-        display: inline-block;
-    }
-
-    .quiz-options {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-top: 20px;
-    }
-
-    .quiz-btn {
-        background: white;
-        border: 2px solid #e0e0e0;
-        padding: 15px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: 0.2s;
-    }
-
-    .quiz-btn:hover { background: #f9f9f9; border-color: var(--secondary); }
-
-    .correct-anim { animation: pulseGreen 0.5s; background: var(--success) !important; color: white; }
-    .wrong-anim { animation: shake 0.4s; background: var(--error) !important; color: white; }
-
-    @keyframes pulseGreen { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-    @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } 100% { transform: translateX(0); } }
-
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7);
-        z-index: 2000;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-content {
-        background: white;
-        padding: 30px;
-        border-radius: 20px;
-        max-width: 500px;
-        text-align: center;
-        animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    @keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-    @media (max-width: 768px) {
-        .story-container, .match-grid { grid-template-columns: 1fr; }
-        .match-grid { gap: 5px; }
-    }
-</style>
+        @media (max-width: 768px) {
+            .story-layout { flex-direction: column; }
+            .options-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="hud-bar">
-    <div class="hud-title">
-        <h1>🕵️‍♂️ Dedektifler İş Başında</h1>
-    </div>
-    <div class="score-board">
-        <i class="fas fa-star" style="color: gold;"></i>
-        <span id="score">0</span> Puan
-    </div>
-</div>
-
-<div class="nav-grid">
-    <div class="nav-card active" onclick="switchTab('tab1', this)">
-        <div class="nav-icon"><i class="fas fa-cloud"></i></div>
-        <div>İpuçları</div>
-    </div>
-    <div class="nav-card" onclick="switchTab('tab2', this)">
-        <div class="nav-icon"><i class="fas fa-book-open"></i></div>
-        <div>Hikayeler</div>
-    </div>
-    <div class="nav-card" onclick="switchTab('tab3', this)">
-        <div class="nav-icon"><i class="fas fa-link"></i></div>
-        <div>Eşleştirme</div>
-    </div>
-    <div class="nav-card" onclick="switchTab('tab4', this)">
-        <div class="nav-icon"><i class="fas fa-table"></i></div>
-        <div>Tablo Doldur</div>
-    </div>
-    <div class="nav-card" onclick="switchTab('tab5', this)">
-        <div class="nav-icon"><i class="fas fa-question-circle"></i></div>
-        <div>Süper Test</div>
-    </div>
-</div>
-
-<div class="main-stage">
-
-    <div id="tab1" class="game-section active">
-        <h2 style="text-align:center; color: var(--dark);">Sebep-Sonuç Kelimeleri</h2>
-        <p style="text-align:center;">Bulutların üzerine tıklayarak sihirli kelimeleri öğren! [Kaynak: Görsel 249]</p>
-        <div class="cloud-wrapper">
-            <div class="cloud-item" onclick="speak('İçin')">İçin</div>
-            <div class="cloud-item" onclick="speak('Çünkü')">Çünkü</div>
-            <div class="cloud-item" onclick="speak('Bu yüzden')">Bu yüzden</div>
-            <div class="cloud-item" onclick="speak('Dolayısıyla')">Dolayısıyla</div>
-            <div class="cloud-item" onclick="speak('Bu sebeple')">Bu sebeple</div>
-            <div class="cloud-item" onclick="speak('Bunun sonucu')">Bunun sonucu</div>
-        </div>
-        <div style="text-align:center; margin-top:20px; padding:20px; background:white; border-radius:15px;">
-            <i class="fas fa-info-circle" style="color:var(--primary)"></i> 
-            <strong>Öğretmen Notu:</strong> "İçin" kelimesi hem sebep hem de amaç bildirebilir. Cümleye "Neden?" sorusunu sorun!
-        </div>
+    <div id="welcome-screen">
+        <div class="detective-badge">🕵️‍♂️</div>
+        <h1>DEDEKTİFLİK AKADEMİSİNE HOŞ GELDİN</h1>
+        <p>Göreve başlamak için adını yaz dedektif!</p>
+        <input type="text" id="studentName" class="name-input" placeholder="Adın Soyadın...">
+        <button class="start-btn" onclick="startApp()">GÖREVE BAŞLA</button>
     </div>
 
-    <div id="tab2" class="game-section">
-        <div class="story-container">
-            <div class="story-card">
-                <div class="story-header" style="background: #FF9F1C;">👑 Cesur Kral</div>
-                <div class="story-content">
-                    <p>Bir zamanlar çok cesur bir kral yaşarmış. Kral yaşlanınca "Ölmeden önce son bir isteğim var: Bilge biri olarak anılmak!" demiş.</p>
-                    <p><strong>Bu yüzden</strong> kral sürekli kitap okumaya başlamış...</p>
-                    <hr>
-                    <p><em>Soru: Kral neden sürekli kitap okumaya başlamış?</em></p>
-                </div>
-                <div class="story-action">
-                    <button class="btn-action" onclick="showModal('Kral, bilge biri olarak anılmak istediği için kitap okumaya başlamıştır.')">Cevabı Gör</button>
-                </div>
+    <div id="main-app">
+        <header>
+            <div class="student-info">Dedektif: <span id="display-name"></span></div>
+            <div class="score-box">PUAN: <span id="score">0</span></div>
+        </header>
+
+        <div class="nav-container" id="menu">
+            <div class="nav-card" onclick="openSection('sec-lect')">
+                <span class="nav-icon">☁️</span>
+                <div class="nav-title">İpucu Bulutları</div>
             </div>
-
-            <div class="story-card">
-                <div class="story-header" style="background: #EF476F;">👧 Geç Kalan Sevgi</div>
-                <div class="story-content">
-                    <p>Sevgi eve dönerken korkuyordu. Yol ıssızdı. Arkasında bir köpek hırlaması duydu. Besili bir köpekti.</p>
-                    <p>Sevgi bir anda koşmaya başladı. Minibüs gelmemişti <strong>çünkü</strong> yol çalışması vardı.</p>
-                    <hr>
-                    <p><em>Soru: Sevgi neden koşmaya başladı?</em></p>
-                </div>
-                <div class="story-action">
-                    <button class="btn-action" onclick="showModal('Sevgi, köpeğin ona saldıracağını düşündüğü için (korktuğu için) koşmaya başlamıştır.')">Cevabı Gör</button>
-                </div>
+            <div class="nav-card" onclick="openSection('sec-story1')">
+                <span class="nav-icon">📖</span>
+                <div class="nav-title">Dosya 1: Geç Kalan Sevgi</div>
+            </div>
+            <div class="nav-card" onclick="openSection('sec-story2')">
+                <span class="nav-icon">👑</span>
+                <div class="nav-title">Dosya 2: Cesur Kral</div>
+            </div>
+            <div class="nav-card" onclick="openSection('sec-match')">
+                <span class="nav-icon">🧩</span>
+                <div class="nav-title">Kanıt Eşleştirme</div>
+            </div>
+            <div class="nav-card" onclick="openSection('sec-table')">
+                <span class="nav-icon">📝</span>
+                <div class="nav-title">Sorgu Odası</div>
+            </div>
+            <div class="nav-card" onclick="openSection('sec-test')">
+                <span class="nav-icon">⚖️</span>
+                <div class="nav-title">Büyük Duruşma (Test)</div>
             </div>
         </div>
-    </div>
 
-    <div id="tab3" class="game-section">
-        <h2 style="text-align:center;">Cümleleri Tamamla!</h2>
-        <p style="text-align:center;">Soldaki sebepleri sağdaki sonuçlarla eşleştir. [Kaynak: Görsel 108-145]</p>
-        
-        <div class="match-grid">
-            <div class="match-col" id="col-causes">
-                <div class="match-item" data-id="1">Kardan adam yapmak için...</div>
-                <div class="match-item" data-id="2">Diş doktorundan randevu aldım...</div>
-                <div class="match-item" data-id="3">Hava çok soğuk olduğu için...</div>
-                <div class="match-item" data-id="4">Yavru kedi çok açtı...</div>
+        <div id="sec-lect" class="section-container">
+            <button class="close-btn" onclick="closeSection()">X</button>
+            <h2>🔍 Sebep - Sonuç İpuçları</h2>
+            <p>Bir dedektif olarak olayların nedenini anlamak için bu kelimeleri takip etmelisin. Kelimelere tıkla!</p>
+            <div class="cloud-grid">
+                <div class="cloud-word" onclick="playSound('pop')">İÇİN</div>
+                <div class="cloud-word" onclick="playSound('pop')">ÇÜNKÜ</div>
+                <div class="cloud-word" onclick="playSound('pop')">BU YÜZDEN</div>
+                <div class="cloud-word" onclick="playSound('pop')">DOLAYISIYLA</div>
+                <div class="cloud-word" onclick="playSound('pop')">BU SEBEPLE</div>
+                <div class="cloud-word" onclick="playSound('pop')">-DEN DOLAYI</div>
             </div>
+            <div style="margin-top: 30px; background: #e9f5f9; padding: 20px; border-radius: 15px;">
+                <h3>Örnek Olay Yeri:</h3>
+                <p><strong>Olay (Sonuç):</strong> Okula geç kaldım.</p>
+                <p><strong>Sebep:</strong> Uyanamadığım <strong>İÇİN</strong>.</p>
+            </div>
+        </div>
+
+        <div id="sec-story1" class="section-container">
+            <button class="close-btn" onclick="closeSection()">X</button>
+            <h2>📖 Dosya 1: Geç Kalan Sevgi</h2>
+            <div class="story-layout">
+                <div class="story-text">
+                    <p>Sevgi, okuldan eve dönerken o hiç sevmediği ıssız ve korkutucu yolda yaklaşık bir saattir minibüs bekliyordu. Soğuktan titriyor, gecenin karanlığından ve sessizliğinden korkuyordu. Minibüsün <strong>neden</strong> bu kadar geç kaldığını düşünüyordu. Vakit ilerliyor, minibüs hâlâ gelmiyordu. O ise korkmaya ve üşümeye devam ediyordu.</p>
+                    <p>Birden arkasında bir köpek hırlaması duydu. Köpek ona sanki yiyecekmiş gibi bakıyordu. Besili bir köpekti. Keskin dişleri görünüyordu. Köpeğin gözlerinin içine kısa bir süre kilitli kaldı sonra bir anda koşmaya başladı. Köpek de arkasında kovalamaya... Hayatında hiç bu kadar hızlı koştuğunu hatırlamıyordu.</p>
+                    <p>Biraz koştuktan sonra bir apartmanın içine girdi ve köpeğin gitmesini bekledi. Köpeğin gittiğinden emin olduktan sonra dışarı çıktı. Biraz yürüdükten sonra bineceği minibüsü gördü ve durdurdu. Meğer minibüsü beklediği yolun az ilerisinde <strong>yol çalışması varmış</strong> ve minibüs başka yoldan gidiyormuş.</p>
+                </div>
+                <div class="story-questions">
+                    <div class="question-box">
+                        <p><strong>1. Sevgi neden korkmuştu?</strong></p>
+                        <button class="opt-btn" onclick="checkAnswer(this, true)">Yol ıssız, karanlık ve sessiz olduğu için.</button>
+                        <button class="opt-btn" onclick="checkAnswer(this, false)">Annesi kızdığı için.</button>
+                    </div>
+                    <div class="question-box">
+                        <p><strong>2. Minibüs neden gelmiyormuş?</strong></p>
+                        <button class="opt-btn" onclick="checkAnswer(this, false)">Minibüs bozulduğu için.</button>
+                        <button class="opt-btn" onclick="checkAnswer(this, true)">Yol çalışması olduğu için.</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sec-story2" class="section-container">
+            <button class="close-btn" onclick="closeSection()">X</button>
+            <h2>👑 Dosya 2: Cesur Kral ile Ak Sakallı Dede</h2>
+            <div class="story-layout">
+                <div class="story-text">
+                    <p>Bir zamanlar ülkelerin birinde çok ünlü bir kral yaşarmış. Çok cesur bir kralmış ama bir kusuru varmış. Kendisine anlatılana hemen inanır, duydukları onda bir ön yargı oluştururmuş.</p>
+                    <p>Yıllar geçmiş, kral yaşlanmış. "Ölmeden önce son bir isteğim var!" demiş yardımcılarına. "Bilge biri olarak anılmak! Öldüğüm zaman cesur olduğum kadar bilge olduğumu da söylesin sevenlerim." demiş.</p>
+                    <p><strong>Bu yüzden</strong> de kral sürekli okumaya, çevresindeki bilge kişilerle fikir alışverişinde bulunmaya başlamış.</p>
+                </div>
+                <div class="story-questions">
+                    <div class="question-box">
+                        <p><strong>Soru: Kral neden sürekli kitap okumaya başlamış?</strong></p>
+                        <button class="opt-btn" onclick="checkAnswer(this, true)">Öldükten sonra "bilge biri" olarak anılmak istediği için.</button>
+                        <button class="opt-btn" onclick="checkAnswer(this, false)">Canı sıkıldığı için.</button>
+                        <button class="opt-btn" onclick="checkAnswer(this, false)">Gözleri iyi görmediği için.</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sec-match" class="section-container">
+            <button class="close-btn" onclick="closeSection()">X</button>
+            <h2>🧩 Kanıtları Birleştir</h2>
+            <p>Sol taraftaki sebepler ile sağ taraftaki sonuçları tıkla ve eşleştir.</p>
             
-            <div style="text-align:center; font-size:2rem; color:#ccc;">
-                <i class="fas fa-exchange-alt"></i>
-            </div>
-
-            <div class="match-col" id="col-effects">
-                <div class="match-item" data-match="3">...kalın giysilerimizi giydik.</div>
-                <div class="match-item" data-match="4">...bu yüzden ona süt verdim.</div>
-                <div class="match-item" data-match="1">...bahçeye çıktık.</div>
-                <div class="match-item" data-match="2">...çünkü dişim çok ağrıyor.</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="tab4" class="game-section">
-        <h2 style="text-align:center;">Tabloyu Tamamla</h2>
-        <p style="text-align:center;">Turuncu tabloyu hatırladın mı? Hadi dolduralım! [Kaynak: IMG_1513]</p>
-        
-        <table class="cause-effect-table">
-            <thead>
-                <tr>
-                    <th class="ce-header">NEDEN (SEBEP)</th>
-                    <th class="ce-header">SONUÇ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="ce-cell">Hayat boyu öğrenmeye devam ettiği için</td>
-                    <td class="ce-cell"><input class="ce-input" type="text" placeholder="Sonuç ne olur? (Örn: Hep bilgili kalır)"></td>
-                </tr>
-                <tr>
-                    <td class="ce-cell"><input class="ce-input" type="text" placeholder="Sebep ne olabilir? (Örn: Param bitti)"></td>
-                    <td class="ce-cell">...çünkü yapmak istediğim şeyleri yapamam.</td>
-                </tr>
-                <tr>
-                    <td class="ce-cell">Tehlikeli olduğu için</td>
-                    <td class="ce-cell"><input class="ce-input" type="text" placeholder="Sonuç? (Örn: Prizle oynamam)"></td>
-                </tr>
-            </tbody>
-        </table>
-        <div style="text-align:center; margin-top:20px;">
-            <button class="btn-action" onclick="addScore(10); showModal('Harikasın! Tabloyu mantıklı cümlelerle doldurdun.')">✅ Kontrol Et</button>
-        </div>
-    </div>
-
-    <div id="tab5" class="game-section">
-        <h2 style="text-align:center;">🏆 Büyük Dedektif Sınavı</h2>
-
-        <div class="quiz-card" id="q1">
-            <div class="quiz-img-container">
-                <i class="fas fa-fish" style="font-size:3rem; color:#3498DB;"></i>
-                <h3>Balinalar Hakkında</h3>
-                <ul style="text-align:left;">
-                    <li>Birlikte beslenirler.</li>
-                    <li>Grup halinde yaşarlar.</li>
-                    <li>Birbirlerini korurlar.</li>
-                </ul>
-            </div>
-            <p><strong>Bu cümlelerden hangi sonuca ulaşılır?</strong></p>
-            <div class="quiz-options">
-                <button class="quiz-btn" onclick="checkQuiz(this, true)">A) Çoğunlukla birlikte zaman geçirirler.</button>
-                <button class="quiz-btn" onclick="checkQuiz(this, false)">B) Tehlikeli olabilirler.</button>
-                <button class="quiz-btn" onclick="checkQuiz(this, false)">C) Çok yemek yerler.</button>
-                <button class="quiz-btn" onclick="checkQuiz(this, false)">D) Denizde yaşarlar.</button>
+            <div style="display: flex; justify-content: space-between; gap: 20px;">
+                <div id="causes" style="flex:1; display: flex; flex-direction: column; gap: 10px;">
+                    </div>
+                <div id="effects" style="flex:1; display: flex; flex-direction: column; gap: 10px;">
+                    </div>
             </div>
         </div>
 
-        <br>
-
-        <div class="quiz-card" id="q2">
-            <p><strong>".............................. burnun tıkanmış."</strong></p>
-            <p>Bu cümle hangisiyle tamamlanırsa <u>neden-sonuç</u> olur?</p>
-            <div class="quiz-options">
-                <button class="quiz-btn" onclick="checkQuiz(this, false)">A) Gözlerin şişmiş</button>
-                <button class="quiz-btn" onclick="checkQuiz(this, true)">B) Nezle olmuşsun</button>
-                <button class="quiz-btn" onclick="checkQuiz(this, false)">C) Bakıyorum da yine</button>
-                <button class="quiz-btn" onclick="checkQuiz(this, false)">D) Sesin kısılmış</button>
+        <div id="sec-table" class="section-container">
+            <button class="close-btn" onclick="closeSection()">X</button>
+            <h2>📝 Sorgu Odası (Boşluk Doldurma)</h2>
+            
+            <div class="question-box">
+                <p><strong>Görsel Kanıt 1:</strong> "Oyun kolu bozuk olduğu için..."</p>
+                <div class="options-grid">
+                    <button class="opt-btn" onclick="checkAnswer(this, true)">...beni yenebildin.</button>
+                    <button class="opt-btn" onclick="checkAnswer(this, false)">...yemek yedim.</button>
+                </div>
             </div>
+
+            <div class="question-box">
+                <p><strong>Görsel Kanıt 2 (Su Metni):</strong> "Vücudumuz normal sıcaklığını korumak ister..."</p>
+                <p>Bu yüzden ne yapmalıyız?</p>
+                <div class="options-grid">
+                    <button class="opt-btn" onclick="checkAnswer(this, true)">Sıcak günlerde daha çok su içmeliyiz.</button>
+                    <button class="opt-btn" onclick="checkAnswer(this, false)">Daha kalın giyinmeliyiz.</button>
+                </div>
+            </div>
+
+            <h3>Turuncu Tabloyu Tamamla</h3>
+            <table class="orange-table">
+                <tr>
+                    <th>NEDEN (SEBEP)</th>
+                    <th>SONUÇ</th>
+                </tr>
+                <tr>
+                    <td>Hayat boyu öğrenmeye devam ettiği için</td>
+                    <td><input class="table-input" placeholder="Sonuç ne olur?"></td>
+                </tr>
+                <tr>
+                    <td>Tehlikeli olduğu için</td>
+                    <td><input class="table-input" placeholder="Neyi yapmamalıyız?"></td>
+                </tr>
+                <tr>
+                    <td><input class="table-input" placeholder="Sebep ne olabilir?"></td>
+                    <td>...çünkü yapmak istediğim şeyleri yapamam.</td>
+                </tr>
+            </table>
+            <button class="start-btn" style="margin-top:10px; font-size:1rem;" onclick="alert('Harika denemeler dedektif! Mantıklı cümleler kurduysan puanı kaptın.')">Kontrol Et</button>
+        </div>
+
+        <div id="sec-test" class="section-container">
+            <button class="close-btn" onclick="closeSection()">X</button>
+            <h2>⚖️ Büyük Duruşma (Test)</h2>
+
+            <div class="question-box">
+                <p><strong>Soru 1 (Balinalar):</strong> Balinalar birlikte beslenir, grup halinde yaşar ve birbirini korur.</p>
+                <p>Bu bilgilerden hangi sonuca ulaşırız?</p>
+                <div class="options-grid">
+                    <button class="opt-btn" onclick="checkAnswer(this, true)">Balinalar çoğunlukla birlikte zaman geçirir.</button>
+                    <button class="opt-btn" onclick="checkAnswer(this, false)">Balinalar tehlikelidir.</button>
+                    <button class="opt-btn" onclick="checkAnswer(this, false)">Balinalar çok yemek yer.</button>
+                </div>
+            </div>
+
+            <div class="question-box">
+                <p><strong>Soru 2:</strong> Hangisinde kişinin işi bırakma <u>nedeni</u> verilmiştir?</p>
+                <div class="options-grid">
+                    <button class="opt-btn" onclick="checkAnswer(this, false)">Bir ay önce işi bıraktı.</button>
+                    <button class="opt-btn" onclick="checkAnswer(this, true)">Yoğun çalışmaktan bıktığı için işi bıraktı.</button>
+                </div>
+            </div>
+
+             <div class="question-box">
+                <p><strong>Soru 3:</strong> ".............................. burnun tıkanmış." (Neden-Sonuç olması için boşluğa ne gelmeli?)</p>
+                <div class="options-grid">
+                    <button class="opt-btn" onclick="checkAnswer(this, true)">Nezle olmuşsun.</button>
+                    <button class="opt-btn" onclick="checkAnswer(this, false)">Sesin kısılmış.</button>
+                </div>
+            </div>
+
+             <div class="question-box">
+                <p><strong>Soru 4:</strong> Tehlikeli olduğu için prizlerle...</p>
+                <div class="options-grid">
+                    <button class="opt-btn" onclick="checkAnswer(this, true)">...oynamamalıyız.</button>
+                    <button class="opt-btn" onclick="checkAnswer(this, false)">...tamir etmeliyiz.</button>
+                </div>
+            </div>
+
         </div>
 
     </div>
 
-</div>
+    <script>
+        let score = 0;
+        let activeSection = null;
 
-<div id="resultModal" class="modal" onclick="this.style.display='none'">
-    <div class="modal-content">
-        <h2 style="color:var(--primary)">Cevap</h2>
-        <p id="modalText" style="font-size:1.2rem;">...</p>
-        <p style="color:#aaa; font-size:0.9rem;">(Kapatmak için ekrana tıkla)</p>
-    </div>
-</div>
+        // Eşleştirme Verileri
+        const matchData = [
+            { id: 1, cause: "Kardan adam yapmak için...", effect: "...bahçeye çıktık." },
+            { id: 2, cause: "Araştırma ödevim olduğu için...", effect: "...kütüphaneye gideceğim." },
+            { id: 3, cause: "Hava çok soğuk olduğu için...", effect: "...kalın giysilerimizi giydik." },
+            { id: 4, cause: "Yavru kedi çok açtı...", effect: "...ona süt verdim." },
+            { id: 5, cause: "Dişim çok ağrıyor...", effect: "...bu yüzden doktora gittim." }
+        ];
 
-<script>
-    // --- GEREKLİ DEĞİŞKENLER ---
-    let score = 0;
-    let selectedCause = null;
-
-    // --- TEMEL FONKSİYONLAR ---
-    function switchTab(tabId, btn) {
-        document.querySelectorAll('.game-section').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-card').forEach(el => el.classList.remove('active'));
-        
-        document.getElementById(tabId).classList.add('active');
-        btn.classList.add('active');
-    }
-
-    function addScore(points) {
-        score += points;
-        document.getElementById('score').innerText = score;
-        
-        // Basit animasyon
-        let sb = document.querySelector('.score-board');
-        sb.style.transform = "scale(1.2)";
-        setTimeout(() => sb.style.transform = "scale(1)", 200);
-    }
-
-    function showModal(text) {
-        document.getElementById('modalText').innerText = text;
-        document.getElementById('resultModal').style.display = 'flex';
-    }
-
-    function speak(text) {
-        // Tarayıcı destekliyorsa sesli okuma (Opsiyonel eğlence)
-        if ('speechSynthesis' in window) {
-            let msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'tr-TR';
-            window.speechSynthesis.speak(msg);
+        function startApp() {
+            const name = document.getElementById('studentName').value;
+            if(name.trim() === "") { alert("Lütfen dedektif adını yaz!"); return; }
+            
+            document.getElementById('display-name').innerText = name;
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            
+            initMatchingGame();
         }
-    }
 
-    // --- EŞLEŞTİRME OYUNU MANTIĞI ---
-    document.querySelectorAll('#col-causes .match-item').forEach(item => {
-        item.addEventListener('click', function() {
-            if(this.classList.contains('matched')) return;
-            
-            // Öncekini temizle
-            document.querySelectorAll('#col-causes .match-item').forEach(i => i.classList.remove('selected'));
-            
-            this.classList.add('selected');
-            selectedCause = this.getAttribute('data-id');
-        });
-    });
+        function openSection(id) {
+            if(activeSection) document.getElementById(activeSection).classList.remove('active');
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById(id).classList.add('active');
+            activeSection = id;
+            window.scrollTo(0,0);
+        }
 
-    document.querySelectorAll('#col-effects .match-item').forEach(item => {
-        item.addEventListener('click', function() {
-            if(!selectedCause || this.classList.contains('matched')) return;
+        function closeSection() {
+            if(activeSection) document.getElementById(activeSection).classList.remove('active');
+            document.getElementById('menu').style.display = 'grid';
+            activeSection = null;
+        }
 
-            let targetId = this.getAttribute('data-match');
+        function playSound(type) {
+            // Basit ses efekti simülasyonu
+        }
+
+        function checkAnswer(btn, isCorrect) {
+            if(btn.disabled) return;
             
-            if(selectedCause === targetId) {
-                // EŞLEŞTİ!
-                this.classList.add('matched');
-                document.querySelector(`.match-item[data-id="${selectedCause}"]`).classList.add('matched');
-                document.querySelector(`.match-item[data-id="${selectedCause}"]`).classList.remove('selected');
-                
-                addScore(20);
-                this.innerHTML = '<i class="fas fa-check"></i> ' + this.innerHTML;
-                selectedCause = null;
+            if(isCorrect) {
+                btn.classList.add('correct');
+                score += 10;
+                document.getElementById('score').innerText = score;
+                confettiEffect(btn);
             } else {
-                // YANLIŞ
-                this.style.backgroundColor = '#FFCDD2';
-                setTimeout(() => { this.style.backgroundColor = 'white'; }, 500);
+                btn.classList.add('wrong');
             }
-        });
-    });
+            
+            // Kardeş butonları kilitle
+            let siblings = btn.parentElement.children;
+            for(let i=0; i<siblings.length; i++) {
+                siblings[i].disabled = true;
+            }
+        }
 
-    // --- TEST MANTIĞI ---
-    function checkQuiz(btn, isCorrect) {
-        // Butona tıklandıktan sonra tekrar tıklanmasın
-        let parent = btn.parentElement;
-        let buttons = parent.getElementsByClassName('quiz-btn');
+        // Eşleştirme Oyunu Mantığı
+        let selectedCause = null;
         
-        if(isCorrect) {
-            btn.classList.add('correct-anim');
-            addScore(25);
-            // Konfeti efekti eklenebilir
-        } else {
-            btn.classList.add('wrong-anim');
+        function initMatchingGame() {
+            const causesDiv = document.getElementById('causes');
+            const effectsDiv = document.getElementById('effects');
+            
+            // Karıştır
+            let shuffledCauses = [...matchData].sort(() => Math.random() - 0.5);
+            let shuffledEffects = [...matchData].sort(() => Math.random() - 0.5);
+
+            shuffledCauses.forEach(item => {
+                let btn = document.createElement('div');
+                btn.className = 'opt-btn';
+                btn.innerText = item.cause;
+                btn.dataset.id = item.id;
+                btn.onclick = () => selectCause(btn);
+                causesDiv.appendChild(btn);
+            });
+
+            shuffledEffects.forEach(item => {
+                let btn = document.createElement('div');
+                btn.className = 'opt-btn';
+                btn.innerText = item.effect;
+                btn.dataset.matchId = item.id;
+                btn.onclick = () => selectEffect(btn);
+                effectsDiv.appendChild(btn);
+            });
         }
 
-        // Diğer şıkları kilitle
-        for(let b of buttons) {
-            b.disabled = true;
-            b.style.opacity = '0.7';
+        function selectCause(btn) {
+            if(btn.classList.contains('correct')) return;
+            // Önceki seçimi kaldır
+            document.querySelectorAll('#causes .opt-btn').forEach(b => b.style.borderColor = '#ddd');
+            
+            selectedCause = btn;
+            btn.style.borderColor = 'blue';
         }
-        btn.style.opacity = '1';
-    }
 
-</script>
+        function selectEffect(btn) {
+            if(!selectedCause || btn.classList.contains('correct')) return;
 
+            if(selectedCause.dataset.id === btn.dataset.matchId) {
+                // Eşleşti
+                selectedCause.classList.add('correct');
+                btn.classList.add('correct');
+                selectedCause.style.borderColor = '#28a745';
+                score += 20;
+                document.getElementById('score').innerText = score;
+                selectedCause = null;
+                confettiEffect(btn);
+            } else {
+                // Yanlış
+                btn.classList.add('wrong');
+                setTimeout(() => btn.classList.remove('wrong'), 500);
+            }
+        }
+
+        // Basit Konfeti Efekti
+        function confettiEffect(element) {
+            // CSS animasyonu ile görsel geri bildirim
+            element.style.transform = "scale(1.1)";
+            setTimeout(() => element.style.transform = "scale(1)", 200);
+        }
+
+    </script>
 </body>
 </html>
