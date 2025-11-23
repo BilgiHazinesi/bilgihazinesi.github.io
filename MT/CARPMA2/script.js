@@ -1,226 +1,307 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elementleri
-    const digits1Select = document.getElementById('digits1');
-    const digits2Select = document.getElementById('digits2');
+    // --- ELEMENTLER ---
+    const manualNum1 = document.getElementById('manual-num1');
+    const manualNum2 = document.getElementById('manual-num2');
     const generateBtn = document.getElementById('generate-btn');
     const gridContainer = document.getElementById('multiplication-grid');
+    
     const startBtn = document.getElementById('start-btn');
     const nextStepBtn = document.getElementById('next-step-btn');
     const resetBtn = document.getElementById('reset-btn');
+    const checkBtn = document.getElementById('check-btn');
+
     const missingDigitModeToggle = document.getElementById('missing-digit-mode');
+    const missingModeHint = document.getElementById('missing-mode-hint');
     const animationControls = document.querySelector('.animation-controls');
     const checkingControls = document.querySelector('.checking-controls');
-    const checkBtn = document.getElementById('check-btn');
-    const missingOptions = document.getElementById('missing-options');
 
-    // Durum Değişkenleri
-    let totalCols = 0;
-    let num1Str = '';
-    let num2Str = '';
+    // --- DURUM DEĞİŞKENLERİ ---
     let animationQueue = [];
     let currentStepIndex = 0;
     let animationInterval = null;
     let solutionMap = new Map();
+    let num1Str = "125";
+    let num2Str = "45";
+    let totalCols = 0;
 
-    // Event Listeners
-    generateBtn.addEventListener('click', createProblem);
-    startBtn.addEventListener('click', runAnimation);
-    nextStepBtn.addEventListener('click', doNextStep);
-    resetBtn.addEventListener('click', () => {
-        clearInterval(animationInterval);
-        createProblem();
+    // --- BAŞLANGIÇ ---
+    // İlk açılışta gridi oluştur
+    updateGridFromInputs(); 
+
+    // --- EVENT LISTENERS ---
+
+    // 1. Manuel Giriş Yapıldığında Anında Güncelle
+    manualNum1.addEventListener('input', () => {
+        // En fazla 6 basamak
+        if(manualNum1.value.length > 6) manualNum1.value = manualNum1.value.slice(0,6);
+        updateGridFromInputs();
     });
-    checkBtn.addEventListener('click', checkSolution);
-    missingDigitModeToggle.addEventListener('change', toggleMode);
     
-    // Verilmeyen yeri seçenekleri artık önemsiz çünkü kural sabitlendi (Her birinden 1 tane)
-    // Ancak kodun kırılmaması için event listener'ı tutuyoruz ama işlevini populateGridForMissingMode içinde değiştirdik.
-    document.querySelectorAll('input[name="missing-placement"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            if (missingDigitModeToggle.checked) switchToMissingMode();
-        });
+    manualNum2.addEventListener('input', () => {
+        // En fazla 3 basamak
+        if(manualNum2.value.length > 3) manualNum2.value = manualNum2.value.slice(0,3);
+        updateGridFromInputs();
     });
 
-    // --- 1. PROBLEM OLUŞTURMA VE GRID KURULUMU ---
+    // 2. Rastgele Sayı Üret (Sadece Inputları değiştirir, input listener gridi günceller)
+    generateBtn.addEventListener('click', () => {
+        const r1 = Math.floor(Math.random() * 900) + 100; // 3 basamaklı örnek
+        const r2 = Math.floor(Math.random() * 90) + 10;   // 2 basamaklı örnek
+        manualNum1.value = r1;
+        manualNum2.value = r2;
+        updateGridFromInputs();
+    });
 
-    function createProblem() {
-        clearInterval(animationInterval);
-        animationQueue = [];
-        currentStepIndex = 0;
-        solutionMap.clear();
-
-        const d1 = parseInt(digits1Select.value);
-        const d2 = parseInt(digits2Select.value);
-        num1Str = generateRandomNumber(d1).toString();
-        num2Str = generateRandomNumber(d2).toString();
-
+    // 3. Mod Değişimi
+    missingDigitModeToggle.addEventListener('change', () => {
         const isMissingMode = missingDigitModeToggle.checked;
         
-        setupGrid(num1Str, num2Str, isMissingMode);
-        prepareAnimation(num1Str, num2Str);
+        // UI Güncelle
+        missingModeHint.style.display = isMissingMode ? 'inline' : 'none';
+        animationControls.style.display = isMissingMode ? 'none' : 'flex';
+        checkingControls.style.display = isMissingMode ? 'block' : 'none';
 
-        if (isMissingMode) {
-            populateGridForMissingMode();
-        } else {
-            writeProblemNumbers();
-        }
+        // Grid'i tazele (Eldeleri gizlemek/göstermek için)
+        // ÖNEMLİ: Sayıları değiştirmiyoruz!
+        setupGrid(isMissingMode);
         
-        updateUiForMode(isMissingMode);
+        // Eğer gizli moda geçildiyse sonuçları dolduruyoruz ki öğretmen neyi gizleyeceğini seçsin
+        if (isMissingMode) {
+            prepareAnimation(); // Çözümü hesapla
+            fillGridWithResults(); // Sonuçları yaz
+        } else {
+            // Animasyon moduna geçildiyse temizle
+            clearResults();
+        }
+    });
+
+    // 4. Kontroller
+    startBtn.addEventListener('click', runAnimation);
+    nextStepBtn.addEventListener('click', doNextStep);
+    
+    resetBtn.addEventListener('click', () => {
+        // Sadece çözümü sil, sayıları koru
+        stopAnimation();
+        clearResults();
+    });
+
+    checkBtn.addEventListener('click', checkSolution);
+
+
+    // --- TEMEL FONKSİYONLAR ---
+
+    function updateGridFromInputs() {
+        stopAnimation();
+        num1Str = manualNum1.value || "0";
+        num2Str = manualNum2.value || "0";
+        setupGrid(missingDigitModeToggle.checked);
+        // Çözümü şimdiden hesapla (hazır olsun)
+        prepareAnimation();
     }
 
-    function setupGrid(num1Str, num2Str, isMissingMode) {
+    function setupGrid(isMissingMode) {
         gridContainer.innerHTML = '';
-        const len1 = num1Str.length;
-        const len2 = num2Str.length;
-        const maxResultLen = len1 + len2;
         
-        // 5. Husus: '+' sembolü için solda ekstra 2 sütun boşluk bırakıyoruz
-        totalCols = Math.max(len1, len2 + 1, maxResultLen) + 2; 
+        const n1 = num1Str;
+        const n2 = num2Str;
+        const len1 = n1.length;
+        const len2 = n2.length;
+        const maxResultLen = len1 + len2;
 
-        gridContainer.style.gridTemplateColumns = `repeat(${totalCols}, 40px)`;
+        // Grid genişliği: Sonuç uzunluğu + Solda '+' sembolü için pay + Sağda taşma payı
+        totalCols = Math.max(len1, len2 + 1, maxResultLen) + 2;
+        
+        gridContainer.style.gridTemplateColumns = `repeat(${totalCols}, 45px)`; // Biraz daha geniş hücreler
 
-        // --- A. Çarpma Eldeleri (En üst) ---
+        // A. ÇARPMA ELDELERİ (Lila - En Üst)
+        // Sadece animasyon modunda göster
         if (!isMissingMode) {
             for (let r = 0; r < len2; r++) {
-                fillRowWithEmpty(totalCols - len1); // Sol boşluk
+                // Boşluklar
+                for(let k=0; k < totalCols - len1; k++) gridContainer.appendChild(createCell(''));
+                // Elde hücreleri
                 for (let i = 0; i < len1; i++) {
-                    const colIndex = len1 - 1 - i;
+                    const colIndex = len1 - i; // Elde, bir sonraki basamağın (solun) üzerine gelir.
+                    // Matematiksel olarak: i. basamağın eldesi i+1 (sola) gider.
+                    // Grid görseli sağa dayalı:
+                    // Birler basamağı (sağdan 0) hesaplanınca eldesi sağdan 1. sütuna gider.
                     gridContainer.appendChild(createCell('', `carry-${r}`, colIndex, 'cell-carry'));
                 }
             }
         }
 
-        // --- B. 1. Çarpan ---
-        fillRowWithEmpty(totalCols - len1);
+        // B. 1. ÇARPAN
+        for(let k=0; k < totalCols - len1; k++) gridContainer.appendChild(createCell(''));
         for (let i = 0; i < len1; i++) {
             const colIndex = len1 - 1 - i;
-            const cell = createCell('', 'num1', colIndex, 'cell-num1', 'cell-editable');
-            cell.addEventListener('click', makeCellEditable);
+            // Tıklanabilir hücre (Sadece Gizli Modda işlevsel olacak)
+            const cell = createCell(n1[i], 'num1', colIndex, 'cell-num1');
+            addClickToToggle(cell); // Tıklama özelliği ekle
             gridContainer.appendChild(cell);
         }
 
-        // --- C. 2. Çarpan ve 'x' ---
-        fillRowWithEmpty(totalCols - len2 - 1);
+        // C. 2. ÇARPAN ve 'x'
+        for(let k=0; k < totalCols - len2 - 1; k++) gridContainer.appendChild(createCell(''));
         gridContainer.appendChild(createCell('x', null, null, 'cell-sign'));
         for (let i = 0; i < len2; i++) {
             const placeIndex = (len2 - 1) - i;
             const colIndex = len2 - 1 - i;
-            const cell = createCell('', 'num2', colIndex, 'cell-num2', `num2-digit-${placeIndex}`, 'cell-editable');
-            cell.addEventListener('click', makeCellEditable);
+            const cell = createCell(n2[i], 'num2', colIndex, 'cell-num2', `num2-digit-${placeIndex}`);
+            addClickToToggle(cell); // Tıklama özelliği ekle
             gridContainer.appendChild(cell);
         }
 
-        // --- Çizgi ---
-        fillRowWithLine(totalCols);
+        // ÇİZGİ
+        for(let k=0; k<totalCols; k++) gridContainer.appendChild(createCell('', null, null, 'cell-line'));
 
-        // --- D. Kısmi Çarpımlar ve '+' Sembolü ---
+        // D. KISMİ ÇARPIMLAR
         for (let i = 0; i < len2; i++) {
             const rowClass = `partial-row-${i}`;
             for (let j = 0; j < totalCols; j++) {
                 const colIndex = totalCols - 1 - j;
                 const cell = createCell('', `partial-${i}`, colIndex, 'cell-partial', rowClass);
                 
-                // 5. Husus: '+' işaretini en sola (Grid'in 0. sütununa) koyuyoruz
-                // Sadece son satırda ve 2+ basamaklı çarpımlarda
+                // '+' Sembolü (En Sola, Son satırsa)
                 if (len2 > 1 && i === len2 - 1 && j === 0) {
                     cell.textContent = '+';
+                    cell.classList.remove('cell-partial', rowClass);
                     cell.classList.add('cell-sign');
-                    cell.classList.remove('cell-partial', rowClass); // Arka plan rengini kaldır
                 }
                 gridContainer.appendChild(cell);
             }
         }
 
-        // --- E. YENİ: Toplama Eldeleri Satırı (Sonuçtan hemen önce) ---
-        if (len2 > 1 && !isMissingMode) { // Sadece birden fazla satır varsa ve animasyon modundaysa
-             for (let j = 0; j < totalCols; j++) {
+        // E. TOPLAMA ELDELERİ (Gri - Arada)
+        if (len2 > 1 && !isMissingMode) {
+            for(let j=0; j<totalCols; j++) {
                 const colIndex = totalCols - 1 - j;
-                // 'add-carry' satırı. data-row'u 'add-carry' olarak işaretliyoruz
                 gridContainer.appendChild(createCell('', 'add-carry', colIndex, 'cell-add-carry'));
             }
         }
 
-        // --- Çizgi ---
-        if (len2 > 1) fillRowWithLine(totalCols);
-
-        // --- F. Sonuç ---
+        // ÇİZGİ 2
         if (len2 > 1) {
-            for (let i = 0; i < totalCols; i++) {
-                const colIndex = totalCols - 1 - i;
+            for(let k=0; k<totalCols; k++) gridContainer.appendChild(createCell('', null, null, 'cell-line'));
+        }
+
+        // F. SONUÇ
+        if (len2 > 1) {
+            for(let j=0; j<totalCols; j++) {
+                const colIndex = totalCols - 1 - j;
                 gridContainer.appendChild(createCell('', 'result', colIndex, 'cell-result'));
             }
         }
     }
 
-    // --- 2. ANİMASYON VE HESAPLAMA ---
+    // --- GİZLEME MANTIĞI (ÖĞRETMEN SEÇİMİ) ---
+    function addClickToToggle(cell) {
+        cell.classList.add('cell-clickable');
+        cell.addEventListener('click', () => {
+            // Sadece Gizli Modda çalışır
+            if (!missingDigitModeToggle.checked) return;
 
-    function prepareAnimation(num1Str, num2Str) {
+            // Eğer şu an bir input ise -> Sayıya çevir
+            if (cell.querySelector('input')) {
+                const input = cell.querySelector('input');
+                cell.textContent = input.dataset.original; // Orijinal sayıyı geri yaz
+            } 
+            // Eğer sayı ise -> Inputa çevir
+            else {
+                const originalVal = cell.textContent;
+                if (!originalVal) return; // Boşsa işlem yapma
+                
+                cell.innerHTML = '';
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 1;
+                input.classList.add('missing-digit-input');
+                input.dataset.correct = originalVal; // Doğru cevabı sakla
+                input.dataset.original = originalVal; // Geri dönüş için sakla
+                
+                // Tıklayınca inputun içine odaklanmayı engelleme, grid tıklamasını durdur
+                input.addEventListener('click', (e) => e.stopPropagation());
+                
+                cell.appendChild(input);
+            }
+        });
+    }
+
+    // --- ANİMASYON MOTORU ---
+
+    function prepareAnimation() {
         animationQueue = [];
         solutionMap.clear();
 
-        const n1 = (num1Str.match(/^[0-9]+$/) ? num1Str : '0').split('').reverse().map(Number);
-        const n2 = (num2Str.match(/^[0-9]+$/) ? num2Str : '0').split('').reverse().map(Number);
-        const partialProducts = []; 
+        const n1Arr = num1Str.split('').reverse().map(Number);
+        const n2Arr = num2Str.split('').reverse().map(Number);
+        let partialProducts = [];
 
-        // Faz 1: Çarpma
-        for (let i = 0; i < n2.length; i++) {
-            const digit2 = n2[i];
+        // FAZ 1: ÇARPMA
+        for (let i = 0; i < n2Arr.length; i++) {
+            const d2 = n2Arr[i];
             let carry = 0;
-            const currentPartialProduct = [];
+            let currentPartial = [];
+            
             animationQueue.push({ type: 'highlight', selector: `[data-row='num2'][data-col='${i}']` });
 
-            for (let j = 0; j < n1.length; j++) {
-                const digit1 = n1[j];
+            for (let j = 0; j < n1Arr.length; j++) {
+                const d1 = n1Arr[j];
                 animationQueue.push({ type: 'highlight', selector: `[data-row='num1'][data-col='${j}']` });
-                const product = (digit1 * digit2) + carry;
-                const resultDigit = product % 10;
+                
+                const product = (d1 * d2) + carry;
+                const writeVal = product % 10;
                 carry = Math.floor(product / 10);
-                const partialColIndex = j + i;
+                
+                // Kısmi çarpım konumu: j (1. çarpan basamağı) + i (2. çarpan kaydırması)
+                const pCol = j + i; 
 
-                animationQueue.push({ type: 'write', selector: `[data-row='partial-${i}'][data-col='${partialColIndex}']`, value: resultDigit });
-                solutionMap.set(`partial-${i}-${partialColIndex}`, resultDigit);
-                currentPartialProduct[partialColIndex] = resultDigit; 
+                // Yazma Animasyonu
+                animationQueue.push({ type: 'write', selector: `[data-row='partial-${i}'][data-col='${pCol}']`, value: writeVal });
+                solutionMap.set(`partial-${i}-${pCol}`, writeVal);
+                currentPartial[pCol] = writeVal;
 
+                // Elde Animasyonu (Varsa) - BİR SONRAKİ SÜTUNA (j+1)
                 if (carry > 0) {
-                    animationQueue.push({ type: 'write', selector: `[data-row='carry-${i}'][data-col='${j + 1}']`, value: carry });
-                    solutionMap.set(`carry-${i}-${j + 1}`, carry);
+                    animationQueue.push({ type: 'write', selector: `[data-row='carry-${i}'][data-col='${j+1}']`, value: carry });
                 }
+                
                 animationQueue.push({ type: 'clear' });
                 animationQueue.push({ type: 'highlight', selector: `[data-row='num2'][data-col='${i}']` });
             }
+
+            // Son elde (varsa)
             if (carry > 0) {
-                const partialColIndex = n1.length + i;
-                animationQueue.push({ type: 'write', selector: `[data-row='partial-${i}'][data-col='${partialColIndex}']`, value: carry });
-                solutionMap.set(`partial-${i}-${partialColIndex}`, carry);
-                currentPartialProduct[partialColIndex] = carry;
+                const pCol = n1Arr.length + i;
+                animationQueue.push({ type: 'write', selector: `[data-row='partial-${i}'][data-col='${pCol}']`, value: carry });
+                solutionMap.set(`partial-${i}-${pCol}`, carry);
+                currentPartial[pCol] = carry;
             }
-            partialProducts.push(currentPartialProduct); 
+            partialProducts.push(currentPartial);
             animationQueue.push({ type: 'clear' });
         }
-        
-        // Faz 2: Toplama
-        if (n2.length > 1) {
+
+        // FAZ 2: TOPLAMA
+        if (n2Arr.length > 1) {
             let carry = 0;
-            const maxCols = totalCols - 1;
-            for (let j = 0; j < maxCols; j++) {
-                let columnSum = carry;
-                // Sütundaki sayıları topla
-                for (let i = 0; i < partialProducts.length; i++) {
-                    animationQueue.push({ type: 'highlight', selector: `[data-row='partial-${i}'][data-col='${j}']` });
-                    columnSum += partialProducts[i][j] || 0;
+            const maxCols = totalCols - 1; 
+
+            for (let col = 0; col < maxCols; col++) {
+                let sum = carry;
+                // Sütunu vurgula
+                for(let row=0; row < partialProducts.length; row++) {
+                    animationQueue.push({ type: 'highlight', selector: `[data-row='partial-${row}'][data-col='${col}']` });
+                    sum += (partialProducts[row][col] || 0);
                 }
-                
-                const resultDigit = columnSum % 10;
-                carry = Math.floor(columnSum / 10); // Yeni elde
 
-                // Sonucu yaz
-                animationQueue.push({ type: 'write', selector: `[data-row='result'][data-col='${j}']`, value: resultDigit });
-                solutionMap.set(`result-${j}`, resultDigit);
+                const writeVal = sum % 10;
+                carry = Math.floor(sum / 10);
 
-                // YENİ: Toplama Eldesini Yaz (Eğer varsa ve son basamak değilse)
+                animationQueue.push({ type: 'write', selector: `[data-row='result'][data-col='${col}']`, value: writeVal });
+                solutionMap.set(`result-${col}`, writeVal);
+
+                // Toplama Eldesi (Bir sonraki sütuna)
                 if (carry > 0) {
-                    // Eldeyi bir sonraki sütuna (j+1) yaz
-                    animationQueue.push({ type: 'write', selector: `[data-row='add-carry'][data-col='${j+1}']`, value: carry });
+                    animationQueue.push({ type: 'write', selector: `[data-row='add-carry'][data-col='${col+1}']`, value: carry });
                 }
 
                 animationQueue.push({ type: 'clear' });
@@ -228,129 +309,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 3. VERİLMEYEN RAKAM MODU (GÜNCELLENDİ) ---
+    function runAnimation() {
+        if (animationInterval) return; // Zaten çalışıyorsa çık
+        // Eğer bitmişse veya hiç başlamamışsa
+        if (currentStepIndex >= animationQueue.length || currentStepIndex === 0) {
+            currentStepIndex = 0;
+            clearResults();
+        }
+        animationInterval = setInterval(doNextStep, 500);
+    }
 
-    function populateGridForMissingMode() {
-        clearAllInputs();
-        writeProblemNumbers();
+    function doNextStep() {
+        if (currentStepIndex >= animationQueue.length) {
+            stopAnimation();
+            return;
+        }
+        const step = animationQueue[currentStepIndex];
+        
+        // Temizleme değilse önceki vurguları kaldır
+        if (step.type !== 'clear') clearHighlights();
 
-        // Sonuçları yaz
-        for (const [key, value] of solutionMap.entries()) {
+        if (step.type === 'highlight') {
+            const el = document.querySelector(step.selector);
+            if (el) el.classList.add('highlight-active');
+        } else if (step.type === 'write') {
+            const el = document.querySelector(step.selector);
+            if (el) el.textContent = step.value;
+        } else if (step.type === 'clear') {
+            clearHighlights();
+        }
+        currentStepIndex++;
+    }
+
+    function stopAnimation() {
+        clearInterval(animationInterval);
+        animationInterval = null;
+        clearHighlights();
+    }
+
+    // --- YARDIMCI İŞLEMLER ---
+
+    function createCell(content, dRow, dCol, ...classes) {
+        const div = document.createElement('div');
+        div.classList.add('grid-cell');
+        if (classes.length) div.classList.add(...classes);
+        if (dRow) div.dataset.row = dRow;
+        if (dCol !== null && dCol !== undefined) div.dataset.col = dCol;
+        div.textContent = content;
+        return div;
+    }
+
+    function clearResults() {
+        // Eldeler, Kısmi Sonuçlar, Final Sonuç, Toplama Eldeleri
+        const selectors = ['.cell-carry', '.cell-partial', '.cell-result', '.cell-add-carry'];
+        selectors.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                // '+' işaretini silme
+                if (el.textContent !== '+') el.textContent = '';
+            });
+        });
+    }
+
+    function clearHighlights() {
+        document.querySelectorAll('.highlight-active').forEach(el => el.classList.remove('highlight-active'));
+    }
+
+    // Gizli moda geçince sonuçları otomatik doldurur (ki öğretmen hangisini gizleyeceğini seçebilsin)
+    function fillGridWithResults() {
+        for (const [key, val] of solutionMap.entries()) {
             const parts = key.split('-');
             let selector = '';
-            if (key.startsWith('partial-')) selector = `[data-row='${parts[0]}-${parts[1]}'][data-col='${parts[2]}']`;
-            else if (key.startsWith('result-')) selector = `[data-row='${parts[0]}'][data-col='${parts[1]}']`;
+            if (key.startsWith('partial')) selector = `[data-row='${parts[0]}-${parts[1]}'][data-col='${parts[2]}']`;
+            else if (key.startsWith('result')) selector = `[data-row='${parts[0]}'][data-col='${parts[1]}']`;
             
             if (selector) {
-                const cell = document.querySelector(selector);
-                if (cell) cell.textContent = value;
+                const el = document.querySelector(selector);
+                if (el) el.textContent = val;
             }
         }
-
-        // KURAL: 1. Çarpan'dan kesinlikle 1 tane, 2. Çarpan'dan kesinlikle 1 tane gizle.
-        const num1Cells = Array.from(document.querySelectorAll("[data-row='num1']"));
-        const num2Cells = Array.from(document.querySelectorAll("[data-row='num2']"));
-
-        // Rastgele birer tane seç
-        if (num1Cells.length > 0) {
-            const randomIdx1 = Math.floor(Math.random() * num1Cells.length);
-            createMissingDigitInput(num1Cells[randomIdx1], num1Cells[randomIdx1].textContent);
-        }
-
-        if (num2Cells.length > 0) {
-            const randomIdx2 = Math.floor(Math.random() * num2Cells.length);
-            createMissingDigitInput(num2Cells[randomIdx2], num2Cells[randomIdx2].textContent);
-        }
-    }
-
-    // --- YARDIMCI VE UI FONKSİYONLARI ---
-
-    function fillRowWithEmpty(count) {
-        for (let i = 0; i < count; i++) gridContainer.appendChild(createCell(''));
-    }
-
-    function fillRowWithLine(count) {
-        for (let i = 0; i < count; i++) gridContainer.appendChild(createCell('', null, null, 'cell-line'));
-    }
-
-    function createCell(content = '', dataRow = null, dataCol = null, ...classes) {
-        const cell = document.createElement('div');
-        cell.classList.add('grid-cell');
-        if (classes.length > 0) cell.classList.add(...classes);
-        if (dataRow !== null) cell.dataset.row = dataRow;
-        if (dataCol !== null) cell.dataset.col = dataCol;
-        cell.textContent = content;
-        return cell;
-    }
-
-    function writeProblemNumbers() {
-        num1Str.split('').forEach((digit, i) => {
-            const colIndex = num1Str.length - 1 - i;
-            const cell = document.querySelector(`[data-row='num1'][data-col='${colIndex}']`);
-            if (cell) { cell.textContent = digit; cell.addEventListener('click', makeCellEditable); }
-        });
-        num2Str.split('').forEach((digit, i) => {
-            const colIndex = num2Str.length - 1 - i;
-            const cell = document.querySelector(`[data-row='num2'][data-col='${colIndex}']`);
-            if (cell) { cell.textContent = digit; cell.addEventListener('click', makeCellEditable); }
-        });
-    }
-
-    function makeCellEditable(event) {
-        if (missingDigitModeToggle.checked || animationInterval) return;
-        const cell = event.currentTarget;
-        if (cell.querySelector('input')) return; 
-        const val = cell.textContent;
-        cell.innerHTML = '';
-        const input = document.createElement('input');
-        input.type = 'text'; input.inputMode = 'numeric'; input.pattern = '[0-9]'; input.maxLength = 1;
-        input.classList.add('missing-digit-input'); input.value = val;
-        input.addEventListener('blur', saveCellEdit);
-        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
-        cell.appendChild(input); input.focus();
-    }
-
-    function saveCellEdit(event) {
-        const input = event.target;
-        const cell = input.parentElement;
-        let val = input.value.replace(/[^0-9]/g, '');
-        if (val === '') val = '0';
-        cell.textContent = val;
-        cell.addEventListener('click', makeCellEditable);
-        recalculateProblemFromDOM();
-    }
-
-    function recalculateProblemFromDOM() {
-        const n1 = Array.from(document.querySelectorAll("[data-row='num1']")).sort((a,b)=>b.dataset.col-a.dataset.col).map(c=>c.textContent).join('');
-        const n2 = Array.from(document.querySelectorAll("[data-row='num2']")).sort((a,b)=>b.dataset.col-a.dataset.col).map(c=>c.textContent).join('');
-        num1Str = n1; num2Str = n2;
-        clearInterval(animationInterval); animationQueue = []; currentStepIndex = 0; solutionMap.clear();
-        clearAllResults();
-        prepareAnimation(num1Str, num2Str);
-    }
-
-    function toggleMode() {
-        const isMissing = missingDigitModeToggle.checked;
-        setupGrid(num1Str, num2Str, isMissing); // Grid'i yeniden kur (elde satırlarını göster/gizle)
-        prepareAnimation(num1Str, num2Str);
-        if (isMissing) populateGridForMissingMode();
-        else writeProblemNumbers();
-        updateUiForMode(isMissing);
-    }
-
-    function updateUiForMode(isMissing) {
-        animationControls.style.display = isMissing ? 'none' : 'flex';
-        checkingControls.style.display = isMissing ? 'block' : 'none';
-        missingOptions.style.display = isMissing ? 'flex' : 'none';
-    }
-
-    function createMissingDigitInput(cell, correctVal) {
-        cell.innerHTML = '';
-        const input = document.createElement('input');
-        input.type = 'text'; input.inputMode = 'numeric'; input.pattern = '[0-9]'; input.maxLength = 1;
-        input.classList.add('missing-digit-input'); input.dataset.correct = correctVal;
-        input.addEventListener('input', (e) => e.target.value = e.target.value.replace(/[^0-9]/g, ''));
-        cell.appendChild(input); cell.removeEventListener('click', makeCellEditable);
     }
 
     function checkSolution() {
@@ -358,49 +394,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let allCorrect = true;
         inputs.forEach(inp => {
             inp.classList.remove('correct', 'incorrect');
-            if (inp.value === inp.dataset.correct) inp.classList.add('correct');
-            else { inp.classList.add('incorrect'); allCorrect = false; }
+            if (inp.value === inp.dataset.correct) {
+                inp.classList.add('correct');
+            } else {
+                inp.classList.add('incorrect');
+                allCorrect = false;
+            }
         });
-        if (allCorrect && inputs.length > 0) setTimeout(() => alert('Tebrikler!'), 100);
+        if (allCorrect && inputs.length > 0) {
+            setTimeout(() => alert("Tebrikler! Hepsi doğru."), 100);
+        }
     }
-
-    function clearAllInputs() {
-        document.querySelectorAll('.missing-digit-input').forEach(inp => {
-            const cell = inp.parentElement;
-            if (cell && inp.dataset.correct) cell.textContent = inp.dataset.correct;
-            cell.addEventListener('click', makeCellEditable);
-        });
-    }
-
-    function clearAllResults() {
-        document.querySelectorAll('.cell-carry, .cell-partial, .cell-result, .cell-add-carry').forEach(c => c.textContent = '');
-    }
-
-    function clearAllHighlights() {
-        document.querySelectorAll('.highlight-active').forEach(c => c.classList.remove('highlight-active'));
-    }
-
-    function doNextStep() {
-        if (currentStepIndex >= animationQueue.length) { clearInterval(animationInterval); clearAllHighlights(); return; }
-        const step = animationQueue[currentStepIndex];
-        if (step.type !== 'clear') clearAllHighlights();
-        if (step.type === 'highlight') document.querySelector(step.selector)?.classList.add('highlight-active');
-        else if (step.type === 'write') { const el = document.querySelector(step.selector); if(el) el.textContent = step.value; }
-        else if (step.type === 'clear') clearAllHighlights();
-        currentStepIndex++;
-    }
-
-    function runAnimation() {
-        if (animationInterval) return;
-        if (currentStepIndex >= animationQueue.length) { currentStepIndex = 0; clearAllResults(); }
-        animationInterval = setInterval(doNextStep, 500);
-    }
-
-    function generateRandomNumber(d) {
-        const min = d===1?0:Math.pow(10,d-1); const max = Math.pow(10,d)-1;
-        return Math.floor(Math.random()*(max-min+1))+min;
-    }
-
-    // Başlangıç
-    createProblem();
 });
