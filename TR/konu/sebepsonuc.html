@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4. Sınıf Türkçe: Neden - Sonuç (Tam Sürüm + Menü Kontrolü)</title>
+    <title>4. Sınıf Türkçe: Neden - Sonuç (Final Eksiksiz Sürüm)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --sidebar-width: 280px;
-            --sidebar-bg: #2c3e50;
-            --active-color: #e67e22;
-            --bg-color: #f4f6f7;
             --primary: #3498db;
-            --success: #27ae60;
-            --danger: #c0392b;
+            --secondary: #2c3e50;
+            --accent: #e67e22;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --bg: #ecf0f1;
+            --card-bg: #ffffff;
+            --sidebar-width: 280px;
         }
 
         * { box-sizing: border-box; }
@@ -22,39 +23,35 @@
         body {
             margin: 0; padding: 0;
             font-family: 'Nunito', sans-serif;
-            background-color: var(--bg-color);
+            background-color: var(--bg);
             display: flex;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* --- 1. SOL MENÜ (KAYAN YAPI) --- */
+        /* --- 1. SOL MENÜ (AÇILIR / KAPANIR) --- */
         .sidebar {
             width: var(--sidebar-width);
-            background-color: var(--sidebar-bg);
-            color: #ecf0f1;
+            background-color: var(--secondary);
+            color: white;
             display: flex;
             flex-direction: column;
             height: 100%;
-            position: fixed; /* Sabitlendi */
-            left: 0;
-            top: 0;
+            position: fixed;
+            left: 0; top: 0; bottom: 0;
             z-index: 1000;
-            transition: transform 0.3s ease-in-out; /* Animasyon */
-            box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease-in-out;
             overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
         }
 
-        /* Menü Kapalıyken */
-        .sidebar.closed {
-            transform: translateX(-100%);
-        }
+        .sidebar.closed { transform: translateX(-100%); }
 
         .brand {
             padding: 20px;
             background: #1a252f;
             text-align: center;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: bold;
             border-bottom: 1px solid #34495e;
             display: flex;
@@ -64,8 +61,8 @@
 
         .menu-item {
             padding: 15px 20px;
-            cursor: pointer;
             border-bottom: 1px solid #34495e;
+            cursor: pointer;
             transition: 0.2s;
             display: flex;
             align-items: center;
@@ -73,92 +70,116 @@
             font-size: 1.05rem;
             color: #bdc3c7;
         }
-
-        .menu-item:hover { background-color: #34495e; color: white; }
-        .menu-item.active { background-color: var(--active-color); color: white; font-weight: bold; }
-        .menu-item i { width: 25px; text-align: center; }
+        .menu-item:hover { background: #34495e; color: white; }
+        .menu-item.active { background: var(--accent); color: white; font-weight: bold; border-left: 5px solid white; }
 
         /* --- 2. İÇERİK ALANI --- */
-        .content {
+        .content-wrapper {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s ease-in-out;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .content-wrapper.full { margin-left: 0; }
+
+        .top-bar {
+            background: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            z-index: 900;
+        }
+
+        .toggle-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .main-content {
             flex: 1;
             padding: 30px;
             overflow-y: auto;
             scroll-behavior: smooth;
-            margin-left: var(--sidebar-width); /* Menü kadar boşluk */
-            transition: margin-left 0.3s ease-in-out; /* Animasyon */
-            position: relative;
         }
 
-        /* Menü Kapalıyken İçerik Genişler */
-        .content.expanded {
-            margin-left: 0;
-        }
-
-        /* MENÜ AÇMA/KAPAMA BUTONU */
-        .toggle-btn {
-            position: sticky;
-            top: 0;
-            left: 0;
-            z-index: 900;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .toggle-btn:hover { background: #2980b9; }
-
-        /* --- SAYFA YAPISI --- */
+        /* --- SAYFA STİLLERİ --- */
         .page {
             display: none;
             max-width: 1000px;
-            margin: 0 auto;
+            margin: 0 auto 50px auto;
             background: white;
-            padding: 50px;
+            padding: 40px;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            animation: fadeIn 0.4s ease-in;
+            animation: fadeIn 0.4s;
         }
         .page.active { display: block; }
-
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        h1 { color: var(--active-color); border-bottom: 3px solid #eee; padding-bottom: 10px; margin-top: 0; font-family: 'Comic Neue', cursive; }
-        h2 { color: var(--primary); margin-top: 30px; border-left: 5px solid var(--primary); padding-left: 15px; }
+        h1 { color: var(--secondary); border-bottom: 3px solid #eee; padding-bottom: 10px; font-family: 'Comic Neue', cursive; margin-top: 0; }
+        h2 { color: var(--primary); margin-top: 30px; border-left: 5px solid var(--accent); padding-left: 10px; }
+        
+        /* BİLEŞENLER */
+        .note-box { background: #fff8e1; border: 2px solid #ffe082; padding: 20px; border-radius: 10px; font-size: 1.15rem; margin-bottom: 20px; }
+        
+        .cloud-container { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; }
+        .cloud {
+            background: #81d4fa; color: #01579b; padding: 10px 25px; border-radius: 50px;
+            font-weight: bold; border: 2px solid white; box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
 
-        /* --- ÖZEL BİLEŞENLER --- */
-        .note-box { background: #fff3cd; padding: 20px; border-radius: 10px; border: 2px solid #ffeeba; margin-bottom: 20px; }
-        .keyword-cloud { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
-        .keyword { background: #d1ecf1; color: #0c5460; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: default; }
-        
         .story-text {
-            font-size: 1.3rem; line-height: 1.9; text-align: justify;
-            background: #f8f9fa; padding: 30px; border-radius: 10px; border: 1px solid #e9ecef;
+            font-size: 1.3rem; line-height: 1.8; text-align: justify;
+            background: #f8f9fa; padding: 25px; border-radius: 10px; border: 1px solid #e9ecef;
         }
+
+        /* SORU KARTLARI (ÖNEMLİ: RENKLER GİZLİ) */
+        .quiz-card {
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        .q-text { font-weight: bold; font-size: 1.2rem; margin-bottom: 15px; color: #333; }
         
-        .full-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .full-table th { background: #e67e22; color: white; padding: 15px; text-align: left; }
-        .full-table td { border: 1px solid #ddd; padding: 15px; background: #fff; }
+        .options-grid { display: grid; gap: 10px; }
         
-        .quiz-card { border: 2px solid #eee; padding: 20px; border-radius: 10px; margin-bottom: 20px; background: white; }
         .opt-btn {
-            display: block; width: 100%; padding: 15px; text-align: left; background: white; 
-            border: 2px solid #dfe6e9; border-radius: 8px; cursor: pointer; font-size: 1.1rem; 
-            transition: 0.2s; margin-bottom: 8px;
+            width: 100%;
+            padding: 15px;
+            text-align: left;
+            background: white; /* Başlangıç rengi BEYAZ */
+            border: 2px solid #dcdde1;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #555;
+            transition: 0.2s;
         }
-        .opt-btn:hover { background: #f1f2f6; border-color: var(--primary); }
-        .opt-btn.correct { background: var(--success); color: white; border-color: var(--success); }
-        .opt-btn.wrong { background: var(--danger); color: white; border-color: var(--danger); }
         
-        .reveal-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
-        .answer-text { display: none; color: var(--danger); font-weight: bold; margin-top: 10px; background: #fadbd8; padding: 10px; border-radius: 5px; }
+        .opt-btn:hover { background: #f1f2f6; border-color: var(--primary); }
+        
+        /* Cevap açılınca gelecek stiller (JS ile eklenir) */
+        .opt-btn.revealed-correct { background-color: var(--success) !important; color: white !important; border-color: var(--success) !important; }
+        .opt-btn.revealed-wrong { background-color: var(--error) !important; color: white !important; border-color: var(--error) !important; opacity: 0.6; }
+
+        /* TABLOLAR */
+        .orange-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .orange-table th { background: #e67e22; color: white; padding: 12px; border: 1px solid #d35400; }
+        .orange-table td { border: 1px solid #e67e22; padding: 10px; background: #fff3e0; }
+        .orange-table input { width: 100%; padding: 8px; border: 1px dashed #e67e22; }
 
     </style>
 </head>
@@ -166,273 +187,304 @@
 
     <div class="sidebar" id="sidebar">
         <div class="brand">
-            <span><i class="fas fa-book-reader"></i> Türkçe 4</span>
-            <span style="font-size:0.8rem; cursor:pointer;" onclick="toggleMenu()"><i class="fas fa-times"></i></span>
+            <span>TÜRKÇE 4</span>
+            <span style="cursor:pointer;" onclick="toggleMenu()"><i class="fas fa-times"></i></span>
         </div>
-        <div class="menu-item active" onclick="showPage('notlar', this)"><i class="fas fa-sticky-note"></i> Konu Anlatımı</div>
-        <div class="menu-item" onclick="showPage('hikaye1', this)"><i class="fas fa-bus"></i> Hikaye: Geç Kalan Sevgi</div>
-        <div class="menu-item" onclick="showPage('hikaye2', this)"><i class="fas fa-crown"></i> Hikaye: Cesur Kral</div>
-        <div class="menu-item" onclick="showPage('etkinlikler', this)"><i class="fas fa-pencil-alt"></i> Etkinlikler & Tablo</div>
-        <div class="menu-item" onclick="showPage('test1', this)"><i class="fas fa-tasks"></i> Test 1: Çoktan Seçmeli</div>
-        <div class="menu-item" onclick="showPage('test2', this)"><i class="fas fa-images"></i> Test 2: Görsel Sorular</div>
+        <div class="menu-item active" onclick="showPage('p1', this)"><i class="fas fa-book"></i> Konu & Notlar</div>
+        <div class="menu-item" onclick="showPage('p2', this)"><i class="fas fa-bus"></i> Okuma: Geç Kalan Sevgi</div>
+        <div class="menu-item" onclick="showPage('p3', this)"><i class="fas fa-crown"></i> Okuma: Cesur Kral</div>
+        <div class="menu-item" onclick="showPage('p4', this)"><i class="fas fa-edit"></i> Etkinlikler</div>
+        <div class="menu-item" onclick="showPage('p5', this)"><i class="fas fa-list-ol"></i> Test 1: Genel Sorular (12 Soru)</div>
+        <div class="menu-item" onclick="showPage('p6', this)"><i class="fas fa-image"></i> Test 2: Görsel Sorular (6 Soru)</div>
     </div>
 
-    <div class="content" id="content">
-        
-        <button class="toggle-btn" onclick="toggleMenu()">
-            <i class="fas fa-bars"></i> Menü
-        </button>
+    <div class="content-wrapper" id="contentWrapper">
+        <div class="top-bar">
+            <button class="toggle-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i> Menü</button>
+            <div style="margin-left: auto; font-weight: bold; color: var(--primary);">Neden - Sonuç İlişkisi</div>
+        </div>
 
-        <div id="notlar" class="page active">
-            <h1>📝 Kapsamlı Defter Notu</h1>
+        <div class="main-content">
             
-            <div class="note-box">
-                <h3>📌 Tanım:</h3>
-                <p>Cümlelerde geçen olay, düşünce, durum ve duyguların bir nedene (gerekçeye) bağlı olarak anlatıldığı cümlelere <strong>Sebep - Sonuç (Neden - Sonuç)</strong> cümleleri denir.</p>
+            <div id="p1" class="page active">
+                <h1>📝 Ders Notları</h1>
+                <div class="note-box">
+                    <strong>Tanım:</strong> Bir eylemin hangi gerekçeyle (nedenle) yapıldığını bildiren cümlelerdir. Cümleye "Neden?" veya "Niçin?" sorusu sorulduğunda cevap alınır.
+                </div>
+
+                <h2>🔑 İpuçlu Kelimeler</h2>
+                <div class="cloud-container">
+                    <div class="cloud">İçin</div>
+                    <div class="cloud">Çünkü</div>
+                    <div class="cloud">Bu yüzden</div>
+                    <div class="cloud">Bu sebeple</div>
+                    <div class="cloud">-den dolayı</div>
+                    <div class="cloud">Bunun sonucunda</div>
+                </div>
+
+                <h2>💡 Örnekler</h2>
+                <ul style="line-height: 1.8; font-size: 1.1rem;">
+                    <li>Yağmur yağdı <strong>bu yüzden</strong> her yer çamur oldu.</li>
+                    <li>Toplantı ertelendi <strong>çünkü</strong> yeterli katılım yoktu.</li>
+                    <li>Köye çığ düştü, <strong>bu sebeple</strong> köylüler evsiz kaldı.</li>
+                    <li>Hakan yaşadığı kazadan <strong>dolayı</strong> çok sinirliydi.</li>
+                </ul>
             </div>
 
-            <h2>🔑 Anahtar Kelimeler</h2>
-            <p>Sebep-sonuç ilişkisi kurmak için şu ifadeleri kullanırız:</p>
-            <div class="keyword-cloud">
-                <span class="keyword">İçin</span>
-                <span class="keyword">Çünkü</span>
-                <span class="keyword">Bu yüzden</span>
-                <span class="keyword">Bu sebeple</span>
-                <span class="keyword">Dolayısıyla</span>
-                <span class="keyword">-den dolayı</span>
-                <span class="keyword">Bunun sonucunda</span>
+            <div id="p2" class="page">
+                <h1>📖 Geç Kalan Sevgi</h1>
+                <p><em>Metnin tamamı aşağıdadır. Görsellerden birebir aktarılmıştır.</em></p>
+                <div class="story-text">
+                    <p>Sevgi, okuldan eve dönerken o hiç sevmediği ıssız ve korkutucu yolda yaklaşık bir saattir minibüs bekliyordu. Soğuktan titriyor, gecenin karanlığından ve sessizliğinden korkuyordu. Minibüsün neden bu kadar geç kaldığını düşünüyordu. Vakit ilerliyor, minibüs hâlâ gelmiyordu. O ise korkmaya ve üşümeye devam ediyordu.</p>
+                    <p>Birden arkasında bir köpek hırlaması duydu. Köpek ona sanki yiyecekmiş gibi bakıyordu. Besili bir köpekti. Keskin dişleri görünüyordu. Köpeğin gözlerinin içine kısa bir süre kilitli kaldı sonra bir anda koşmaya başladı. Köpek de arkasında kovalamaya... Hayatında hiç bu kadar hızlı koştuğunu hatırlamıyordu.</p>
+                    <p>Biraz koştuktan sonra bir apartmanın içine girdi ve köpeğin gitmesini bekledi. Köpeğin gittiğinden emin olduktan sonra dışarı çıktı. Biraz yürüdükten sonra bineceği minibüsü gördü ve durdurdu. Meğer minibüsü beklediği yolun az ilerisinde <strong>yol çalışması varmış</strong> ve minibüs başka yoldan gidiyormuş.</p>
+                    <p>Düşünüyorum da o gün köpek onu kovalamamış olsaydı kim bilir kaç saat daha orada minibüs bekleyecekti.</p>
+                </div>
             </div>
 
-            <h2>💡 Örnekler (Deftere Yazalım)</h2>
-            <ul style="list-style-type: disc; margin-left: 20px;">
-                <li>Yağmur yağdı <strong>bu yüzden</strong> her yer çamur oldu.</li>
-                <li>Toplantı ertelendi <strong>çünkü</strong> yeterli katılım yoktu.</li>
-                <li>Çok şeker tükettiğim <strong>için</strong> cildimde alerji oluştu.</li>
-                <li>Param yok <strong>bu sebeple</strong> istediğim kıyafeti alamadım.</li>
-                <li>Diş doktoruna randevu aldım <strong>çünkü</strong> dişim çok ağrıyor.</li>
-            </ul>
+            <div id="p3" class="page">
+                <h1>👑 Cesur Kral ve Ak Sakallı Dede</h1>
+                <p><em>Masalın tamamı aşağıdadır.</em></p>
+                <div class="story-text">
+                    <p>Bir zamanlar ülkelerin birinde çok ünlü bir kral yaşarmış... Çok cesur bir kralmış. Gelin görün ki bu kralın bir kusuru varmış. Kendisine anlatılana hemen inanır, duydukları onda bir ön yargı oluştururmuş...</p>
+                    <p>Yıllar geçmiş, kral yaşlanmış. "Ölmeden önce son bir isteğim var! Bilge biri olarak anılmak!" demiş... <strong>Bu yüzden de kral sürekli okumaya</strong>, çevresindeki bilge kişilerle fikir alışverişinde bulunmaya başlamış.</p>
+                    <p>...(Ormanda Ak Sakallı Dede ile karşılaşırlar)...</p>
+                    <p>Ak sakallı dede... <strong>"Tam beş parmaktır!"</strong> demiş. "Bak, elini yüzüne koy, gözlerin ile kulağın arası tam beş parmaktır. Kulağınla duyduğuna hemen inanma, yanlış olabilir. Duyduklarını gözlerinle de görüyorsan duyduğuna inanabilirsin. İşte, bu nedenle doğru ile yanlış arasında beş parmaklık uzaklık vardır."</p>
+                </div>
+            </div>
+
+            <div id="p4" class="page">
+                <h1>🧩 Etkinlikler</h1>
+                
+                <h3>1. Tabloyu Tamamla</h3>
+                <table class="orange-table">
+                    <tr><th>NEDEN (SEBEP)</th><th>SONUÇ</th></tr>
+                    <tr><td>Hayat boyu öğrenmeye devam ettiği için</td><td><input type="text"></td></tr>
+                    <tr><td><input type="text"></td><td>çünkü yapmak istediğim şeyleri yapamam.</td></tr>
+                    <tr><td>Tehlikeli olduğu için</td><td><input type="text"></td></tr>
+                </table>
+
+                <h3 style="margin-top:30px;">2. Eşleştirme (Siirt Arge)</h3>
+                <div class="quiz-card">
+                    <p><strong>A. Kardan adam yapmak için...</strong></p>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="checkMatch(this, true)">...bahçeye çıktık.</button>
+                        <button class="opt-btn" onclick="checkMatch(this, false)">...yemek yedik.</button>
+                    </div>
+                </div>
+                <div class="quiz-card">
+                    <p><strong>B. Araştırma ödevim olduğu için...</strong></p>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="checkMatch(this, false)">...uyudum.</button>
+                        <button class="opt-btn" onclick="checkMatch(this, true)">...kütüphaneye gideceğim.</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="p5" class="page">
+                <h1>📝 Test 1: Soru Bankası</h1>
+                <p>Verilen PDF ve dökümanlardan derlenen tüm sorular buradadır.</p>
+
+                <div class="quiz-card">
+                    <div class="q-text">1. Aşağıdaki cümlelerin hangisi sebep - sonuç cümlesi değildir?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, false)">A) Fırın kapandığı için ekmek alamadım.</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) Kar yağınca okullar tatil oldu.</button>
+                        <button class="opt-btn" onclick="check(this, true)">C) Size gelemiyorum çünkü misafir gelecek. (Mazeret/Amaç)</button>
+                        <button class="opt-btn" onclick="check(this, false)">D) Korku sevinç gibi duygularda nabız artar.</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">2. Aşağıdaki cümlelerin hangisinde sebep - sonuç ilişkisi vardır?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, true)">A) Hastalandığı için okul maçına gelemedi.</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) Senin kadar yaramaz bir çocuk görmedim.</button>
+                        <button class="opt-btn" onclick="check(this, false)">C) Kitap okumak bir zevktir.</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">3. Hangi cümleye "Neden?" sorusunu sorarsak cevap ALAMAYIZ?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, false)">A) Odunlar yaş olduğundan sobayı yakamadı.</button>
+                        <button class="opt-btn" onclick="check(this, true)">B) Uzun ince bir yoldayım, gidiyorum gündüz gece.</button>
+                        <button class="opt-btn" onclick="check(this, false)">C) Şarjım bittiğinden dolayı arayamadım.</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">4. "Oyun kolu bozuk olduğu için beni yenebildin." cümlesinde sebep bildiren kelime hangisidir?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, true)">A) için</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) bozuk</button>
+                        <button class="opt-btn" onclick="check(this, false)">C) oyun</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">5. "Komşuları rahatsız etmemek için müziğin ......."</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, false)">A) sesini açtık.</button>
+                        <button class="opt-btn" onclick="check(this, true)">B) sesini kıstık.</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">6. "Telefonu arızalandı bu yüzden kimse ona ......."</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, true)">A) ulaşamıyor.</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) gelemiyor.</button>
+                    </div>
+                </div>
+
+                 <div class="quiz-card">
+                    <div class="q-text">7. Hangisi sebep-sonuç ilişkisi kuramaz?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, false)">A) Dolayısıyla</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) Bu yüzden</button>
+                        <button class="opt-btn" onclick="check(this, true)">C) Ama</button>
+                        <button class="opt-btn" onclick="check(this, false)">D) Çünkü</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">8. Hangisinde sebep-sonuç ilişkisi vardır?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, true)">A) Uzun süre annemi aramayınca meraklanmış.</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) Geleceğe umutla bakıyoruz.</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">9. Hangisinde sebep-sonuç anlamı YOKTUR?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, false)">A) Başı ağrıdığı için yattı.</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) Bilgisayara çok baktığından gözleri bozuldu.</button>
+                        <button class="opt-btn" onclick="check(this, true)">C) Bu yemek çok lezzetli olmuş.</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="p6" class="page">
+                <h1>🖼️ Test 2: Görsel Okuma ve Yorumlama</h1>
+                <p>Ekran görüntülerindeki sorular buraya aktarılmıştır. (Başlangıçta cevaplar gizlidir)</p>
+
+                <div class="quiz-card">
+                    <div class="q-text">1. Balinalar birlikte beslenir, grup halinde yaşar, birbirini korur. Bu bilgilerden hangi sonuca ulaşılır?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, true)">A) Balinalar çoğunlukla diğer balinalarla birlikte zaman geçirir.</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) Balinalar tehlikelidir.</button>
+                        <button class="opt-btn" onclick="check(this, false)">C) Balinalar çok fazla yemek yer.</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">2. Hangi cümlede işi bırakma NEDENİ verilmiştir?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, false)">A) Bir ay önce işi bıraktı.</button>
+                        <button class="opt-btn" onclick="check(this, true)">B) Yoğun çalışmaktan bıktığı için işi bıraktı.</button>
+                        <button class="opt-btn" onclick="check(this, false)">C) Bu, bu yıl bıraktığı üçüncü iş oldu.</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">3. "....................... burnun tıkanmış." cümlesini hangisiyle tamamlarsak neden-sonuç olur?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, false)">A) Gözlerin şişmiş</button>
+                        <button class="opt-btn" onclick="check(this, true)">B) Nezle olmuşsun</button>
+                        <button class="opt-btn" onclick="check(this, false)">C) Sesin kısılmış</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">4. "Pastayı çok sevdiği için bir tabak daha istedi." cümlesiyle aynı ilişkiye sahip cümle hangisidir?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, false)">A) Bizim için çocukların mutluluğu önemlidir.</button>
+                        <button class="opt-btn" onclick="check(this, true)">B) Karanlıktan korktuğu için gece lambasını açtık.</button>
+                        <button class="opt-btn" onclick="check(this, false)">C) Ailem için buradan ayrılmak kolay değil.</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">5. "Vücudumuz normal sıcaklığını korumak ister bu yüzden soğuk günlerde..."</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, true)">A) ...sıcak tutacak giysilere ihtiyaç duyarız.</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) ...soğuk su içeriz.</button>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <div class="q-text">6. Aşağıdaki cümlelerin hangisinde neden sorusunun cevabı vardır?</div>
+                    <div class="options-grid">
+                        <button class="opt-btn" onclick="check(this, true)">A) Yemek yemedi de başı döndü (Neden? Yemek yemediği için).</button>
+                        <button class="opt-btn" onclick="check(this, false)">B) Yemek yiyecek gücü bile yoktu.</button>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
-
-        <div id="hikaye1" class="page">
-            <h1>📖 Hikaye: Geç Kalan Sevgi</h1>
-            <p><em>Metin görsellerden eksiksiz aktarılmıştır.</em></p>
-            
-            <div class="story-text">
-                <p>Sevgi, okuldan eve dönerken o hiç sevmediği ıssız ve korkutucu yolda yaklaşık bir saattir minibüs bekliyordu. Soğuktan titriyor, gecenin karanlığından ve sessizliğinden korkuyordu. Minibüsün neden bu kadar geç kaldığını düşünüyordu. Vakit ilerliyor, minibüs hâlâ gelmiyordu. O ise korkmaya ve üşümeye devam ediyordu.</p>
-                <p>Birden arkasında bir köpek hırlaması duydu. Köpek ona sanki yiyecekmiş gibi bakıyordu. Besili bir köpekti. Keskin dişleri görünüyordu. Köpeğin gözlerinin içine kısa bir süre kilitli kaldı sonra bir anda koşmaya başladı. Köpek de arkasında kovalamaya... Hayatında hiç bu kadar hızlı koştuğunu hatırlamıyordu.</p>
-                <p>Biraz koştuktan sonra bir apartmanın içine girdi ve köpeğin gitmesini bekledi. Köpeğin gittiğinden emin olduktan sonra dışarı çıktı. Biraz yürüdükten sonra bineceği minibüsü gördü ve durdurdu. Meğer minibüsü beklediği yolun az ilerisinde <strong>yol çalışması varmış</strong> ve minibüs başka yoldan gidiyormuş.</p>
-                <p>Düşünüyorum da o gün köpek onu kovalamamış olsaydı kim bilir kaç saat daha orada minibüs bekleyecekti.</p>
-            </div>
-
-            <h2>❓ Analiz Soruları</h2>
-            <div class="quiz-card">
-                <strong>1. Sevgi neden korkmuştur?</strong>
-                <br><button class="reveal-btn" onclick="toggleAns(this)">Cevabı Gör</button>
-                <div class="answer-text">Cevap: Yol ıssız, karanlık ve sessiz olduğu için. Ayrıca arkasından köpek hırladığı için.</div>
-            </div>
-            <div class="quiz-card">
-                <strong>2. Minibüs neden gelmiyormuş?</strong>
-                <br><button class="reveal-btn" onclick="toggleAns(this)">Cevabı Gör</button>
-                <div class="answer-text">Cevap: Yol çalışması olduğu için güzergah değiştirmiş.</div>
-            </div>
-        </div>
-
-        <div id="hikaye2" class="page">
-            <h1>👑 Hikaye: Cesur Kral ile Ak Sakallı Dede</h1>
-            <p><em>Metin görsellerden eksiksiz aktarılmıştır.</em></p>
-            
-            <div class="story-text">
-                <p>Bir zamanlar ülkelerin birinde çok ünlü bir kral yaşarmış. Bu ününü cengâverliğine borçluymuş. Çok cesur bir kralmış. Gelin görün ki bu kralın bir kusuru varmış. Kendisine anlatılana hemen inanır, duydukları onda bir ön yargı oluştururmuş. Çevresindekilere de bu ön yargılarına göre davranırmış.</p>
-                <p>Yıllar geçmiş, kral yaşlanmış. "Ölmeden önce son bir isteğim var!" demiş yardımcılarına. "Bilge biri olarak anılmak! Öldüğüm zaman cesur olduğum kadar bilge olduğumu da söylesin sevenlerim." demiş. <strong>Bu yüzden de kral sürekli okumaya</strong>, çevresindeki bilge kişilerle fikir alışverişinde bulunmaya başlamış.</p>
-                <p>Bu sohbetlerden birinde bir bilge, krala şöyle demiş: "Sayın kralım, kitaplardan ve sohbetlerden çok şey öğrendiniz. Bilgeliğe yaklaştınız ama bunlar yeterli değil. Ülkemizdeki en bilge kişiyle ak sakallı dede ile görüşmenizde fayda var. O size bilgeliğin anahtarını verebilir." ... Birlikte yola koyulmuşlar ... nihayet bir orman kulübesinde yaşayan ak sakallı dedenin yanına gelmişler.</p>
-                <p>Ak sakallı dede, kralın niçin orada olduğunu öğrenince ona bir soru sormuş: "Doğru ile yanlışı ayırt edemeyen bilge bir kişi olamaz. Doğru ile yanlış arasındaki uzaklık ne kadardır?" ... Ak sakallı dede <strong>"Tam beş parmaktır!"</strong> demiş. "Bak, elini yüzüne koy, gözlerin ile kulağın arası tam beş parmaktır. Kulağınla duyduğuna hemen inanma, yanlış olabilir. Duyduklarını gözlerinle de görüyorsan duyduğuna inanabilirsin. İşte, bu nedenle doğru ile yanlış arasında beş parmaklık uzaklık vardır."</p>
-            </div>
-
-            <h2>❓ Analiz Soruları</h2>
-            <div class="quiz-card">
-                <strong>1. Kral neden sürekli kitap okumaya başlamış?</strong>
-                <br><button class="reveal-btn" onclick="toggleAns(this)">Cevabı Gör</button>
-                <div class="answer-text">Cevap: Öldükten sonra "bilge biri" olarak anılmak istediği için.</div>
-            </div>
-             <div class="quiz-card">
-                <strong>2. Ak sakallı dedenin sorusunun cevabı nedir?</strong>
-                <br><button class="reveal-btn" onclick="toggleAns(this)">Cevabı Gör</button>
-                <div class="answer-text">Cevap: 5 parmaktır (Göz ve kulak arasındaki mesafe).</div>
-            </div>
-        </div>
-
-        <div id="etkinlikler" class="page">
-            <h1>🧩 Etkinlikler</h1>
-
-            <h2>1. Tablo Doldurma (Turuncu Tablo)</h2>
-            <p>Boşlukları uygun neden veya sonuçla doldurunuz.</p>
-            <table class="full-table">
-                <tr><th>NEDEN (SEBEP)</th><th>SONUÇ</th></tr>
-                <tr><td>Hayat boyu öğrenmeye devam ettiği için</td><td><input type="text" placeholder="Sonuç..." style="width:100%; padding:5px;"></td></tr>
-                <tr><td><input type="text" placeholder="Sebep..." style="width:100%; padding:5px;"></td><td>çünkü yapmak istediğim şeyleri yapamam.</td></tr>
-                <tr><td>Her alanda başarılı olamayız...</td><td><input type="text" placeholder="Sonuç..." style="width:100%; padding:5px;"></td></tr>
-                <tr><td>Tehlikeli olduğu için...</td><td><input type="text" placeholder="Sonuç..." style="width:100%; padding:5px;"></td></tr>
-            </table>
-
-            <h2>2. Cümle Eşleştirme</h2>
-            <p>Sebebe uygun sonucu seçiniz.</p>
-            <div class="quiz-card">
-                <p>⛄ <strong>Kardan adam yapmak için...</strong></p>
-                <select style="padding:10px;"><option>...</option><option>...bahçeye çıktık.</option><option>...eve girdik.</option></select>
-            </div>
-            <div class="quiz-card">
-                <p>📚 <strong>Araştırma ödevim olduğu için...</strong></p>
-                <select style="padding:10px;"><option>...</option><option>...kütüphaneye gideceğim.</option><option>...oyun oynadım.</option></select>
-            </div>
-        </div>
-
-        <div id="test1" class="page">
-            <h1>📝 Test 1: Soru Bankası</h1>
-            <p>Kaynak: Yüklenen PDF</p>
-
-            <div class="quiz-card">
-                <div class="quiz-text">1. Aşağıdaki cümlelerin hangisi sebep - sonuç cümlesi değildir?</div>
-                <div class="options">
-                    <button class="opt-btn wrong" onclick="check(this)">A) Fırın kapandığı için ekmek alamadım.</button>
-                    <button class="opt-btn wrong" onclick="check(this)">B) Kar yağınca okullar tatil oldu.</button>
-                    <button class="opt-btn correct" onclick="check(this)">C) Size gelemiyorum çünkü akşama misafirimiz gelecek. (Amaç/Mazeret)</button>
-                    <button class="opt-btn wrong" onclick="check(this)">D) Korku sevinç gibi duygularda nabız artar.</button>
-                </div>
-            </div>
-
-            <div class="quiz-card">
-                <div class="quiz-text">2. Aşağıdaki cümlelerin hangisinde sebep - sonuç ilişkisi vardır?</div>
-                <div class="options">
-                    <button class="opt-btn correct" onclick="check(this)">A) Hastalandığı için okul maçına gelemedi.</button>
-                    <button class="opt-btn wrong" onclick="check(this)">B) Senin kadar yaramaz bir çocuk görmedim.</button>
-                    <button class="opt-btn wrong" onclick="check(this)">C) Kitap okumak bir zevktir.</button>
-                </div>
-            </div>
-
-            <div class="quiz-card">
-                <div class="quiz-text">3. "Komşuları rahatsız etmemek için müziğin ............"</div>
-                <div class="options">
-                    <button class="opt-btn wrong" onclick="check(this)">A) Sesini açtık</button>
-                    <button class="opt-btn correct" onclick="check(this)">B) Sesini kıstık</button>
-                    <button class="opt-btn wrong" onclick="check(this)">C) Ritmini bozduk</button>
-                </div>
-            </div>
-
-            <div class="quiz-card">
-                <div class="quiz-text">4. "Telefonu arızalandı bu yüzden kimse ona ............"</div>
-                <div class="options">
-                    <button class="opt-btn wrong" onclick="check(this)">A) Gelecekmiş</button>
-                    <button class="opt-btn correct" onclick="check(this)">B) Ulaşamıyor</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="test2" class="page">
-            <h1>🖼️ Test 2: Görsel Sorular</h1>
-            <p>Kaynak: Yüklenen Ekran Görüntüleri</p>
-
-            <div class="quiz-card">
-                <div class="quiz-text">1. Balinalar birlikte beslenir, grup halinde yaşar, birbirini korur. Bu cümlelerden hangi sonuca ulaşılır?</div>
-                <div class="options">
-                    <button class="opt-btn correct" onclick="check(this)">A) Balinalar çoğunlukla diğer balinalarla birlikte zaman geçirir.</button>
-                    <button class="opt-btn wrong" onclick="check(this)">B) Balinalar tehlikelidir.</button>
-                </div>
-            </div>
-
-            <div class="quiz-card">
-                <div class="quiz-text">2. "...................... burnun tıkanmış." cümlesi hangisiyle tamamlanırsa neden-sonuç olur?</div>
-                <div class="options">
-                    <button class="opt-btn correct" onclick="check(this)">A) Nezle olmuşsun</button>
-                    <button class="opt-btn wrong" onclick="check(this)">B) Gözlerin şişmiş</button>
-                    <button class="opt-btn wrong" onclick="check(this)">C) Sesin kısılmış</button>
-                </div>
-            </div>
-
-            <div class="quiz-card">
-                <div class="quiz-text">3. Hangi cümlede işi bırakma NEDENİ verilmiştir?</div>
-                <div class="options">
-                    <button class="opt-btn wrong" onclick="check(this)">A) Bir ay önce işi bıraktı.</button>
-                    <button class="opt-btn correct" onclick="check(this)">B) Yoğun çalışmaktan bıktığı için işi bıraktı.</button>
-                </div>
-            </div>
-            
-            <div class="quiz-card">
-                <div class="quiz-text">4. "Vücudumuz normal sıcaklığını korumak ister bu yüzden soğuk günlerde..."</div>
-                <div class="options">
-                    <button class="opt-btn correct" onclick="check(this)">...sıcak tutacak giysilere ihtiyaç duyarız.</button>
-                    <button class="opt-btn wrong" onclick="check(this)">...soğuk su içeriz.</button>
-                </div>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        // MENÜ AÇ/KAPA
+        // MENÜ FONKSİYONU
         function toggleMenu() {
             var sidebar = document.getElementById('sidebar');
-            var content = document.getElementById('content');
+            var wrapper = document.getElementById('contentWrapper');
             
             if (sidebar.classList.contains('closed')) {
                 sidebar.classList.remove('closed');
-                content.classList.remove('expanded');
+                wrapper.classList.remove('full');
             } else {
                 sidebar.classList.add('closed');
-                content.classList.add('expanded');
+                wrapper.classList.add('full');
             }
         }
 
-        // SAYFA GÖSTERME
+        // SAYFA GEÇİŞİ
         function showPage(pageId, btn) {
-            // Tüm sayfaları gizle
+            // Sayfaları gizle
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            // Buton aktifliklerini kaldır
             document.querySelectorAll('.menu-item').forEach(b => b.classList.remove('active'));
             
             // Seçileni aç
             document.getElementById(pageId).classList.add('active');
             btn.classList.add('active');
-            
-            // Mobilde menüyü otomatik kapat
-            if(window.innerWidth < 768) {
-                toggleMenu();
-            }
         }
 
-        // CEVAP GÖSTER
-        function toggleAns(btn) {
-            var div = btn.nextElementSibling;
-            if (div.style.display === "block") {
-                div.style.display = "none";
-                btn.innerText = "Cevabı Gör";
-            } else {
-                div.style.display = "block";
-                btn.innerText = "Gizle";
-            }
-        }
-
-        // TEST KONTROL
-        function check(btn) {
+        // SORU KONTROL (RENK DEĞİŞİMİ SADECE TIKLANINCA)
+        function check(btn, isCorrect) {
+            // Şıkları kilitle
             var parent = btn.parentElement;
             var buttons = parent.getElementsByClassName('opt-btn');
             
-            for(var i=0; i<buttons.length; i++) {
+            for(var i=0; i<buttons.length; i++){
                 buttons[i].disabled = true;
-                buttons[i].style.opacity = "0.7";
+                buttons[i].style.cursor = 'default';
             }
-            btn.style.opacity = "1";
-            
-            if(btn.classList.contains('correct')) {
-                btn.innerHTML += " <i class='fas fa-check'></i> (Doğru)";
+
+            // Rengi uygula
+            if(isCorrect) {
+                btn.classList.add('revealed-correct');
+                btn.innerHTML += ' <i class="fas fa-check"></i>';
             } else {
-                btn.innerHTML += " <i class='fas fa-times'></i> (Yanlış)";
-                // Doğruyu işaretle
-                for(var i=0; i<buttons.length; i++) {
-                    if(buttons[i].classList.contains('correct')) {
-                         buttons[i].style.border = "2px solid #27ae60";
+                btn.classList.add('revealed-wrong');
+                btn.innerHTML += ' <i class="fas fa-times"></i>';
+                // Doğruyu göster
+                for(var i=0; i<buttons.length; i++){
+                    if(buttons[i].getAttribute('onclick').includes('true')) {
+                        buttons[i].classList.add('revealed-correct');
                     }
                 }
             }
         }
+        
+        function checkMatch(btn, isCorrect) {
+             check(btn, isCorrect);
+        }
+
     </script>
 </body>
 </html>
