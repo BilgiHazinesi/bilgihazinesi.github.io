@@ -2,444 +2,489 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4. Sınıf Türkçe: Neden - Sonuç (Tam Dijital Fasikül)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>4. Sınıf Türkçe: Neden - Sonuç (Tam Sürüm)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
     <style>
         :root {
-            --primary: #2d3436;
-            --accent: #d63031; /* Kırmızı vurgu */
-            --highlight: #fdcb6e; /* Sarı vurgu */
-            --bg-color: #dfe6e9;
-            --sidebar-width: 300px;
+            --bg-color: #e0c3fc;
+            --bg-gradient: linear-gradient(160deg, #8ec5fc 0%, #e0c3fc 100%);
+            --card-bg: #ffffff;
+            --primary: #6c5ce7;
+            --secondary: #00cec9;
+            --accent: #fd79a8;
+            --success: #00b894;
+            --error: #d63031;
+            --text: #2d3436;
+            --font-main: 'Nunito', sans-serif;
+            --font-title: 'Fredoka', sans-serif;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; user-select: none; }
 
         body {
             margin: 0; padding: 0;
-            font-family: 'Nunito', sans-serif;
-            background: var(--bg-color);
-            display: flex;
+            font-family: var(--font-main);
+            background-image: var(--bg-gradient);
             height: 100vh;
             overflow: hidden;
-        }
-
-        /* --- 1. SOL MENÜ (FASİKÜL İNDEKSİ) --- */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: white;
-            height: 100%;
-            overflow-y: auto;
-            border-right: 1px solid #ccc;
             display: flex;
             flex-direction: column;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- ANA EKRAN (TABLET GÖRÜNÜMÜ) --- */
+        .main-container {
+            width: 95%;
+            max-width: 1300px;
+            height: 85vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 8px solid white;
+            position: relative;
+        }
+
+        /* --- ÜST BAR --- */
+        .top-bar {
+            padding: 15px 30px;
+            background: white;
+            border-bottom: 2px solid #f1f2f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .app-title { font-family: var(--font-title); font-size: 1.8rem; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .score-badge { background: var(--accent); color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 1.2rem; box-shadow: 0 4px 0 rgba(0,0,0,0.1); }
+
+        /* --- İÇERİK ALANI (SLIDER) --- */
+        .content-stage {
+            flex: 1;
+            position: relative;
+            overflow-y: auto; /* İçerik taşarsa kaydır */
+            overflow-x: hidden;
+            padding: 40px;
+            scroll-behavior: smooth;
+        }
+        
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .screen.active { display: block; }
+
+        /* --- DOCK MENÜ (ALT NAVİGASYON) --- */
+        .dock {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             z-index: 100;
         }
 
-        .sidebar-header {
-            padding: 20px;
-            background: var(--primary);
-            color: white;
-            text-align: center;
-        }
-        .sidebar-header h2 { margin: 0; font-family: 'Patrick Hand', cursive; letter-spacing: 2px; }
-
-        .nav-btn {
-            padding: 15px 20px;
+        .dock-btn {
+            width: 60px; height: 60px;
+            border-radius: 50%;
             border: none;
-            background: white;
-            text-align: left;
-            font-size: 1.1rem;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f1f1;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #555;
-        }
-
-        .nav-btn:hover { background: #f1f2f6; padding-left: 25px; color: var(--accent); }
-        .nav-btn.active { background: var(--accent); color: white; padding-left: 25px; }
-        .nav-btn i { width: 25px; text-align: center; }
-
-        .score-display {
-            margin-top: auto;
-            padding: 20px;
-            background: #00b894;
-            color: white;
-            text-align: center;
-            font-weight: bold;
+            background: #f1f2f6;
+            color: #666;
             font-size: 1.5rem;
+            cursor: pointer;
+            transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
         }
+        .dock-btn:hover, .dock-btn.active { transform: translateY(-10px) scale(1.1); color: white; }
+        
+        /* Renk Kodları */
+        .btn-home:hover, .btn-home.active { background: #a29bfe; }
+        .btn-learn:hover, .btn-learn.active { background: #00cec9; }
+        .btn-story:hover, .btn-story.active { background: #fd79a8; }
+        .btn-activity:hover, .btn-activity.active { background: #fdcb6e; }
+        .btn-quiz:hover, .btn-quiz.active { background: #6c5ce7; }
 
-        /* --- 2. İÇERİK ALANI --- */
-        .content-area {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            scroll-behavior: smooth;
+        .tooltip {
+            position: absolute; top: -35px; background: #2d3436; color: white;
+            font-size: 0.8rem; padding: 4px 8px; border-radius: 5px; opacity: 0; pointer-events: none; white-space: nowrap;
         }
+        .dock-btn:hover .tooltip { opacity: 1; top: -45px; transition: 0.2s; }
 
-        .page-section {
-            background: white;
-            max-width: 1000px;
-            margin: 0 auto 50px auto;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            display: none; /* JS ile açılacak */
-            animation: fadeIn 0.4s ease-in;
+        /* --- BİLEŞENLER --- */
+        
+        /* Kartlar */
+        .card {
+            background: white; border-radius: 20px; padding: 30px; margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-left: 8px solid var(--primary);
         }
-        .page-section.active { display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        h1 { color: var(--primary); border-bottom: 4px solid var(--highlight); display: inline-block; margin-top: 0; }
-        h2 { color: var(--accent); margin-top: 30px; }
-
-        /* --- ÖZEL BİLEŞENLER --- */
         
         /* Bulutlar */
-        .cloud-wrap { display: flex; gap: 15px; flex-wrap: wrap; margin: 20px 0; }
+        .cloud-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; }
         .cloud {
-            background: #74b9ff; color: white; padding: 10px 25px;
-            border-radius: 30px; font-weight: bold; font-family: 'Patrick Hand', cursive;
-            font-size: 1.4rem; border: 3px solid #0984e3; cursor: help;
+            background: #74b9ff; color: white; padding: 15px 30px; border-radius: 50px;
+            font-weight: bold; font-size: 1.3rem; cursor: pointer; border: 3px solid white;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1); transition: 0.2s;
         }
-        
+        .cloud:hover { transform: scale(1.1) rotate(-3deg); background: #0984e3; }
+
         /* Hikaye Metni */
-        .story-content {
-            font-size: 1.3rem; line-height: 1.8; text-align: justify;
-            padding: 20px; background: #fffbe7; border-left: 8px solid var(--highlight);
-            border-radius: 0 10px 10px 0;
+        .story-text {
+            font-size: 1.6rem; line-height: 1.8; text-align: justify;
+            color: #2d3436; margin-bottom: 20px;
+            display: none; /* JS ile açılacak */
         }
+        .story-text.visible { display: block; animation: slideInUp 0.5s; }
         
-        /* Turuncu Tablo */
-        .orange-table { width: 100%; border-collapse: collapse; font-size: 1.2rem; }
-        .orange-table th { background: #e67e22; color: white; padding: 15px; border: 1px solid #d35400; }
-        .orange-table td { border: 1px solid #e67e22; padding: 10px; background: #fff3e0; }
-        .orange-table input { width: 100%; padding: 10px; border: 2px dashed #e67e22; border-radius: 5px; font-family: inherit; }
-
-        /* Balina Kartı */
-        .whale-card {
-            background: #e0f7fa; border: 3px solid #00bcd4; padding: 20px;
-            border-radius: 15px; display: flex; align-items: center; gap: 20px;
+        .nav-arrow {
+            background: var(--primary); color: white; border: none; padding: 10px 30px;
+            border-radius: 30px; font-size: 1.2rem; cursor: pointer; margin-top: 10px;
+            float: right;
         }
 
-        /* Test Soruları */
-        .quiz-item {
-            margin-bottom: 20px; border: 2px solid #eee; padding: 20px; border-radius: 10px;
+        /* Soru Kartları (Quiz) */
+        .quiz-container {
+            max-width: 800px; margin: 0 auto; text-align: center;
         }
-        .quiz-question { font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; color: #2d3436; }
-        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .q-btn {
-            padding: 12px; background: #f5f6fa; border: 1px solid #dcdde1;
-            border-radius: 8px; text-align: left; cursor: pointer; font-size: 1.1rem;
-            transition: 0.2s;
+        .question-text {
+            font-size: 1.8rem; font-weight: bold; color: var(--text); margin-bottom: 30px;
         }
-        .q-btn:hover { background: #dcdde1; }
-        .q-btn.correct { background: #2ecc71; color: white; border-color: #27ae60; }
-        .q-btn.wrong { background: #e74c3c; color: white; border-color: #c0392b; }
+        .options-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+        .option-btn {
+            padding: 20px; background: white; border: 3px solid #dfe6e9; border-radius: 15px;
+            font-size: 1.3rem; font-weight: bold; color: #636e72; cursor: pointer; transition: 0.2s;
+        }
+        .option-btn:hover { border-color: var(--primary); background: #f1f2f6; }
+        
+        /* Cevap Renkleri (JS ile eklenir) */
+        .option-btn.correct { background: var(--success) !important; color: white !important; border-color: var(--success) !important; }
+        .option-btn.wrong { background: var(--error) !important; color: white !important; border-color: var(--error) !important; animation: shake 0.5s; }
 
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-10px);} 75% {transform: translateX(10px);} }
+
+        /* Etkinlik Tablosu */
+        .orange-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        .orange-table th { background: #fdcb6e; color: white; padding: 15px; font-size: 1.4rem; border-radius: 10px 10px 0 0; }
+        .orange-table td { background: #fff; padding: 15px; box-shadow: 0 5px 0 rgba(0,0,0,0.05); font-size: 1.3rem; }
+        .table-input {
+            width: 100%; padding: 10px; font-size: 1.2rem; border: 2px solid #dfe6e9; border-radius: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-book-reader" style="font-size: 3rem; margin-bottom: 10px;"></i>
-            <h2>TÜRKÇE 4</h2>
-            <p>Neden - Sonuç Fasikülü</p>
-        </div>
-        
-        <button class="nav-btn active" onclick="showPage('p1')"><i class="fas fa-sticky-note"></i> Konu & Anahtar Kelimeler</button>
-        <button class="nav-btn" onclick="showPage('p2')"><i class="fas fa-book-open"></i> Okuma: Geç Kalan Sevgi</button>
-        <button class="nav-btn" onclick="showPage('p3')"><i class="fas fa-crown"></i> Okuma: Cesur Kral</button>
-        <button class="nav-btn" onclick="showPage('p4')"><i class="fas fa-table"></i> Etkinlik: Turuncu Tablo</button>
-        <button class="nav-btn" onclick="showPage('p5')"><i class="fas fa-fish"></i> Etkinlik: Görsel Okuma</button>
-        <button class="nav-btn" onclick="showPage('p6')"><i class="fas fa-check-double"></i> Test 1: Çoktan Seçmeli</button>
-        <button class="nav-btn" onclick="showPage('p7')"><i class="fas fa-tasks"></i> Test 2: Görsel Sorular</button>
-
-        <div class="score-display">
-            PUAN: <span id="totalScore">0</span>
-        </div>
+<div class="main-container">
+    
+    <div class="top-bar">
+        <div class="app-title"><i class="fas fa-graduation-cap"></i> 4. Sınıf Dedektifleri</div>
+        <div class="score-badge">Puan: <span id="score">0</span></div>
     </div>
 
-    <div class="content-area">
+    <div class="content-stage" id="stage">
 
-        <div id="p1" class="page-section active">
-            <h1>📌 Ders Notları ve Anahtar Kelimeler</h1>
-            <p style="font-size: 1.2rem;">Bir cümlede bir işin, hareketin veya durumun <strong style="color:var(--accent)">niçin/neden</strong> yapıldığı belirtiliyorsa bu cümlelere neden-sonuç cümleleri denir.</p>
-
-            <h3>☁️ İpuçlu Kelimeler (Sihirli Bulutlar)</h3>
-            <p>Bu kelimeleri gördüğün yerde dur ve düşün!</p>
-            <div class="cloud-wrap">
-                <div class="cloud">İÇİN</div>
-                <div class="cloud">ÇÜNKÜ</div>
-                <div class="cloud">BU YÜZDEN</div>
-                <div class="cloud">BU SEBEPLE</div>
-                <div class="cloud">DOLAYISIYLA</div>
-                <div class="cloud">-DEN DOLAYI</div>
-                <div class="cloud">BUNUN SONUCUNDA</div>
-            </div>
-
-            <h3>📝 Örnek İncelemesi</h3>
-            <ul style="font-size: 1.2rem; line-height: 1.8;">
-                <li><i class="fas fa-check" style="color:green"></i> Fırın kapandığı <strong>için</strong> ekmek alamadım. (Sebep: Fırın kapandı, Sonuç: Ekmek alamadım)</li>
-                <li><i class="fas fa-check" style="color:green"></i> Kar yağınca okullar tatil oldu. (Sebep: Kar yağdı, Sonuç: Okul tatil)</li>
-                <li><i class="fas fa-check" style="color:green"></i> Size gelemiyorum <strong>çünkü</strong> misafirimiz gelecekmiş.</li>
-            </ul>
+        <div id="screen-home" class="screen active" style="text-align: center; padding-top: 50px;">
+            <div class="animate__animated animate__bounceIn" style="font-size: 8rem; margin-bottom: 20px;">🕵️‍♀️</div>
+            <h1 style="font-size: 3.5rem; color: var(--primary); margin: 0; font-family: var(--font-title);">NEDEN - SONUÇ<br>DEDEKTİFLİĞİ</h1>
+            <p style="font-size: 1.5rem; color: #666; margin-top: 20px;">Olayların arkasındaki sırrı çözmeye hazır mısın?</p>
+            <button class="nav-arrow" style="float:none; font-size: 1.5rem; padding: 15px 40px;" onclick="switchScreen('screen-learn')">BAŞLA ▶</button>
         </div>
 
-        <div id="p2" class="page-section">
-            <h1>📖 Okuma Parçası: Geç Kalan Sevgi</h1>
-            <div class="story-content">
-                <p>Sevgi, okuldan eve dönerken o hiç sevmediği ıssız ve korkutucu yolda yaklaşık bir saattir minibüs bekliyordu. Soğuktan titriyor, gecenin karanlığından ve sessizliğinden korkuyordu. Minibüsün neden bu kadar geç kaldığını düşünüyordu. Vakit ilerliyor, minibüs hâlâ gelmiyordu. O ise korkmaya ve üşümeye devam ediyordu.</p>
-                <p>Birden arkasında bir köpek hırlaması duydu. Köpek ona sanki yiyecekmiş gibi bakıyordu. Besili bir köpekti. Keskin dişleri görünüyordu. Köpeğin gözlerinin içine kısa bir süre kilitli kaldı sonra bir anda koşmaya başladı. Köpek de arkasında kovalamaya... Hayatında hiç bu kadar hızlı koştuğunu hatırlamıyordu.</p>
-                <p>Biraz koştuktan sonra bir apartmanın içine girdi ve köpeğin gitmesini bekledi. Köpeğin gittiğinden emin olduktan sonra dışarı çıktı. Biraz yürüdükten sonra bineceği minibüsü gördü ve durdurdu. Meğer minibüsü beklediği yolun az ilerisinde <strong style="background:yellow">yol çalışması varmış</strong> ve minibüs başka yoldan gidiyormuş.</p>
-                <p>Düşünüyorum da o gün köpek onu kovalamamış olsaydı kim bilir kaç saat daha orada minibüs bekleyecekti.</p>
-            </div>
+        <div id="screen-learn" class="screen">
+            <h1 style="color:var(--secondary); text-align:center;">📝 İpuçları</h1>
             
-            <div style="margin-top: 20px; padding: 20px; border: 2px dashed #ccc; border-radius: 10px;">
-                <h3>❓ Metin Analiz Soruları</h3>
-                <div class="quiz-item">
-                    <div class="quiz-question">1. Sevgi neden korkmuştu?</div>
-                    <div class="quiz-options">
-                        <button class="q-btn correct" onclick="check(this)">Yol ıssız, karanlık olduğu ve köpek hırladığı için.</button>
-                        <button class="q-btn wrong" onclick="check(this)">Minibüs şoförü ona kızdığı için.</button>
-                    </div>
+            <div class="card">
+                <h2 style="margin:0; color: var(--primary);">Dedektif Kuralı:</h2>
+                <p style="font-size: 1.4rem;">Bir cümlede "Bu olay <span style="color:var(--error); font-weight:bold;">NEDEN</span> oldu?" sorusuna cevap bulabiliyorsan, o bir Neden-Sonuç cümlesidir.</p>
+            </div>
+
+            <div class="card" style="border-color: var(--accent);">
+                <h3 style="text-align:center;">🔍 Bu Kelimeleri Takip Et!</h3>
+                <div class="cloud-grid">
+                    <div class="cloud">İÇİN</div>
+                    <div class="cloud">ÇÜNKÜ</div>
+                    <div class="cloud">BU YÜZDEN</div>
+                    <div class="cloud">DOLAYISIYLA</div>
+                    <div class="cloud">BU SEBEPLE</div>
+                    <div class="cloud">-DEN DOLAYI</div>
                 </div>
-                <div class="quiz-item">
-                    <div class="quiz-question">2. Minibüs neden gelmiyormuş?</div>
-                    <div class="quiz-options">
-                        <button class="q-btn wrong" onclick="check(this)">Bozulduğu için.</button>
-                        <button class="q-btn correct" onclick="check(this)">Yol çalışması olduğu için başka yoldan gitmiş.</button>
+            </div>
+        </div>
+
+        <div id="screen-stories" class="screen">
+            
+            <div id="story-menu" style="text-align:center;">
+                <h1>📖 Bir Dosya Seç</h1>
+                <div style="display:flex; justify-content:center; gap:30px; margin-top:50px;">
+                    <div onclick="startStory('story1')" style="cursor:pointer; background:white; padding:30px; border-radius:20px; width:300px; box-shadow:0 10px 20px rgba(0,0,0,0.1);">
+                        <i class="fas fa-bus" style="font-size:4rem; color:var(--accent);"></i>
+                        <h2>Geç Kalan Sevgi</h2>
+                    </div>
+                    <div onclick="startStory('story2')" style="cursor:pointer; background:white; padding:30px; border-radius:20px; width:300px; box-shadow:0 10px 20px rgba(0,0,0,0.1);">
+                        <i class="fas fa-crown" style="font-size:4rem; color:gold;"></i>
+                        <h2>Cesur Kral</h2>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="p3" class="page-section">
-            <h1>👑 Okuma Parçası: Cesur Kral ile Ak Sakallı Dede</h1>
-            <div class="story-content">
-                <p>Bir zamanlar ülkelerin birinde çok ünlü bir kral yaşarmış. Bu ününü cengâverliğine borçluymuş. Çok cesur bir kralmış. Gelin görün ki bu kralın bir kusuru varmış. Kendisine anlatılana hemen inanır, duydukları onda bir ön yargı oluştururmuş.</p>
-                <p>Yıllar geçmiş, kral yaşlanmış. "Ölmeden önce son bir isteğim var!" demiş yardımcılarına. "Bilge biri olarak anılmak! Öldüğüm zaman cesur olduğum kadar bilge olduğumu da söylesin sevenlerim." demiş. <strong style="background:yellow">Bu yüzden de kral sürekli okumaya</strong>, çevresindeki bilge kişilerle fikir alışverişinde bulunmaya başlamış.</p>
-                <p>... (Hikayenin devamında Bilge ile ormana giderler) ...</p>
-                <p>Ak sakallı dede, kralın niçin orada olduğunu öğrenince ona bir soru sormuş... Ak sakallı dede "Tam beş parmaktır!" demiş. "Bak, elini yüzüne koy, gözlerin ile kulağın arası tam beş parmaktır. Kulağınla duyduğuna hemen inanma, yanlış olabilir. Duyduklarını gözlerinle de görüyorsan duyduğuna inanabilirsin. İşte, bu nedenle doğru ile yanlış arasında beş parmaklık uzaklık vardır."</p>
-            </div>
-
-            <div style="margin-top: 20px; padding: 20px; border: 2px dashed #ccc; border-radius: 10px;">
-                <h3>❓ Metin Analiz Soruları</h3>
-                <div class="quiz-item">
-                    <div class="quiz-question">1. Kral neden sürekli okumaya başlamış?</div>
-                    <div class="quiz-options">
-                        <button class="q-btn correct" onclick="check(this)">Öldükten sonra "bilge biri" olarak anılmak istediği için.</button>
-                        <button class="q-btn wrong" onclick="check(this)">Savaştan sıkıldığı için.</button>
-                    </div>
-                </div>
-                <div class="quiz-item">
-                    <div class="quiz-question">2. Ak sakallı dedenin "5 parmak" cevabı ne anlama gelir?</div>
-                    <div class="quiz-options">
-                        <button class="q-btn wrong" onclick="check(this)">İnsanların elleri çok önemlidir.</button>
-                        <button class="q-btn correct" onclick="check(this)">Sadece duyduğuna (kulak) inanma, gördüğüne (göz) inan.</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="p4" class="page-section">
-            <h1>📝 Tablo Doldurma Etkinliği</h1>
-            <p>Aşağıdaki tabloda boş bırakılan yerleri mantıklı ifadelerle doldur. (Birebir görselden aktarılmıştır)</p>
-            
-            <table class="orange-table">
-                <tr>
-                    <th width="50%">NEDEN (SEBEP)</th>
-                    <th width="50%">SONUÇ</th>
-                </tr>
-                <tr>
-                    <td>Hayat boyu öğrenmeye devam ettiği için</td>
-                    <td><input type="text" placeholder="Sonuç ne olur? (Örn: Hep bilgili kalır)"></td>
-                </tr>
-                <tr>
-                    <td><input type="text" placeholder="Sebep ne olabilir?"></td>
-                    <td>...çünkü yapmak istediğim şeyleri yapamam.</td>
-                </tr>
-                <tr>
-                    <td>Her alanda başarılı olamayız...</td>
-                    <td><input type="text" placeholder="Sonuç? (Örn: Bu yüzden yardımlaşmalıyız)"></td>
-                </tr>
-                <tr>
-                    <td>Tehlikeli olduğu için...</td>
-                    <td><input type="text" placeholder="Örn: Prizlerle oynamam."></td>
-                </tr>
-                <tr>
-                    <td>Hepimiz zaman zaman hata yaparız...</td>
-                    <td><input type="text" placeholder="Sonuç? (Örn: Bu yüzden özür dilemeliyiz)"></td>
-                </tr>
-            </table>
-            <button style="margin-top: 20px; padding: 10px 20px; background: #e67e22; color: white; border: none; cursor: pointer;" onclick="alert('Harika! Mantıklı cümleler kurduysan puanı hak ettin.')">Kontrol Et</button>
-        </div>
-
-        <div id="p5" class="page-section">
-            <h1>🐳 Görsel Okuma ve Yorumlama</h1>
-            
-            <div class="whale-card">
-                <i class="fas fa-fish" style="font-size: 5rem; color: #00838f;"></i>
-                <div>
-                    <h3>Balinalar Hakkında Bilgiler:</h3>
-                    <ul>
-                        <li>Balinalar birlikte beslenir.</li>
-                        <li>Balinalar grup halinde yaşar.</li>
-                        <li>Balinalar birbirlerini tehlikelere karşı korur.</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="quiz-item" style="margin-top: 20px;">
-                <div class="quiz-question">SORU: Balinalarla ilgili verilen bu cümlelerden aşağıdaki sonuçlardan hangisine ulaşılır?</div>
-                <div class="quiz-options">
-                    <button class="q-btn correct" onclick="check(this)">A) Balinalar çoğunlukla diğer balinalarla birlikte zaman geçirir.</button>
-                    <button class="q-btn wrong" onclick="check(this)">B) Balinalar zaman zaman tehlikeli olabilir.</button>
-                    <button class="q-btn wrong" onclick="check(this)">C) Balinalar çok fazla yemek yer.</button>
-                    <button class="q-btn wrong" onclick="check(this)">D) Balinalar denizlerde yaşar.</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="p6" class="page-section">
-            <h1>✅ Bölüm Testi 1 (PDF Soruları)</h1>
-            <p>Kaynak: Test Yurdu PDF'inden aktarılmıştır.</p>
-
-            <div class="quiz-item">
-                <div class="quiz-question">1. Aşağıdaki cümlelerin hangisi sebep - sonuç cümlesi değildir?</div>
-                <div class="quiz-options">
-                    <button class="q-btn wrong" onclick="check(this)">A) Fırın kapandığı için ekmek alamadım.</button>
-                    <button class="q-btn wrong" onclick="check(this)">B) Kar yağınca okullar tatil oldu.</button>
-                    <button class="q-btn wrong" onclick="check(this)">D) Korku sevinç gibi duygularda nabız artar.</button>
-                    <button class="q-btn correct" onclick="check(this)">C) Size gelemiyorum çünkü akşama misafirimiz gelecekmiş. (Amaç olabilir/Çeldirici)</button> 
-                    </div>
-                <div style="font-size: 0.9rem; color: #666; margin-top:5px;">Not: PDF'teki cevap anahtarı C şıkkını işaret etmiş ancak soru köküne göre tartışılabilir. Biz PDF'e sadık kaldık.</div>
-            </div>
-
-            <div class="quiz-item">
-                <div class="quiz-question">2. Aşağıdaki cümlelerin hangisinde sebep - sonuç ilişkisi vardır?</div>
-                <div class="quiz-options">
-                    <button class="q-btn correct" onclick="check(this)">A) Hastalandığı için okul maçına gelemedi.</button>
-                    <button class="q-btn wrong" onclick="check(this)">B) Senin kadar yaramaz bir çocuk görmedim.</button>
-                    <button class="q-btn wrong" onclick="check(this)">C) Kitap okumak bir zevktir.</button>
-                </div>
-            </div>
-
-            <div class="quiz-item">
-                <div class="quiz-question">3. Aşağıdaki cümlelerden hangisine "neden" sorusunu sorarsak cevap alamayız?</div>
-                <div class="quiz-options">
-                    <button class="q-btn wrong" onclick="check(this)">A) Odunlar yaş olduğundan dolayı sobayı yakamadı.</button>
-                    <button class="q-btn correct" onclick="check(this)">C) Uzun ince bir yoldayım, gidiyorum gündüz gece.</button>
-                </div>
-            </div>
-            
-             <div class="quiz-item">
-                <div class="quiz-question">4. "Oyun kolu bozuk olduğu için beni yenebildin." cümlesinde sebep-sonuç ilişkisini gösteren kelime hangisidir?</div>
-                <div class="quiz-options">
-                    <button class="q-btn correct" onclick="check(this)">A) için</button>
-                    <button class="q-btn wrong" onclick="check(this)">B) bozuk</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="p7" class="page-section">
-            <h1>✅ Bölüm Testi 2 (Görsel Sorular)</h1>
-            <p>Kaynak: Yüklenen ekran görüntüleri.</p>
-
-            <div class="quiz-item">
-                <div class="quiz-question">1. Hangi cümlede işi bırakma NEDENİ verilmiştir?</div>
-                <div class="quiz-options">
-                    <button class="q-btn wrong" onclick="check(this)">A) Bir ay önce işi bıraktı.</button>
-                    <button class="q-btn correct" onclick="check(this)">C) Yoğun çalışmaktan bıktığı için işi bıraktı.</button>
-                </div>
-            </div>
-
-            <div class="quiz-item">
-                <div class="quiz-question">2. "...................... burnun tıkanmış." cümlesini tamamla.</div>
-                <div class="quiz-options">
-                    <button class="q-btn correct" onclick="check(this)">B) Nezle olmuşsun</button>
-                    <button class="q-btn wrong" onclick="check(this)">A) Gözlerin şişmiş</button>
-                </div>
-            </div>
-            
-            <div class="quiz-item">
-                <div class="quiz-question">3. "Pastayı çok sevdiği için bir tabak daha istedi." cümlesiyle aynı anlam ilişkisi hangisindedir?</div>
-                <div class="quiz-options">
-                    <button class="q-btn wrong" onclick="check(this)">A) Bizim için mutluluk önemlidir.</button>
-                    <button class="q-btn correct" onclick="check(this)">D) Karanlıktan korktuğu için gece lambasını açtık.</button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        // --- SAYFA GEÇİŞLERİ ---
-        function showPage(id) {
-            // Tüm sayfaları gizle
-            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            
-            // Seçileni göster
-            document.getElementById(id).classList.add('active');
-            
-            // Butonu aktif yap
-            // (Basit döngü ile aktif butonu bulmak yerine event target kullanılabilir ama
-            // burada onclick içinden çağrıldığı için buton highlight'ı manuel yapalım)
-            // Daha sağlam olması için butonlara id verip eşleştirebiliriz, 
-            // şimdilik kullanıcı tıkladığında 'this' mantığı için inline JS yerine:
-            const buttons = document.querySelectorAll('.nav-btn');
-            // Hangi butona basıldığını bulmak zor olacağı için basit bir yöntem:
-            // Her butona onclick="showPage('p1'); setActive(this)" diyebiliriz.
-        }
-        
-        // Navigasyon butonlarına tıklayınca aktif class'ı eklemek için:
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // --- PUANLAMA VE KONTROL ---
-        let totalScore = 0;
-
-        function check(btn) {
-            // Zaten tıklanmışsa işlem yapma
-            if (btn.disabled) return;
-
-            // O sorudaki diğer şıkları kilitle
-            const parent = btn.parentElement;
-            const siblings = parent.querySelectorAll('.q-btn');
-            siblings.forEach(b => {
-                b.disabled = true; 
-                b.style.opacity = '0.7';
-            });
-            btn.style.opacity = '1';
-
-            if (btn.classList.contains('correct')) {
-                btn.innerHTML += ' <i class="fas fa-check"></i>';
-                totalScore += 10;
-                document.getElementById('totalScore').innerText = totalScore;
+            <div id="story1-content" style="display:none;">
+                <h2 style="color:var(--accent);"><i class="fas fa-bus"></i> Geç Kalan Sevgi</h2>
                 
-                // Konfeti efekti (Basit CSS animasyonu eklenebilir ama kod sadeliği için sadece renk değişimi)
-            } else {
-                btn.innerHTML += ' <i class="fas fa-times"></i>';
-                // Doğruyu göster
-                siblings.forEach(b => {
-                    if(b.classList.contains('correct')) b.style.backgroundColor = '#2ecc71';
-                });
-            }
+                <div class="card">
+                    <div id="s1-p1" class="story-text visible">
+                        Sevgi, okuldan eve dönerken o hiç sevmediği ıssız ve korkutucu yolda yaklaşık bir saattir minibüs bekliyordu. Soğuktan titriyor, gecenin karanlığından ve sessizliğinden korkuyordu.
+                        <br><button class="nav-arrow" onclick="revealText('s1-p2')">Devam Et ▼</button>
+                    </div>
+                    
+                    <div id="s1-p2" class="story-text">
+                        Birden arkasında bir köpek hırlaması duydu. Köpek ona sanki yiyecekmiş gibi bakıyordu. Besili bir köpekti.
+                        <strong style="color:var(--error)">Sevgi korktuğu için bir anda koşmaya başladı.</strong>
+                        <br><button class="nav-arrow" onclick="revealText('s1-p3')">Devam Et ▼</button>
+                    </div>
+
+                    <div id="s1-p3" class="story-text">
+                        Bir apartmana sığındı. Sonra öğrendi ki: Minibüsü beklediği yolun az ilerisinde <strong>yol çalışması varmış</strong> (Sebep) ve minibüs bu yüzden başka yoldan gidiyormuş (Sonuç).
+                        <br><br>
+                        <div style="background:#ffeaa7; padding:15px; border-radius:10px; text-align:center; font-weight:bold;">
+                            Vaka Çözüldü! 🎉
+                        </div>
+                    </div>
+                </div>
+                <button class="nav-arrow" style="background:#ccc; float:left;" onclick="resetStory()">Geri Dön</button>
+            </div>
+
+            <div id="story2-content" style="display:none;">
+                <h2 style="color:gold;"><i class="fas fa-crown"></i> Cesur Kral</h2>
+                <div class="card">
+                    <div id="s2-p1" class="story-text visible">
+                        Kral yaşlanınca "Ölmeden önce son bir isteğim var: Bilge biri olarak anılmak!" demiş. <strong>Bu yüzden</strong> de kral sürekli kitap okumaya başlamış.
+                        <br><button class="nav-arrow" onclick="revealText('s2-p2')">Devam Et ▼</button>
+                    </div>
+                    <div id="s2-p2" class="story-text">
+                        Ak sakallı dede ona şöyle demiş: "Kulağınla duyduğuna hemen inanma. Gözünle gördüğüne inan. <strong>Çünkü doğru ile yanlış arası 5 parmaktır (Göz ve Kulak arası).</strong>"
+                        <br><br>
+                        <div style="background:#ffeaa7; padding:15px; border-radius:10px; text-align:center; font-weight:bold;">
+                            Ders: Duyduğuna (Dedikodu) değil, Gördüğüne (Kanıt) inan!
+                        </div>
+                    </div>
+                </div>
+                <button class="nav-arrow" style="background:#ccc; float:left;" onclick="resetStory()">Geri Dön</button>
+            </div>
+
+        </div>
+
+        <div id="screen-activity" class="screen">
+            <h1>🧩 Kanıt Masası</h1>
+            
+            <div class="card">
+                <h3>Tabloyu Tamamla</h3>
+                <table class="orange-table">
+                    <tr><th>SEBEP</th><th>SONUÇ</th></tr>
+                    <tr>
+                        <td>Hayat boyu öğrenmeye devam ettiği için...</td>
+                        <td><input class="table-input" id="inp1" placeholder="Sonuç ne olur?"></td>
+                    </tr>
+                    <tr>
+                        <td>Tehlikeli olduğu için...</td>
+                        <td><input class="table-input" id="inp2" placeholder="Örn: Prizle oynamam."></td>
+                    </tr>
+                </table>
+                <button class="nav-arrow" style="margin-top:10px; float:none;" onclick="checkTable()">Kontrol Et</button>
+            </div>
+
+            <div class="card" style="background:#e0f7fa; border-color:#00bcd4;">
+                <div style="display:flex; align-items:center; gap:20px;">
+                    <i class="fas fa-fish" style="font-size:4rem; color:#0097a7;"></i>
+                    <div>
+                        <h3>Balina Raporu</h3>
+                        <p>Balinalar birlikte beslenir, birlikte yaşar, birbirini korur.</p>
+                        <p><strong>SONUÇ:</strong> Balinalar sosyaldir ve dayanışma içindedir.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-quiz" class="screen">
+            <div class="quiz-container">
+                <h1 style="color:var(--primary);">🏆 BÜYÜK SINAV</h1>
+                <div id="quiz-box">
+                    <div class="question-text" id="q-text">Soru Yükleniyor...</div>
+                    <div class="options-grid" id="q-options"></div>
+                </div>
+                <div id="quiz-result" style="display:none;">
+                    <h2>Sınav Bitti!</h2>
+                    <p style="font-size:2rem;">Toplam Puan: <span id="final-score">0</span></p>
+                    <button class="nav-arrow" onclick="location.reload()" style="float:none;">Tekrar Oyna</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="dock">
+        <button class="dock-btn btn-home active" onclick="switchScreen('screen-home', this)">
+            <i class="fas fa-home"></i><span class="tooltip">Giriş</span>
+        </button>
+        <button class="dock-btn btn-learn" onclick="switchScreen('screen-learn', this)">
+            <i class="fas fa-lightbulb"></i><span class="tooltip">İpuçları</span>
+        </button>
+        <button class="dock-btn btn-story" onclick="switchScreen('screen-stories', this)">
+            <i class="fas fa-book-open"></i><span class="tooltip">Hikayeler</span>
+        </button>
+        <button class="dock-btn btn-activity" onclick="switchScreen('screen-activity', this)">
+            <i class="fas fa-puzzle-piece"></i><span class="tooltip">Etkinlik</span>
+        </button>
+        <button class="dock-btn btn-quiz" onclick="switchScreen('screen-quiz', this); loadQuestion();">
+            <i class="fas fa-trophy"></i><span class="tooltip">Sınav</span>
+        </button>
+    </div>
+
+</div>
+
+<script>
+    // --- EKRAN YÖNETİMİ ---
+    function switchScreen(screenId, btn) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        
+        if(btn) {
+            document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         }
-    </script>
+    }
+
+    // --- HİKAYE MEKANİĞİ ---
+    function startStory(id) {
+        document.getElementById('story-menu').style.display = 'none';
+        document.getElementById(id + '-content').style.display = 'block';
+    }
+
+    function revealText(id) {
+        document.getElementById(id).classList.add('visible');
+        // Otomatik kaydır
+        document.getElementById(id).scrollIntoView({behavior: "smooth"});
+    }
+
+    function resetStory() {
+        document.getElementById('story-menu').style.display = 'block';
+        document.getElementById('story1-content').style.display = 'none';
+        document.getElementById('story2-content').style.display = 'none';
+        // Metinleri gizle (ilk paragraflar hariç)
+        document.querySelectorAll('.story-text').forEach(el => {
+            if(!el.id.endsWith('p1')) el.classList.remove('visible');
+        });
+    }
+
+    // --- TABLO KONTROLÜ ---
+    function checkTable() {
+        let i1 = document.getElementById('inp1');
+        let i2 = document.getElementById('inp2');
+        
+        if(i1.value.length > 3) { i1.style.borderColor = "green"; i1.style.backgroundColor = "#d4edda"; updateScore(10); }
+        if(i2.value.length > 3) { i2.style.borderColor = "green"; i2.style.backgroundColor = "#d4edda"; updateScore(10); }
+    }
+
+    // --- SORU BANKASI (TÜM KAYNAKLARDAN) ---
+    const questions = [
+        {
+            q: "Aşağıdaki cümlelerin hangisi sebep-sonuç cümlesi DEĞİLDİR?",
+            opts: ["Kar yağınca okullar tatil oldu.", "Korku, sevinç gibi duygularda nabız artar.", "Size gelemiyorum çünkü misafir var.", "Hastalandığı için gelmedi."],
+            ans: 1 // Korku sevinç
+        },
+        {
+            q: "'...................... burnun tıkanmış.' Boşluğa ne gelmeli?",
+            opts: ["Nezle olmuşsun", "Gözlerin şişmiş", "Sesin kısılmış", "Bakıyorum da yine"],
+            ans: 0
+        },
+        {
+            q: "Hangisinde işi bırakma NEDENİ verilmiştir?",
+            opts: ["Bir ay önce işi bıraktı.", "Yoğun çalışmaktan bıktığı için bıraktı.", "Bu yıl 3. işi oldu.", "Arkadaşıyla bıraktı."],
+            ans: 1
+        },
+        {
+            q: "Balinalar birlikte beslenir ve yaşar. Bu neyi gösterir?",
+            opts: ["Tehlikeli olduklarını", "Sosyal olduklarını ve yardımlaştıklarını", "Çok yemek yediklerini", "Denizde yaşadıklarını"],
+            ans: 1
+        },
+        {
+            q: "'Oyun kolu bozuk olduğu için beni yenebildin.' cümlesindeki sebep nedir?",
+            opts: ["Beni yenebilmen", "Oyun kolunun bozuk olması", "Oyun oynamamız", "Kolun yeni olması"],
+            ans: 1
+        },
+        {
+            q: "Aşağıdakilerden hangisi sebep-sonuç ilişkisi kuran bir kelime değildir?",
+            opts: ["Çünkü", "Bu yüzden", "Ama", "Dolayısıyla"],
+            ans: 2
+        }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+
+    function loadQuestion() {
+        if(currentQ >= questions.length) {
+            document.getElementById('quiz-box').style.display = 'none';
+            document.getElementById('quiz-result').style.display = 'block';
+            document.getElementById('final-score').innerText = score;
+            return;
+        }
+
+        const q = questions[currentQ];
+        document.getElementById('q-text').innerText = (currentQ + 1) + ". " + q.q;
+        
+        let html = '';
+        q.opts.forEach((opt, idx) => {
+            html += `<button class="option-btn" onclick="checkAnswer(this, ${idx})">${opt}</button>`;
+        });
+        document.getElementById('q-options').innerHTML = html;
+    }
+
+    function checkAnswer(btn, idx) {
+        // Kilitle
+        let buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        if(idx === questions[currentQ].ans) {
+            btn.classList.add('correct');
+            btn.innerHTML += " <i class='fas fa-check'></i>";
+            updateScore(20);
+        } else {
+            btn.classList.add('wrong');
+            // Doğruyu göster
+            buttons[questions[currentQ].ans].classList.add('correct');
+        }
+
+        setTimeout(() => {
+            currentQ++;
+            loadQuestion();
+        }, 2000); // 2 saniye bekle sonraki soruya geç
+    }
+
+    function updateScore(pts) {
+        score += pts;
+        document.getElementById('score').innerText = score;
+        // Animasyon
+        let badge = document.querySelector('.score-badge');
+        badge.style.transform = "scale(1.2)";
+        setTimeout(() => badge.style.transform = "scale(1)", 200);
+    }
+
+</script>
+
 </body>
 </html>
