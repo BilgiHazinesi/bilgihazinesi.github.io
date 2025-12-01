@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sihirli Kısayol Çarpma Makinesi</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        input {
+            padding: 10px 15px;
+            font-size: 1.2rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            width: 100px;
+            text-align: center;
+            font-family: inherit;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            font-weight: 600;
+            color: white;
+        }
+
+        button:hover { transform: scale(1.05); }
+        button:active { transform: scale(0.95); }
+
+        .btn-5 { background-color: #e67e22; }
+        .btn-25 { background-color: #27ae60; }
+        .btn-50 { background-color: #2980b9; }
+        .btn-125 { background-color: #8e44ad; }
+
+        /* Sahne Alanı */
+        #stage {
+            width: 100%;
+            max-width: 800px;
+            height: 300px;
+            background: white;
+            border-radius: 20px;
+            border: 4px dashed #bdc3c7;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .number-box {
+            background-color: #34495e;
+            color: white;
+            font-size: 2rem;
+            padding: 20px;
+            border-radius: 10px;
+            transition: all 0.8s ease;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .zero-part {
+            color: #f1c40f; /* Sıfırların rengi farklı olsun */
+            font-weight: bold;
+        }
+
+        /* Bölünmüş parçalar için */
+        .split-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .split-part {
+            background-color: #95a5a6;
+            color: rgba(255,255,255,0.5);
+            flex: 1;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            border-radius: 8px;
+            transition: all 0.5s;
+        }
+
+        .split-part.active {
+            background-color: #e74c3c;
+            color: white;
+            transform: scale(1.1);
+            font-size: 2.5rem;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.6);
+            z-index: 10;
+        }
+
+        #explanation {
+            font-size: 1.3rem;
+            text-align: center;
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ffeeba;
+            min-height: 60px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .step-highlight {
+            font-weight: bold;
+            color: #d35400;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>🚀 Pratik Çarpma Laboratuvarı</h1>
+    <p>Bir sayıyı gir ve çarpmak istediğin "Sihirli Sayıyı" seç!</p>
+
+    <div class="controls">
+        <input type="number" id="userNumber" placeholder="Sayı" value="12">
+        <button class="btn-5" onclick="animateMath(5)">x 5</button>
+        <button class="btn-25" onclick="animateMath(25)">x 25</button>
+        <button class="btn-50" onclick="animateMath(50)">x 50</button>
+        <button class="btn-125" onclick="animateMath(125)">x 125</button>
+    </div>
+
+    <div id="explanation">Hazır mısın?</div>
+
+    <div id="stage">
+        <div class="number-box" style="display:none;"></div>
+    </div>
+
+    <script>
+        const stage = document.getElementById('stage');
+        const explanation = document.getElementById('explanation');
+
+        async function animateMath(multiplier) {
+            const inputVal = document.getElementById('userNumber').value;
+            const number = parseInt(inputVal);
+
+            if (!number) {
+                explanation.innerHTML = "Lütfen önce bir sayı gir!";
+                return;
+            }
+
+            // Temizlik
+            stage.innerHTML = '';
+            
+            // Strateji Belirleme
+            let strategies = {
+                5:   { expand: 10,   zeros: "0",    divide: 2,  text: "5 ile çarpmak için: 10 ile çarp, 2'ye böl!" },
+                25:  { expand: 100,  zeros: "00",   divide: 4,  text: "25 ile çarpmak için: 100 ile çarp, 4'e böl!" },
+                50:  { expand: 100,  zeros: "00",   divide: 2,  text: "50 ile çarpmak için: 100 ile çarp, 2'ye böl!" },
+                125: { expand: 1000, zeros: "000",  divide: 8,  text: "125 ile çarpmak için: 1000 ile çarp, 8'e böl!" }
+            };
+
+            const strat = strategies[multiplier];
+            const expandedNumber = number * strat.expand;
+            const finalResult = expandedNumber / strat.divide;
+
+            // --- ADIM 1: SAYIYI GÖSTER ---
+            explanation.innerHTML = `Sayıyı Sahneye Alalım: <b>${number}</b>`;
+            const box = document.createElement('div');
+            box.className = 'number-box';
+            box.innerText = number;
+            stage.appendChild(box);
+            
+            await wait(1000);
+
+            // --- ADIM 2: BÜYÜT (SIFIR EKLE) ---
+            explanation.innerHTML = `<span class='step-highlight'>ADIM 1:</span> ${multiplier} ile çarpmak zordur. Önce sayıyı <b>${strat.expand}</b> ile çarpalım (Yanına ${strat.zeros.length} sıfır ekle).`;
+            
+            box.innerHTML = `${number}<span class="zero-part">${strat.zeros}</span>`;
+            box.style.transform = "scale(1.5)";
+            box.style.backgroundColor = "#2c3e50";
+            
+            await wait(2000);
+
+            // --- ADIM 3: PARÇALA (BÖLME İŞLEMİ) ---
+            explanation.innerHTML = `<span class='step-highlight'>ADIM 2:</span> Sayımız büyüdü (${expandedNumber}). Şimdi sonucu bulmak için bunu <b>${strat.divide}</b> parçaya bölelim!`;
+            
+            // Kutuyu kaldır, parçalı yapıyı getir
+            stage.innerHTML = '';
+            const splitContainer = document.createElement('div');
+            splitContainer.className = 'split-container';
+
+            // Parçaları oluştur
+            for(let i=0; i<strat.divide; i++) {
+                let part = document.createElement('div');
+                part.className = 'split-part';
+                part.innerText = expandedNumber / strat.divide; // Her parçanın değeri
+                splitContainer.appendChild(part);
+            }
+            stage.appendChild(splitContainer);
+
+            await wait(2000);
+
+            // --- ADIM 4: SONUCU SEÇ ---
+            explanation.innerHTML = `İşte Sonuç! ${expandedNumber} sayısının <b>${strat.divide}'de 1'i</b> bizim cevabımızdır.`;
+            
+            // İlk parçayı vurgula, diğerlerini soluklaştır
+            const parts = document.querySelectorAll('.split-part');
+            parts.forEach((p, index) => {
+                if (index === 0) {
+                    p.classList.add('active');
+                    p.style.backgroundColor = getColor(multiplier);
+                } else {
+                    p.style.opacity = '0.2';
+                }
+            });
+
+            await wait(1500);
+            explanation.innerHTML = `🎉 Tebrikler! <b>${number} x ${multiplier} = ${finalResult}</b>`;
+        }
+
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function getColor(m) {
+            if(m==5) return '#e67e22';
+            if(m==25) return '#27ae60';
+            if(m==50) return '#2980b9';
+            if(m==125) return '#8e44ad';
+            return '#333';
+        }
+    </script>
+</body>
+</html>
