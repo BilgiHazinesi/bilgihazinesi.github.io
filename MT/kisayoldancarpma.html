@@ -3,117 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sihirli Kısayol Çarpma Makinesi</title>
+    <title>Adım Adım Kısayol Çarpma</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
 
         body {
-            font-family: 'Fredoka', sans-serif;
-            background-color: #f0f8ff;
+            font-family: 'Comic Neue', cursive; /* Okul/tahta hissi için */
+            background-color: #f4f6f7;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            color: #333;
+            color: #2c3e50;
         }
 
-        h1 {
-            color: #2c3e50;
-            text-align: center;
+        h1 { margin-bottom: 10px; color: #d35400; }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
         .controls {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 15px;
             justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 15px;
         }
 
         input {
-            padding: 10px 15px;
-            font-size: 1.2rem;
-            border: 2px solid #ddd;
-            border-radius: 10px;
+            padding: 10px;
+            font-size: 1.5rem;
             width: 100px;
             text-align: center;
+            border: 2px solid #bdc3c7;
+            border-radius: 10px;
             font-family: inherit;
         }
 
         button {
             padding: 10px 20px;
-            font-size: 1rem;
+            font-size: 1.2rem;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            transition: transform 0.1s, background 0.2s;
-            font-weight: 600;
             color: white;
-        }
-
-        button:hover { transform: scale(1.05); }
-        button:active { transform: scale(0.95); }
-
-        .btn-5 { background-color: #e67e22; }
-        .btn-25 { background-color: #27ae60; }
-        .btn-50 { background-color: #2980b9; }
-        .btn-125 { background-color: #8e44ad; }
-
-        /* Sahne Alanı */
-        #stage {
-            width: 100%;
-            max-width: 800px;
-            height: 300px;
-            background: white;
-            border-radius: 20px;
-            border: 4px dashed #bdc3c7;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .number-box {
-            background-color: #34495e;
-            color: white;
-            font-size: 2rem;
-            padding: 20px;
-            border-radius: 10px;
-            transition: all 0.8s ease;
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .zero-part {
-            color: #f1c40f; /* Sıfırların rengi farklı olsun */
             font-weight: bold;
+            transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.95); }
+        .btn-5 { background: #e67e22; }
+        .btn-25 { background: #27ae60; }
+        .btn-50 { background: #2980b9; }
+
+        /* MANTIK ALANI (Neden bölüyoruz?) */
+        #logic-stage {
+            border: 3px dashed #bdc3c7;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: #fffbea;
         }
 
-        /* Bölünmüş parçalar için */
-        .split-container {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            height: 100%;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .split-part {
-            background-color: #95a5a6;
-            color: rgba(255,255,255,0.5);
-            flex: 1;
-            height: 100px;
+        .block-container { display: flex; gap: 5px; align-items: center; }
+        .block {
+            width: 60px;
+            height: 60px;
+            background: #e67e22;
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -121,149 +90,284 @@
             border-radius: 8px;
             transition: all 0.5s;
         }
-
-        .split-part.active {
-            background-color: #e74c3c;
-            color: white;
-            transform: scale(1.1);
-            font-size: 2.5rem;
-            font-weight: bold;
-            box-shadow: 0 0 20px rgba(231, 76, 60, 0.6);
-            z-index: 10;
+        .block.ghost {
+            background: #bdc3c7;
+            border: 2px dashed #7f8c8d;
+            color: #7f8c8d;
+        }
+        .logic-text {
+            font-size: 1.3rem;
+            margin-top: 15px;
+            text-align: center;
+            color: #7f8c8d;
         }
 
-        #explanation {
-            font-size: 1.3rem;
+        /* İŞLEM ALANI (Bakkal Bölmesi) */
+        #calc-stage {
+            background: #2c3e50; /* Karatahta rengi */
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            min-height: 300px;
+            font-family: 'Courier New', monospace;
+            font-size: 2rem;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .division-layout {
+            display: grid;
+            grid-template-columns: max-content max-content max-content;
+            grid-template-rows: max-content max-content;
+            gap: 5px;
+            text-align: right;
+        }
+
+        .dividend { padding-right: 15px; } /* Bölünen */
+        .divisor-line { 
+            border-left: 3px solid white; 
+            border-bottom: 3px solid white; 
+            padding-left: 10px;
+            padding-bottom: 5px;
+            text-align: left;
+        } /* Bölen ve çizgi */
+        .quotient { 
+            border-left: 3px solid white; 
+            padding-left: 10px; 
+            padding-top: 5px;
+            text-align: left;
+            color: #f1c40f; /* Sonuç sarı */
+        } /* Bölüm */
+        
+        .work-area {
+            grid-column: 1;
+            text-align: right;
+            padding-right: 15px;
+            white-space: pre;
+        }
+
+        .highlight { color: #e74c3c; font-weight: bold; } /* İşlem yapılan rakam */
+        
+        #narrator {
+            margin-top: 20px;
+            font-size: 1.4rem;
             text-align: center;
-            background: #fff3cd;
-            color: #856404;
+            background: #dff9fb;
             padding: 15px;
             border-radius: 10px;
-            border: 1px solid #ffeeba;
+            color: #2c3e50;
             min-height: 60px;
-            width: 100%;
-            max-width: 800px;
-        }
-
-        .step-highlight {
-            font-weight: bold;
-            color: #d35400;
+            border: 2px solid #c7ecee;
         }
 
     </style>
 </head>
 <body>
 
-    <h1>🚀 Pratik Çarpma Laboratuvarı</h1>
-    <p>Bir sayıyı gir ve çarpmak istediğin "Sihirli Sayıyı" seç!</p>
+    <h1>🧠 Zihinden İşlemlerin Sırrı</h1>
 
-    <div class="controls">
-        <input type="number" id="userNumber" placeholder="Sayı" value="12">
-        <button class="btn-5" onclick="animateMath(5)">x 5</button>
-        <button class="btn-25" onclick="animateMath(25)">x 25</button>
-        <button class="btn-50" onclick="animateMath(50)">x 50</button>
-        <button class="btn-125" onclick="animateMath(125)">x 125</button>
-    </div>
+    <div class="container">
+        <div class="controls">
+            <input type="number" id="inpNumber" value="12" placeholder="Sayı">
+            <button class="btn-5" onclick="startLesson(5)">x 5</button>
+            <button class="btn-25" onclick="startLesson(25)">x 25</button>
+            <button class="btn-50" onclick="startLesson(50)">x 50</button>
+        </div>
 
-    <div id="explanation">Hazır mısın?</div>
+        <div id="logic-stage">
+            <div class="logic-text">Bir işlem seçin, mantığını görelim.</div>
+        </div>
 
-    <div id="stage">
-        <div class="number-box" style="display:none;"></div>
+        <div id="calc-stage">
+            <div class="division-layout" id="div-layout" style="display:none;">
+                </div>
+        </div>
+
+        <div id="narrator">Hazır mısınız?</div>
     </div>
 
     <script>
-        const stage = document.getElementById('stage');
-        const explanation = document.getElementById('explanation');
+        const logicStage = document.getElementById('logic-stage');
+        const divLayout = document.getElementById('div-layout');
+        const narrator = document.getElementById('narrator');
 
-        async function animateMath(multiplier) {
-            const inputVal = document.getElementById('userNumber').value;
-            const number = parseInt(inputVal);
+        async function startLesson(multiplier) {
+            const numInput = document.getElementById('inpNumber').value;
+            const number = parseInt(numInput);
+            if(!number) return;
 
-            if (!number) {
-                explanation.innerHTML = "Lütfen önce bir sayı gir!";
-                return;
-            }
+            // Ayarlar
+            let config = {};
+            if(multiplier === 5) config = { base: 10, divide: 2, color: '#e67e22', baseName: '10 (Onluk)' };
+            if(multiplier === 25) config = { base: 100, divide: 4, color: '#27ae60', baseName: '100 (Yüzlük)' };
+            if(multiplier === 50) config = { base: 100, divide: 2, color: '#2980b9', baseName: '100 (Yüzlük)' };
 
-            // Temizlik
-            stage.innerHTML = '';
+            // --- BÖLÜM 1: MANTIK ANLATIMI ---
+            narrator.innerText = `${multiplier} ile çarpmak bazen zordur. Gelin hile yapalım!`;
+            logicStage.innerHTML = '';
+            divLayout.style.display = 'none';
+
+            // 1. Orijinal bloğu göster
+            let container = document.createElement('div');
+            container.className = 'block-container';
+            let mainBlock = createBlock(multiplier, config.color);
+            container.appendChild(mainBlock);
+            logicStage.appendChild(container);
             
-            // Strateji Belirleme
-            let strategies = {
-                5:   { expand: 10,   zeros: "0",    divide: 2,  text: "5 ile çarpmak için: 10 ile çarp, 2'ye böl!" },
-                25:  { expand: 100,  zeros: "00",   divide: 4,  text: "25 ile çarpmak için: 100 ile çarp, 4'e böl!" },
-                50:  { expand: 100,  zeros: "00",   divide: 2,  text: "50 ile çarpmak için: 100 ile çarp, 2'ye böl!" },
-                125: { expand: 1000, zeros: "000",  divide: 8,  text: "125 ile çarpmak için: 1000 ile çarp, 8'e böl!" }
-            };
-
-            const strat = strategies[multiplier];
-            const expandedNumber = number * strat.expand;
-            const finalResult = expandedNumber / strat.divide;
-
-            // --- ADIM 1: SAYIYI GÖSTER ---
-            explanation.innerHTML = `Sayıyı Sahneye Alalım: <b>${number}</b>`;
-            const box = document.createElement('div');
-            box.className = 'number-box';
-            box.innerText = number;
-            stage.appendChild(box);
-            
-            await wait(1000);
-
-            // --- ADIM 2: BÜYÜT (SIFIR EKLE) ---
-            explanation.innerHTML = `<span class='step-highlight'>ADIM 1:</span> ${multiplier} ile çarpmak zordur. Önce sayıyı <b>${strat.expand}</b> ile çarpalım (Yanına ${strat.zeros.length} sıfır ekle).`;
-            
-            box.innerHTML = `${number}<span class="zero-part">${strat.zeros}</span>`;
-            box.style.transform = "scale(1.5)";
-            box.style.backgroundColor = "#2c3e50";
-            
-            await wait(2000);
-
-            // --- ADIM 3: PARÇALA (BÖLME İŞLEMİ) ---
-            explanation.innerHTML = `<span class='step-highlight'>ADIM 2:</span> Sayımız büyüdü (${expandedNumber}). Şimdi sonucu bulmak için bunu <b>${strat.divide}</b> parçaya bölelim!`;
-            
-            // Kutuyu kaldır, parçalı yapıyı getir
-            stage.innerHTML = '';
-            const splitContainer = document.createElement('div');
-            splitContainer.className = 'split-container';
-
-            // Parçaları oluştur
-            for(let i=0; i<strat.divide; i++) {
-                let part = document.createElement('div');
-                part.className = 'split-part';
-                part.innerText = expandedNumber / strat.divide; // Her parçanın değeri
-                splitContainer.appendChild(part);
-            }
-            stage.appendChild(splitContainer);
-
-            await wait(2000);
-
-            // --- ADIM 4: SONUCU SEÇ ---
-            explanation.innerHTML = `İşte Sonuç! ${expandedNumber} sayısının <b>${strat.divide}'de 1'i</b> bizim cevabımızdır.`;
-            
-            // İlk parçayı vurgula, diğerlerini soluklaştır
-            const parts = document.querySelectorAll('.split-part');
-            parts.forEach((p, index) => {
-                if (index === 0) {
-                    p.classList.add('active');
-                    p.style.backgroundColor = getColor(multiplier);
-                } else {
-                    p.style.opacity = '0.2';
-                }
-            });
-
             await wait(1500);
-            explanation.innerHTML = `🎉 Tebrikler! <b>${number} x ${multiplier} = ${finalResult}</b>`;
+
+            // 2. Tamamlama (Ghost Blocks)
+            narrator.innerHTML = `${multiplier} sayısını <b>${config.baseName}</b> yapmak çok kolay!`;
+            
+            if(multiplier === 5) {
+                // 5 -> 10 (1 tane daha lazım)
+                let ghost = createBlock(5, config.color, true);
+                container.appendChild(ghost);
+                await wait(1000);
+                narrator.innerHTML = `Bak! İki tane 5, bir tane <b>10</b> eder. <br>Sayıyı 10 ile çarptık ama sayı <b>2 katına</b> çıktı.`;
+            } 
+            else if (multiplier === 25) {
+                // 25 -> 100 (3 tane daha lazım)
+                for(let i=0; i<3; i++) {
+                    container.appendChild(createBlock(25, config.color, true));
+                    await wait(500);
+                }
+                narrator.innerHTML = `Dört tane 25, bir tane <b>100</b> eder. <br>Sayıyı 100 ile çarptık ama sayı <b>4 katına</b> çıktı.`;
+            }
+             else if (multiplier === 50) {
+                 let ghost = createBlock(50, config.color, true);
+                container.appendChild(ghost);
+                await wait(1000);
+                narrator.innerHTML = `İki tane 50, bir tane <b>100</b> eder. <br>Sayıyı 100 ile çarptık ama sayı <b>2 katına</b> çıktı.`;
+             }
+
+            await wait(2000);
+            narrator.innerHTML = `Sonucu düzeltmek için bulduğumuz cevabı <b>${config.divide}'ye bölmeliyiz!</b>`;
+            
+            // --- BÖLÜM 2: İŞLEM ANİMASYONU ---
+            await wait(2000);
+            
+            const expandedNum = number * config.base; // Örn: 12 -> 120
+            animateDivision(expandedNum, config.divide);
+        }
+
+        function createBlock(text, color, isGhost=false) {
+            let d = document.createElement('div');
+            d.className = 'block ' + (isGhost ? 'ghost' : '');
+            d.innerText = text;
+            d.style.backgroundColor = isGhost ? 'transparent' : color;
+            return d;
+        }
+
+        async function animateDivision(dividend, divisor) {
+            divLayout.style.display = 'grid';
+            divLayout.innerHTML = ''; // Temizle
+            
+            narrator.innerText = `Önce sayının sonuna sıfırları ekledik: ${dividend}. Şimdi ${divisor}'ye bölüyoruz.`;
+
+            // HTML Yapısını Kur
+            // Grid: 
+            // [Bölünen] [Çizgi/Bölen]
+            // [İşlem]   [Bölüm]
+            
+            const divDividend = document.createElement('div');
+            divDividend.className = 'dividend';
+            divDividend.innerText = dividend; // Örn: 120
+            
+            const divDivisorLine = document.createElement('div');
+            divDivisorLine.className = 'divisor-line';
+            divDivisorLine.innerText = divisor; // Örn: 2
+
+            const divWork = document.createElement('div');
+            divWork.className = 'work-area';
+            divWork.id = 'work-area';
+
+            const divQuotient = document.createElement('div');
+            divQuotient.className = 'quotient';
+            divQuotient.id = 'quotient-res';
+            divQuotient.innerText = '';
+
+            divLayout.appendChild(divDividend);
+            divLayout.appendChild(divDivisorLine);
+            divLayout.appendChild(divWork);
+            divLayout.appendChild(divQuotient);
+
+            // --- ALGORİTMA BAŞLIYOR ---
+            let dividendStr = dividend.toString();
+            let currentPart = "";
+            let quotientStr = "";
+            let stepText = ""; // Work area text
+
+            // Basamak basamak ilerle
+            for(let i=0; i < dividendStr.length; i++) {
+                let digit = dividendStr[i];
+                currentPart += digit;
+                let currentNum = parseInt(currentPart);
+
+                // Görsel Vurgu: Hangi rakamı indirdik?
+                narrator.innerHTML = `Sıradaki rakam: <b>${digit}</b>. Şu an elimizde <b>${currentNum}</b> var.`;
+                await wait(1500);
+
+                if (currentNum < divisor) {
+                    // Bölünmüyorsa (ve bu ilk rakam değilse veya sonda 0 varsa)
+                    // Genellikle başta bölünmezse pas geçeriz, ama aradaysa 0 atarız.
+                    if (i > 0 && currentNum === 0) { 
+                        quotientStr += "0";
+                        divQuotient.innerText = quotientStr;
+                        narrator.innerHTML = `${currentNum} içinde ${divisor} yok. Bölüme <b>0</b> yazıyoruz.`;
+                        await wait(1500);
+                    }
+                    // Bir sonraki rakamı bekle
+                    continue;
+                }
+
+                // Bölünüyorsa
+                let q = Math.floor(currentNum / divisor);
+                let remainder = currentNum % divisor;
+                let product = q * divisor;
+
+                quotientStr += q;
+                divQuotient.innerText = quotientStr;
+                narrator.innerHTML = `${currentNum} içinde ${divisor}, <b>${q}</b> kere var. (${q} x ${divisor} = ${product})`;
+                await wait(1500);
+
+                // Çıkarma İşlemini Göster
+                // Work area'ya ekleme yapmalıyız. Bu kısım basit bir simülasyon olacak.
+                // CSS ile hizalamak zor olduğu için basit metin tabanlı ekliyoruz.
+                
+                // Eğer bu ilk işlemse, doğrudan alta yaz, değilse hizalama gerekir.
+                // Burada basitlik adına "Çıkarma" adımını sözel ve görsel tek satır göstereceğiz.
+                
+                let spacing = " ".repeat(i); // Basit hizalama
+                let subStep = `\n${product}\n-____\n   ${remainder}`;
+                
+                // Eski usül alt alta yazma simülasyonu (biraz hileli ama 4. sınıf için görsel yeterli)
+                // Bu örnekte work-area'yı her adımda güncellemek yerine sadece aktif adımı gösterelim mi?
+                // Hayır, birikimli gitsin.
+                
+                // Basit gösterim:
+                let prevContent = divWork.innerText;
+                // Hizalama boşluğu hesaplama (kabaca)
+                let visualPadding = ""; 
+                for(let k=0; k < dividendStr.length - (i+1); k++) visualPadding += " ";
+                
+                divWork.innerText = prevContent + `\n -${product} \n ----- \n   ${remainder}`;
+                
+                narrator.innerHTML = `${currentNum}'den ${product} çıktı, <b>${remainder}</b> kaldı.`;
+                
+                currentPart = remainder.toString();
+                if(currentPart === "0") currentPart = ""; // Kalan 0 ise temizle, sonraki rakam gelsin
+                
+                await wait(2000);
+            }
+
+            narrator.innerHTML = `🎉 İşlem Tamam! Sonuç: <b>${quotientStr}</b>`;
         }
 
         function wait(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        function getColor(m) {
-            if(m==5) return '#e67e22';
-            if(m==25) return '#27ae60';
-            if(m==50) return '#2980b9';
-            if(m==125) return '#8e44ad';
-            return '#333';
         }
     </script>
 </body>
