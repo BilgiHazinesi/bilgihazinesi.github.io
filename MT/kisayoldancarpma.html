@@ -3,367 +3,317 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adım Adım Kısayol Çarpma</title>
+    <title>Sihirli Dönüşüm ve Çarpma</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
 
         body {
-            font-family: 'Comic Neue', cursive; /* Okul/tahta hissi için */
-            background-color: #f4f6f7;
+            font-family: 'Patrick Hand', cursive; /* El yazısı fontu */
+            background-color: #fff8e1; /* Defter kağıdı rengi */
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            color: #2c3e50;
+            color: #444;
         }
 
-        h1 { margin-bottom: 10px; color: #d35400; }
-
+        h1 { font-size: 2.5rem; color: #d84315; margin-bottom: 10px; }
+        
         .container {
-            width: 100%;
+            width: 90%;
             max-width: 900px;
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
+        /* Kontrol Paneli */
         .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 20px;
-            background: #ecf0f1;
+            background: white;
             padding: 15px;
             border-radius: 15px;
+            box-shadow: 4px 4px 0px #333;
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
         input {
             padding: 10px;
             font-size: 1.5rem;
-            width: 100px;
+            width: 120px;
             text-align: center;
-            border: 2px solid #bdc3c7;
-            border-radius: 10px;
-            font-family: inherit;
+            border: 2px solid #555;
+            border-radius: 8px;
+            font-family: 'Patrick Hand', cursive;
         }
 
-        button {
+        .btn-group button {
             padding: 10px 20px;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 10px;
+            font-size: 1.3rem;
+            border: 2px solid #333;
+            border-radius: 8px;
             cursor: pointer;
-            color: white;
-            font-weight: bold;
-            transition: transform 0.1s;
+            margin: 0 5px;
+            background: #fff;
+            transition: all 0.2s;
+            font-family: 'Patrick Hand', cursive;
         }
-        button:active { transform: scale(0.95); }
-        .btn-5 { background: #e67e22; }
-        .btn-25 { background: #27ae60; }
-        .btn-50 { background: #2980b9; }
 
-        /* MANTIK ALANI (Neden bölüyoruz?) */
-        #logic-stage {
-            border: 3px dashed #bdc3c7;
+        .btn-group button:hover { transform: translateY(-3px); box-shadow: 0 3px 0 #333; }
+        .btn-group button:active { transform: translateY(0); box-shadow: none; }
+
+        .btn-5 { background-color: #ffccbc !important; }
+        .btn-25 { background-color: #c8e6c9 !important; }
+        .btn-125 { background-color: #b3e5fc !important; }
+
+        /* BÖLÜM 1: TEORİ ANİMASYONU */
+        #theory-stage {
+            background: #e1f5fe;
+            border: 3px dashed #0288d1;
             border-radius: 15px;
-            padding: 20px;
-            min-height: 150px;
+            min-height: 180px;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
-            background: #fffbea;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .block-container { display: flex; gap: 5px; align-items: center; }
-        .block {
+        .theory-row { display: flex; align-items: center; gap: 10px; font-size: 2rem; }
+        
+        .bubble {
             width: 60px;
             height: 60px;
-            background: #e67e22;
+            border-radius: 50%;
+            background: #ff7043;
             color: white;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 1.5rem;
-            border-radius: 8px;
             transition: all 0.5s;
-        }
-        .block.ghost {
-            background: #bdc3c7;
-            border: 2px dashed #7f8c8d;
-            color: #7f8c8d;
-        }
-        .logic-text {
-            font-size: 1.3rem;
-            margin-top: 15px;
-            text-align: center;
-            color: #7f8c8d;
+            position: relative;
         }
 
-        /* İŞLEM ALANI (Bakkal Bölmesi) */
+        .helper-2 {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #66bb6a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            position: absolute;
+            top: -50px; /* Yukarıdan düşecek */
+            opacity: 0;
+            transition: all 0.8s;
+        }
+        
+        .bubble.merged {
+            background: #0277bd;
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+            transform: scale(1.1);
+        }
+
+        /* BÖLÜM 2: İŞLEM SAHNESİ */
         #calc-stage {
-            background: #2c3e50; /* Karatahta rengi */
+            background: #37474f; /* Tahta rengi */
             color: white;
             padding: 30px;
             border-radius: 15px;
-            min-height: 300px;
+            border: 6px solid #8d6e63; /* Ahşap çerçeve */
+            min-height: 250px;
             font-family: 'Courier New', monospace;
-            font-size: 2rem;
-            position: relative;
+            font-size: 2.2rem;
             display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            align-items: flex-start;
+            gap: 20px;
         }
 
-        .division-layout {
-            display: grid;
-            grid-template-columns: max-content max-content max-content;
-            grid-template-rows: max-content max-content;
-            gap: 5px;
-            text-align: right;
+        .calc-line {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s;
         }
-
-        .dividend { padding-right: 15px; } /* Bölünen */
-        .divisor-line { 
-            border-left: 3px solid white; 
-            border-bottom: 3px solid white; 
-            padding-left: 10px;
-            padding-bottom: 5px;
-            text-align: left;
-        } /* Bölen ve çizgi */
-        .quotient { 
-            border-left: 3px solid white; 
-            padding-left: 10px; 
-            padding-top: 5px;
-            text-align: left;
-            color: #f1c40f; /* Sonuç sarı */
-        } /* Bölüm */
+        .calc-line.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
         
-        .work-area {
-            grid-column: 1;
-            text-align: right;
-            padding-right: 15px;
-            white-space: pre;
-        }
+        .highlight-num { color: #ffeb3b; font-weight: bold; }
+        .divider-num { color: #f48fb1; }
 
-        .highlight { color: #e74c3c; font-weight: bold; } /* İşlem yapılan rakam */
-        
         #narrator {
-            margin-top: 20px;
-            font-size: 1.4rem;
             text-align: center;
-            background: #dff9fb;
-            padding: 15px;
+            font-size: 1.4rem;
+            color: #555;
+            background: #fff;
+            padding: 10px;
             border-radius: 10px;
-            color: #2c3e50;
-            min-height: 60px;
-            border: 2px solid #c7ecee;
+            border: 1px solid #ccc;
         }
 
     </style>
 </head>
 <body>
 
-    <h1>🧠 Zihinden İşlemlerin Sırrı</h1>
+    <h1>✨ 5, 25 ve 125 ile Kısa Yoldan Çarpma</h1>
 
     <div class="container">
+        
         <div class="controls">
-            <input type="number" id="inpNumber" value="12" placeholder="Sayı">
-            <button class="btn-5" onclick="startLesson(5)">x 5</button>
-            <button class="btn-25" onclick="startLesson(25)">x 25</button>
-            <button class="btn-50" onclick="startLesson(50)">x 50</button>
+            <label>Sayı Girin:</label>
+            <input type="number" id="inpNumber" value="8" placeholder="Örn: 8">
+            <div class="btn-group">
+                <button class="btn-5" onclick="runSimulation(5)">x 5</button>
+                <button class="btn-25" onclick="runSimulation(25)">x 25</button>
+                <button class="btn-125" onclick="runSimulation(125)">x 125</button>
+            </div>
         </div>
 
-        <div id="logic-stage">
-            <div class="logic-text">Bir işlem seçin, mantığını görelim.</div>
+        <div id="narrator">Bir işlem seçin, sihir başlasın!</div>
+
+        <div id="theory-stage">
+            <div style="margin-bottom:10px; color:#0277bd; font-weight:bold;">1. ADIM: DÖNÜŞÜM (Neden bölüyoruz?)</div>
+            <div id="theory-content" class="theory-row"></div>
         </div>
 
         <div id="calc-stage">
-            <div class="division-layout" id="div-layout" style="display:none;">
-                </div>
-        </div>
+            </div>
 
-        <div id="narrator">Hazır mısınız?</div>
     </div>
 
     <script>
-        const logicStage = document.getElementById('logic-stage');
-        const divLayout = document.getElementById('div-layout');
+        const theoryContent = document.getElementById('theory-content');
+        const calcStage = document.getElementById('calc-stage');
         const narrator = document.getElementById('narrator');
 
-        async function startLesson(multiplier) {
-            const numInput = document.getElementById('inpNumber').value;
-            const number = parseInt(numInput);
-            if(!number) return;
+        async function runSimulation(factor) {
+            const inputVal = document.getElementById('inpNumber').value;
+            const number = parseInt(inputVal);
+            if (!number) { narrator.innerText = "Lütfen bir sayı girin!"; return; }
 
-            // Ayarlar
-            let config = {};
-            if(multiplier === 5) config = { base: 10, divide: 2, color: '#e67e22', baseName: '10 (Onluk)' };
-            if(multiplier === 25) config = { base: 100, divide: 4, color: '#27ae60', baseName: '100 (Yüzlük)' };
-            if(multiplier === 50) config = { base: 100, divide: 2, color: '#2980b9', baseName: '100 (Yüzlük)' };
+            // Temizlik
+            theoryContent.innerHTML = '';
+            calcStage.innerHTML = '';
 
-            // --- BÖLÜM 1: MANTIK ANLATIMI ---
-            narrator.innerText = `${multiplier} ile çarpmak bazen zordur. Gelin hile yapalım!`;
-            logicStage.innerHTML = '';
-            divLayout.style.display = 'none';
-
-            // 1. Orijinal bloğu göster
-            let container = document.createElement('div');
-            container.className = 'block-container';
-            let mainBlock = createBlock(multiplier, config.color);
-            container.appendChild(mainBlock);
-            logicStage.appendChild(container);
+            // --- 1. TEORİ: Sayıları Parçalarına Ayır ve 10'a Tamamla ---
+            narrator.innerText = `${factor} sayısı ile çarpmak zordur. Gelin onu 10'un katlarına çevirelim!`;
             
+            let fivesCount = 0;
+            if(factor === 5) fivesCount = 1;
+            if(factor === 25) fivesCount = 2; // 5x5
+            if(factor === 125) fivesCount = 3; // 5x5x5
+
+            // Baloncukları oluştur: 5, 5, 5
+            for(let i=0; i<fivesCount; i++) {
+                let d = document.createElement('div');
+                d.className = 'bubble';
+                d.innerText = '5';
+                d.id = `bubble-${i}`;
+                
+                // Yardımcı 2'yi oluştur (Gizli)
+                let h = document.createElement('div');
+                h.className = 'helper-2';
+                h.innerText = 'x2';
+                h.id = `helper-${i}`;
+                d.appendChild(h);
+
+                theoryContent.appendChild(d);
+                
+                if(i < fivesCount-1) {
+                    let x = document.createElement('span');
+                    x.innerText = 'x';
+                    theoryContent.appendChild(x);
+                }
+            }
+
             await wait(1500);
 
-            // 2. Tamamlama (Ghost Blocks)
-            narrator.innerHTML = `${multiplier} sayısını <b>${config.baseName}</b> yapmak çok kolay!`;
-            
-            if(multiplier === 5) {
-                // 5 -> 10 (1 tane daha lazım)
-                let ghost = createBlock(5, config.color, true);
-                container.appendChild(ghost);
-                await wait(1000);
-                narrator.innerHTML = `Bak! İki tane 5, bir tane <b>10</b> eder. <br>Sayıyı 10 ile çarptık ama sayı <b>2 katına</b> çıktı.`;
-            } 
-            else if (multiplier === 25) {
-                // 25 -> 100 (3 tane daha lazım)
-                for(let i=0; i<3; i++) {
-                    container.appendChild(createBlock(25, config.color, true));
-                    await wait(500);
-                }
-                narrator.innerHTML = `Dört tane 25, bir tane <b>100</b> eder. <br>Sayıyı 100 ile çarptık ama sayı <b>4 katına</b> çıktı.`;
-            }
-             else if (multiplier === 50) {
-                 let ghost = createBlock(50, config.color, true);
-                container.appendChild(ghost);
-                await wait(1000);
-                narrator.innerHTML = `İki tane 50, bir tane <b>100</b> eder. <br>Sayıyı 100 ile çarptık ama sayı <b>2 katına</b> çıktı.`;
-             }
+            // "2" ile çarpma animasyonu
+            narrator.innerHTML = `Her <b>5</b>'in yanına bir <b>2</b> (yardımcı) çağıralım. <br>Böylece hepsi <b>10</b> olur!`;
 
-            await wait(2000);
-            narrator.innerHTML = `Sonucu düzeltmek için bulduğumuz cevabı <b>${config.divide}'ye bölmeliyiz!</b>`;
-            
-            // --- BÖLÜM 2: İŞLEM ANİMASYONU ---
-            await wait(2000);
-            
-            const expandedNum = number * config.base; // Örn: 12 -> 120
-            animateDivision(expandedNum, config.divide);
-        }
-
-        function createBlock(text, color, isGhost=false) {
-            let d = document.createElement('div');
-            d.className = 'block ' + (isGhost ? 'ghost' : '');
-            d.innerText = text;
-            d.style.backgroundColor = isGhost ? 'transparent' : color;
-            return d;
-        }
-
-        async function animateDivision(dividend, divisor) {
-            divLayout.style.display = 'grid';
-            divLayout.innerHTML = ''; // Temizle
-            
-            narrator.innerText = `Önce sayının sonuna sıfırları ekledik: ${dividend}. Şimdi ${divisor}'ye bölüyoruz.`;
-
-            // HTML Yapısını Kur
-            // Grid: 
-            // [Bölünen] [Çizgi/Bölen]
-            // [İşlem]   [Bölüm]
-            
-            const divDividend = document.createElement('div');
-            divDividend.className = 'dividend';
-            divDividend.innerText = dividend; // Örn: 120
-            
-            const divDivisorLine = document.createElement('div');
-            divDivisorLine.className = 'divisor-line';
-            divDivisorLine.innerText = divisor; // Örn: 2
-
-            const divWork = document.createElement('div');
-            divWork.className = 'work-area';
-            divWork.id = 'work-area';
-
-            const divQuotient = document.createElement('div');
-            divQuotient.className = 'quotient';
-            divQuotient.id = 'quotient-res';
-            divQuotient.innerText = '';
-
-            divLayout.appendChild(divDividend);
-            divLayout.appendChild(divDivisorLine);
-            divLayout.appendChild(divWork);
-            divLayout.appendChild(divQuotient);
-
-            // --- ALGORİTMA BAŞLIYOR ---
-            let dividendStr = dividend.toString();
-            let currentPart = "";
-            let quotientStr = "";
-            let stepText = ""; // Work area text
-
-            // Basamak basamak ilerle
-            for(let i=0; i < dividendStr.length; i++) {
-                let digit = dividendStr[i];
-                currentPart += digit;
-                let currentNum = parseInt(currentPart);
-
-                // Görsel Vurgu: Hangi rakamı indirdik?
-                narrator.innerHTML = `Sıradaki rakam: <b>${digit}</b>. Şu an elimizde <b>${currentNum}</b> var.`;
-                await wait(1500);
-
-                if (currentNum < divisor) {
-                    // Bölünmüyorsa (ve bu ilk rakam değilse veya sonda 0 varsa)
-                    // Genellikle başta bölünmezse pas geçeriz, ama aradaysa 0 atarız.
-                    if (i > 0 && currentNum === 0) { 
-                        quotientStr += "0";
-                        divQuotient.innerText = quotientStr;
-                        narrator.innerHTML = `${currentNum} içinde ${divisor} yok. Bölüme <b>0</b> yazıyoruz.`;
-                        await wait(1500);
-                    }
-                    // Bir sonraki rakamı bekle
-                    continue;
-                }
-
-                // Bölünüyorsa
-                let q = Math.floor(currentNum / divisor);
-                let remainder = currentNum % divisor;
-                let product = q * divisor;
-
-                quotientStr += q;
-                divQuotient.innerText = quotientStr;
-                narrator.innerHTML = `${currentNum} içinde ${divisor}, <b>${q}</b> kere var. (${q} x ${divisor} = ${product})`;
-                await wait(1500);
-
-                // Çıkarma İşlemini Göster
-                // Work area'ya ekleme yapmalıyız. Bu kısım basit bir simülasyon olacak.
-                // CSS ile hizalamak zor olduğu için basit metin tabanlı ekliyoruz.
+            for(let i=0; i<fivesCount; i++) {
+                let helper = document.getElementById(`helper-${i}`);
+                let bubble = document.getElementById(`bubble-${i}`);
                 
-                // Eğer bu ilk işlemse, doğrudan alta yaz, değilse hizalama gerekir.
-                // Burada basitlik adına "Çıkarma" adımını sözel ve görsel tek satır göstereceğiz.
+                // 2 yukarıdan düşer
+                helper.style.opacity = '1';
+                helper.style.top = '10px'; 
                 
-                let spacing = " ".repeat(i); // Basit hizalama
-                let subStep = `\n${product}\n-____\n   ${remainder}`;
+                await wait(800);
                 
-                // Eski usül alt alta yazma simülasyonu (biraz hileli ama 4. sınıf için görsel yeterli)
-                // Bu örnekte work-area'yı her adımda güncellemek yerine sadece aktif adımı gösterelim mi?
-                // Hayır, birikimli gitsin.
-                
-                // Basit gösterim:
-                let prevContent = divWork.innerText;
-                // Hizalama boşluğu hesaplama (kabaca)
-                let visualPadding = ""; 
-                for(let k=0; k < dividendStr.length - (i+1); k++) visualPadding += " ";
-                
-                divWork.innerText = prevContent + `\n -${product} \n ----- \n   ${remainder}`;
-                
-                narrator.innerHTML = `${currentNum}'den ${product} çıktı, <b>${remainder}</b> kaldı.`;
-                
-                currentPart = remainder.toString();
-                if(currentPart === "0") currentPart = ""; // Kalan 0 ise temizle, sonraki rakam gelsin
-                
-                await wait(2000);
+                // Birleşme (Morph)
+                helper.style.opacity = '0';
+                bubble.innerText = '10';
+                bubble.classList.add('merged');
             }
 
-            narrator.innerHTML = `🎉 İşlem Tamam! Sonuç: <b>${quotientStr}</b>`;
+            await wait(1000);
+            
+            // Sonuç Metni
+            let finalMult = Math.pow(10, fivesCount);
+            let totalDivisor = Math.pow(2, fivesCount);
+            narrator.innerHTML = `Harika! Sayımız <b>${finalMult}</b> oldu. <br>Ama işlemi dengelemek için ana sayımızı <b>${fivesCount} kere 2'ye bölmeliyiz</b> (Toplam ${totalDivisor}'e bölmek).`;
+
+            await wait(3000);
+
+            // --- 2. HESAPLAMA: Adım Adım Bölme ---
+            narrator.innerText = "Şimdi işlemi yapalım.";
+            calcStage.innerHTML = ''; // Temizle
+
+            // Sayıyı genişlet (Sıfır ekle)
+            let expandedNumber = number * finalMult;
+            let currentVal = expandedNumber;
+            
+            // Adım 1: Sıfır Ekleme Gösterimi
+            let step0 = document.createElement('div');
+            step0.className = 'calc-line show';
+            step0.innerHTML = `${number} x ${finalMult} = <span class="highlight-num">${expandedNumber}</span>`;
+            calcStage.appendChild(step0);
+            
+            await wait(2000);
+
+            // Zincirleme Bölme Döngüsü
+            // Kullanıcı isteği: 8760 : 2 = 4380 formatında
+            
+            for(let k=1; k<=fivesCount; k++) {
+                let result = currentVal / 2;
+                
+                let stepDiv = document.createElement('div');
+                stepDiv.className = 'calc-line';
+                
+                // Format: 8760 : 2 = 4380
+                stepDiv.innerHTML = `<span class="highlight-num">${currentVal}</span> : <span class="divider-num">2</span> = ${result}`;
+                calcStage.appendChild(stepDiv);
+
+                // Animasyon tetikle
+                await wait(100); 
+                stepDiv.classList.add('show');
+                
+                if(fivesCount > 1) {
+                    narrator.innerText = `${k}. bölme işlemi (Yarısını alıyoruz)...`;
+                } else {
+                    narrator.innerText = `Yarısını aldık ve bitti!`;
+                }
+
+                currentVal = result;
+                await wait(2500);
+            }
+
+            narrator.innerHTML = `🎉 SONUÇ: <b>${number} x ${factor} = ${currentVal}</b>`;
         }
 
         function wait(ms) {
