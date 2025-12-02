@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sınıf İçi Sunum Paneli (Sağda Bölme)</title>
+    <title>Sınıf İçi Sunum Paneli (Alt Alta Gösterim)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
 
         body {
             font-family: 'Fredoka', sans-serif;
-            background-color: #f0f2f5;
-            color: #2c3e50;
+            background-color: #eceff1;
+            color: #263238;
             margin: 0;
-            padding: 15px;
+            padding: 10px;
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -23,12 +23,11 @@
             text-align: center;
             color: #37474f;
             margin: 0 0 10px 0;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        /* Ana Taşıyıcı */
         .stage-container {
             display: flex;
             width: 100%;
@@ -38,51 +37,49 @@
             box-sizing: border-box;
         }
 
-        /* Panel Tasarımı */
+        /* Panel Genel Yapısı */
         .panel {
             flex: 1;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border: 1px solid #e0e0e0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: 1px solid #cfd8dc;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px;
+            padding: 0; /* İçeriği header ile sıfırlamak için */
             position: relative;
-            transition: all 0.3s;
+            overflow: hidden;
         }
 
-        /* Başlık Şeritleri */
+        /* Başlıklar */
         .panel-header {
             width: 100%;
             text-align: center;
-            padding: 8px 0;
-            font-size: 1.3rem;
+            padding: 10px 0;
+            font-size: 1.2rem;
             font-weight: bold;
             color: white;
-            border-radius: 12px 12px 0 0;
-            position: absolute;
-            top: 0;
-            left: 0;
+            z-index: 2;
         }
-        .p1-head { background: linear-gradient(135deg, #ff8a65, #ffab91); } /* Turuncu */
-        .p2-head { background: linear-gradient(135deg, #4db6ac, #80cbc4); } /* Turkuaz */
-        .p3-head { background: linear-gradient(135deg, #7986cb, #9fa8da); } /* İndigo */
+        .p1-head { background: linear-gradient(135deg, #ef5350, #ff8a80); }
+        .p2-head { background: linear-gradient(135deg, #42a5f5, #90caf9); }
+        .p3-head { background: linear-gradient(135deg, #66bb6a, #a5d6a7); }
 
         .panel-content {
-            margin-top: 45px;
+            padding: 10px;
             width: 100%;
-            flex-grow: 1;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
+            box-sizing: border-box;
         }
 
-        /* Ayar Bölümü */
+        /* Ayar Kısmı */
         .setup-area {
             background: #fafafa;
-            padding: 8px;
+            padding: 5px;
             border-radius: 8px;
             width: 95%;
             display: flex;
@@ -90,64 +87,86 @@
             align-items: center;
             gap: 5px;
             border: 1px dashed #cfd8dc;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .num-input {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             padding: 5px;
             width: 80px;
             text-align: center;
-            border: 2px solid #e0e0e0;
+            border: 2px solid #b0bec5;
             border-radius: 6px;
-            color: #455a64;
+            color: #37474f;
             font-weight: bold;
         }
 
-        .mode-btns { display: flex; gap: 4px; justify-content: center; width: 100%; }
+        .mode-btns { display: flex; gap: 3px; justify-content: center; width: 100%; }
         
         .setup-btn {
-            padding: 5px;
+            padding: 4px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
             color: white;
             font-weight: bold;
-            font-size: 0.85rem;
-            opacity: 0.7;
+            font-size: 0.8rem;
+            opacity: 0.6;
             flex: 1;
         }
-        .setup-btn:hover { opacity: 1; }
-        .setup-btn.active { opacity: 1; transform: scale(0.95); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+        .setup-btn.active { opacity: 1; transform: scale(0.95); }
         
-        .btn-5 { background: #ffa726; }
-        .btn-25 { background: #66bb6a; }
-        .btn-50 { background: #42a5f5; }
-        .btn-125 { background: #ab47bc; }
+        .btn-5 { background: #ff9800; }
+        .btn-25 { background: #4caf50; }
+        .btn-50 { background: #2196f3; }
+        .btn-125 { background: #9c27b0; }
 
-        /* Görsel Sahne */
+        /* GÖRSEL SAHNE (Önemli Kısım) */
         .visual-stage {
             flex-grow: 1;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: start; /* Üstten başlasın */
+            padding-top: 20px;
+            position: relative;
         }
 
+        /* 1. Katman: Soru İfadesi (Silinmeyecek) */
+        .question-box {
+            background: #eceff1;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #b0bec5;
+            margin-bottom: 10px;
+            transition: all 0.5s;
+        }
         .question-text {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
-            color: #546e7a;
+            color: #37474f;
+            margin: 0;
         }
 
-        /* Grid Sistemi */
+        /* Dönüşüm Oku */
+        .transform-arrow {
+            font-size: 2rem;
+            color: #ff7043;
+            margin-bottom: 10px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.5s;
+        }
+        .arrow-show { opacity: 1; transform: translateY(0); }
+
+        /* 2. Katman: Grid Sistemi (Altta belirecek) */
         .calc-row {
             display: flex;
             gap: 4px;
             align-items: flex-end;
-            visibility: hidden;
-            padding-right: 10px; /* Sağdaki bölen için pay */
+            visibility: hidden; /* Başta gizli */
+            padding-right: 10px;
         }
 
         .digit-group {
@@ -162,20 +181,20 @@
             width: 45px;
             height: 45px;
             background: white;
-            border: 2px solid #b0bec5;
+            border: 2px solid #90a4ae;
             border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 1.8rem;
             font-weight: bold;
-            color: #37474f;
+            color: #455a64;
             z-index: 1;
         }
 
         .zero-box {
             border-color: #ffcc80;
-            color: #e65100;
+            color: #ef6c00;
             background: #fff3e0;
             opacity: 0;
             transform: translateX(-20px);
@@ -196,36 +215,33 @@
             opacity: 0;
             transform: translateY(-10px);
             transition: all 0.4s;
-            border-top: 2px solid #eee; 
+            border-top: 2px solid #eee;
         }
         .res-show { opacity: 1; transform: translateY(0); border-top-color: #4caf50; }
 
         .carry {
             position: absolute;
-            top: -22px;
-            left: -8px;
+            top: -25px;
+            left: -5px;
             font-size: 1rem;
             color: #d32f2f;
             font-weight: bold;
             opacity: 0;
             z-index: 2;
             transition: all 0.4s;
-            background: rgba(255,255,255,0.9);
-            padding: 2px 5px;
+            background: rgba(255,255,255,0.95);
+            padding: 2px 6px;
             border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .carry-show { opacity: 1; transform: translateY(0); }
 
-        /* Bölen İşareti (SAĞDA) */
         .divider-sign {
             font-size: 2rem;
-            margin-left: 10px; /* Soldan boşluk */
+            margin-left: 10px;
             color: #78909c;
-            padding-bottom: 55px; /* Kutularla hizalamak için yukarı ittik */
+            padding-bottom: 55px;
             font-weight: bold;
-            display: flex;
-            align-items: center;
         }
 
         .active-calc {
@@ -235,7 +251,7 @@
             transform: scale(1.1);
         }
 
-        /* Kontrol Butonları */
+        /* Butonlar */
         .control-bar {
             width: 100%;
             display: flex;
@@ -245,8 +261,8 @@
 
         .main-btn {
             flex: 2;
-            padding: 12px;
-            font-size: 1.1rem;
+            padding: 10px;
+            font-size: 1rem;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -261,8 +277,8 @@
 
         .instant-btn {
             flex: 1;
-            padding: 12px;
-            font-size: 1.1rem;
+            padding: 10px;
+            font-size: 1rem;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -276,15 +292,15 @@
 
         .reset-icon {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 10px;
+            right: 10px;
             cursor: pointer;
             font-size: 1.2rem;
             color: white;
             opacity: 0.8;
             z-index: 10;
         }
-        .reset-icon:hover { opacity: 1; transform: rotate(90deg); transition: 0.3s; }
+        .reset-icon:hover { transform: rotate(90deg); transition: 0.3s; opacity: 1; }
 
     </style>
 </head>
@@ -293,6 +309,7 @@
     <h1>✨ Akıllı Tahta Matematik Paneli</h1>
 
     <div class="stage-container">
+        
         <div class="panel">
             <div class="panel-header p1-head">
                 SORU 1
@@ -300,7 +317,7 @@
             </div>
             <div class="panel-content">
                 <div class="setup-area" id="setup-1">
-                    <input type="number" id="inp-1" class="num-input" value="12">
+                    <input type="number" id="inp-1" class="num-input" value="17">
                     <div class="mode-btns">
                         <button class="setup-btn btn-5" onclick="setMode(1, 5, this)">x5</button>
                         <button class="setup-btn btn-25" onclick="setMode(1, 25, this)">x25</button>
@@ -308,10 +325,17 @@
                         <button class="setup-btn btn-125" onclick="setMode(1, 125, this)">x125</button>
                     </div>
                 </div>
+
                 <div class="visual-stage">
-                    <div class="question-text" id="qtext-1">Hazır</div>
+                    <div class="question-box">
+                        <div class="question-text" id="qtext-1">Hazır</div>
+                    </div>
+                    
+                    <div class="transform-arrow" id="arrow-1">⬇</div>
+
                     <div class="calc-row" id="grid-1"></div>
                 </div>
+
                 <div class="control-bar">
                     <button class="main-btn" id="btn-play-1" onclick="nextStep(1)" disabled>▶ OYNAT</button>
                     <button class="instant-btn" id="btn-quick-1" onclick="instantShow(1)" disabled>⚡ CEVAP</button>
@@ -335,7 +359,10 @@
                     </div>
                 </div>
                 <div class="visual-stage">
-                    <div class="question-text" id="qtext-2">Hazır</div>
+                    <div class="question-box">
+                        <div class="question-text" id="qtext-2">Hazır</div>
+                    </div>
+                    <div class="transform-arrow" id="arrow-2">⬇</div>
                     <div class="calc-row" id="grid-2"></div>
                 </div>
                 <div class="control-bar">
@@ -352,7 +379,7 @@
             </div>
             <div class="panel-content">
                 <div class="setup-area" id="setup-3">
-                    <input type="number" id="inp-3" class="num-input" value="16">
+                    <input type="number" id="inp-3" class="num-input" value="36">
                     <div class="mode-btns">
                         <button class="setup-btn btn-5" onclick="setMode(3, 5, this)">x5</button>
                         <button class="setup-btn btn-25" onclick="setMode(3, 25, this)">x25</button>
@@ -361,7 +388,10 @@
                     </div>
                 </div>
                 <div class="visual-stage">
-                    <div class="question-text" id="qtext-3">Hazır</div>
+                    <div class="question-box">
+                        <div class="question-text" id="qtext-3">Hazır</div>
+                    </div>
+                    <div class="transform-arrow" id="arrow-3">⬇</div>
                     <div class="calc-row" id="grid-3"></div>
                 </div>
                 <div class="control-bar">
@@ -370,6 +400,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
     <script>
@@ -398,9 +429,13 @@
             states[pid].num = inputVal;
             states[pid].step = 1;
 
-            document.getElementById(`qtext-${pid}`).innerText = `${inputVal} x ${factor} = ?`;
-            document.getElementById(`qtext-${pid}`).style.display = 'block';
+            // Soru Alanını Güncelle
+            document.getElementById(`qtext-${pid}`).innerText = `${inputVal} x ${factor}`;
+            
+            // Alt alanı temizle ve oku gizle
             document.getElementById(`grid-${pid}`).innerHTML = '';
+            document.getElementById(`grid-${pid}`).style.visibility = 'hidden';
+            document.getElementById(`arrow-${pid}`).classList.remove('arrow-show');
             
             const btnPlay = document.getElementById(`btn-play-${pid}`);
             const btnQuick = document.getElementById(`btn-quick-${pid}`);
@@ -420,11 +455,14 @@
                 btnPlay.disabled = true;
                 btnQuick.disabled = true;
 
+                // Ok İşaretini Göster
+                document.getElementById(`arrow-${pid}`).classList.add('arrow-show');
+
+                // Grid'i Hazırla
                 prepareGrid(pid, state.num, rule.zeros, rule.div);
-                
-                document.getElementById(`qtext-${pid}`).style.display = 'none';
                 document.getElementById(`grid-${pid}`).style.visibility = 'visible';
 
+                // Sıfırları Kaydır
                 const zeroBoxes = document.querySelectorAll(`#grid-${pid} .zero-box`);
                 for(let box of zeroBoxes) {
                     await wait(300);
@@ -459,19 +497,19 @@
             const digits = fullStr.split('').map(Number);
             const divisor = rule.div;
 
-            // Çiz
+            // Her şeyi çiz ve göster
+            document.getElementById(`arrow-${pid}`).classList.add('arrow-show');
             prepareGrid(pid, state.num, rule.zeros, rule.div);
-            document.getElementById(`qtext-${pid}`).style.display = 'none';
             document.getElementById(`grid-${pid}`).style.visibility = 'visible';
 
-            // Sıfırları aç
+            // Sıfırları anında aç
             const zeroBoxes = document.querySelectorAll(`#grid-${pid} .zero-box`);
             zeroBoxes.forEach(box => {
                 box.classList.add('zero-show');
                 box.style.transition = 'none';
             });
 
-            // Hesapla ve yaz
+            // Sonuçları anında yaz
             let remainder = 0;
             for(let i=0; i<digits.length; i++) {
                 let currentVal = parseInt(remainder.toString() + digits[i].toString());
@@ -504,7 +542,6 @@
 
             const fullStr = numStr + zeros;
             
-            // 1. Önce Rakam Kutuları
             for(let i=0; i < fullStr.length; i++) {
                 const isZero = i >= numStr.length;
                 const digit = fullStr[i];
@@ -531,7 +568,6 @@
                 grid.appendChild(group);
             }
 
-            // 2. En Sona Bölen İşareti (SAĞA)
             const divSign = document.createElement('div');
             divSign.className = 'divider-sign';
             divSign.innerHTML = `÷ ${divisor}`;
@@ -571,8 +607,8 @@
 
         function resetPanel(pid) {
             states[pid].step = 0;
-            document.getElementById(`qtext-${pid}`).style.display = 'block';
             document.getElementById(`qtext-${pid}`).innerText = 'Hazır';
+            document.getElementById(`arrow-${pid}`).classList.remove('arrow-show');
             document.getElementById(`grid-${pid}`).innerHTML = '';
             document.getElementById(`grid-${pid}`).style.visibility = 'hidden';
             
