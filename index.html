@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilgi Hazinesi - Eğitimin Keşif Dünyası</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="stiller/stil.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        /* GÜNCELLEME 2: Yeni Fontları Uygulama */
+
+        /* Tüm sayfa için varsayılan fontu Poppins yapıyoruz. 
+           Bu, "İ" harfi dahil tüm Türkçe karakterlerin düzgün görünmesini garanti eder. */
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Ana başlık (H1) için istediğiniz "Dancing Script" fontunu uyguluyoruz */
+        .header h1 {
+            font-family: 'Dancing Script', cursive;
+            font-weight: 700;
+            /* El yazısı fontları bazen küçük görünür, gerekirse boyutu buradan artırabilirsiniz */
+            font-size: 3.5rem; 
+        }
+
+        /* Kart başlıkları (H2) ve diğer başlıklar için okunaklı Poppins'i kalın olarak kullanıyoruz */
+        h2, h3, h4, h5, h6 {
+             font-family: 'Poppins', sans-serif;
+             font-weight: 600;
+        }
+
+        /* Sizin mevcut stilleriniz */
+        .desktop-nav {
+            display: none !important;
+        }
+        .mobile-nav-toggle {
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="https://bilgihazinesi.github.io/" class="home-button" title="Anasayfa'ya Dön"><i class="bi bi-house-heart-fill"></i></a>
+    <div id="menu-container"></div>
+    <div id="float-menu-placeholder"></div>
+    
+    <div class="page-wrapper">
+        <header class="header">
+            <h1>Bilgi Hazinesi</h1>
+            <p>Öğrenmenin Keşif Dolu Dünyasına Hoş Geldiniz!</p>
+        </header>
+        
+        <main class="container">
+            <p class="intro">
+                <strong>Bilgi Hazinesi ekibi olarak,</strong> sizler için hazırladığımız birbirinden keyifli ders içeriklerine aşağıdaki kartlara tıklayarak ulaşabilirsiniz. İyi eğlenceler!
+            </p>
+            <div class="card-container" id="card-container"></div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Bilgi Hazinesi Ekibi - Tüm Hakları Saklıdır.</p>
+        </footer>
+    </div>
+    
+    <script src="bilesenler/menu.js"></script>
+    <script src="bilesenler/float-menu.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('sayfalar.json')
+                .then(response => response.json())
+                .then(data => {
+                    buildHomepageContent(data);
+                })
+                .catch(error => {
+                    console.error('Anasayfa içeriği yüklenirken hata oluştu:', error);
+                });
+        });
+
+        function buildHomepageContent(data) {
+            const cardContainer = document.getElementById('card-container');
+            if(!cardContainer) return;
+
+            // Masaüstü menüsü kaldırıldığı için bu kodlara artık gerek yok.
+            // Sadece kartları oluşturuyoruz.
+            data.forEach(kategori => {
+                let cardHtml = `
+                    <div class="card">
+                        <div class="icon"><i class="bi ${kategori.ikon}"></i></div>
+                        <h2>${kategori.isim}</h2>
+                        <p>${kategori.aciklama}</p>
+                        <ul class="card-sub-links">
+                `;
+                kategori.sayfalar.forEach(sayfa => {
+                    cardHtml += `<li><a href="${sayfa.url}">${sayfa.isim}</a></li>`;
+                });
+                cardHtml += '</ul></div>';
+                cardContainer.innerHTML += cardHtml;
+            });
+            
+            setupCardClickEvents();
+        }
+
+        function setupCardClickEvents() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('click', function(event) {
+                    if (event.target.tagName === 'A') { return; }
+                    const subLinks = this.querySelector('.card-sub-links');
+                    if (!subLinks) return;
+                    
+                    const isOpen = subLinks.style.maxHeight && subLinks.style.maxHeight !== "0px";
+                    
+                    document.querySelectorAll('.card-sub-links').forEach(menu => {
+                        menu.style.maxHeight = null;
+                    });
+                    
+                    if (!isOpen) {
+                        subLinks.style.maxHeight = subLinks.scrollHeight + "px";
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
