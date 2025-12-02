@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zihinden İşlem Ustası</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+        :root {
+            --bg-color: #e0f7fa;
+            --primary: #00bcd4;
+            --secondary: #ff9800;
+            --success: #4caf50;
+            --error: #f44336;
+            --text: #37474f;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .app-container {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+            border: 5px solid white;
+            position: relative;
+        }
+
+        /* Üst Menü */
+        .header {
+            background: var(--primary);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 { margin: 0; font-size: 2rem; }
+        .score-board { 
+            background: rgba(0,0,0,0.1); 
+            padding: 5px 15px; 
+            border-radius: 20px; 
+            font-size: 1.2rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        /* Sayfa İçeriği */
+        .content {
+            padding: 30px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Butonlar */
+        .btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            font-family: inherit;
+            font-weight: bold;
+            box-shadow: 0 5px 0 #e65100;
+            transition: all 0.1s;
+        }
+        .btn:active { transform: translateY(5px); box-shadow: none; }
+        .btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        .btn-mode { width: 80%; max-width: 300px; }
+
+        /* Soru Kartı */
+        .question-box {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+        
+        .strategy-hint {
+            font-size: 1.2rem;
+            color: #78909c;
+            margin-bottom: 20px;
+            background: #eceff1;
+            padding: 10px 20px;
+            border-radius: 15px;
+        }
+
+        /* İnteraktif Alanlar */
+        .interactive-step {
+            display: none; /* JS ile açılacak */
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed var(--secondary);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .interactive-step.active { display: block; animation: popIn 0.5s; }
+
+        input {
+            font-size: 2rem;
+            padding: 10px;
+            width: 150px;
+            text-align: center;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        input:focus { border-color: var(--primary); outline: none; }
+
+        .feedback {
+            font-size: 1.5rem;
+            margin-top: 15px;
+            height: 40px;
+            font-weight: bold;
+        }
+        .feedback.correct { color: var(--success); }
+        .feedback.wrong { color: var(--error); }
+
+        /* Animasyonlar */
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background: #eee;
+            margin-top: 20px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <h1>🎓 Zihinden İşlem Ustası</h1>
+            <div class="score-board" id="scoreBoard">Puan: 0</div>
+        </div>
+
+        <div class="content" id="mainMenu">
+            <h2>Hangi Seviyede Çalışmak İstersin?</h2>
+            <button class="btn btn-mode" onclick="startGame('training', 5)">x5 (Başlangıç)</button>
+            <button class="btn btn-mode" onclick="startGame('training', 50)">x50 (Orta)</button>
+            <button class="btn btn-mode" onclick="startGame('training', 25)">x25 (İleri)</button>
+            <button class="btn btn-mode" onclick="startGame('training', 125)">x125 (Usta)</button>
+            <button class="btn btn-mode" style="background:#f44336; box-shadow:0 5px 0 #b71c1c" onclick="startChallenge()">🏆 KARIŞIK YARIŞMA</button>
+        </div>
+
+        <div class="content" id="gameArea" style="display:none;">
+            <div class="question-box" id="questionDisplay">24 x 25</div>
+            <div class="strategy-hint" id="hintDisplay">İpucu: Sayının sonuna 00 ekle, 4'e böl.</div>
+
+            <div class="interactive-step" id="step1">
+                <p id="step1Text">24'ün yanına sıfırları ekle:</p>
+                <input type="number" id="inputStep1" placeholder="?">
+                <button class="btn" style="padding:10px 20px; font-size:1rem;" onclick="checkStep1()">Kontrol Et</button>
+            </div>
+
+            <div class="interactive-step" id="step2">
+                <p id="step2Text">Şimdi 2400 sayısını 4'e böl:</p>
+                <input type="number" id="inputStep2" placeholder="?">
+                <button class="btn" style="padding:10px 20px; font-size:1rem;" onclick="checkStep2()">Sonucu Gir</button>
+            </div>
+
+            <div class="feedback" id="feedbackMsg"></div>
+            
+            <button class="btn" id="nextBtn" style="display:none;" onclick="nextQuestion()">Sonraki Soru >></button>
+            <button class="btn" id="menuBtn" style="background:#78909c; box-shadow:0 5px 0 #546e7a; font-size:1rem;" onclick="showMenu()">Menüye Dön</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DEĞİŞKENLER ---
+        let currentMode = ''; // 'training' veya 'challenge'
+        let currentFactor = 0;
+        let currentNumber = 0;
+        let score = 0;
+        let expandedNum = 0;
+        let finalResult = 0;
+        
+        // DOM Elementleri
+        const mainMenu = document.getElementById('mainMenu');
+        const gameArea = document.getElementById('gameArea');
+        const questionDisplay = document.getElementById('questionDisplay');
+        const hintDisplay = document.getElementById('hintDisplay');
+        const scoreBoard = document.getElementById('scoreBoard');
+        
+        const step1Div = document.getElementById('step1');
+        const step2Div = document.getElementById('step2');
+        const inp1 = document.getElementById('inputStep1');
+        const inp2 = document.getElementById('inputStep2');
+        const feedback = document.getElementById('feedbackMsg');
+        const nextBtn = document.getElementById('nextBtn');
+        const step1Text = document.getElementById('step1Text');
+        const step2Text = document.getElementById('step2Text');
+
+        // Ayarlar
+        const rules = {
+            5: { text: "10 ile çarp (0 ekle), 2'ye böl.", zeros: "0", div: 2 },
+            25: { text: "100 ile çarp (00 ekle), 4'e böl.", zeros: "00", div: 4 },
+            50: { text: "100 ile çarp (00 ekle), 2'ye böl.", zeros: "00", div: 2 },
+            125: { text: "1000 ile çarp (000 ekle), 8'e böl.", zeros: "000", div: 8 }
+        };
+
+        // --- OYUN BAŞLATMA ---
+        function showMenu() {
+            gameArea.style.display = 'none';
+            mainMenu.style.display = 'flex';
+            score = 0;
+            updateScore();
+        }
+
+        function startGame(mode, factor) {
+            currentMode = mode;
+            currentFactor = factor;
+            score = 0;
+            updateScore();
+            
+            mainMenu.style.display = 'none';
+            gameArea.style.display = 'flex';
+            
+            generateQuestion();
+        }
+
+        function startChallenge() {
+            currentMode = 'challenge';
+            score = 0;
+            updateScore();
+            mainMenu.style.display = 'none';
+            gameArea.style.display = 'flex';
+            generateQuestion();
+        }
+
+        // --- SORU ÜRETME ---
+        function generateQuestion() {
+            // Arayüzü Sıfırla
+            step1Div.classList.add('active');
+            step2Div.classList.remove('active');
+            nextBtn.style.display = 'none';
+            feedback.innerText = '';
+            inp1.value = '';
+            inp2.value = '';
+            inp1.disabled = false;
+            inp2.disabled = false;
+            
+            // Challenge modunda rastgele faktör seç
+            if (currentMode === 'challenge') {
+                const factors = [5, 25, 50, 125];
+                currentFactor = factors[Math.floor(Math.random() * factors.length)];
+            }
+
+            // Sayı üret (Bölünebilme kuralına uygun olması pratik için iyidir)
+            const rule = rules[currentFactor];
+            
+            // Öğrencinin kolay bölmesi için katları seçelim
+            // Örn: 4'e bölünecekse 4'ün katı bir sayı seçelim ki buçuklu çıkmasın (başlangıç için)
+            let multiplier = Math.floor(Math.random() * 20) + 2; 
+            currentNumber = multiplier * rule.div; 
+
+            // Soruyu Yaz
+            questionDisplay.innerText = `${currentNumber} x ${currentFactor}`;
+            hintDisplay.innerText = `İPUCU: ${rule.text}`;
+
+            // Adım 1 Metnini Hazırla
+            step1Text.innerHTML = `1. ADIM: <b>${currentNumber}</b> sayısının sonuna <b style='color:#ff9800'>${rule.zeros.length} tane sıfır</b> ekle:`;
+            
+            // Adım 2 Metnini Hazırla (Şimdilik gizli)
+            // Bu kısım checkStep1 içinde güncellenecek
+            
+            // Cevapları Hesapla
+            expandedNum = parseInt(currentNumber.toString() + rule.zeros);
+            finalResult = expandedNum / rule.div;
+
+            // Odaklan
+            inp1.focus();
+        }
+
+        // --- KONTROL MEKANİZMASI ---
+        function checkStep1() {
+            const userVal = parseInt(inp1.value);
+            if (userVal === expandedNum) {
+                feedback.innerText = "✅ Doğru! Sayıyı büyüttün.";
+                feedback.className = "feedback correct";
+                inp1.disabled = true; // Kitle
+                
+                // Adım 2'ye geç
+                const rule = rules[currentFactor];
+                step2Text.innerHTML = `2. ADIM: Şimdi <b>${expandedNum}</b> sayısını <b style='color:#00bcd4'>${rule.div}'ye böl</b>:`;
+                step1Div.classList.remove('active');
+                step2Div.classList.add('active');
+                inp2.focus();
+            } else {
+                feedback.innerText = "❌ Hata! Sadece sayının sonuna sıfırları ekle.";
+                feedback.className = "feedback wrong";
+                shake(inp1);
+            }
+        }
+
+        function checkStep2() {
+            const userVal = parseInt(inp2.value);
+            if (userVal === finalResult) {
+                feedback.innerText = "🎉 MÜKEMMEL! Cevap Doğru.";
+                feedback.className = "feedback correct";
+                inp2.disabled = true;
+                
+                score += 10;
+                updateScore();
+                
+                step2Div.classList.remove('active'); // Gizle
+                nextBtn.style.display = 'inline-block';
+                nextBtn.focus();
+            } else {
+                feedback.innerText = "⚠️ Yanlış. Tekrar dene (Yarısını veya çeyreğini düşün).";
+                feedback.className = "feedback wrong";
+                shake(inp2);
+            }
+        }
+
+        function nextQuestion() {
+            generateQuestion();
+        }
+
+        function updateScore() {
+            scoreBoard.innerText = `Puan: ${score}`;
+        }
+
+        // Görsel efekt: Titreme (Hata durumunda)
+        function shake(element) {
+            element.style.transform = "translateX(10px)";
+            setTimeout(() => {
+                element.style.transform = "translateX(-10px)";
+                setTimeout(() => {
+                    element.style.transform = "translateX(0)";
+                }, 100);
+            }, 100);
+        }
+
+        // Enter tuşu desteği
+        inp1.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") checkStep1();
+        });
+        inp2.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") checkStep2();
+        });
+
+    </script>
+</body>
+</html>
