@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Klasik Bölme: Kutu Kutu Yöntem</title>
+    <title>Türk Usulü Bölme Paneli</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500;700&display=swap');
 
         body {
             font-family: 'Fredoka', sans-serif;
-            background-color: #f0f4c3; /* Yumuşak bir arka plan */
+            background-color: #f1f8e9;
             margin: 0;
             padding: 10px;
             height: 100vh;
@@ -23,7 +24,7 @@
             text-align: center;
             margin: 0 0 10px 0;
             font-size: 1.6rem;
-            color: #558b2f;
+            color: #33691e;
             text-transform: uppercase;
         }
 
@@ -42,15 +43,15 @@
             background: white;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border: 2px solid #c5e1a5;
+            border: 2px solid #aed581;
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow: hidden;
             position: relative;
+            overflow: hidden;
         }
 
-        /* Başlık */
+        /* Başlıklar */
         .panel-header {
             width: 100%;
             text-align: center;
@@ -63,19 +64,19 @@
         .p2-head { background: #42a5f5; }
         .p3-head { background: #66bb6a; }
 
-        /* BUTON GRUBU (ÜSTTE) */
+        /* BUTON GRUBU (EN ÜSTTE) */
         .top-controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             padding: 10px;
             width: 100%;
             justify-content: center;
-            background: #f1f8e9;
+            background: #f9fbe7;
             border-bottom: 1px solid #dcedc8;
         }
 
         .action-btn {
-            padding: 8px 15px;
+            padding: 8px 12px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
@@ -85,13 +86,13 @@
             transition: 0.2s;
         }
         .btn-play { background: #558b2f; flex: 2; }
-        .btn-quick { background: #ffca28; color: #333; flex: 1; }
-        .btn-reset { background: #bdbdbd; width: 40px; }
+        .btn-quick { background: #fbc02d; color: #333; flex: 1; }
+        .btn-reset { background: #90a4ae; width: 40px; font-size: 1.2rem; }
 
         .action-btn:disabled { opacity: 0.5; cursor: default; }
         .action-btn:active { transform: translateY(2px); }
 
-        /* GİRİŞ ALANI (SETUP) */
+        /* AYAR ALANI */
         .setup-area {
             display: flex;
             flex-direction: column;
@@ -103,29 +104,31 @@
         }
 
         .num-input {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             padding: 5px;
-            width: 100px;
+            width: 120px;
             text-align: center;
             border: 2px solid #ccc;
             border-radius: 6px;
             font-weight: bold;
+            color: #455a64;
         }
 
-        .preset-btns { display: flex; gap: 5px; }
+        .preset-btns { display: flex; gap: 4px; width: 100%; justify-content: center; }
         .pre-btn {
-            padding: 5px 10px;
-            font-size: 0.8rem;
+            padding: 6px;
+            font-size: 0.85rem;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             color: white;
-            opacity: 0.7;
+            opacity: 0.8;
+            flex: 1;
         }
         .pre-btn:hover { opacity: 1; }
-        .active-preset { opacity: 1; box-shadow: 0 0 5px rgba(0,0,0,0.3); transform: scale(1.05); }
+        .active-preset { opacity: 1; transform: scale(1.05); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
-        /* GRID ALANI (SONSUZ DEFTER KAĞIDI GİBİ) */
+        /* GRID ALANI (SONSUZ KAĞIT) */
         .grid-wrapper {
             flex-grow: 1;
             width: 100%;
@@ -134,76 +137,79 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
-            background-size: 20px 20px;
         }
 
         .math-grid {
             display: grid;
-            /* Dinamik kolon sayısı JS ile verilecek */
-            gap: 2px; 
+            /* Grid şablonu JS ile dinamik ayarlanacak */
+            gap: 0; /* Çizgiler bitişik olsun */
             visibility: hidden;
         }
 
         /* HÜCRE TASARIMI */
         .cell {
-            width: 35px;
+            width: 30px;
             height: 40px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.4rem;
+            font-family: 'Roboto Mono', monospace; /* Hizalama için şart */
+            font-size: 1.5rem;
             font-weight: bold;
-            color: #455a64;
-            background: white;
-            border: 1px solid #cfd8dc; /* Hafif çerçeve */
-            border-radius: 4px;
+            color: #37474f;
+            position: relative;
         }
 
-        .cell-empty {
-            background: transparent;
-            border: none;
+        /* TÜRK USULÜ ÇİZGİLER */
+        .border-left-wall {
+            border-left: 3px solid #333;
+        }
+        
+        .border-bottom-wall {
+            border-bottom: 3px solid #333;
         }
 
-        /* KLASİK BÖLME ÇİZGİLERİ (ÖZEL HÜCRELER İÇİN) */
-        /* Bölünen ile Bölen arasındaki dikey çizgi */
-        .border-right-thick {
-            border-right: 3px solid #333 !important;
-        }
-        /* Bölen altındaki yatay çizgi */
-        .border-bottom-thick {
-            border-bottom: 3px solid #333 !important;
-        }
-        /* Çıkarma çizgisi */
-        .border-sub-line {
-            border-bottom: 2px solid #d32f2f !important;
+        .subtraction-line {
+            border-bottom: 2px solid #d32f2f; /* Kırmızı çıkarma çizgisi */
         }
 
-        /* RENKLER VE ANİMASYONLAR */
-        .highlight-dividend { background-color: #fff9c4; border-color: #fbc02d; }
-        .highlight-product { color: #d32f2f; }
-        .highlight-quotient { color: #2e7d32; background-color: #e8f5e9; font-weight: 800; }
-        .highlight-bringdown { color: #1565c0; animation: dropIn 0.5s; }
+        /* RENKLER VE EFEKTLER */
+        .hl-dividend { color: #333; }
+        .hl-divisor { color: #1565c0; }
+        .hl-quotient { color: #2e7d32; font-weight: 900; background-color: #e8f5e9; }
+        .hl-sub { color: #c62828; } /* Çıkan sayı */
+        .hl-rem { color: #333; font-weight: bold; } /* Kalan */
+        
+        .cell-anim {
+            animation: fadeIn 0.5s ease-out;
+        }
 
-        @keyframes dropIn {
-            0% { transform: translateY(-20px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Eksi İşareti */
+        .minus-sign {
+            position: absolute;
+            left: -15px;
+            color: #d32f2f;
+            font-size: 1.2rem;
         }
 
     </style>
 </head>
 <body>
 
-    <h1>📏 Klasik Bölme Tahtası</h1>
+    <h1>📏 Türk Usulü Bölme Tahtası</h1>
 
     <div class="stage-container">
         </div>
 
     <script>
-        // HTML Şablonunu Oluştur
         const container = document.querySelector('.stage-container');
-        const colors = ['#ff7043', '#42a5f5', '#66bb6a']; // Turuncu, Mavi, Yeşil
-
+        
+        // 3 Tane Panel Oluştur
         for(let i=1; i<=3; i++) {
             let pColor = i===1 ? 'p1-head' : (i===2 ? 'p2-head' : 'p3-head');
             
@@ -213,12 +219,12 @@
                 
                 <div class="top-controls">
                     <button class="action-btn btn-play" id="btn-play-${i}" onclick="playStep(${i})" disabled>▶ BAŞLAT</button>
-                    <button class="action-btn btn-quick" id="btn-quick-${i}" onclick="quickShow(${i})" disabled>⚡ SONUÇ</button>
+                    <button class="action-btn btn-quick" id="btn-quick-${i}" onclick="quickShow(${i})" disabled>⚡ CEVAP</button>
                     <button class="action-btn btn-reset" onclick="reset(${i})">↺</button>
                 </div>
 
                 <div class="setup-area" id="setup-${i}">
-                    <input type="number" id="inp-${i}" class="num-input" value="${12 + i*5}">
+                    <input type="number" id="inp-${i}" class="num-input" value="${12 + i*4}">
                     <div class="preset-btns">
                         <button class="pre-btn" style="background:#ef6c00" onclick="setMode(${i}, 5, this)">x5</button>
                         <button class="pre-btn" style="background:#2e7d32" onclick="setMode(${i}, 25, this)">x25</button>
@@ -235,11 +241,11 @@
             container.innerHTML += html;
         }
 
-        // --- VERİ YAPISI ---
+        // --- GLOBAL DEĞİŞKENLER ---
         const states = {
-            1: { steps: [], idx: 0, div: 0, num: 0 },
-            2: { steps: [], idx: 0, div: 0, num: 0 },
-            3: { steps: [], idx: 0, div: 0, num: 0 }
+            1: { steps: [], idx: 0 },
+            2: { steps: [], idx: 0 },
+            3: { steps: [], idx: 0 }
         };
 
         const rules = {
@@ -249,9 +255,9 @@
             125: { div: 8, zeros: "000" }
         };
 
-        // --- KURULUM ---
+        // --- OYUN KURULUMU ---
         function setMode(pid, factor, btn) {
-            // Buton stili
+            // Buton aktifliği
             const allBtns = document.querySelectorAll(`#setup-${pid} .pre-btn`);
             allBtns.forEach(b => b.classList.remove('active-preset'));
             btn.classList.add('active-preset');
@@ -259,153 +265,107 @@
             const inpVal = document.getElementById(`inp-${pid}`).value;
             if(!inpVal) return;
 
-            // Mantık
+            // Hesaplamalar
             const rule = rules[factor];
             const fullNumStr = inpVal + rule.zeros;
-            const fullNum = parseInt(fullNumStr);
+            const dividend = parseInt(fullNumStr);
             const divisor = rule.div;
 
-            // Hazırlık
-            states[pid].num = fullNum;
-            states[pid].div = divisor;
-            states[pid].steps = calculateDivisionSteps(fullNum, divisor);
+            // Grid'i Temizle ve Hazırla
+            states[pid].steps = calculateTurkishDivision(dividend, divisor);
             states[pid].idx = 0;
+            
+            drawSkeleton(pid, fullNumStr, divisor);
 
-            // Butonları aç
+            // Kontrolleri Aç
             document.getElementById(`btn-play-${pid}`).disabled = false;
             document.getElementById(`btn-play-${pid}`).innerText = "▶ BAŞLAT";
             document.getElementById(`btn-quick-${pid}`).disabled = false;
-
-            // Grid'i İlk Haliyle Çiz (Sadece Soru Kısmı)
-            drawInitialGrid(pid, fullNumStr, divisor);
         }
 
-        // --- ADIM HESAPLAMA MOTORU ---
-        function calculateDivisionSteps(dividend, divisor) {
-            const sDividend = dividend.toString();
-            const sDivisor = divisor.toString();
-            const steps = [];
-
-            // Grid Koordinat Sistemi
-            // Col 0...N: Bölünen Rakamları
-            // Col N+1: Duvar (|)
-            // Col N+2...: Bölen / Bölüm
-            
-            // Satır 0: Soru Satırı (Bölünen | Bölen)
-            // Satır 1: Bölüm Çizgisi Altı (_______)
-            // Satır 2+: İşlemler
-
-            let remainder = 0;
-            let currentRow = 2; // İşlemler 2. satırdan (index) başlar
-
-            for (let i = 0; i < sDividend.length; i++) {
-                let digit = parseInt(sDividend[i]);
-                
-                // Adım: Aşağı İndir (İlk rakam hariç)
-                if (i > 0) {
-                    steps.push({ type: 'bring_down', val: digit, row: currentRow, col: i });
-                }
-
-                // Mevcut değer (Kalan + İnen Rakam)
-                let currentVal = remainder * 10 + digit;
-                let q = Math.floor(currentVal / divisor);
-                let prod = q * divisor;
-                let newRem = currentVal - prod;
-
-                // Adım: Bölüme Yaz
-                steps.push({ type: 'quotient', val: q, qIndex: i });
-
-                // Adım: Çarp ve Yaz (Altına)
-                // Dikkat: Çift haneli çarpım hizalaması
-                steps.push({ type: 'product', val: prod, row: currentRow + 1, col: i });
-
-                // Adım: Çıkar ve Kalanı Yaz
-                steps.push({ type: 'remainder', val: newRem, row: currentRow + 3, col: i });
-
-                remainder = newRem;
-                currentRow += 3; // Her blok 3 satır yer kaplar (Çıkan, Çizgi, Kalan)
-            }
-            return steps;
-        }
-
-        // --- ÇİZİM FONKSİYONLARI ---
-        function drawInitialGrid(pid, dividendStr, divisor) {
+        // --- İSKELET ÇİZİMİ (Bölünen | Bölen) ---
+        function drawSkeleton(pid, dividendStr, divisor) {
             const grid = document.getElementById(`grid-${pid}`);
             grid.innerHTML = '';
             grid.style.visibility = 'visible';
 
-            // Grid Boyutlarını Hesapla
-            // Sütun Sayısı: Bölünen Uzunluğu + 1 (Çizgi) + Bölen Uzunluğu (En az 3)
-            const colCount = dividendStr.length + 1 + 3;
-            grid.style.gridTemplateColumns = `repeat(${colCount}, 35px)`;
+            // Grid Sütun Yapısı: [Rakamlar...] [Duvar] [Bölen/Bölüm]
+            const digitCols = dividendStr.length;
+            const totalCols = digitCols + 2; // +1 Duvar, +1 Bölen Alanı
+            
+            grid.style.gridTemplateColumns = `repeat(${digitCols}, 30px) 10px 60px`;
 
-            // SATIR 0: [Bölünen Rakamları] [|] [Bölen]
-            // Bölünen
+            // 1. SATIR: Bölünen Rakamları | Bölen
+            // Rakamlar
             for(let char of dividendStr) {
-                grid.appendChild(createCell(char));
+                let cell = createCell(char, 'hl-dividend');
+                grid.appendChild(cell);
             }
             
-            // Duvar
+            // Duvar (Dikey Çizgi)
             let wall = createCell('');
-            wall.classList.add('border-right-thick'); // Sağ tarafa kalın çizgi
+            wall.classList.add('border-left-wall'); // Soluna çizgi çek
+            // Duvar, bölünen ile bölen arasında kalır.
+            // Bölenin altına kadar uzaması için, sonraki satırlarda da bu duvarı çizeceğiz.
             grid.appendChild(wall);
 
             // Bölen
-            let divCell = createCell(divisor);
-            divCell.classList.add('border-bottom-thick'); // Altına kalın çizgi
+            let divCell = createCell(divisor, 'hl-divisor');
+            divCell.classList.add('border-bottom-wall'); // Altına çizgi çek
             grid.appendChild(divCell);
-
-            // Geri kalan boşluk (varsa)
-            fillEmptyCells(grid, colCount - (dividendStr.length + 2));
         }
 
+        // --- HESAPLAMA MOTORU ---
+        function calculateTurkishDivision(dividend, divisor) {
+            const steps = [];
+            const sDividend = dividend.toString();
+            let remainder = 0;
+            let currentVal = 0; // İşlem gören kısım
+            
+            // Satır mantığı gridde biraz farklı işleyecek.
+            // Bölüm (Quotient) -> Row 2, en sağ kolon.
+            // İşlemler -> Row 2'den itibaren sol kolonlar.
+
+            for (let i = 0; i < sDividend.length; i++) {
+                let digit = parseInt(sDividend[i]);
+                currentVal = remainder * 10 + digit;
+
+                // Adım 1: Bölüm Rakamı
+                let q = Math.floor(currentVal / divisor);
+                steps.push({ type: 'quotient', val: q });
+
+                // Adım 2: Çarpma ve Çıkarma (Sadece 0 değilse veya işlem bitiyorsa çizelim)
+                // Türk usulünde 0 olsa bile bazen yazılır ama genelde "içinde yoksa 0 at geç" yapılır.
+                // Biz klasik tam gösterim yapalım (Çarp -> Yaz -> Çıkar).
+                
+                let product = q * divisor;
+                let diff = currentVal - product;
+
+                // Çarpım Sonucunu Yaz (Product)
+                // Hizalama: Hangi basamaktaysak (i), oraya hizalı bitmeli.
+                steps.push({ type: 'product', val: product, colIndex: i });
+
+                // Çıkarma Sonucu (Remainder)
+                steps.push({ type: 'diff', val: diff, colIndex: i });
+
+                remainder = diff;
+            }
+            return steps;
+        }
+
+        // --- ADIM OYNATICI ---
         function playStep(pid) {
             const state = states[pid];
             const btn = document.getElementById(`btn-play-${pid}`);
             const btnQ = document.getElementById(`btn-quick-${pid}`);
-
+            
             if(state.idx >= state.steps.length) return;
 
             btn.disabled = true;
             btnQ.disabled = true;
 
             const step = state.steps[state.idx];
-            const grid = document.getElementById(`grid-${pid}`);
-            const colCount = parseInt(grid.style.gridTemplateColumns.split('(')[1]);
-            const dividendLen = states[pid].num.toString().length;
-
-            // Animasyonlu İşlem
-            if(step.type === 'quotient') {
-                // Bölüm hücresini bulmak biraz trickli çünkü grid akışkan.
-                // Ama bölüm yeri sabit: Satır 1, Duvarın sağı.
-                // Biz grid'e append yaparak gittiğimiz için, aslında bölüm satırını en başta oluşturmadık.
-                // Dinamik olarak belirli bir pozisyona div eklemek gridde zor (absolute gerekir).
-                // ÇÖZÜM: Bölüm için ayrı bir alan tanımlamak yerine, gridin sağ tarafını kullanacağız.
-                // Bölüm her zaman Bölen'in altındadır.
-                
-                // Önceki satırları doldurarak "Bölüm Satırına" (Satır 1) gelelim
-                // Bölen Satır 0'daydı.
-                // Grid'e sadece append yaparsak alt alta gider. 
-                // Biz burada JS ile spesifik bir hücreye müdahale etmeyeceğiz, yeni hücreler ekleyeceğiz.
-                // Ama bu "Klasik grid" yapısında zor.
-                
-                // DÜZELTME: Bölüm rakamlarını, en baştaki bölenin altına (Satır 1, sağ sütunlar) eklemeliyiz.
-                // Bunu yapmak için "Position Absolute" kullanarak mevcut gridin üzerine koymak en temiz görsel çözümdür.
-                // Veya grid'i baştan N satırlı oluşturmak gerekir.
-                
-                // PRATİK ÇÖZÜM: Bölüm kutucuğunu, Bölen kutucuğunun hemen altına "append" edemeyiz çünkü grid flow var.
-                // Bu yüzden basit bir hile: Bölüm rakamlarını gridin en sağına eklenen yeni bir "sonuç paneli" gibi göstereceğiz
-                // YA DA: Grid'i baştan büyük kuracağız. (En sağlıklısı)
-                
-                // Kod karmaşasını önlemek için: 
-                // Quotient değeri geldiğinde, Bölen'in olduğu hücrenin (örneğin 5. çocuk) altına bir span ekleyelim veya
-                // Grid yapısını değiştirelim:
-            }
-            
-            // YENİ STRATEJİ: Grid yerine Absolute Positioning kullanan "Sanal Grid".
-            // Hayır, Grid ile devam edelim ama "Satır Ekleme" mantığıyla.
-            
-            renderDynamicStep(pid, step, colCount, dividendLen);
+            renderStep(pid, step);
 
             state.idx++;
 
@@ -418,17 +378,13 @@
                     btn.innerText = "BİTTİ";
                     btn.disabled = true;
                 }
-            }, 600); // Animasyon süresi
+            }, 500);
         }
 
         function quickShow(pid) {
             const state = states[pid];
-            const grid = document.getElementById(`grid-${pid}`);
-            const colCount = parseInt(grid.style.gridTemplateColumns.split('(')[1]);
-            const dividendLen = states[pid].num.toString().length;
-
             while(state.idx < state.steps.length) {
-                renderDynamicStep(pid, state.steps[state.idx], colCount, dividendLen, true); // true = no animation
+                renderStep(pid, state.steps[state.idx], true);
                 state.idx++;
             }
             document.getElementById(`btn-play-${pid}`).innerText = "BİTTİ";
@@ -436,193 +392,113 @@
             document.getElementById(`btn-quick-${pid}`).disabled = true;
         }
 
-        // DİNAMİK RENDER MOTORU (Satır Satır Ekleyen)
-        function renderDynamicStep(pid, step, totalCols, dividendLen, instant = false) {
+        // --- RENDER MOTORU ---
+        function renderStep(pid, step, instant = false) {
             const grid = document.getElementById(`grid-${pid}`);
-            
-            // Eğer grid boşsa (ilk adım), sadece bölüm satırını hazırlarız.
-            // Bölüm satırı (Satır 1) henüz yoksa oluşturmak lazım mı?
-            // Mevcut yapıda: Satır 0 var.
-            
-            // --- BÖLÜM (QUOTIENT) YAZMA ---
+            const cols = grid.style.gridTemplateColumns.split(' ').length; // Toplam kolon sayısı
+            const dividendCols = cols - 2; // Sadece rakam alanı
+
+            // BÖLÜM (QUOTIENT)
             if (step.type === 'quotient') {
-                // Bölüm, Bölen'in hemen altına yazılır.
-                // Grid'de bu hücre: Satır 1, Sütun = (dividendLen + 1).
-                // Ama rakamlar yan yana dizilmeli.
-                // Bu yüzden Satır 1'deki ilgili hücreyi hedeflemeliyiz.
+                // Bölüm hücresi: Sağdaki en son kolonun içinde birikmeli.
+                // Grid yapımızda statik bir bölüm hücresi yok, dinamik ekliyoruz.
+                // Çözüm: İlk bölüm adımında, bölenin altına bir kapsayıcı açalım, sonra oraya ekleyelim.
                 
-                // Basitlik için: Bölüm rakamlarını gridin içinde "Bölen"in altına denk gelen yere eklemek yerine
-                // absolute position ile "yapıştıralım". Bu görsel olarak en kolayıdır ve gridi bozmaz.
+                let quotientArea = document.getElementById(`q-area-${pid}`);
+                if (!quotientArea) {
+                    // Henüz yoksa oluştur (Absolute ile bölenin altına koymak en temizi)
+                    // Grid hücresini bul: Row 1, Last Col.
+                    // Bu grid yapısında Row 1 zaten dolu.
+                    // Biz grid'e append ediyoruz, yani yeni satırlar oluşuyor.
+                    
+                    // Grid'in en sağ kolonundaki (Bölenin altı) hücreyi hedefleyelim.
+                    // Basit yol: Gridin 2. satır, son hücresine yazmaya başla.
+                    // Ama product adımları da satır ekliyor.
+                    
+                    // Türk usulünde Bölüm sabit durur.
+                    // Bu yüzden Bölüm alanını "Absolute" yapalım, grid akışından etkilenmesin.
+                    
+                    quotientArea = document.createElement('div');
+                    quotientArea.id = `q-area-${pid}`;
+                    quotientArea.style.position = 'absolute';
+                    // Konumlandırma (Bölen hücresini bul)
+                    const divisorCell = grid.children[dividendCols + 1]; // Son hücre
+                    quotientArea.style.top = (divisorCell.offsetTop + divisorCell.offsetHeight) + 'px';
+                    quotientArea.style.left = divisorCell.offsetLeft + 'px';
+                    quotientArea.style.width = divisorCell.offsetWidth + 'px';
+                    quotientArea.style.height = '40px';
+                    quotientArea.style.display = 'flex';
+                    quotientArea.style.alignItems = 'center';
+                    quotientArea.style.justifyContent = 'center';
+                    quotientArea.className = 'hl-quotient';
+                    grid.parentNode.appendChild(quotientArea); // Grid wrapper'a ekle
+                }
                 
-                const divisorCell = grid.children[dividendLen + 1]; // Bölen hücresi
-                const qSpan = document.createElement('div');
-                qSpan.innerText = step.val;
-                qSpan.className = 'highlight-quotient';
-                qSpan.style.position = 'absolute';
-                qSpan.style.width = '35px';
-                qSpan.style.height = '40px';
-                qSpan.style.display = 'flex';
-                qSpan.style.justifyContent = 'center';
-                qSpan.style.alignItems = 'center';
-                qSpan.style.border = '1px solid #2e7d32';
-                qSpan.style.borderRadius = '4px';
-                
-                // Konum Hesapla: Bölenin Altı + Sağa doğru kayma (step.qIndex * 35px)
-                const rect = divisorCell.getBoundingClientRect();
-                const gridRect = grid.getBoundingClientRect();
-                
-                qSpan.style.top = (rect.bottom - gridRect.top + 2) + 'px'; // Hemen altı
-                qSpan.style.left = (rect.left - gridRect.left + (step.qIndex * 35)) + 'px'; // Yan yana dizilsin
-                
-                if(!instant) qSpan.style.animation = "dropIn 0.5s";
-                grid.appendChild(qSpan);
-                return;
+                quotientArea.innerText += step.val;
+                if(!instant) quotientArea.classList.add('cell-anim');
             }
 
-            // --- İŞLEM BASAMAKLARI (GRID SATIRI EKLEME) ---
-            // Her işlem için yeni satırlar eklememiz gerekmiyor, grid otomatik akar.
-            // Ama boşlukları (padding cells) doldurmalıyız ki hizalama tutsun.
-            
-            // Hangi satırdayız? step.row
-            // Grid'deki mevcut eleman sayısından şu anki satırı bulabiliriz.
-            let currentCells = grid.children.length;
-            // Absolute elemanları sayma
-            let staticCells = 0;
-            for(let c of grid.children) { if(c.style.position !== 'absolute') staticCells++; }
-            
-            let currentRow = Math.ceil(staticCells / totalCols);
-            
-            // Hedef satıra kadar boş hücre bas
-            while(currentRow < step.row) {
-                for(let i=0; i<totalCols; i++) {
-                    // Dikey çizgiyi koru (dividendLen + 1. sütun)
-                    let cell = createCell('', false);
-                    if(i === dividendLen) cell.classList.add('border-right-thick');
-                    else cell.classList.add('cell-empty');
+            // ÇARPIM ve ÇIKARMA (PRODUCT & DIFF)
+            // Bunlar yeni satırlar gerektirir.
+            if (step.type === 'product' || step.type === 'diff') {
+                // Yeni bir satır oluştur (cols kadar boş hücre)
+                for(let i=0; i<cols; i++) {
+                    let cell = createCell('');
+                    
+                    // Duvarı devam ettir (Sondan 2. kolon)
+                    if (i === dividendCols) {
+                        cell.classList.add('border-left-wall');
+                    }
+                    
+                    // İçerik var mı?
+                    // step.colIndex hizasında bitmeli.
+                    let valStr = step.val.toString();
+                    let startCol = step.colIndex - valStr.length + 1;
+                    
+                    if (i >= startCol && i <= step.colIndex) {
+                        // Rakamı bul
+                        let charIndex = i - startCol;
+                        cell.innerText = valStr[charIndex];
+                        
+                        if(step.type === 'product') {
+                            cell.classList.add('hl-sub');
+                            cell.classList.add('subtraction-line'); // Altı çizili
+                            if(charIndex === 0) { // İlk rakamın soluna eksi
+                                let minus = document.createElement('span');
+                                minus.innerText = '-';
+                                minus.className = 'minus-sign';
+                                cell.appendChild(minus);
+                            }
+                        } else {
+                            cell.classList.add('hl-rem');
+                        }
+                        
+                        if(!instant) cell.classList.add('cell-anim');
+                    }
+
                     grid.appendChild(cell);
                 }
-                currentRow++;
-            }
-
-            // Şimdi hedef satırdayız (step.row). 
-            // İlgili kolona kadar boşluk bas.
-            // step.col: Hangi basamak hizasına yazacağız?
-            
-            // ÇARPIM YAZMA
-            if (step.type === 'product') {
-                // Hizalama: step.col hizasında bitmeli.
-                // Sayı (step.val) tek veya çift haneli olabilir.
-                let valStr = step.val.toString();
-                let startCol = step.col - valStr.length + 1;
-                
-                // Başlangıç kolonuna kadar boşluk
-                for(let i=0; i<startCol; i++) {
-                     grid.appendChild(createCell('', true, (i===dividendLen)));
-                }
-                
-                // Rakamları yaz
-                for(let char of valStr) {
-                    let cell = createCell(char);
-                    cell.style.borderBottom = "2px solid #d32f2f"; // Çıkarma çizgisi
-                    cell.classList.add('highlight-product');
-                    grid.appendChild(cell);
-                }
-                
-                // "-" işareti (bir soluna)
-                // Grid mantığında zordur, pas geçelim veya sol hücreye ekleyelim.
-                
-                // Satırın geri kalanını doldur
-                let filled = startCol + valStr.length;
-                fillRowRest(grid, filled, totalCols, dividendLen);
-            }
-
-            // ÇIKARMA SONUCU (KALAN)
-            if (step.type === 'remainder') {
-                let valStr = step.val.toString();
-                let startCol = step.col - valStr.length + 1;
-
-                for(let i=0; i<startCol; i++) {
-                     grid.appendChild(createCell('', true, (i===dividendLen)));
-                }
-                for(let char of valStr) {
-                    grid.appendChild(createCell(char));
-                }
-                let filled = startCol + valStr.length;
-                fillRowRest(grid, filled, totalCols, dividendLen);
-            }
-
-            // AŞAĞI İNDİRME
-            if (step.type === 'bring_down') {
-                // Bu adım aslında 'remainder' adımının yanına eklenir görsel olarak.
-                // Ama bizim kodumuz satır satır gidiyor.
-                // Bu yüzden, az önce eklenen 'remainder' satırına müdahale etmeliyiz veya
-                // yeni satır açıp oraya yazmalıyız.
-                
-                // En temiz yol: "bring_down" type'ını remainder ile birleştirmek veya
-                // Remainder'ı yazdıktan sonra, aynı satırdaki bir sonraki hücreye bu sayıyı koymak.
-                
-                // JS Grid'de son eklenen hücreleri bulup yanına ekleyelim.
-                // Bu biraz karmaşık, o yüzden görsel hile yapalım:
-                // Remainder satırını yazarken (yukarıdaki blok), eğer o adımda 'bring_down' da varsa onu da yazmalıydık.
-                
-                // Pratik çözüm: Absolute div ile sayıyı yukarıdan aşağı kaydıralım.
-                // Hedef: step.row (yani remainder satırı), step.col.
-                
-                // Hedef hücreyi bulmak zor. 
-                // Grid'in son satırındaki step.col indeksli hücreyi bulalım.
-                // Grid çocuklarını tersten tara.
-                
-                // Basitlik adına: Remainder'dan sonra yeni satır açmadan, 
-                // bir önceki Remainder işlemindeki boşluk hücresini bulup içeriğini değiştirelim.
-                
-                // Veya: Yeni bir satır açalım, sadece inen sayıyı yazalım? Hayır, yan yana olmalı.
-                
-                // En iyisi: Remainder kutusunun yanına "absolute" olarak ekleyelim.
-                const allCells = grid.querySelectorAll('.cell');
-                const lastCell = allCells[allCells.length - (totalCols - step.col)]; // Matematiksel tahmin
-                
-                // Bu çok kırılgan. O yüzden "Absolute" en iyisi.
-                // Sütun başlığındaki (Bölünen) ilgili rakamı bul.
-                const topDigit = grid.children[step.col]; // Bölünen satırındaki rakam
-                const targetRowTop = grid.lastElementChild.offsetTop; // Son satırın konumu
-                
-                const dropCell = document.createElement('div');
-                dropCell.innerText = step.val;
-                dropCell.className = 'cell highlight-bringdown';
-                dropCell.style.position = 'absolute';
-                dropCell.style.left = topDigit.offsetLeft + 'px';
-                dropCell.style.top = targetRowTop + 'px';
-                
-                grid.appendChild(dropCell);
             }
         }
 
-        // --- YARDIMCILAR ---
-        function createCell(content, isEmpty=false, hasRightBorder=false) {
+        function createCell(content, extraClass='') {
             const div = document.createElement('div');
-            div.className = isEmpty ? 'cell cell-empty' : 'cell';
+            div.className = 'cell ' + extraClass;
             div.innerText = content;
-            if(hasRightBorder) div.classList.add('border-right-thick');
             return div;
         }
 
-        function fillEmptyCells(grid, count) {
-            for(let i=0; i<count; i++) grid.appendChild(createCell('', true));
-        }
-        
-        function fillRowRest(grid, filledCount, totalCols, divLineIdx) {
-            for(let i=filledCount; i<totalCols; i++) {
-                let cell = createCell('', true);
-                if(i === divLineIdx) cell.classList.add('border-right-thick');
-                grid.appendChild(cell);
-            }
-        }
-
         function reset(pid) {
-            document.getElementById(`grid-${pid}`).innerHTML = '';
-            document.getElementById(`btn-play-${pid}`).disabled = true;
+            const grid = document.getElementById(`grid-${pid}`);
+            grid.innerHTML = '';
+            // Varsa quotient alanını sil
+            const qArea = document.getElementById(`q-area-${pid}`);
+            if(qArea) qArea.remove();
+            
             document.getElementById(`btn-play-${pid}`).innerText = "▶ BAŞLAT";
+            document.getElementById(`btn-play-${pid}`).disabled = true;
             document.getElementById(`btn-quick-${pid}`).disabled = true;
+            
             const allBtns = document.querySelectorAll(`#setup-${pid} .pre-btn`);
             allBtns.forEach(b => b.classList.remove('active-preset'));
         }
