@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sınıf İçi İşlem Yarışması (Manuel Sıfır)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #37474f;
+            margin: 0;
+            padding: 10px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            overflow: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 10px 0;
+            color: #ffca28;
+            font-size: 1.5rem;
+        }
+
+        .stage-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 10px;
+        }
+
+        .student-panel {
+            flex: 1;
+            background: #eceff1;
+            border-radius: 15px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #37474f;
+            border: 4px solid;
+            position: relative;
+        }
+
+        .p1 { border-color: #ef5350; background: #ffebee; }
+        .p2 { border-color: #42a5f5; background: #e3f2fd; }
+        .p3 { border-color: #66bb6a; background: #e8f5e9; }
+
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .student-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.8);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        .teacher-btn {
+            background: #546e7a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 5px 10px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 10px;
+            width: 100%;
+            align-items: center;
+        }
+
+        input.num-input {
+            font-size: 1.2rem;
+            padding: 5px;
+            width: 80px;
+            text-align: center;
+            border-radius: 8px;
+            border: 2px solid #b0bec5;
+        }
+
+        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+
+        button.action-btn {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+        button.action-btn:active { transform: scale(0.95); }
+        .btn-5 { background: #ff9800; }
+        .btn-25 { background: #4caf50; }
+        .btn-50 { background: #03a9f4; }
+        .btn-125 { background: #9c27b0; }
+
+        .division-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 5px;
+            width: 100%;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .info-text {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            color: #546e7a;
+            font-weight: bold;
+            min-height: 1.2em;
+            text-align: center;
+        }
+
+        .grid-row {
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .digit-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            width: 45px;
+        }
+
+        .carry-over {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.9rem;
+            color: #d32f2f;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .digit-box {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border: 2px solid #78909c;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            position: relative;
+            padding-top: 8px; 
+            color: #333;
+        }
+
+        /* Sıfır ekleme kutusu */
+        .zero-input-box {
+            width: 45px;
+            height: 45px;
+            background: #fff3e0;
+            border: 2px dashed #ff9800;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #ef6c00;
+        }
+        .zero-input-box:focus { outline: none; background: #ffe0b2; }
+
+        .answer-input {
+            width: 35px;
+            height: 35px;
+            margin-top: 5px;
+            text-align: center;
+            font-size: 1.3rem;
+            border: 2px dashed #b0bec5;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.5);
+            font-weight: bold;
+            color: #1a237e;
+        }
+        .answer-input:disabled { background: #e0e0e0; border: 1px solid #ccc; opacity: 0.6; }
+        .answer-input:focus { border-color: #3f51b5; background: white; outline: none; }
+        .answer-input.correct { background-color: #c8e6c9; border-color: #4caf50; border-style: solid; }
+        .answer-input.wrong { background-color: #ffcdd2; animation: shake 0.3s; }
+
+        .active-digit { border-color: #ff9800; box-shadow: 0 0 8px rgba(255, 152, 0, 0.5); transform: scale(1.05); }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(4px); }
+            75% { transform: translateX(-4px); }
+            100% { transform: translateX(0); }
+        }
+
+        .divider-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            height: 45px;
+            color: #455a64;
+        }
+
+        /* Gizli Cevap Alanı */
+        .hidden-answer {
+            margin-top: 10px;
+            font-size: 1.5rem;
+            color: #d84315;
+            background: #ffccbc;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 2px dashed #bf360c;
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>🏆 Yan Yana İşlem Yarışması (Manuel Sıfır Ekleme)</h1>
+
+    <div class="stage-container">
+        <div class="student-panel p1">
+            <div class="student-header">
+                <div class="student-name">1. ÖĞRENCİ</div>
+                <button class="teacher-btn" onclick="toggleAnswer(1)">👁️ Cevap</button>
+            </div>
+            <div class="controls">
+                <input type="number" id="inp-1" class="num-input" placeholder="Sayı" value="14">
+                <div class="btn-group">
+                    <button class="action-btn btn-5" onclick="initGame(1, 5)">x5</button>
+                    <button class="action-btn btn-25" onclick="initGame(1, 25)">x25</button>
+                    <button class="action-btn btn-50" onclick="initGame(1, 50)">x50</button>
+                    <button class="action-btn btn-125" onclick="initGame(1, 125)">x125</button>
+                </div>
+            </div>
+            <div class="info-text" id="info-1">Hazır...</div>
+            <div class="division-area" id="area-1"></div>
+            <div class="hidden-answer" id="ans-1"></div>
+        </div>
+
+        <div class="student-panel p2">
+            <div class="student-header">
+                <div class="student-name">2. ÖĞRENCİ</div>
+                <button class="teacher-btn" onclick="toggleAnswer(2)">👁️ Cevap</button>
+            </div>
+            <div class="controls">
+                <input type="number" id="inp-2" class="num-input" placeholder="Sayı" value="28">
+                <div class="btn-group">
+                    <button class="action-btn btn-5" onclick="initGame(2, 5)">x5</button>
+                    <button class="action-btn btn-25" onclick="initGame(2, 25)">x25</button>
+                    <button class="action-btn btn-50" onclick="initGame(2, 50)">x50</button>
+                    <button class="action-btn btn-125" onclick="initGame(2, 125)">x125</button>
+                </div>
+            </div>
+            <div class="info-text" id="info-2">Hazır...</div>
+            <div class="division-area" id="area-2"></div>
+            <div class="hidden-answer" id="ans-2"></div>
+        </div>
+
+        <div class="student-panel p3">
+            <div class="student-header">
+                <div class="student-name">3. ÖĞRENCİ</div>
+                <button class="teacher-btn" onclick="toggleAnswer(3)">👁️ Cevap</button>
+            </div>
+            <div class="controls">
+                <input type="number" id="inp-3" class="num-input" placeholder="Sayı" value="16">
+                <div class="btn-group">
+                    <button class="action-btn btn-5" onclick="initGame(3, 5)">x5</button>
+                    <button class="action-btn btn-25" onclick="initGame(3, 25)">x25</button>
+                    <button class="action-btn btn-50" onclick="initGame(3, 50)">x50</button>
+                    <button class="action-btn btn-125" onclick="initGame(3, 125)">x125</button>
+                </div>
+            </div>
+            <div class="info-text" id="info-3">Hazır...</div>
+            <div class="division-area" id="area-3"></div>
+            <div class="hidden-answer" id="ans-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // Oyun Durumları
+        const states = {};
+
+        const rules = {
+            5: { zeros: 1, div: 2, text: "10 ile çarp (1 sıfır), 2'ye böl" },
+            25: { zeros: 2, div: 4, text: "100 ile çarp (2 sıfır), 4'e böl" },
+            50: { zeros: 2, div: 2, text: "100 ile çarp (2 sıfır), 2'ye böl" },
+            125: { zeros: 3, div: 8, text: "1000 ile çarp (3 sıfır), 8'e böl" }
+        };
+
+        function initGame(pid, factor) {
+            const inputVal = document.getElementById(`inp-${pid}`).value;
+            if(!inputVal) return;
+
+            const rule = rules[factor];
+            
+            // Cevabı gizle
+            document.getElementById(`ans-${pid}`).style.display = 'none';
+            document.getElementById(`info-${pid}`).innerText = `Adım 1: Sayının yanına ${rule.zeros} tane sıfır ekle!`;
+
+            // State Oluştur
+            states[pid] = {
+                originalStr: inputVal,
+                zerosNeeded: rule.zeros,
+                zerosAdded: 0,
+                fullNumberStr: inputVal, // Sıfırlar eklendikçe büyüyecek
+                divisor: rule.div,
+                digits: inputVal.split('').map(Number),
+                remainder: 0,
+                phase: 'adding_zeros' // veya 'dividing'
+            };
+
+            renderGrid(pid);
+        }
+
+        function renderGrid(pid) {
+            const state = states[pid];
+            const area = document.getElementById(`area-${pid}`);
+            area.innerHTML = '';
+
+            const row = document.createElement('div');
+            row.className = 'grid-row';
+
+            // Bölen Göstergesi
+            const divSign = document.createElement('div');
+            divSign.className = 'divider-display';
+            divSign.innerHTML = `<span style="font-size:1.2rem; margin-right:5px;">÷</span>${state.divisor}`;
+            row.appendChild(divSign);
+
+            // 1. Mevcut Rakamlar (Sabit Kutular)
+            state.digits.forEach((digit, idx) => {
+                const wrapper = createDigitWrapper(pid, idx, digit, false);
+                row.appendChild(wrapper);
+            });
+
+            // 2. Eksik Sıfırlar (Input Kutuları)
+            // Eğer hala eklenmesi gereken sıfır varsa input göster
+            const totalLen = state.originalStr.length + state.zerosNeeded;
+            const currentLen = state.digits.length;
+
+            if (state.phase === 'adding_zeros') {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'digit-wrapper';
+
+                const zeroInp = document.createElement('input');
+                zeroInp.className = 'zero-input-box';
+                zeroInp.maxLength = 1;
+                zeroInp.placeholder = '0';
+                
+                // Sıfır giriş kontrolü
+                zeroInp.onkeyup = (e) => checkZeroInput(pid, zeroInp);
+                
+                wrapper.appendChild(zeroInp);
+                row.appendChild(wrapper);
+                
+                // Otomatik odaklan
+                setTimeout(() => zeroInp.focus(), 100);
+            }
+
+            area.appendChild(row);
+
+            // Eğer bölme aşamasına geçildiyse inputları yönet
+            if (state.phase === 'dividing') {
+                // Doğru cevap için hesaplama
+                const totalNum = parseInt(state.fullNumberStr);
+                const finalResult = totalNum / state.divisor;
+                document.getElementById(`ans-${pid}`).innerText = `Sonuç: ${finalResult}`;
+
+                // İlk bölme inputunu aç
+                const firstInp = document.getElementById(`p${pid}-ans-0`);
+                if(firstInp) {
+                    firstInp.disabled = false;
+                    firstInp.focus();
+                    updateActiveBox(pid, 0);
+                }
+                
+                document.getElementById(`info-${pid}`).innerText = `Adım 2: Şimdi ${state.divisor}'ye böl!`;
+            }
+        }
+
+        function createDigitWrapper(pid, index, digitVal, isZeroInput) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'digit-wrapper';
+
+            // Elde (Carry)
+            const carry = document.createElement('span');
+            carry.className = 'carry-over';
+            carry.id = `p${pid}-carry-${index}`;
+            wrapper.appendChild(carry);
+
+            // Kutu
+            const box = document.createElement('div');
+            box.className = 'digit-box';
+            box.innerText = digitVal;
+            box.id = `p${pid}-box-${index}`;
+            // Sonradan eklenen sıfırsa rengi biraz farklı olabilir
+            if (index >= states[pid].originalStr.length) {
+                box.style.color = '#e65100'; // Turuncu sıfırlar
+            }
+            wrapper.appendChild(box);
+
+            // Cevap Inputu (Bölme için)
+            const ansInp = document.createElement('input');
+            ansInp.className = 'answer-input';
+            ansInp.type = 'number';
+            ansInp.id = `p${pid}-ans-${index}`;
+            ansInp.disabled = true; // Başlangıçta hepsi kapalı
+            ansInp.onkeyup = (e) => checkDivision(pid, index, ansInp);
+            
+            wrapper.appendChild(ansInp);
+            return wrapper;
+        }
+
+        function checkZeroInput(pid, inputElem) {
+            const val = inputElem.value;
+            if (val === '0') {
+                // Doğru!
+                const state = states[pid];
+                state.digits.push(0);
+                state.fullNumberStr += "0";
+                state.zerosAdded++;
+
+                // Tüm sıfırlar bitti mi?
+                if (state.zerosAdded >= state.zerosNeeded) {
+                    state.phase = 'dividing';
+                }
+                
+                // Yeniden çiz (Input kutuya dönüşecek)
+                renderGrid(pid);
+            } else if (val.length > 0) {
+                // Yanlış (Sıfır değilse sil)
+                inputElem.value = '';
+                inputElem.style.borderColor = 'red';
+                setTimeout(() => inputElem.style.borderColor = '#ff9800', 300);
+            }
+        }
+
+        function checkDivision(pid, index, inputElem) {
+            const state = states[pid];
+            if(inputElem.value === "") return;
+
+            const userVal = parseInt(inputElem.value);
+            
+            // Mevcut Bölünen Hesapla (Elde + Rakam)
+            let currentDividend = state.digits[index];
+            if (state.remainder > 0) {
+                currentDividend = parseInt(state.remainder.toString() + state.digits[index].toString());
+            }
+
+            const correctQ = Math.floor(currentDividend / state.divisor);
+            const newRem = currentDividend % state.divisor;
+
+            if (userVal === correctQ) {
+                // DOĞRU
+                inputElem.classList.add('correct');
+                inputElem.classList.remove('wrong');
+                inputElem.disabled = true;
+                state.remainder = newRem; // Kalanı güncelle
+
+                // Sonraki var mı?
+                if (index < state.digits.length - 1) {
+                    const nextIndex = index + 1;
+                    
+                    // Kalanı görselleştir
+                    if (newRem > 0) {
+                        document.getElementById(`p${pid}-carry-${nextIndex}`).innerText = newRem;
+                    }
+                    
+                    // Sonraki inputu aç
+                    const nextInp = document.getElementById(`p${pid}-ans-${nextIndex}`);
+                    nextInp.disabled = false;
+                    nextInp.focus();
+                    updateActiveBox(pid, nextIndex);
+                } else {
+                    // BİTTİ
+                    document.getElementById(`info-${pid}`).innerHTML = "🎉 TEBRİKLER! Bitti.";
+                    document.getElementById(`info-${pid}`).style.color = "#4caf50";
+                    updateActiveBox(pid, -1); // Vurguyu kaldır
+                }
+
+            } else {
+                // YANLIŞ
+                inputElem.classList.add('wrong');
+            }
+        }
+
+        function updateActiveBox(pid, index) {
+            const boxes = document.querySelectorAll(`#area-${pid} .digit-box`);
+            boxes.forEach(b => b.classList.remove('active-digit'));
+            
+            if(index !== -1) {
+                const box = document.getElementById(`p${pid}-box-${index}`);
+                if(box) box.classList.add('active-digit');
+            }
+        }
+
+        function toggleAnswer(pid) {
+            const ansDiv = document.getElementById(`ans-${pid}`);
+            if (ansDiv.style.display === 'none' || ansDiv.style.display === '') {
+                ansDiv.style.display = 'block';
+            } else {
+                ansDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
