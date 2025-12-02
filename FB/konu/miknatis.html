@@ -3,434 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mıknatıs Laboratuvarı - 4. Sınıf</title>
-    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <title>Sanal Mıknatıs Dünyası 4. Sınıf</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --n-color: #ff4757; /* Kuzey Kırmızısı */
-            --s-color: #3742fa; /* Güney Mavisi */
-            --bg-color: #f1f2f6;
-            --text-color: #2f3542;
+            --primary: #3498db;
+            --secondary: #e74c3c;
+            --accent: #f1c40f;
+            --bg: #ecf0f1;
+            --text: #2c3e50;
+            --n-color: #e74c3c; /* Kırmızı Kuzey */
+            --s-color: #2980b9; /* Mavi Güney */
         }
 
         body {
-            font-family: 'Comic Neue', cursive;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            user-select: none; /* Metin seçimini engelle */
+            user-select: none;
         }
 
-        h1 {
-            color: var(--text-color);
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
-        }
+        h1 { color: var(--text); text-align: center; font-weight: 900; font-size: 2.5rem; margin-bottom: 10px; }
+        .subtitle { text-align: center; font-size: 1.2rem; color: #7f8c8d; margin-bottom: 30px; }
 
-        .container {
-            width: 100%;
-            max-width: 900px;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
+        /* --- TAB NAVİGASYONU --- */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: white; padding: 5px; border-radius: 50px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .tab-btn {
+            padding: 12px 25px; border: none; background: none; cursor: pointer; font-size: 1.1rem; font-weight: 700; color: #95a5a6; border-radius: 50px; transition: all 0.3s; font-family: 'Nunito', sans-serif;
         }
+        .tab-btn.active { background-color: var(--primary); color: white; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
+        .tab-content { display: none; width: 100%; max-width: 900px; animation: fadeIn 0.5s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- Ortak Kart Stili --- */
-        .experiment-card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
+        /* --- ORTAK KART STİLİ --- */
+        .card { background: white; border-radius: 25px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: var(--text); font-weight: 700; border-bottom: 3px solid var(--accent); display: inline-block; padding-bottom: 5px; margin: 0 auto 30px auto; width: 100%; }
 
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #57606f;
-            border-bottom: 2px solid #dfe4ea;
-            padding-bottom: 10px;
-        }
+        /* --- BÖLÜM 1: MIKNATIS ÇEŞİTLERİ (CSS/SVG Çizimler) --- */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; justify-items: center; }
+        .magnet-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .magnet-label { font-weight: 700; color: #7f8c8d; }
 
-        /* --- Deney 1: İtme ve Çekme --- */
-        #interaction-zone {
-            height: 350px;
-            background-color: #dfe6e9;
-            border-radius: 15px;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 3px dashed #b2bec3;
-        }
-
-        .magnet {
-            width: 200px;
-            height: 60px;
-            display: flex;
-            position: absolute;
-            cursor: grab;
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .magnet:active {
-            cursor: grabbing;
-            transform: scale(1.05);
-        }
-
-        .pole {
-            width: 50%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2rem;
-            font-weight: bold;
-            color: white;
-        }
-
-        .pole.n { background: linear-gradient(135deg, #ff6b81, var(--n-color)); border-radius: 5px 0 0 5px; }
-        .pole.s { background: linear-gradient(135deg, #5352ed, var(--s-color)); border-radius: 0 5px 5px 0; }
+        /* CSS ile Çizilmiş Mıknatıslar */
+        .bar-magnet-css { width: 150px; height: 40px; display: flex; border-radius: 4px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); font-weight: 900; color: white; font-size: 1.2rem; }
+        .bar-n { width: 50%; background: var(--n-color); display: flex; justify-content: center; align-items: center; }
+        .bar-s { width: 50%; background: var(--s-color); display: flex; justify-content: center; align-items: center; }
         
-        /* Ters mıknatıs için class */
-        .magnet.flipped .pole.n { order: 2; border-radius: 0 5px 5px 0; }
-        .magnet.flipped .pole.s { order: 1; border-radius: 5px 0 0 5px; }
+        .disk-magnet-css { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(to bottom, #7f8c8d, #95a5a6); border-bottom: 10px solid #34495e; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transform: rotateX(60deg); }
+        
+        .ring-magnet-css { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(to bottom, #7f8c8d, #95a5a6); border-bottom: 10px solid #34495e; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transform: rotateX(60deg); position: relative; display: flex; justify-content: center; align-items: center;}
+        .ring-magnet-css::after { content: ''; width: 30px; height: 30px; background: var(--bg); border-radius: 50%; position: absolute; border: 5px solid #2c3e50; }
 
-        .controls {
-            margin-top: 15px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
+        .needle-magnet-css { width: 140px; height: 40px; position: relative; display: flex; filter: drop-shadow(0 3px 3px rgba(0,0,0,0.2));}
+        .needle-n { width: 0; height: 0; border-top: 20px solid transparent; border-bottom: 20px solid transparent; border-left: 70px solid var(--n-color); position: relative;}
+        .needle-n::after { content:'N'; position:absolute; left: -50px; top: -10px; color:white; font-weight:900;}
+        .needle-s { width: 0; height: 0; border-top: 20px solid transparent; border-bottom: 20px solid transparent; border-right: 70px solid var(--s-color); position: relative;}
+        .needle-s::after { content:'S'; position:absolute; right: -50px; top: -10px; color:white; font-weight:900;}
+
+        /* --- BÖLÜM 2: İTME ÇEKME ETKİLEŞİMİ --- */
+        #interaction-stage {
+            height: 400px; background: #dfe6e9; border-radius: 20px; position: relative; overflow: hidden; border: 4px dashed #b2bec3; display: flex; justify-content: center; align-items: center;
         }
-
-        button {
-            background-color: #2ed573;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1.2rem;
-            border-radius: 10px;
-            color: white;
-            cursor: pointer;
-            font-family: 'Comic Neue', cursive;
-            font-weight: bold;
-            box-shadow: 0 4px 0 #26af61;
-            transition: all 0.1s;
+        .interactive-magnet {
+            width: 180px; height: 60px; position: absolute; display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.2); cursor: grab; transition: transform 0.2s; font-size: 1.5rem; font-weight: 900; color: white;
         }
+        .interactive-magnet:active { cursor: grabbing; transform: scale(1.05); }
+        /* Sabit mıknatıs (soldaki) */
+        #static-magnet { left: 50px; top: 170px; cursor: default; }
+        /* Hareketli mıknatıs (sağdaki) */
+        #drag-magnet { left: 450px; top: 170px; }
 
-        button:active {
-            transform: translateY(4px);
-            box-shadow: none;
+        .im-n { width: 50%; background: var(--n-color); display: flex; justify-content: center; align-items: center; }
+        .im-s { width: 50%; background: var(--s-color); display: flex; justify-content: center; align-items: center; }
+        
+        /* Çevrilmiş durum */
+        .interactive-magnet.flipped { flex-direction: row-reverse; }
+
+        .controls-area { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: transform 0.1s; font-family: 'Nunito', sans-serif; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.2); }
+        .btn:active { transform: translateY(5px); box-shadow: none; }
+        .btn-flip { background-color: var(--accent); color: var(--text); }
+        .btn-reset { background-color: var(--secondary); }
+        .btn-break { background-color: var(--n-color); font-size: 1.3rem; padding: 15px 40px; }
+
+        /* Etkileşim Efektleri */
+        @keyframes shake-hard {
+            0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-3px, -2px) rotate(-2deg); } 20% { transform: translate(-5px, 0px) rotate(3deg); } 30% { transform: translate(5px, 3px) rotate(0deg); } 40% { transform: translate(3px, -2px) rotate(2deg); } 50% { transform: translate(-3px, 3px) rotate(-2deg); } 60% { transform: translate(-5px, 2px) rotate(0deg); } 70% { transform: translate(5px, 2px) rotate(-3deg); } 80% { transform: translate(-3px, -2px) rotate(3deg); } 90% { transform: translate(3px, 3px) rotate(0deg); } 100% { transform: translate(1px, -3px) rotate(-2deg); }
         }
+        .repelling { animation: shake-hard 0.4s infinite; box-shadow: 0 0 20px var(--n-color) !important; }
+        .attracting { box-shadow: 0 0 30px #2ecc71 !important; }
+        
+        #feedback-text { position: absolute; top: 20px; width: 100%; text-align: center; font-size: 1.8rem; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none;}
 
-        button.reset-btn { background-color: #ffa502; box-shadow: 0 4px 0 #e18e00; }
-        button.flip-btn { background-color: #3742fa; box-shadow: 0 4px 0 #2f3542; }
-
-        .feedback-msg {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1.5rem;
-            font-weight: bold;
-            padding: 5px 15px;
-            border-radius: 10px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-        }
-
-        /* --- Deney 2: Mıknatıs Bölünmesi --- */
-        #breaking-zone {
-            min-height: 250px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            padding: 40px 0;
-        }
-
-        .break-container {
-            display: flex;
-            gap: 20px;
-            transition: all 0.5s ease;
-        }
-
-        .big-magnet {
-            width: 300px;
-            height: 80px;
-            font-size: 2.5rem;
-        }
-
-        .mini-magnet {
-            width: 140px;
-            height: 80px;
-            font-size: 2rem;
-            animation: popIn 0.5s ease;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0); opacity: 0; }
-            80% { transform: scale(1.1); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        .repelling {
-            animation: shake 0.5s;
-        }
+        /* --- BÖLÜM 3: KIRILMA DENEYİ --- */
+        .break-stage { min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 30px; padding: 20px; }
+        .whole-magnet { width: 400px; height: 80px; display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.2); font-size: 2rem; font-weight: 900; color: white; }
+        .broken-container { display: flex; gap: 40px; }
+        .broken-piece { width: 180px; height: 80px; display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.2); font-size: 1.8rem; font-weight: 900; color: white; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
+        .hidden { display: none !important; }
 
     </style>
 </head>
 <body>
 
-    <h1>🧲 Mıknatıs Laboratuvarı</h1>
-    <p style="text-align: center; font-size: 1.2rem;">Mıknatısları sürükle, çevir ve keşfet!</p>
+    <h1>🧲 Sanal Mıknatıs Dünyası</h1>
+    <p class="subtitle">4. Sınıf Fen Bilimleri - Keşfet, Oyna, Öğren!</p>
 
-    <div class="container">
-        
-        <div class="experiment-card">
-            <div class="card-title">1. İtme ve Çekme Deneyi</div>
-            <div id="interaction-zone">
-                <div class="feedback-msg" id="feedback"></div>
-                
-                <div class="magnet" id="m1" style="left: 50px; top: 145px;">
-                    <div class="pole n">N</div>
-                    <div class="pole s">S</div>
-                </div>
-
-                <div class="magnet" id="m2" style="left: 450px; top: 145px;">
-                    <div class="pole n">N</div>
-                    <div class="pole s">S</div>
-                </div>
-            </div>
-            
-            <div class="controls">
-                <button class="flip-btn" onclick="flipMagnet('m2')">Sağdakini Çevir 🔄</button>
-                <button class="reset-btn" onclick="resetPositions()">Başa Dön 🔙</button>
-            </div>
-        </div>
-
-        <div class="experiment-card">
-            <div class="card-title">2. Mıknatıs Bölünürse Ne Olur?</div>
-            <p style="text-align: center;">"Büyük Mıknatısı Kır" butonuna bas ve yeni kutupların nasıl oluştuğunu gör!</p>
-            
-            <div id="breaking-zone">
-                <div id="whole-magnet-group" class="break-container">
-                    <div class="magnet big-magnet">
-                        <div class="pole n">N</div>
-                        <div class="pole s">S</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="controls">
-                <button onclick="breakMagnet()" id="break-btn" style="background-color: #ff4757; box-shadow: 0 4px 0 #c0392b;">🔨 Büyük Mıknatısı Kır</button>
-                <button class="reset-btn" onclick="resetBreak()">Birleştir 🧩</button>
-            </div>
-        </div>
-
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('tab1', this)">Mıknatıs Çeşitleri</button>
+        <button class="tab-btn" onclick="openTab('tab2', this)">İtme & Çekme Deneyi</button>
+        <button class="tab-btn" onclick="openTab('tab3', this)">Mıknatıs Kırılırsa?</button>
     </div>
 
+    <div id="tab1" class="tab-content active">
+        <div class="card">
+            <h2>Doğada Farklı Şekillerde Mıknatıslar Vardır</h2>
+            <div class="gallery-grid">
+                
+                <div class="magnet-item">
+                    <svg width="120" height="140" viewBox="0 0 120 140">
+                        <path d="M 10 140 L 10 60 Q 10 10 60 10 Q 110 10 110 60 L 110 140 L 80 140 L 80 60 Q 80 40 60 40 Q 40 40 40 60 L 40 140 Z" fill="url(#grad1)" stroke="#2c3e50" stroke-width="2"/>
+                        <defs>
+                            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="49%" style="stop-color:#e74c3c;stop-opacity:1" />
+                            <stop offset="51%" style="stop-color:#2980b9;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <text x="25" y="130" fill="white" font-weight="bold">N</text>
+                        <text x="95" y="130" fill="white" font-weight="bold">S</text>
+                    </svg>
+                    <span class="magnet-label">At Nalı Mıknatıs</span>
+                </div>
+
+                 <div class="magnet-item">
+                    <svg width="100" height="140" viewBox="0 0 100 140">
+                        <path d="M 10 140 L 10 40 Q 10 10 50 10 Q 90 10 90 40 L 90 140 L 65 140 L 65 40 Q 65 30 50 30 Q 35 30 35 40 L 35 140 Z" fill="url(#gradU)" stroke="#2c3e50" stroke-width="2"/>
+                         <defs>
+                            <linearGradient id="gradU" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="49%" style="stop-color:#e74c3c;stop-opacity:1" />
+                            <stop offset="51%" style="stop-color:#2980b9;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <text x="20" y="130" fill="white" font-weight="bold">N</text>
+                        <text x="75" y="130" fill="white" font-weight="bold">S</text>
+                    </svg>
+                    <span class="magnet-label">U Mıknatıs</span>
+                </div>
+
+                <div class="magnet-item">
+                    <div class="bar-magnet-css">
+                        <div class="bar-n">N</div><div class="bar-s">S</div>
+                    </div>
+                    <span class="magnet-label">Çubuk Mıknatıs</span>
+                </div>
+
+                <div class="magnet-item">
+                     <div class="needle-magnet-css">
+                        <div class="needle-s"></div><div class="needle-n"></div>
+                    </div>
+                    <span class="magnet-label">Pusula İğnesi</span>
+                </div>
+
+                <div class="magnet-item">
+                    <div class="disk-magnet-css"></div>
+                    <span class="magnet-label">Disk Mıknatıs</span>
+                </div>
+
+                 <div class="magnet-item">
+                    <div class="ring-magnet-css"></div>
+                    <span class="magnet-label">Halka Mıknatıs</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="tab2" class="tab-content">
+        <div class="card">
+            <h2>Kutupların Gücü: İtiyor mu, Çekiyor mu?</h2>
+            <p style="text-align: center; margin-bottom: 20px;">Sağdaki mıknatısı sürükle ve soldakine yaklaştır. Yönünü değiştirmeyi unutma!</p>
+            
+            <div id="interaction-stage">
+                <div id="feedback-text"></div>
+                <div class="interactive-magnet" id="static-magnet">
+                    <div class="im-n">N</div><div class="im-s">S</div>
+                </div>
+                <div class="interactive-magnet" id="drag-magnet">
+                    <div class="im-n">N</div><div class="im-s">S</div>
+                </div>
+            </div>
+
+            <div class="controls-area">
+                <button class="btn btn-flip" onclick="flipDragMagnet()">🔄 Mıknatısı Çevir</button>
+                <button class="btn btn-reset" onclick="resetExperiment()">geri al ◀</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab3" class="tab-content">
+        <div class="card">
+            <h2>Mıknatıs Kırılırsa Sihir Bozulur mu?</h2>
+            <p style="text-align: center; font-size: 1.1rem;">Koca bir çubuk mıknatısımız var. Ortadan kırarsak sence sadece kırmızı (N) ve sadece mavi (S) parçalar mı kalır? Hadi deneyelim!</p>
+            
+            <div class="break-stage">
+                <div id="whole-container">
+                    <div class="whole-magnet">
+                        <div class="bar-n" style="width: 50%;">N</div>
+                        <div class="bar-s" style="width: 50%;">S</div>
+                    </div>
+                </div>
+
+                <div id="broken-container" class="broken-container hidden">
+                    </div>
+
+                 <button id="break-btn" class="btn btn-break" onclick="breakTheMagnet()">🔨 ÇEKİÇLE KIR!</button>
+                 <button id="repair-btn" class="btn btn-reset hidden" onclick="repairMagnet()">🧩 BİRLEŞTİR</button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
-        // --- İTME VE ÇEKME MANTIĞI ---
-        const m1 = document.getElementById('m1');
-        const m2 = document.getElementById('m2');
-        const feedback = document.getElementById('feedback');
-        const zone = document.getElementById('interaction-zone');
+        // --- TAB FONKSİYONLARI ---
+        function openTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+        }
 
-        let isDragging = false;
-        let dragOffsetX = 0;
-        let dragOffsetY = 0;
-        let activeMagnet = null;
+        // --- DENEY 2: İTME/ÇEKME MANTIĞI ---
+        const dragMag = document.getElementById('drag-magnet');
+        const staticMag = document.getElementById('static-magnet');
+        const stage = document.getElementById('interaction-stage');
+        const feedback = document.getElementById('feedback-text');
+        
+        let isDragging = false, startX, startY, initialLeft, initialTop;
+        let isFlipped = false;
 
-        // Mıknatıs 2'nin durumu
-        let m2Flipped = false; 
-
-        // Mouse Events
-        m2.addEventListener('mousedown', startDrag);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', endDrag);
-
-        // Touch Events (Tabletler için)
-        m2.addEventListener('touchstart', startDrag, {passive: false});
-        document.addEventListener('touchmove', drag, {passive: false});
-        document.addEventListener('touchend', endDrag);
+        // Sürükleme Olayları
+        dragMag.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', doDrag);
+        document.addEventListener('mouseup', stopDrag);
+        dragMag.addEventListener('touchstart', startDrag, {passive: false});
+        document.addEventListener('touchmove', doDrag, {passive: false});
+        document.addEventListener('touchend', stopDrag);
 
         function startDrag(e) {
             isDragging = true;
-            activeMagnet = m2;
-            
-            const clientX = e.clientX || e.touches[0].clientX;
-            const clientY = e.clientY || e.touches[0].clientY;
-            
-            const rect = m2.getBoundingClientRect();
-            dragOffsetX = clientX - rect.left;
-            dragOffsetY = clientY - rect.top;
-            
-            m2.style.cursor = 'grabbing';
+            dragMag.style.transition = 'none'; // Sürüklerken gecikmeyi kapat
+            startX = e.clientX || e.touches[0].clientX;
+            startY = e.clientY || e.touches[0].clientY;
+            initialLeft = dragMag.offsetLeft;
+            initialTop = dragMag.offsetTop;
+            dragMag.style.cursor = 'grabbing';
         }
 
-        function drag(e) {
+        function doDrag(e) {
             if (!isDragging) return;
-            e.preventDefault(); // Sayfa kaymasını engelle
+            e.preventDefault();
+            const currentX = e.clientX || e.touches[0].clientX;
+            const currentY = e.clientY || e.touches[0].clientY;
+            const dx = currentX - startX;
+            const dy = currentY - startY;
 
-            const clientX = e.clientX || e.touches[0].clientX;
-            const clientY = e.clientY || e.touches[0].clientY;
+            let newLeft = initialLeft + dx;
+            let newTop = initialTop + dy;
 
-            const zoneRect = zone.getBoundingClientRect();
-            
-            let newLeft = clientX - zoneRect.left - dragOffsetX;
-            let newTop = clientY - zoneRect.top - dragOffsetY;
+            // Sınırlar içinde tut
+            newLeft = Math.max(0, Math.min(newLeft, stage.offsetWidth - dragMag.offsetWidth));
+            newTop = Math.max(0, Math.min(newTop, stage.offsetHeight - dragMag.offsetHeight));
 
-            // Sınırları kontrol et
-            if(newLeft < 0) newLeft = 0;
-            if(newTop < 0) newTop = 0;
-            if(newLeft + 200 > zoneRect.width) newLeft = zoneRect.width - 200;
-            if(newTop + 60 > zoneRect.height) newTop = zoneRect.height - 60;
-
-            m2.style.left = newLeft + 'px';
-            m2.style.top = newTop + 'px';
+            dragMag.style.left = newLeft + 'px';
+            dragMag.style.top = newTop + 'px';
 
             checkInteraction();
         }
 
-        function endDrag() {
+        function stopDrag() {
             isDragging = false;
-            m2.style.cursor = 'grab';
-            m2.classList.remove('repelling');
+            dragMag.style.cursor = 'grab';
+            dragMag.style.transition = 'transform 0.2s, left 0.3s, top 0.3s'; // Animasyonu geri aç
+            
+            // Etkileşim bittiğinde resetle
+            dragMag.classList.remove('repelling', 'attracting');
+             feedback.style.opacity = 0;
         }
 
-        function flipMagnet(id) {
-            const el = document.getElementById(id);
-            if (id === 'm2') {
-                m2Flipped = !m2Flipped;
-                if(m2Flipped) el.classList.add('flipped');
-                else el.classList.remove('flipped');
-            }
-            checkInteraction();
+        function flipDragMagnet() {
+            isFlipped = !isFlipped;
+            dragMag.classList.toggle('flipped');
+            if(isDragging) checkInteraction(); // Sürüklerken çevrilirse kontrol et
         }
 
-        function resetPositions() {
-            m2.style.left = '450px';
-            m2.style.top = '145px';
-            feedback.style.opacity = '0';
-            m2.classList.remove('repelling');
+        function resetExperiment() {
+            dragMag.style.left = '450px';
+            dragMag.style.top = '170px';
+            isFlipped = false;
+            dragMag.classList.remove('flipped', 'repelling', 'attracting');
+            feedback.style.opacity = 0;
         }
 
         function checkInteraction() {
-            // Basit çarpışma ve mesafe mantığı
-            const r1 = m1.getBoundingClientRect();
-            const r2 = m2.getBoundingClientRect();
+            const staticRect = staticMag.getBoundingClientRect();
+            const dragRect = dragMag.getBoundingClientRect();
+            const distance = Math.hypot(
+                (dragRect.left + dragRect.width/2) - (staticRect.left + staticRect.width/2),
+                (dragRect.top + dragRect.height/2) - (staticRect.top + staticRect.height/2)
+            );
 
-            // Merkez noktaları
-            const c1x = r1.left + r1.width / 2;
-            const c1y = r1.top + r1.height / 2;
-            const c2x = r2.left + r2.width / 2;
-            const c2y = r2.top + r2.height / 2;
+            dragMag.classList.remove('repelling', 'attracting');
+            feedback.style.opacity = 0;
 
-            const distance = Math.hypot(c1x - c2x, c1y - c2y);
+            // Yakınlık Eşiği (200px)
+            if (distance < 200) {
+                feedback.style.opacity = 1;
+                // Sabit Mıknatısın SAĞ ucu 'S' (Mavi)
+                // Hareketli Mıknatısın SOL ucu ne?
+                // Normalde 'N' (Kırmızı), Çevrilmişse 'S' (Mavi)
+                const dragLeftPole = isFlipped ? 'S' : 'N';
 
-            // Kutup Kontrolü (Sol mıknatıs sabit: N - S)
-            // Sağ mıknatıs (m2) çevrilmediyse: N - S (Sola bakan N, Sağa bakan S)
-            // m2 çevrildiyse: S - N (Sola bakan S, Sağa bakan N)
-            
-            // Yakınlaşma eşiği
-            if (distance < 220) {
-                // Hangi uçlar birbirine bakıyor?
-                // M1'in sağı (S) ile M2'nin solu etkileşimde.
-                
-                let m1RightPole = 'S'; 
-                let m2LeftPole = m2Flipped ? 'S' : 'N'; // Çevrildiyse S başa gelir
-
-                if (m1RightPole !== m2LeftPole) {
-                    // S ve N (Zıt) -> ÇEKME
-                    feedback.textContent = "✅ Zıt Kutuplar Birbirini Çeker!";
-                    feedback.style.color = "green";
-                    feedback.style.opacity = "1";
-                    
-                    // Mıknatıs efekti (Snap)
-                    if (!isDragging && distance < 210) {
-                        const zoneRect = zone.getBoundingClientRect();
-                        // M1'in sağına yapıştır
-                        m2.style.top = m1.style.top;
-                        m2.style.left = (parseFloat(m1.style.left) + 200) + 'px';
+                if (dragLeftPole === 'N') {
+                    // S ile N karşılaştı -> ÇEKME
+                    feedback.textContent = "✅ ZIT KUTUPLAR BİRBİRİNİ ÇEKER!";
+                    feedback.style.color = "#27ae60";
+                    dragMag.classList.add('attracting');
+                    // Snap Efekti (Yaklaşınca yapışsın)
+                    if(distance < 190 && isDragging) {
+                         dragMag.style.left = (staticMag.offsetLeft + staticMag.offsetWidth - 5) + 'px';
+                         dragMag.style.top = staticMag.offsetTop + 'px';
                     }
                 } else {
-                    // S ve S (Aynı) -> İTME
-                    feedback.textContent = "⚡ Aynı Kutuplar Birbirini İter!";
-                    feedback.style.color = "red";
-                    feedback.style.opacity = "1";
-
-                    if(distance < 210) {
-                        m2.classList.add('repelling'); // Titreme efekti ekle
-                    } else {
-                        m2.classList.remove('repelling');
-                    }
+                    // S ile S karşılaştı -> İTME
+                    feedback.textContent = "⚡ AYNI KUTUPLAR BİRBİRİNİ İTER!";
+                    feedback.style.color = "#c0392b";
+                    dragMag.classList.add('repelling');
                 }
-            } else {
-                feedback.style.opacity = "0";
-                m2.classList.remove('repelling');
             }
         }
 
-        // --- BÖLÜNME DENEYİ MANTIĞI ---
-        const breakZone = document.getElementById('whole-magnet-group');
+        // --- DENEY 3: KIRILMA MANTIĞI ---
+        const wholeContainer = document.getElementById('whole-container');
+        const brokenContainer = document.getElementById('broken-container');
         const breakBtn = document.getElementById('break-btn');
-        let isBroken = false;
+        const repairBtn = document.getElementById('repair-btn');
 
-        function breakMagnet() {
-            if (isBroken) return;
-            isBroken = true;
-            breakBtn.disabled = true;
-            breakBtn.style.opacity = 0.5;
+        function breakTheMagnet() {
+            wholeContainer.classList.add('hidden');
+            brokenContainer.classList.remove('hidden');
+            breakBtn.classList.add('hidden');
+            repairBtn.classList.remove('hidden');
 
-            // HTML içeriğini değiştir
-            breakZone.innerHTML = `
-                <div class="magnet mini-magnet">
-                    <div class="pole n">N</div>
-                    <div class="pole s">S</div>
+            // Kırılan parçaların HTML'ini dinamik olarak oluştur
+            // ÖNEMLİ NOKTA: Kırılan iç kısımlarda ZIT kutuplar oluşmalı.
+            brokenContainer.innerHTML = `
+                <div class="broken-piece">
+                    <div class="bar-n" style="width: 70%;">N</div>
+                    <div class="bar-s" style="width: 30%;">S</div>
                 </div>
-                <div class="magnet mini-magnet">
-                    <div class="pole n">N</div>
-                    <div class="pole s">S</div>
+                <div class="broken-piece">
+                    <div class="bar-n" style="width: 30%;">N</div>
+                    <div class="bar-s" style="width: 70%;">S</div>
                 </div>
             `;
         }
 
-        function resetBreak() {
-            isBroken = false;
-            breakBtn.disabled = false;
-            breakBtn.style.opacity = 1;
-
-            breakZone.innerHTML = `
-                <div class="magnet big-magnet">
-                    <div class="pole n">N</div>
-                    <div class="pole s">S</div>
-                </div>
-            `;
+        function repairMagnet() {
+            wholeContainer.classList.remove('hidden');
+            brokenContainer.classList.add('hidden');
+            breakBtn.classList.remove('hidden');
+            repairBtn.classList.add('hidden');
+            brokenContainer.innerHTML = ""; // Temizle
         }
 
     </script>
