@@ -3,528 +3,596 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sınıf İçi İşlem Yarışması (Manuel Sıfır)</title>
+    <title>Klasik Bölme Sunum Paneli</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
 
         body {
             font-family: 'Fredoka', sans-serif;
-            background-color: #37474f;
+            background-color: #e0f2f1;
             margin: 0;
             padding: 10px;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            color: white;
             overflow: hidden;
+            color: #37474f;
         }
 
         h1 {
             text-align: center;
             margin: 0 0 10px 0;
-            color: #ffca28;
             font-size: 1.5rem;
+            color: #00695c;
+            text-transform: uppercase;
         }
 
         .stage-container {
             display: flex;
             width: 100%;
             height: 100%;
-            gap: 10px;
+            gap: 15px;
+            padding-bottom: 5px;
+            box-sizing: border-box;
         }
 
-        .student-panel {
+        /* PANEL TASARIMI */
+        .panel {
             flex: 1;
-            background: #eceff1;
+            background: white;
             border-radius: 15px;
-            padding: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 2px solid #b2dfdb;
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: #37474f;
-            border: 4px solid;
             position: relative;
+            overflow: hidden;
         }
 
-        .p1 { border-color: #ef5350; background: #ffebee; }
-        .p2 { border-color: #42a5f5; background: #e3f2fd; }
-        .p3 { border-color: #66bb6a; background: #e8f5e9; }
-
-        .student-header {
-            display: flex;
-            justify-content: space-between;
+        .panel-header {
             width: 100%;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .student-name {
+            text-align: center;
+            padding: 8px 0;
+            font-size: 1.2rem;
             font-weight: bold;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            background: rgba(255,255,255,0.8);
-            padding: 5px 15px;
-            border-radius: 20px;
-        }
-
-        .teacher-btn {
-            background: #546e7a;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            padding: 5px 10px;
         }
+        .p1-head { background: #ff7043; }
+        .p2-head { background: #42a5f5; }
+        .p3-head { background: #66bb6a; }
 
-        .controls {
+        .panel-content {
+            padding: 10px;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            gap: 5px;
-            margin-bottom: 10px;
-            width: 100%;
             align-items: center;
+            overflow-y: auto; /* İşlem uzarsa kaydırma çubuğu çıksın */
         }
 
-        input.num-input {
+        /* AYARLAR */
+        .setup-area {
+            background: #fafafa;
+            padding: 5px;
+            border-radius: 8px;
+            width: 95%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            border: 1px dashed #cfd8dc;
+            margin-bottom: 10px;
+        }
+
+        .num-input {
             font-size: 1.2rem;
             padding: 5px;
             width: 80px;
             text-align: center;
-            border-radius: 8px;
             border: 2px solid #b0bec5;
+            border-radius: 6px;
+            font-weight: bold;
         }
 
-        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
-
-        button.action-btn {
-            padding: 5px 10px;
-            font-size: 0.9rem;
+        .mode-btns { display: flex; gap: 3px; justify-content: center; width: 100%; }
+        .setup-btn {
+            padding: 4px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            flex: 1;
+            opacity: 0.7;
+        }
+        .setup-btn.active { opacity: 1; transform: scale(0.95); }
+        
+        .btn-5 { background: #ef6c00; }
+        .btn-25 { background: #2e7d32; }
+        .btn-50 { background: #1565c0; }
+        .btn-125 { background: #6a1b9a; }
+
+        /* GÖRSEL ALAN */
+        .visual-stage {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .question-box {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #455a64;
+            background: #eceff1;
+            padding: 5px 15px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+        }
+
+        .arrow {
+            font-size: 2rem;
+            color: #ff7043;
+            margin-bottom: 5px;
+            opacity: 0;
+            transition: 0.5s;
+        }
+        .arrow.show { opacity: 1; }
+
+        /* KLASİK BÖLME GRID SİSTEMİ */
+        .long-division-container {
+            font-family: 'Roboto Mono', monospace; /* Hizalama için Monospace şart */
+            font-size: 1.5rem;
+            line-height: 1.5rem;
+            display: grid;
+            /* Grid dinamik olarak JS ile ayarlanacak ama varsayılan değerler */
+            grid-template-columns: repeat(10, 1fr); 
+            gap: 2px;
+            visibility: hidden;
+        }
+
+        .cell {
+            width: 25px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #37474f;
+        }
+
+        /* Çizgiler ve Renkler */
+        .border-bottom { border-bottom: 2px solid #37474f; }
+        .border-right { border-right: 2px solid #37474f; }
+        
+        .quotient-digit { color: #2e7d32; font-weight: bold; animation: popIn 0.3s; } /* Sonuç Rakamları */
+        .sub-digit { color: #c62828; animation: slideDown 0.4s; } /* Çıkan sayılar */
+        .bring-down { color: #1565c0; font-weight: bold; animation: dropIn 0.5s; } /* Aşağı inenler */
+        
+        /* Animasyonlar */
+        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes slideDown { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes dropIn { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* BUTONLAR */
+        .control-bar {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .main-btn, .instant-btn {
+            padding: 10px;
             border: none;
             border-radius: 5px;
             color: white;
             font-weight: bold;
-            transition: transform 0.1s;
+            cursor: pointer;
+            font-size: 1rem;
         }
-        button.action-btn:active { transform: scale(0.95); }
-        .btn-5 { background: #ff9800; }
-        .btn-25 { background: #4caf50; }
-        .btn-50 { background: #03a9f4; }
-        .btn-125 { background: #9c27b0; }
+        .main-btn { flex: 2; background: #546e7a; }
+        .instant-btn { flex: 1; background: #ff7043; }
+        button:disabled { background: #cfd8dc; cursor: default; }
 
-        .division-area {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 5px;
-            width: 100%;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-
-        .info-text {
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            color: #546e7a;
-            font-weight: bold;
-            min-height: 1.2em;
-            text-align: center;
-        }
-
-        .grid-row {
-            display: flex;
-            gap: 4px;
-            align-items: flex-end;
-            margin-bottom: 20px;
-        }
-
-        .digit-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            width: 45px;
-        }
-
-        .carry-over {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            font-size: 0.9rem;
-            color: #d32f2f;
-            font-weight: bold;
-            z-index: 2;
-        }
-
-        .digit-box {
-            width: 45px;
-            height: 45px;
-            background: white;
-            border: 2px solid #78909c;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.6rem;
-            font-weight: bold;
-            position: relative;
-            padding-top: 8px; 
-            color: #333;
-        }
-
-        /* Sıfır ekleme kutusu */
-        .zero-input-box {
-            width: 45px;
-            height: 45px;
-            background: #fff3e0;
-            border: 2px dashed #ff9800;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1.6rem;
-            font-weight: bold;
-            color: #ef6c00;
-        }
-        .zero-input-box:focus { outline: none; background: #ffe0b2; }
-
-        .answer-input {
-            width: 35px;
-            height: 35px;
-            margin-top: 5px;
-            text-align: center;
-            font-size: 1.3rem;
-            border: 2px dashed #b0bec5;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.5);
-            font-weight: bold;
-            color: #1a237e;
-        }
-        .answer-input:disabled { background: #e0e0e0; border: 1px solid #ccc; opacity: 0.6; }
-        .answer-input:focus { border-color: #3f51b5; background: white; outline: none; }
-        .answer-input.correct { background-color: #c8e6c9; border-color: #4caf50; border-style: solid; }
-        .answer-input.wrong { background-color: #ffcdd2; animation: shake 0.3s; }
-
-        .active-digit { border-color: #ff9800; box-shadow: 0 0 8px rgba(255, 152, 0, 0.5); transform: scale(1.05); }
-
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(4px); }
-            75% { transform: translateX(-4px); }
-            100% { transform: translateX(0); }
-        }
-
-        .divider-display {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-right: 8px;
-            display: flex;
-            align-items: center;
-            height: 45px;
-            color: #455a64;
-        }
-
-        /* Gizli Cevap Alanı */
-        .hidden-answer {
-            margin-top: 10px;
-            font-size: 1.5rem;
-            color: #d84315;
-            background: #ffccbc;
-            padding: 5px 10px;
-            border-radius: 5px;
-            border: 2px dashed #bf360c;
-            display: none;
-        }
-
+        .reset-icon { position: absolute; top: 8px; right: 8px; color: white; cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-    <h1>🏆 Yan Yana İşlem Yarışması (Manuel Sıfır Ekleme)</h1>
+    <h1>📏 Klasik Bölme Yöntemi (Bakkal Bölmesi)</h1>
 
     <div class="stage-container">
-        <div class="student-panel p1">
-            <div class="student-header">
-                <div class="student-name">1. ÖĞRENCİ</div>
-                <button class="teacher-btn" onclick="toggleAnswer(1)">👁️ Cevap</button>
-            </div>
-            <div class="controls">
-                <input type="number" id="inp-1" class="num-input" placeholder="Sayı" value="14">
-                <div class="btn-group">
-                    <button class="action-btn btn-5" onclick="initGame(1, 5)">x5</button>
-                    <button class="action-btn btn-25" onclick="initGame(1, 25)">x25</button>
-                    <button class="action-btn btn-50" onclick="initGame(1, 50)">x50</button>
-                    <button class="action-btn btn-125" onclick="initGame(1, 125)">x125</button>
-                </div>
-            </div>
-            <div class="info-text" id="info-1">Hazır...</div>
-            <div class="division-area" id="area-1"></div>
-            <div class="hidden-answer" id="ans-1"></div>
-        </div>
+        <script>
+            // 3 Paneli Döngüyle Oluşturalım
+            for(let i=1; i<=3; i++) {
+                let colorClass = i===1 ? 'p1-head' : (i===2 ? 'p2-head' : 'p3-head');
+                document.write(`
+                <div class="panel">
+                    <div class="panel-header ${colorClass}">
+                        SORU ${i}
+                        <div class="reset-icon" onclick="resetPanel(${i})">↺</div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="setup-area" id="setup-${i}">
+                            <input type="number" id="inp-${i}" class="num-input" value="${12 + i*4}">
+                            <div class="mode-btns">
+                                <button class="setup-btn btn-5" onclick="setMode(${i}, 5, this)">x5</button>
+                                <button class="setup-btn btn-25" onclick="setMode(${i}, 25, this)">x25</button>
+                                <button class="setup-btn btn-50" onclick="setMode(${i}, 50, this)">x50</button>
+                                <button class="setup-btn btn-125" onclick="setMode(${i}, 125, this)">x125</button>
+                            </div>
+                        </div>
 
-        <div class="student-panel p2">
-            <div class="student-header">
-                <div class="student-name">2. ÖĞRENCİ</div>
-                <button class="teacher-btn" onclick="toggleAnswer(2)">👁️ Cevap</button>
-            </div>
-            <div class="controls">
-                <input type="number" id="inp-2" class="num-input" placeholder="Sayı" value="28">
-                <div class="btn-group">
-                    <button class="action-btn btn-5" onclick="initGame(2, 5)">x5</button>
-                    <button class="action-btn btn-25" onclick="initGame(2, 25)">x25</button>
-                    <button class="action-btn btn-50" onclick="initGame(2, 50)">x50</button>
-                    <button class="action-btn btn-125" onclick="initGame(2, 125)">x125</button>
-                </div>
-            </div>
-            <div class="info-text" id="info-2">Hazır...</div>
-            <div class="division-area" id="area-2"></div>
-            <div class="hidden-answer" id="ans-2"></div>
-        </div>
+                        <div class="visual-stage">
+                            <div class="question-box" id="qtext-${i}">Hazır</div>
+                            <div class="arrow" id="arrow-${i}">⬇</div>
+                            <div class="long-division-container" id="grid-${i}"></div>
+                        </div>
 
-        <div class="student-panel p3">
-            <div class="student-header">
-                <div class="student-name">3. ÖĞRENCİ</div>
-                <button class="teacher-btn" onclick="toggleAnswer(3)">👁️ Cevap</button>
-            </div>
-            <div class="controls">
-                <input type="number" id="inp-3" class="num-input" placeholder="Sayı" value="16">
-                <div class="btn-group">
-                    <button class="action-btn btn-5" onclick="initGame(3, 5)">x5</button>
-                    <button class="action-btn btn-25" onclick="initGame(3, 25)">x25</button>
-                    <button class="action-btn btn-50" onclick="initGame(3, 50)">x50</button>
-                    <button class="action-btn btn-125" onclick="initGame(3, 125)">x125</button>
+                        <div class="control-bar">
+                            <button class="main-btn" id="btn-play-${i}" onclick="playAnimation(${i})" disabled>▶ OYNAT</button>
+                            <button class="instant-btn" id="btn-quick-${i}" onclick="instantShow(${i})" disabled>⚡ CEVAP</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="info-text" id="info-3">Hazır...</div>
-            <div class="division-area" id="area-3"></div>
-            <div class="hidden-answer" id="ans-3"></div>
-        </div>
+                `);
+            }
+        </script>
     </div>
 
     <script>
-        // Oyun Durumları
-        const states = {};
-
-        const rules = {
-            5: { zeros: 1, div: 2, text: "10 ile çarp (1 sıfır), 2'ye böl" },
-            25: { zeros: 2, div: 4, text: "100 ile çarp (2 sıfır), 4'e böl" },
-            50: { zeros: 2, div: 2, text: "100 ile çarp (2 sıfır), 2'ye böl" },
-            125: { zeros: 3, div: 8, text: "1000 ile çarp (3 sıfır), 8'e böl" }
+        const states = {
+            1: { factor: 0, steps: [], currentStepIdx: 0, expandedNum: 0, divisor: 0 },
+            2: { factor: 0, steps: [], currentStepIdx: 0, expandedNum: 0, divisor: 0 },
+            3: { factor: 0, steps: [], currentStepIdx: 0, expandedNum: 0, divisor: 0 }
         };
 
-        function initGame(pid, factor) {
+        const rules = {
+            5: { div: 2, zeros: "0" },
+            25: { div: 4, zeros: "00" },
+            50: { div: 2, zeros: "00" },
+            125: { div: 8, zeros: "000" }
+        };
+
+        // --- KURULUM ---
+        function setMode(pid, factor, btn) {
+            // Buton görselliği
+            const allBtns = document.querySelectorAll(`#setup-${pid} .setup-btn`);
+            allBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
             const inputVal = document.getElementById(`inp-${pid}`).value;
             if(!inputVal) return;
 
+            // Verileri Hazırla
             const rule = rules[factor];
-            
-            // Cevabı gizle
-            document.getElementById(`ans-${pid}`).style.display = 'none';
-            document.getElementById(`info-${pid}`).innerText = `Adım 1: Sayının yanına ${rule.zeros} tane sıfır ekle!`;
+            const expandedStr = inputVal + rule.zeros;
+            const expandedNum = parseInt(expandedStr);
+            const divisor = rule.div;
 
-            // State Oluştur
-            states[pid] = {
-                originalStr: inputVal,
-                zerosNeeded: rule.zeros,
-                zerosAdded: 0,
-                fullNumberStr: inputVal, // Sıfırlar eklendikçe büyüyecek
-                divisor: rule.div,
-                digits: inputVal.split('').map(Number),
-                remainder: 0,
-                phase: 'adding_zeros' // veya 'dividing'
-            };
+            states[pid].factor = factor;
+            states[pid].expandedNum = expandedNum;
+            states[pid].divisor = divisor;
+            states[pid].steps = generateDivisionSteps(expandedNum, divisor);
+            states[pid].currentStepIdx = 0;
 
-            renderGrid(pid);
+            // Arayüzü Sıfırla
+            document.getElementById(`qtext-${pid}`).innerText = `${inputVal} x ${factor}`;
+            document.getElementById(`arrow-${pid}`).classList.remove('show');
+            document.getElementById(`grid-${pid}`).innerHTML = '';
+            document.getElementById(`grid-${pid}`).style.visibility = 'hidden';
+
+            const btnPlay = document.getElementById(`btn-play-${pid}`);
+            const btnQuick = document.getElementById(`btn-quick-${pid}`);
+            btnPlay.disabled = false;
+            btnPlay.innerText = "▶ OYNAT";
+            btnQuick.disabled = false;
         }
 
-        function renderGrid(pid) {
+        // --- OYNATMA MANTIĞI ---
+        async function playAnimation(pid) {
+            const btnPlay = document.getElementById(`btn-play-${pid}`);
+            const btnQuick = document.getElementById(`btn-quick-${pid}`);
             const state = states[pid];
-            const area = document.getElementById(`area-${pid}`);
-            area.innerHTML = '';
 
-            const row = document.createElement('div');
-            row.className = 'grid-row';
+            // Eğer hiç başlamadıysa önce sahneyi kur
+            if(state.currentStepIdx === 0) {
+                btnPlay.disabled = true;
+                btnQuick.disabled = true;
 
-            // Bölen Göstergesi
-            const divSign = document.createElement('div');
-            divSign.className = 'divider-display';
-            divSign.innerHTML = `<span style="font-size:1.2rem; margin-right:5px;">÷</span>${state.divisor}`;
-            row.appendChild(divSign);
-
-            // 1. Mevcut Rakamlar (Sabit Kutular)
-            state.digits.forEach((digit, idx) => {
-                const wrapper = createDigitWrapper(pid, idx, digit, false);
-                row.appendChild(wrapper);
-            });
-
-            // 2. Eksik Sıfırlar (Input Kutuları)
-            // Eğer hala eklenmesi gereken sıfır varsa input göster
-            const totalLen = state.originalStr.length + state.zerosNeeded;
-            const currentLen = state.digits.length;
-
-            if (state.phase === 'adding_zeros') {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'digit-wrapper';
-
-                const zeroInp = document.createElement('input');
-                zeroInp.className = 'zero-input-box';
-                zeroInp.maxLength = 1;
-                zeroInp.placeholder = '0';
+                document.getElementById(`arrow-${pid}`).classList.add('show');
+                setupGrid(pid, state.expandedNum, state.divisor);
+                document.getElementById(`grid-${pid}`).style.visibility = 'visible';
                 
-                // Sıfır giriş kontrolü
-                zeroInp.onkeyup = (e) => checkZeroInput(pid, zeroInp);
-                
-                wrapper.appendChild(zeroInp);
-                row.appendChild(wrapper);
-                
-                // Otomatik odaklan
-                setTimeout(() => zeroInp.focus(), 100);
+                await wait(1000);
+                btnPlay.innerText = "ADIM ADIM";
+                btnPlay.disabled = false;
+                btnQuick.disabled = false;
+                return; // İlk tıklamada sadece gridi kurar
             }
 
-            area.appendChild(row);
+            // Sonraki adımları tek tek oynat
+            if(state.currentStepIdx < state.steps.length) {
+                btnPlay.disabled = true;
+                const step = state.steps[state.currentStepIdx];
+                await renderStep(pid, step);
+                state.currentStepIdx++;
+                btnPlay.disabled = false;
 
-            // Eğer bölme aşamasına geçildiyse inputları yönet
-            if (state.phase === 'dividing') {
-                // Doğru cevap için hesaplama
-                const totalNum = parseInt(state.fullNumberStr);
-                const finalResult = totalNum / state.divisor;
-                document.getElementById(`ans-${pid}`).innerText = `Sonuç: ${finalResult}`;
+                if(state.currentStepIdx >= state.steps.length) {
+                    btnPlay.innerText = "BİTTİ";
+                    btnPlay.disabled = true;
+                }
+            }
+        }
 
-                // İlk bölme inputunu aç
-                const firstInp = document.getElementById(`p${pid}-ans-0`);
-                if(firstInp) {
-                    firstInp.disabled = false;
-                    firstInp.focus();
-                    updateActiveBox(pid, 0);
+        function instantShow(pid) {
+            const state = states[pid];
+            // Henüz grid kurulmadıysa kur
+            if(document.getElementById(`grid-${pid}`).innerHTML === '') {
+                document.getElementById(`arrow-${pid}`).classList.add('show');
+                setupGrid(pid, state.expandedNum, state.divisor);
+                document.getElementById(`grid-${pid}`).style.visibility = 'visible';
+            }
+
+            // Kalan tüm adımları hızlıca bas
+            while(state.currentStepIdx < state.steps.length) {
+                const step = state.steps[state.currentStepIdx];
+                // Hızlı render (wait olmadan)
+                renderStepSync(pid, step);
+                state.currentStepIdx++;
+            }
+            
+            document.getElementById(`btn-play-${pid}`).innerText = "BİTTİ";
+            document.getElementById(`btn-play-${pid}`).disabled = true;
+            document.getElementById(`btn-quick-${pid}`).disabled = true;
+        }
+
+        // --- BÖLME ALGORİTMASI (BEYİN) ---
+        function generateDivisionSteps(dividend, divisor) {
+            const dividendStr = dividend.toString();
+            const steps = [];
+            
+            let remainder = 0;
+            let row = 2; // 0: Bölüm, 1: Soru satırı, 2+: İşlemler
+            
+            // Grid koordinatları için basit bir mantık
+            // Sütunlar: Sayının rakamları kadar.
+            
+            for (let i = 0; i < dividendStr.length; i++) {
+                const digit = parseInt(dividendStr[i]);
+                const currentVal = remainder * 10 + digit; // İndirilen sayı dahil
+                
+                // Adım 1: Aşağı İndirme (İlk rakam hariç görsel olarak)
+                if (i > 0) {
+                     steps.push({ type: 'bring_down', val: digit, row: row, col: i });
                 }
                 
-                document.getElementById(`info-${pid}`).innerText = `Adım 2: Şimdi ${state.divisor}'ye böl!`;
-            }
-        }
-
-        function createDigitWrapper(pid, index, digitVal, isZeroInput) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'digit-wrapper';
-
-            // Elde (Carry)
-            const carry = document.createElement('span');
-            carry.className = 'carry-over';
-            carry.id = `p${pid}-carry-${index}`;
-            wrapper.appendChild(carry);
-
-            // Kutu
-            const box = document.createElement('div');
-            box.className = 'digit-box';
-            box.innerText = digitVal;
-            box.id = `p${pid}-box-${index}`;
-            // Sonradan eklenen sıfırsa rengi biraz farklı olabilir
-            if (index >= states[pid].originalStr.length) {
-                box.style.color = '#e65100'; // Turuncu sıfırlar
-            }
-            wrapper.appendChild(box);
-
-            // Cevap Inputu (Bölme için)
-            const ansInp = document.createElement('input');
-            ansInp.className = 'answer-input';
-            ansInp.type = 'number';
-            ansInp.id = `p${pid}-ans-${index}`;
-            ansInp.disabled = true; // Başlangıçta hepsi kapalı
-            ansInp.onkeyup = (e) => checkDivision(pid, index, ansInp);
-            
-            wrapper.appendChild(ansInp);
-            return wrapper;
-        }
-
-        function checkZeroInput(pid, inputElem) {
-            const val = inputElem.value;
-            if (val === '0') {
-                // Doğru!
-                const state = states[pid];
-                state.digits.push(0);
-                state.fullNumberStr += "0";
-                state.zerosAdded++;
-
-                // Tüm sıfırlar bitti mi?
-                if (state.zerosAdded >= state.zerosNeeded) {
-                    state.phase = 'dividing';
-                }
+                // Kontrol: Bu sayı bölen'den küçük mü? (Sadece başta değilse 0 atılır)
+                const quotientDigit = Math.floor(currentVal / divisor);
                 
-                // Yeniden çiz (Input kutuya dönüşecek)
-                renderGrid(pid);
-            } else if (val.length > 0) {
-                // Yanlış (Sıfır değilse sil)
-                inputElem.value = '';
-                inputElem.style.borderColor = 'red';
-                setTimeout(() => inputElem.style.borderColor = '#ff9800', 300);
+                // Bölüm hanesine yaz
+                steps.push({ type: 'quotient', val: quotientDigit, col: i });
+
+                const product = quotientDigit * divisor;
+                const newRemainder = currentVal - product;
+
+                // Çarpma ve Yazma (Sadece 0 değilse veya işlem bitiyorsa gösterelim)
+                // Klasik bölmede 0 olsa bile "0 kere var" diyip 0 çıkarılır.
+                // Biz sadece anlamlı adımları gösterelim (Product yaz, Çıkar)
+                
+                steps.push({ type: 'product', val: product, row: row + 1, col: i, isDoubleDigit: product >= 10 });
+                
+                // Çıkarma Çizgisi ve Sonuç
+                steps.push({ type: 'subtract_res', val: newRemainder, row: row + 2, col: i });
+                
+                remainder = newRemainder;
+                row += 2; // Her işlem bloğu 2 satır yer kaplar (Çıkan sayı + Kalan)
             }
+            return steps;
         }
 
-        function checkDivision(pid, index, inputElem) {
-            const state = states[pid];
-            if(inputElem.value === "") return;
-
-            const userVal = parseInt(inputElem.value);
+        // --- GRID KURULUMU ---
+        function setupGrid(pid, dividend, divisor) {
+            const container = document.getElementById(`grid-${pid}`);
+            const divStr = dividend.toString();
+            const cols = divStr.length + 3; // Biraz boşluk
             
-            // Mevcut Bölünen Hesapla (Elde + Rakam)
-            let currentDividend = state.digits[index];
-            if (state.remainder > 0) {
-                currentDividend = parseInt(state.remainder.toString() + state.digits[index].toString());
+            // Grid stili güncelle
+            container.style.gridTemplateColumns = `repeat(${cols}, 25px)`;
+            
+            // Başlangıç Yapısı
+            // Satır 0: Bölüm Alanı (Boş, çizgili)
+            // Satır 1: Bölen | Bölünen
+            
+            // Bölüm Çizgisi (Üstteki çizgi)
+            for(let i=0; i<cols; i++) {
+                const cell = createCell('');
+                if(i >= 2 && i < 2 + divStr.length) cell.classList.add('border-bottom'); // Bölünenin üstü değil, Bölümün altı aslında
+                container.appendChild(cell);
             }
 
-            const correctQ = Math.floor(currentDividend / state.divisor);
-            const newRem = currentDividend % state.divisor;
+            // Ana Satır (Bölen | Bölünen)
+            // Sütun 0: Bölen
+            const cellDivisor = createCell(divisor);
+            cellDivisor.classList.add('border-right');
+            container.appendChild(cellDivisor);
+            
+            // Sütun 1: Boşluk (Parantez içi)
+            container.appendChild(createCell('')); 
 
-            if (userVal === correctQ) {
-                // DOĞRU
-                inputElem.classList.add('correct');
-                inputElem.classList.remove('wrong');
-                inputElem.disabled = true;
-                state.remainder = newRem; // Kalanı güncelle
+            // Sütun 2+: Bölünen Rakamları
+            for(let char of divStr) {
+                const cell = createCell(char);
+                // Sonradan eklenen sıfırlar farklı renk olabilir
+                container.appendChild(cell);
+            }
+            // Kalan boşluklar
+            container.appendChild(createCell(''));
+        }
 
-                // Sonraki var mı?
-                if (index < state.digits.length - 1) {
-                    const nextIndex = index + 1;
-                    
-                    // Kalanı görselleştir
-                    if (newRem > 0) {
-                        document.getElementById(`p${pid}-carry-${nextIndex}`).innerText = newRem;
-                    }
-                    
-                    // Sonraki inputu aç
-                    const nextInp = document.getElementById(`p${pid}-ans-${nextIndex}`);
-                    nextInp.disabled = false;
-                    nextInp.focus();
-                    updateActiveBox(pid, nextIndex);
+        // --- RENDER ---
+        async function renderStep(pid, step) {
+            const container = document.getElementById(`grid-${pid}`);
+            const cols = parseInt(container.style.gridTemplateColumns.split('(')[1]); // Kolon sayısını çek
+            
+            if(step.type === 'quotient') {
+                // Bölüm (En üst satır değil, aslında Grid mantığında özel yerleştirme lazım)
+                // Gridde "absolute" yerleştirme yapmayıp, flow kullanıyorsak zor.
+                // Bu yüzden basitlik adına: En üst satırdaki ilgili hücrenin içine yazacağız.
+                // Grid child index hesabı: Row 0, Col X.
+                // Index = step.col + 2 (Çünkü ilk 2 kolon bölen için)
+                const index = step.col + 2; 
+                const cell = container.children[index];
+                cell.innerText = step.val;
+                cell.classList.add('quotient-digit');
+                await wait(500);
+            }
+            else if(step.type === 'bring_down') {
+                // Aşağı indirme: Mevcut satırın, ilgili kolonuna yaz
+                // Gridde "boşlukları doldurarak" gitmek lazım.
+                // Bu yapı için: Her yeni satır için 'cols' kadar div ekleyeceğiz.
+                // Ama önceki adımlardan satır eklenmiş olabilir.
+                
+                // Pratik Çözüm: Grid'e her seferinde tam bir satır ekle.
+                // step.row satırına denk gelene kadar boş satır ekle.
+                ensureRows(container, step.row, cols);
+                
+                const cellIndex = (step.row * cols) + (step.col + 2);
+                // Hedef hücre dolu olabilir (önceki kalan), yanına yazmak gerekebilir.
+                // Bu grid yapısında tam hizalama için: Sayıların basamak değeri kolonudur.
+                const cell = container.children[cellIndex];
+                cell.innerText = step.val;
+                cell.classList.add('bring-down');
+                await wait(600);
+            }
+            else if(step.type === 'product') {
+                ensureRows(container, step.row, cols);
+                // Çıkan sayıyı yaz (Örn: 16)
+                // Tek basamaksa: step.col'a yaz.
+                // Çift basamaksa: step.col ve step.col-1'e yaz.
+                
+                if(step.val < 10) {
+                    const idx = (step.row * cols) + (step.col + 2);
+                    const cell = container.children[idx];
+                    cell.innerText = step.val;
+                    cell.classList.add('sub-digit');
+                    cell.style.borderBottom = "1px solid #aaa"; // Çıkarma çizgisi
                 } else {
-                    // BİTTİ
-                    document.getElementById(`info-${pid}`).innerHTML = "🎉 TEBRİKLER! Bitti.";
-                    document.getElementById(`info-${pid}`).style.color = "#4caf50";
-                    updateActiveBox(pid, -1); // Vurguyu kaldır
+                    // onlar basamağı
+                    const idx1 = (step.row * cols) + (step.col + 1);
+                    container.children[idx1].innerText = Math.floor(step.val / 10);
+                    container.children[idx1].classList.add('sub-digit');
+                    container.children[idx1].style.borderBottom = "1px solid #aaa";
+
+                    // birler basamağı
+                    const idx2 = (step.row * cols) + (step.col + 2);
+                    container.children[idx2].innerText = step.val % 10;
+                    container.children[idx2].classList.add('sub-digit');
+                    container.children[idx2].style.borderBottom = "1px solid #aaa";
                 }
-
-            } else {
-                // YANLIŞ
-                inputElem.classList.add('wrong');
+                
+                // Eksi işareti
+                const signIdx = (step.row * cols) + (step.col); 
+                container.children[signIdx].innerText = "-";
+                
+                await wait(800);
+            }
+            else if(step.type === 'subtract_res') {
+                ensureRows(container, step.row, cols);
+                // Kalanı yaz
+                const idx = (step.row * cols) + (step.col + 2);
+                container.children[idx].innerText = step.val;
+                await wait(600);
             }
         }
 
-        function updateActiveBox(pid, index) {
-            const boxes = document.querySelectorAll(`#area-${pid} .digit-box`);
-            boxes.forEach(b => b.classList.remove('active-digit'));
+        // Senkron Render (Hızlı Cevap için)
+        function renderStepSync(pid, step) {
+            // Animasyonsuz versiyon
+            const container = document.getElementById(`grid-${pid}`);
+            const cols = parseInt(container.style.gridTemplateColumns.split('(')[1]);
             
-            if(index !== -1) {
-                const box = document.getElementById(`p${pid}-box-${index}`);
-                if(box) box.classList.add('active-digit');
+            if(step.type === 'quotient') {
+                const index = step.col + 2; 
+                const cell = container.children[index];
+                cell.innerText = step.val;
+                cell.classList.add('quotient-digit');
+            }
+            else if(step.type === 'bring_down') {
+                ensureRows(container, step.row, cols);
+                const cellIndex = (step.row * cols) + (step.col + 2);
+                container.children[cellIndex].innerText = step.val;
+                container.children[cellIndex].classList.add('bring-down');
+            }
+            else if(step.type === 'product') {
+                ensureRows(container, step.row, cols);
+                if(step.val < 10) {
+                    const idx = (step.row * cols) + (step.col + 2);
+                    const cell = container.children[idx];
+                    cell.innerText = step.val;
+                    cell.style.borderBottom = "1px solid #aaa";
+                } else {
+                    const idx1 = (step.row * cols) + (step.col + 1);
+                    container.children[idx1].innerText = Math.floor(step.val / 10);
+                    container.children[idx1].style.borderBottom = "1px solid #aaa";
+                    const idx2 = (step.row * cols) + (step.col + 2);
+                    container.children[idx2].innerText = step.val % 10;
+                    container.children[idx2].style.borderBottom = "1px solid #aaa";
+                }
+                const signIdx = (step.row * cols) + (step.col); 
+                container.children[signIdx].innerText = "-";
+            }
+            else if(step.type === 'subtract_res') {
+                ensureRows(container, step.row, cols);
+                const idx = (step.row * cols) + (step.col + 2);
+                container.children[idx].innerText = step.val;
             }
         }
 
-        function toggleAnswer(pid) {
-            const ansDiv = document.getElementById(`ans-${pid}`);
-            if (ansDiv.style.display === 'none' || ansDiv.style.display === '') {
-                ansDiv.style.display = 'block';
-            } else {
-                ansDiv.style.display = 'none';
+        function createCell(content) {
+            const div = document.createElement('div');
+            div.className = 'cell';
+            div.innerText = content;
+            return div;
+        }
+
+        function ensureRows(container, targetRow, cols) {
+            // Şu anki satır sayısı = toplam çocuk / kolon sayısı
+            let currentRows = Math.ceil(container.children.length / cols);
+            while (currentRows <= targetRow) {
+                for (let i = 0; i < cols; i++) {
+                    container.appendChild(createCell(''));
+                }
+                currentRows++;
             }
         }
+
+        function resetPanel(pid) {
+            document.getElementById(`qtext-${pid}`).innerText = 'Hazır';
+            document.getElementById(`arrow-${pid}`).classList.remove('show');
+            document.getElementById(`grid-${pid}`).innerHTML = '';
+            document.getElementById(`grid-${pid}`).style.visibility = 'hidden';
+            
+            const allBtns = document.querySelectorAll(`#setup-${pid} .setup-btn`);
+            allBtns.forEach(b => b.classList.remove('active'));
+            
+            const btnPlay = document.getElementById(`btn-play-${pid}`);
+            btnPlay.innerText = "▶ OYNAT";
+            btnPlay.disabled = true;
+            document.getElementById(`btn-quick-${pid}`).disabled = true;
+        }
+
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
     </script>
 </body>
 </html>
