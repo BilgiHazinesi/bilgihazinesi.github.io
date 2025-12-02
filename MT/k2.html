@@ -3,382 +3,514 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zihinden İşlem Ustası</title>
+    <title>Akıllı Tahta Sunum Modülü</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
-
-        :root {
-            --bg-color: #e0f7fa;
-            --primary: #00bcd4;
-            --secondary: #ff9800;
-            --success: #4caf50;
-            --error: #f44336;
-            --text: #37474f;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Chalkboard+SE:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
 
         body {
             font-family: 'Fredoka', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background-color: #212121; /* Tahta siyahı */
+            color: white;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        .app-container {
-            background: white;
+        h1 {
+            text-align: center;
+            color: #ffca28;
+            font-family: 'Chalkboard SE', sans-serif;
+            margin: 5px 0 15px 0;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+        }
+
+        /* 3'lü Panel Yapısı */
+        .stage-container {
+            display: flex;
             width: 100%;
-            max-width: 800px;
-            border-radius: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            overflow: hidden;
-            border: 5px solid white;
+            height: 100%;
+            gap: 15px;
+            padding: 0 10px 10px 10px;
+            box-sizing: border-box;
+        }
+
+        .panel {
+            flex: 1;
+            background: #333;
+            border-radius: 20px;
+            border: 2px solid #555;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Başlıklar */
+        .panel-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 5px 15px;
+            border-radius: 50px;
+            color: #212121;
+            text-transform: uppercase;
+        }
+        .p1-head { background: #ffab91; }
+        .p2-head { background: #81d4fa; }
+        .p3-head { background: #a5d6a7; }
+
+        /* Öğretmen Kontrolleri (Setup) */
+        .setup-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        .num-input {
+            font-size: 1.5rem;
+            padding: 8px;
+            width: 100px;
+            text-align: center;
+            border-radius: 8px;
+            border: none;
+            background: #424242;
+            color: #ffca28;
+            font-weight: bold;
+        }
+
+        .mode-btns { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+        
+        .setup-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+        .setup-btn.active { opacity: 1; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        
+        .btn-5 { background: #ef6c00; }
+        .btn-25 { background: #2e7d32; }
+        .btn-50 { background: #1565c0; }
+        .btn-125 { background: #6a1b9a; }
+
+        /* Sunum Butonu (Büyük Oynat Tuşu) */
+        .play-btn {
+            width: 80%;
+            padding: 12px;
+            margin-top: auto; /* En alta it */
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #ffca28;
+            color: #333;
+            box-shadow: 0 5px 0 #c79100;
+            transition: transform 0.1s;
+        }
+        .play-btn:active { transform: translateY(4px); box-shadow: none; }
+        .play-btn:disabled { background: #616161; box-shadow: none; color: #9e9e9e; cursor: not-allowed; }
+
+        /* GÖRSEL ALAN (GRID) */
+        .visual-stage {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             position: relative;
         }
 
-        /* Üst Menü */
-        .header {
-            background: var(--primary);
-            padding: 20px;
-            text-align: center;
+        /* Soru Metni */
+        .question-text {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-family: 'Chalkboard SE', sans-serif;
             color: white;
         }
 
-        .header h1 { margin: 0; font-size: 2rem; }
-        .score-board { 
-            background: rgba(0,0,0,0.1); 
-            padding: 5px 15px; 
-            border-radius: 20px; 
-            font-size: 1.2rem;
-            margin-top: 10px;
-            display: inline-block;
+        /* Grid Sistemi */
+        .calc-row {
+            display: flex;
+            gap: 5px;
+            align-items: flex-end;
+            visibility: hidden; /* Başta gizli */
         }
 
-        /* Sayfa İçeriği */
-        .content {
-            padding: 30px;
-            text-align: center;
-            min-height: 300px;
+        .digit-group {
             display: flex;
             flex-direction: column;
+            align-items: center;
+            position: relative;
+            width: 50px;
+        }
+
+        .box {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #90a4ae;
+            border-radius: 8px;
+            display: flex;
             justify-content: center;
             align-items: center;
-        }
-
-        /* Butonlar */
-        .btn {
-            background: var(--secondary);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.5rem;
-            border-radius: 50px;
-            cursor: pointer;
-            margin: 10px;
-            font-family: inherit;
-            font-weight: bold;
-            box-shadow: 0 5px 0 #e65100;
-            transition: all 0.1s;
-        }
-        .btn:active { transform: translateY(5px); box-shadow: none; }
-        .btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
-
-        .btn-mode { width: 80%; max-width: 300px; }
-
-        /* Soru Kartı */
-        .question-box {
-            font-size: 3.5rem;
-            font-weight: bold;
-            color: var(--text);
-            margin-bottom: 20px;
-        }
-        
-        .strategy-hint {
-            font-size: 1.2rem;
-            color: #78909c;
-            margin-bottom: 20px;
-            background: #eceff1;
-            padding: 10px 20px;
-            border-radius: 15px;
-        }
-
-        /* İnteraktif Alanlar */
-        .interactive-step {
-            display: none; /* JS ile açılacak */
-            background: #fff3e0;
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px dashed var(--secondary);
-            width: 100%;
-            max-width: 500px;
-        }
-
-        .interactive-step.active { display: block; animation: popIn 0.5s; }
-
-        input {
             font-size: 2rem;
-            padding: 10px;
-            width: 150px;
-            text-align: center;
-            border: 3px solid #ddd;
-            border-radius: 10px;
-            font-family: inherit;
             font-weight: bold;
-            color: var(--primary);
+            color: white;
+            position: relative;
+            background: #263238;
+            transition: all 0.5s;
         }
-        input:focus { border-color: var(--primary); outline: none; }
 
-        .feedback {
-            font-size: 1.5rem;
-            margin-top: 15px;
-            height: 40px;
+        /* Sıfırlar sonradan gelir */
+        .zero-box {
+            color: #ffb74d; /* Turuncu */
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        .zero-show { opacity: 1; transform: translateX(0); }
+
+        /* Sonuç Kutusu */
+        .res-box {
+            width: 50px;
+            height: 50px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
             font-weight: bold;
+            color: #69f0ae; /* Parlak yeşil */
+            border-bottom: 3px solid #69f0ae;
+            opacity: 0;
         }
-        .feedback.correct { color: var(--success); }
-        .feedback.wrong { color: var(--error); }
+        .res-show { opacity: 1; transform: translateY(0); }
 
-        /* Animasyonlar */
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        /* Elde Sayısı (Kırmızı küçük) */
+        .carry {
+            position: absolute;
+            top: -25px; /* Kutunun üstü */
+            left: -5px;
+            font-size: 1.2rem;
+            color: #ff5252;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s;
+        }
+        .carry-show { opacity: 1; transform: translateY(0); }
+
+        /* Vurgulama */
+        .active-calc {
+            border-color: #ffca28;
+            box-shadow: 0 0 15px rgba(255, 202, 40, 0.4);
+            z-index: 10;
         }
 
-        /* Progress Bar */
-        .progress-container {
-            width: 100%;
-            height: 10px;
-            background: #eee;
-            margin-top: 20px;
-            border-radius: 5px;
-            overflow: hidden;
+        .divider-sign {
+            font-size: 2rem;
+            margin-right: 10px;
+            color: #90a4ae;
+            align-self: center;
+            padding-bottom: 60px; /* Hizalama ayarı */
         }
-        .progress-bar {
-            height: 100%;
-            background: var(--success);
-            width: 0%;
-            transition: width 0.5s;
+
+        .reset-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #757575;
         }
+        .reset-icon:hover { color: white; }
 
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <div class="header">
-            <h1>🎓 Zihinden İşlem Ustası</h1>
-            <div class="score-board" id="scoreBoard">Puan: 0</div>
-        </div>
+    <h1>🎬 Matematik Sineması: Zihinden İşlemler</h1>
 
-        <div class="content" id="mainMenu">
-            <h2>Hangi Seviyede Çalışmak İstersin?</h2>
-            <button class="btn btn-mode" onclick="startGame('training', 5)">x5 (Başlangıç)</button>
-            <button class="btn btn-mode" onclick="startGame('training', 50)">x50 (Orta)</button>
-            <button class="btn btn-mode" onclick="startGame('training', 25)">x25 (İleri)</button>
-            <button class="btn btn-mode" onclick="startGame('training', 125)">x125 (Usta)</button>
-            <button class="btn btn-mode" style="background:#f44336; box-shadow:0 5px 0 #b71c1c" onclick="startChallenge()">🏆 KARIŞIK YARIŞMA</button>
-        </div>
-
-        <div class="content" id="gameArea" style="display:none;">
-            <div class="question-box" id="questionDisplay">24 x 25</div>
-            <div class="strategy-hint" id="hintDisplay">İpucu: Sayının sonuna 00 ekle, 4'e böl.</div>
-
-            <div class="interactive-step" id="step1">
-                <p id="step1Text">24'ün yanına sıfırları ekle:</p>
-                <input type="number" id="inputStep1" placeholder="?">
-                <button class="btn" style="padding:10px 20px; font-size:1rem;" onclick="checkStep1()">Kontrol Et</button>
-            </div>
-
-            <div class="interactive-step" id="step2">
-                <p id="step2Text">Şimdi 2400 sayısını 4'e böl:</p>
-                <input type="number" id="inputStep2" placeholder="?">
-                <button class="btn" style="padding:10px 20px; font-size:1rem;" onclick="checkStep2()">Sonucu Gir</button>
-            </div>
-
-            <div class="feedback" id="feedbackMsg"></div>
+    <div class="stage-container">
+        
+        <div class="panel">
+            <div class="reset-icon" onclick="resetPanel(1)">↺</div>
+            <div class="panel-header p1-head">SORU 1</div>
             
-            <button class="btn" id="nextBtn" style="display:none;" onclick="nextQuestion()">Sonraki Soru >></button>
-            <button class="btn" id="menuBtn" style="background:#78909c; box-shadow:0 5px 0 #546e7a; font-size:1rem;" onclick="showMenu()">Menüye Dön</button>
+            <div class="setup-area" id="setup-1">
+                <input type="number" id="inp-1" class="num-input" value="12">
+                <div class="mode-btns">
+                    <button class="setup-btn btn-5" onclick="setMode(1, 5, this)">x5</button>
+                    <button class="setup-btn btn-25" onclick="setMode(1, 25, this)">x25</button>
+                    <button class="setup-btn btn-50" onclick="setMode(1, 50, this)">x50</button>
+                    <button class="setup-btn btn-125" onclick="setMode(1, 125, this)">x125</button>
+                </div>
+            </div>
+
+            <div class="visual-stage" id="stage-1">
+                <div class="question-text" id="qtext-1">Sayı Seçin</div>
+                <div class="calc-row" id="grid-1"></div>
+            </div>
+
+            <button class="play-btn" id="btn-1" onclick="nextStep(1)">BAŞLAT</button>
+        </div>
+
+        <div class="panel">
+            <div class="reset-icon" onclick="resetPanel(2)">↺</div>
+            <div class="panel-header p2-head">SORU 2</div>
+            
+            <div class="setup-area" id="setup-2">
+                <input type="number" id="inp-2" class="num-input" value="16">
+                <div class="mode-btns">
+                    <button class="setup-btn btn-5" onclick="setMode(2, 5, this)">x5</button>
+                    <button class="setup-btn btn-25" onclick="setMode(2, 25, this)">x25</button>
+                    <button class="setup-btn btn-50" onclick="setMode(2, 50, this)">x50</button>
+                    <button class="setup-btn btn-125" onclick="setMode(2, 125, this)">x125</button>
+                </div>
+            </div>
+
+            <div class="visual-stage" id="stage-2">
+                <div class="question-text" id="qtext-2">Sayı Seçin</div>
+                <div class="calc-row" id="grid-2"></div>
+            </div>
+
+            <button class="play-btn" id="btn-2" onclick="nextStep(2)">BAŞLAT</button>
+        </div>
+
+        <div class="panel">
+            <div class="reset-icon" onclick="resetPanel(3)">↺</div>
+            <div class="panel-header p3-head">SORU 3</div>
+            
+            <div class="setup-area" id="setup-3">
+                <input type="number" id="inp-3" class="num-input" value="24">
+                <div class="mode-btns">
+                    <button class="setup-btn btn-5" onclick="setMode(3, 5, this)">x5</button>
+                    <button class="setup-btn btn-25" onclick="setMode(3, 25, this)">x25</button>
+                    <button class="setup-btn btn-50" onclick="setMode(3, 50, this)">x50</button>
+                    <button class="setup-btn btn-125" onclick="setMode(3, 125, this)">x125</button>
+                </div>
+            </div>
+
+            <div class="visual-stage" id="stage-3">
+                <div class="question-text" id="qtext-3">Sayı Seçin</div>
+                <div class="calc-row" id="grid-3"></div>
+            </div>
+
+            <button class="play-btn" id="btn-3" onclick="nextStep(3)">BAŞLAT</button>
         </div>
 
     </div>
 
     <script>
-        // --- DEĞİŞKENLER ---
-        let currentMode = ''; // 'training' veya 'challenge'
-        let currentFactor = 0;
-        let currentNumber = 0;
-        let score = 0;
-        let expandedNum = 0;
-        let finalResult = 0;
-        
-        // DOM Elementleri
-        const mainMenu = document.getElementById('mainMenu');
-        const gameArea = document.getElementById('gameArea');
-        const questionDisplay = document.getElementById('questionDisplay');
-        const hintDisplay = document.getElementById('hintDisplay');
-        const scoreBoard = document.getElementById('scoreBoard');
-        
-        const step1Div = document.getElementById('step1');
-        const step2Div = document.getElementById('step2');
-        const inp1 = document.getElementById('inputStep1');
-        const inp2 = document.getElementById('inputStep2');
-        const feedback = document.getElementById('feedbackMsg');
-        const nextBtn = document.getElementById('nextBtn');
-        const step1Text = document.getElementById('step1Text');
-        const step2Text = document.getElementById('step2Text');
-
-        // Ayarlar
-        const rules = {
-            5: { text: "10 ile çarp (0 ekle), 2'ye böl.", zeros: "0", div: 2 },
-            25: { text: "100 ile çarp (00 ekle), 4'e böl.", zeros: "00", div: 4 },
-            50: { text: "100 ile çarp (00 ekle), 2'ye böl.", zeros: "00", div: 2 },
-            125: { text: "1000 ile çarp (000 ekle), 8'e böl.", zeros: "000", div: 8 }
+        // Veri Yapısı
+        const states = {
+            1: { step: 0, factor: 0, div: 0, zeros: "", num: 0 },
+            2: { step: 0, factor: 0, div: 0, zeros: "", num: 0 },
+            3: { step: 0, factor: 0, div: 0, zeros: "", num: 0 }
         };
 
-        // --- OYUN BAŞLATMA ---
-        function showMenu() {
-            gameArea.style.display = 'none';
-            mainMenu.style.display = 'flex';
-            score = 0;
-            updateScore();
+        const rules = {
+            5: { div: 2, zeros: "0" },
+            25: { div: 4, zeros: "00" },
+            50: { div: 2, zeros: "00" },
+            125: { div: 8, zeros: "000" }
+        };
+
+        // 1. Kurulum (Öğretmen Seçimi)
+        function setMode(pid, factor, btn) {
+            // Buton görselliği
+            const allBtns = document.querySelectorAll(`#setup-${pid} .setup-btn`);
+            allBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const inputVal = document.getElementById(`inp-${pid}`).value;
+            states[pid].factor = factor;
+            states[pid].num = inputVal;
+            states[pid].step = 1; // Hazır durumuna geç
+            
+            // Soruyu Göster (İpucu yok, sadece işlem)
+            document.getElementById(`qtext-${pid}`).innerText = `${inputVal} x ${factor} = ?`;
+            document.getElementById(`grid-${pid}`).innerHTML = ''; // Temizle
+            
+            // Buton metnini güncelle
+            document.getElementById(`btn-${pid}`).innerText = "1. SIFIRLARI GÖSTER";
+            document.getElementById(`btn-${pid}`).disabled = false;
         }
 
-        function startGame(mode, factor) {
-            currentMode = mode;
-            currentFactor = factor;
-            score = 0;
-            updateScore();
-            
-            mainMenu.style.display = 'none';
-            gameArea.style.display = 'flex';
-            
-            generateQuestion();
-        }
+        // 2. Adım Kontrolcüsü (Tek Butonla Yönetim)
+        async function nextStep(pid) {
+            const state = states[pid];
+            const rule = rules[state.factor];
+            const btn = document.getElementById(`btn-${pid}`);
 
-        function startChallenge() {
-            currentMode = 'challenge';
-            score = 0;
-            updateScore();
-            mainMenu.style.display = 'none';
-            gameArea.style.display = 'flex';
-            generateQuestion();
-        }
-
-        // --- SORU ÜRETME ---
-        function generateQuestion() {
-            // Arayüzü Sıfırla
-            step1Div.classList.add('active');
-            step2Div.classList.remove('active');
-            nextBtn.style.display = 'none';
-            feedback.innerText = '';
-            inp1.value = '';
-            inp2.value = '';
-            inp1.disabled = false;
-            inp2.disabled = false;
-            
-            // Challenge modunda rastgele faktör seç
-            if (currentMode === 'challenge') {
-                const factors = [5, 25, 50, 125];
-                currentFactor = factors[Math.floor(Math.random() * factors.length)];
-            }
-
-            // Sayı üret (Bölünebilme kuralına uygun olması pratik için iyidir)
-            const rule = rules[currentFactor];
-            
-            // Öğrencinin kolay bölmesi için katları seçelim
-            // Örn: 4'e bölünecekse 4'ün katı bir sayı seçelim ki buçuklu çıkmasın (başlangıç için)
-            let multiplier = Math.floor(Math.random() * 20) + 2; 
-            currentNumber = multiplier * rule.div; 
-
-            // Soruyu Yaz
-            questionDisplay.innerText = `${currentNumber} x ${currentFactor}`;
-            hintDisplay.innerText = `İPUCU: ${rule.text}`;
-
-            // Adım 1 Metnini Hazırla
-            step1Text.innerHTML = `1. ADIM: <b>${currentNumber}</b> sayısının sonuna <b style='color:#ff9800'>${rule.zeros.length} tane sıfır</b> ekle:`;
-            
-            // Adım 2 Metnini Hazırla (Şimdilik gizli)
-            // Bu kısım checkStep1 içinde güncellenecek
-            
-            // Cevapları Hesapla
-            expandedNum = parseInt(currentNumber.toString() + rule.zeros);
-            finalResult = expandedNum / rule.div;
-
-            // Odaklan
-            inp1.focus();
-        }
-
-        // --- KONTROL MEKANİZMASI ---
-        function checkStep1() {
-            const userVal = parseInt(inp1.value);
-            if (userVal === expandedNum) {
-                feedback.innerText = "✅ Doğru! Sayıyı büyüttün.";
-                feedback.className = "feedback correct";
-                inp1.disabled = true; // Kitle
+            if (state.step === 1) {
+                // ADIM: SIFIRLARI EKLE (Animasyonlu)
+                // Grid'i hazırla
+                prepareGrid(pid, state.num, rule.zeros, rule.div);
                 
-                // Adım 2'ye geç
-                const rule = rules[currentFactor];
-                step2Text.innerHTML = `2. ADIM: Şimdi <b>${expandedNum}</b> sayısını <b style='color:#00bcd4'>${rule.div}'ye böl</b>:`;
-                step1Div.classList.remove('active');
-                step2Div.classList.add('active');
-                inp2.focus();
-            } else {
-                feedback.innerText = "❌ Hata! Sadece sayının sonuna sıfırları ekle.";
-                feedback.className = "feedback wrong";
-                shake(inp1);
+                // Soru metnini küçült veya kaldır
+                document.getElementById(`qtext-${pid}`).style.display = 'none';
+                document.getElementById(`grid-${pid}`).style.visibility = 'visible';
+                
+                // Sıfırları animasyonla göster
+                const zeroBoxes = document.querySelectorAll(`#grid-${pid} .zero-box`);
+                for(let box of zeroBoxes) {
+                    await wait(300);
+                    box.classList.add('zero-show');
+                }
+
+                btn.innerText = "2. BÖLME İŞLEMİNİ OYNAT";
+                state.step = 2;
+
+            } else if (state.step === 2) {
+                // ADIM: BÖLME ANİMASYONU
+                btn.disabled = true; // İşlem bitene kadar kilitle
+                await autoPlayDivision(pid, state.num + rule.zeros, rule.div);
+                
+                btn.innerText = "TEMİZLE / YENİ SORU";
+                btn.disabled = false;
+                state.step = 3;
+
+            } else if (state.step === 3) {
+                // SIFIRLA
+                resetPanel(pid);
             }
         }
 
-        function checkStep2() {
-            const userVal = parseInt(inp2.value);
-            if (userVal === finalResult) {
-                feedback.innerText = "🎉 MÜKEMMEL! Cevap Doğru.";
-                feedback.className = "feedback correct";
-                inp2.disabled = true;
-                
-                score += 10;
-                updateScore();
-                
-                step2Div.classList.remove('active'); // Gizle
-                nextBtn.style.display = 'inline-block';
-                nextBtn.focus();
-            } else {
-                feedback.innerText = "⚠️ Yanlış. Tekrar dene (Yarısını veya çeyreğini düşün).";
-                feedback.className = "feedback wrong";
-                shake(inp2);
+        // Grid Hazırlama
+        function prepareGrid(pid, numStr, zeros, divisor) {
+            const grid = document.getElementById(`grid-${pid}`);
+            grid.innerHTML = '';
+
+            // Bölen İşareti
+            const divSign = document.createElement('div');
+            divSign.className = 'divider-sign';
+            divSign.innerHTML = `÷ ${divisor}`;
+            grid.appendChild(divSign);
+
+            const fullStr = numStr + zeros;
+            
+            // Rakam Kutuları
+            for(let i=0; i < fullStr.length; i++) {
+                const isZero = i >= numStr.length;
+                const digit = fullStr[i];
+
+                const group = document.createElement('div');
+                group.className = 'digit-group';
+                group.id = `p${pid}-g-${i}`;
+
+                // Elde
+                const carry = document.createElement('div');
+                carry.className = 'carry';
+                carry.id = `p${pid}-c-${i}`;
+                group.appendChild(carry);
+
+                // Kutu
+                const box = document.createElement('div');
+                box.className = `box ${isZero ? 'zero-box' : ''}`;
+                box.innerText = digit;
+                box.id = `p${pid}-b-${i}`;
+                group.appendChild(box);
+
+                // Sonuç (Başta gizli)
+                const res = document.createElement('div');
+                res.className = 'res-box';
+                res.id = `p${pid}-r-${i}`;
+                group.appendChild(res);
+
+                grid.appendChild(group);
             }
         }
 
-        function nextQuestion() {
-            generateQuestion();
+        // Otomatik Bölme Animasyonu (Taşıma Mantığı ile)
+        async function autoPlayDivision(pid, fullNumberStr, divisor) {
+            const digits = fullNumberStr.split('').map(Number);
+            let remainder = 0;
+
+            for(let i=0; i < digits.length; i++) {
+                const box = document.getElementById(`p${pid}-b-${i}`);
+                const resBox = document.getElementById(`p${pid}-r-${i}`);
+                
+                // 1. Kutuyu Vurgula
+                box.classList.add('active-calc');
+                await wait(800);
+
+                // 2. Mevcut Değeri Hesapla (Elde + Rakam)
+                let currentVal = parseInt(remainder.toString() + digits[i].toString());
+                
+                // 3. Bölme
+                let quotient = Math.floor(currentVal / divisor);
+                let newRemainder = currentVal % divisor;
+
+                // 4. Sonucu Yaz (Animasyonla)
+                resBox.innerText = quotient;
+                resBox.classList.add('res-show');
+                
+                // 5. Elde Varsa Sonraki Kutuya Gönder
+                if(i < digits.length - 1) {
+                    if (newRemainder > 0) {
+                        const nextCarry = document.getElementById(`p${pid}-c-${i+1}`);
+                        
+                        // Uçan sayı efekti eklenebilir ama basitlik için direkt belirsin
+                        await wait(500);
+                        nextCarry.innerText = newRemainder;
+                        nextCarry.classList.add('carry-show');
+                        
+                        // Sonraki kutunun üzerine görsel etki
+                        const nextBox = document.getElementById(`p${pid}-b-${i+1}`);
+                        nextBox.style.borderColor = "#ff5252"; // Kırmızı uyarısı
+                        setTimeout(() => nextBox.style.borderColor = "#90a4ae", 800);
+                    }
+                }
+
+                // Vurguyu Kaldır
+                await wait(500);
+                box.classList.remove('active-calc');
+                
+                remainder = newRemainder;
+            }
         }
 
-        function updateScore() {
-            scoreBoard.innerText = `Puan: ${score}`;
+        function resetPanel(pid) {
+            states[pid].step = 0;
+            document.getElementById(`qtext-${pid}`).style.display = 'block';
+            document.getElementById(`qtext-${pid}`).innerText = 'Sayı Seçin';
+            document.getElementById(`grid-${pid}`).innerHTML = '';
+            document.getElementById(`grid-${pid}`).style.visibility = 'hidden';
+            
+            // Ayar butonlarını sıfırla
+            const allBtns = document.querySelectorAll(`#setup-${pid} .setup-btn`);
+            allBtns.forEach(b => b.classList.remove('active'));
+            
+            // Ana butonu sıfırla
+            const btn = document.getElementById(`btn-${pid}`);
+            btn.innerText = "BAŞLAT";
+            btn.disabled = false; // "false" olmalı ki yeniden basılabilsin
         }
 
-        // Görsel efekt: Titreme (Hata durumunda)
-        function shake(element) {
-            element.style.transform = "translateX(10px)";
-            setTimeout(() => {
-                element.style.transform = "translateX(-10px)";
-                setTimeout(() => {
-                    element.style.transform = "translateX(0)";
-                }, 100);
-            }, 100);
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
-
-        // Enter tuşu desteği
-        inp1.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") checkStep1();
-        });
-        inp2.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") checkStep2();
-        });
-
     </script>
 </body>
 </html>
