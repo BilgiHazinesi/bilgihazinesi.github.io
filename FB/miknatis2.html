@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fen Bilimleri: Mıknatıs Dünyası (Düzeltilmiş V9)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --n-color: #e74c3c; /* Kırmızı */
+            --s-color: #2980b9; /* Mavi */
+            --bg-color: #f1f2f6;
+        }
+
+        body {
+            font-family: 'Comic Neue', cursive;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+        }
+
+        /* --- MENÜ --- */
+        .nav-container {
+            display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;
+        }
+        .nav-btn {
+            padding: 12px 25px; border: none; border-radius: 50px; cursor: pointer;
+            font-size: 1.2rem; font-weight: bold; color: #555; background: white;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1); transition: 0.2s;
+        }
+        .nav-btn.active { background: #2c3e50; color: white; transform: translateY(2px); box-shadow: none; }
+
+        /* --- PANELLER --- */
+        .panel { display: none; width: 100%; max-width: 1100px; animation: fadeIn 0.4s; }
+        .panel.active { display: block; }
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+
+        /* --- SERBEST LAB STİLLERİ --- */
+        #lab-area {
+            height: 550px; background-color: white;
+            background-image: radial-gradient(#bdc3c7 2px, transparent 2px);
+            background-size: 30px 30px;
+            border: 4px solid #34495e; border-radius: 20px;
+            position: relative; overflow: hidden; touch-action: none;
+        }
+        .lab-toolbar { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
+        .tool-btn {
+            padding: 10px 20px; border: none; border-radius: 10px; color: white; 
+            font-weight: bold; cursor: pointer; font-size: 1rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s;
+        }
+        .tool-btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn-add { background: #27ae60; }
+        .btn-break { background: #f39c12; }
+        .btn-del { background: #c0392b; }
+        .btn-clear { background: #7f8c8d; }
+        .mode-on { border: 3px solid #333; transform: translateY(2px); box-shadow: none; }
+
+        .magnet {
+            position: absolute; display: flex;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-radius: 4px; cursor: grab; font-weight: bold; color: white;
+            align-items: center; justify-content: center; font-size: 1.2rem;
+            z-index: 10; border: 2px solid white;
+        }
+        .pole { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .pole.n { background: var(--n-color); }
+        .pole.s { background: var(--s-color); }
+
+        /* --- SORU SİMÜLASYONU STİLLERİ --- */
+        .grid-questions { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media(max-width: 800px) { .grid-questions { grid-template-columns: 1fr; } }
+
+        .q-card {
+            background: white; border-radius: 20px; height: 500px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); position: relative;
+            border-bottom: 5px solid #95a5a6; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .q-header { padding: 15px; text-align: center; background: #ecf0f1; font-weight: bold; font-size: 1.3rem; color: #2c3e50; }
+        .q-canvas { flex: 1; position: relative; overflow: hidden; }
+
+        /* Yay Stilleri */
+        #spring-path { fill: none; stroke: #34495e; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+        .q-mag {
+            width: 80px; height: 100px; position: absolute; display: flex; flex-direction: column;
+            border-radius: 5px; font-weight: bold; color: white; font-size: 1.2rem;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2); z-index: 5; border: 2px solid #555;
+        }
+        .q-pole { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; }
+        .q-pole.n { background-color: var(--n-color) !important; }
+        .q-pole.s { background-color: var(--s-color) !important; }
+
+        /* İp Stilleri */
+        .pendulum {
+            position: absolute; top: 0; width: 4px; height: 250px; transform-origin: top center;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .string-line { width: 2px; height: 100%; background: #333; margin: 0 auto; }
+        .mag-hor {
+            width: 100px; height: 40px; position: absolute; bottom: 0; left: -48px; 
+            display: flex; border-radius: 4px; font-weight: bold; color: white; 
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2); border: 2px solid #555;
+        }
+
+        .q-controls { padding: 10px; display: flex; justify-content: center; gap: 10px; background: #eee; }
+
+        /* --- GALERİ STİLLERİ --- */
+        .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; padding: 20px; }
+        .gallery-item { background: white; padding: 20px; border-radius: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="nav-container">
+        <button class="nav-btn active" onclick="openTab('tab-lab', this)">1. Serbest Laboratuvar</button>
+        <button class="nav-btn" onclick="openTab('tab-questions', this)">2. Soru Simülasyonu</button>
+        <button class="nav-btn" onclick="openTab('tab-gallery', this)">3. Mıknatıs Çeşitleri</button>
+    </div>
+
+    <div id="tab-lab" class="panel active">
+        <div class="lab-toolbar">
+            <button class="tool-btn btn-add" onclick="labAddMagnet()">➕ Ekle</button>
+            <button class="tool-btn btn-break" id="btn-break" onclick="labToggleBreak()">🔨 Kırma Modu</button>
+            <button class="tool-btn btn-del" id="btn-del" onclick="labToggleDel()">🗑️ Silme Modu</button>
+            <button class="tool-btn btn-clear" onclick="labClear()">✨ Temizle</button>
+        </div>
+        <div style="text-align:center; color:#777; margin-bottom:5px;">Çevirmek için mıknatısa <b>çift tıklayın</b>. Kırmak için modu açıp mıknatısa tıklayın.</div>
+        <div id="lab-area"></div>
+    </div>
+
+    <div id="tab-questions" class="panel">
+        <div class="grid-questions">
+            
+            <div class="q-card">
+                <div class="q-header">Yay Sorusu (İtme/Çekme)</div>
+                <div class="q-canvas" id="spring-canvas">
+                    <svg width="60" height="400" style="position:absolute; left:50%; transform:translateX(-50%); overflow:visible;">
+                        <path id="spring-path" d="" />
+                    </svg>
+
+                    <div id="s-top" class="q-mag" style="top:100px; left:50%; transform:translateX(-50%);">
+                        <div class="q-pole s">S</div>
+                        <div class="q-pole n">N</div>
+                    </div>
+
+                    <div id="s-bot" class="q-mag" style="top:320px; left:50%; transform:translateX(-50%); cursor:ns-resize;">
+                        <div class="q-pole s">S</div>
+                        <div class="q-pole n">N</div>
+                    </div>
+                </div>
+                <div class="q-controls">
+                    <button class="tool-btn btn-break" onclick="flipSpringBot()">Alttakini Çevir 🔄</button>
+                </div>
+            </div>
+
+            <div class="q-card">
+                <div class="q-header">Sarkaç Sorusu (Açı Değişimi)</div>
+                <div class="q-canvas" id="string-canvas">
+                    <div style="position:absolute; top:0; width:100%; height:20px; background:repeating-linear-gradient(45deg,#333,#333 10px,#555 10px,#555 20px);"></div>
+                    
+                    <div id="p-left" class="pendulum" style="left:30%;">
+                        <div class="string-line"></div>
+                        <div class="mag-hor" id="pm-left">
+                            <div class="q-pole n">N</div>
+                            <div class="q-pole s">S</div>
+                        </div>
+                    </div>
+
+                    <div id="p-right" class="pendulum" style="left:70%; cursor:ew-resize;">
+                        <div style="position:absolute; top:50%; left:5px; background:#eee; padding:2px; font-size:0.7rem; pointer-events:none;">↔ Tut</div>
+                        <div class="string-line"></div>
+                        <div class="mag-hor" id="pm-right">
+                            <div class="q-pole n">N</div>
+                            <div class="q-pole s">S</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="q-controls">
+                    <button class="tool-btn btn-break" onclick="flipPendulum('pm-left')">Solu Çevir 🔄</button>
+                    <button class="tool-btn btn-break" onclick="flipPendulum('pm-right')">Sağı Çevir 🔄</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="tab-gallery" class="panel">
+        <div class="gallery">
+            <div class="gallery-item">
+                <svg width="100" height="120" viewBox="0 0 100 120" style="margin:auto;">
+                    <path d="M15,120 V50 C15,10 85,10 85,50 V120 H65 V50 C65,30 35,30 35,50 V120 Z" fill="#ccc" stroke="#333" stroke-width="2"/>
+                    <path d="M15,120 V90 H35 V120 Z" fill="#e74c3c"/>
+                    <path d="M85,120 V90 H65 V120 Z" fill="#2980b9"/>
+                    <text x="20" y="110" fill="white" font-weight="bold">N</text>
+                    <text x="70" y="110" fill="white" font-weight="bold">S</text>
+                </svg>
+                <span style="display:block;margin-top:10px;font-weight:bold;">At Nalı Mıknatıs</span>
+            </div>
+            <div class="gallery-item">
+                <div style="width:120px; height:30px; display:flex; margin:45px auto; border-radius:4px; overflow:hidden;">
+                    <div style="width:50%; background:#e74c3c; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center;">N</div>
+                    <div style="width:50%; background:#2980b9; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center;">S</div>
+                </div>
+                <span style="display:block;margin-top:10px;font-weight:bold;">Çubuk Mıknatıs</span>
+            </div>
+             <div class="gallery-item">
+                <div style="width:70px; height:70px; border-radius:50%; background:radial-gradient(#999, #333); margin:25px auto;"></div>
+                <span style="display:block;margin-top:10px;font-weight:bold;">Yuvarlak Mıknatıs</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openTab(id, btn) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+            if(id === 'tab-questions') {
+                updateSpring(); updatePendulum();
+            }
+        }
+
+        /* --------------------------------------------------------
+           1. SERBEST LABORATUVAR (Değişiklik Yok - Sorunsuz)
+           -------------------------------------------------------- */
+        const labArea = document.getElementById('lab-area');
+        let labMagnets = [];
+        let labMode = 'move';
+
+        function labToggleBreak() { labMode = (labMode==='break')?'move':'break'; updateLabUI(); }
+        function labToggleDel() { labMode = (labMode==='delete')?'move':'delete'; updateLabUI(); }
+        function updateLabUI() {
+            document.getElementById('btn-break').classList.remove('mode-on');
+            document.getElementById('btn-del').classList.remove('mode-on');
+            labArea.style.cursor = 'default';
+            if(labMode==='break') { document.getElementById('btn-break').classList.add('mode-on'); labArea.style.cursor='crosshair'; }
+            if(labMode==='delete') { document.getElementById('btn-del').classList.add('mode-on'); labArea.style.cursor='not-allowed'; }
+        }
+        
+        class LabMagnet {
+            constructor(x, y, w, h) {
+                this.x = x; this.y = y; this.w = w || 160; this.h = h || 40;
+                this.vx = 0; this.vy = 0; this.flipped = false; this.dragging = false;
+                this.el = document.createElement('div'); this.el.className = 'magnet';
+                this.render();
+                this.el.addEventListener('mousedown', e => this.onStart(e));
+                this.el.addEventListener('touchstart', e => this.onStart(e), {passive:false});
+                this.el.addEventListener('dblclick', () => { if(labMode==='move') { this.flipped=!this.flipped; this.render(); } });
+                labArea.appendChild(this.el); this.updatePos();
+            }
+            render() {
+                this.el.style.width = this.w+'px'; this.el.style.height = this.h+'px';
+                this.el.innerHTML = this.flipped ? 
+                    `<div class="pole s">S</div><div class="pole n">N</div>` : 
+                    `<div class="pole n">N</div><div class="pole s">S</div>`;
+            }
+            onStart(e) {
+                e.stopPropagation();
+                if(labMode==='delete') { this.destroy(); return; }
+                if(labMode==='break') {
+                    if(this.w<60) return; this.destroy();
+                    let nw = (this.w/2)-5;
+                    let m1 = new LabMagnet(this.x, this.y, nw, this.h);
+                    let m2 = new LabMagnet(this.x+nw+10, this.y, nw, this.h);
+                    m1.flipped=this.flipped; m2.flipped=this.flipped;
+                    m1.vx=-3; m2.vx=3; labMagnets.push(m1, m2); return;
+                }
+                this.dragging = true;
+                const cx = e.clientX||e.touches[0].clientX; const cy = e.clientY||e.touches[0].clientY;
+                this.offX = cx-this.x; this.offY = cy-this.y;
+            }
+            destroy() { this.el.remove(); labMagnets = labMagnets.filter(m=>m!==this); }
+            updatePos() { this.el.style.left = this.x+'px'; this.el.style.top = this.y+'px'; }
+        }
+        
+        window.addEventListener('mousemove', e=>{ labMagnets.forEach(m=>{ if(m.dragging){ m.x=e.clientX-m.offX; m.y=e.clientY-m.offY; m.updatePos(); }})});
+        window.addEventListener('mouseup', ()=>{ labMagnets.forEach(m=>m.dragging=false)});
+        window.addEventListener('touchmove', e=>{ labMagnets.forEach(m=>{ if(m.dragging){ m.x=e.touches[0].clientX-m.offX; m.y=e.touches[0].clientY-m.offY; m.updatePos(); }})}, {passive:false});
+        window.addEventListener('touchend', ()=>{ labMagnets.forEach(m=>m.dragging=false)});
+
+        function labLoop() {
+            for(let i=0; i<labMagnets.length; i++) {
+                let m1 = labMagnets[i]; if(m1.dragging) continue;
+                for(let j=0; j<labMagnets.length; j++) {
+                    if(i===j) continue; let m2 = labMagnets[j];
+                    let dx = (m2.x+m2.w/2) - (m1.x+m1.w/2); let dy = (m2.y+m2.h/2) - (m1.y+m1.h/2);
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist<50 || dist>300) continue;
+                    let isM2Right = (m2.x+m2.w/2) > (m1.x+m1.w/2);
+                    let p1 = isM2Right ? (m1.flipped?'n':'s') : (m1.flipped?'s':'n');
+                    let p2 = isM2Right ? (m2.flipped?'s':'n') : (m2.flipped?'n':'s');
+                    let force = (p1!==p2) ? 1 : -1; 
+                    let fVal = 1500/(dist*dist);
+                    m1.vx += (dx/dist)*fVal*force; m1.vy += (dy/dist)*fVal*force;
+                }
+                m1.x+=m1.vx; m1.y+=m1.vy; m1.vx*=0.92; m1.vy*=0.92;
+                if(m1.x<0) m1.x=0; if(m1.y<0) m1.y=0; 
+                if(m1.x>labArea.clientWidth-m1.w) m1.x=labArea.clientWidth-m1.w;
+                if(m1.y>labArea.clientHeight-m1.h) m1.y=labArea.clientHeight-m1.h;
+                m1.updatePos();
+            }
+            requestAnimationFrame(labLoop);
+        }
+        function labAddMagnet() { labMagnets.push(new LabMagnet(50+Math.random()*200, 50+Math.random()*200)); }
+        function labClear() { labMagnets.forEach(m=>m.el.remove()); labMagnets=[]; }
+        labAddMagnet(); labAddMagnet(); labLoop();
+
+        /* --------------------------------------------------------
+           2. SORU SİMÜLASYONU (FİZİK DÜZELTİLDİ)
+           -------------------------------------------------------- */
+        
+        // --- YAY ---
+        const sTop = document.getElementById('s-top');
+        const sBot = document.getElementById('s-bot');
+        const sPath = document.getElementById('spring-path');
+        let sDragging = false;
+        
+        // BAŞLANGIÇ KUTUP DURUMLARI
+        // sTop: HTML'de S üstte, N altta. Yani alt yüzü 'N'.
+        // sBot: HTML'de S üstte, N altta. Yani üst yüzü 'S'.
+        // Bu durumda N ve S bakışıyor -> ÇEKMELİ.
+        let sBotFlipped = false; // False: Üstü S. True: Üstü N.
+
+        sBot.addEventListener('mousedown', ()=>sDragging=true);
+        window.addEventListener('mouseup', ()=>sDragging=false);
+        document.getElementById('spring-canvas').addEventListener('mousemove', e=>{
+            if(!sDragging) return;
+            const rect = document.getElementById('spring-canvas').getBoundingClientRect();
+            let y = e.clientY - rect.top - 50; 
+            if(y<180) y=180; if(y>380) y=380;
+            sBot.style.top = y + 'px';
+            updateSpring();
+        });
+
+        function flipSpringBot() {
+            sBotFlipped = !sBotFlipped;
+            // Görseli güncelle
+            sBot.innerHTML = sBotFlipped ? 
+                `<div class="q-pole n">N</div><div class="q-pole s">S</div>` : 
+                `<div class="q-pole s">S</div><div class="q-pole n">N</div>`;
+            updateSpring();
+        }
+
+        function updateSpring() {
+            // Fizik Mantığı:
+            // Üst Mıknatıs (Sabit): Alt yüzü N.
+            // Alt Mıknatıs (Hareketli):
+            //   - Normal (sBotFlipped=false): Üst yüzü S. -> N ve S (ZIT) -> ÇEKER.
+            //   - Ters (sBotFlipped=true): Üst yüzü N. -> N ve N (AYNI) -> İTER.
+            
+            let isAttracting = !sBotFlipped; // S (false) ise çeker.
+            
+            let topY = 100 + 100; // Üst mıknatısın alt noktası
+            let botY = parseInt(sBot.style.top); // Alt mıknatısın üst noktası
+            let dist = botY - topY;
+
+            let offset = 0;
+            if(dist < 150) {
+                let force = (150 - dist) / 2;
+                // ÇEKME: Yay UZAR (Aşağı iner, +offset).
+                // İTME: Yay SIKIŞIR (Yukarı çıkar, -offset).
+                offset = isAttracting ? force : -force;
+            }
+
+            let newH = 100 + offset;
+            sTop.style.top = newH + 'px';
+
+            // Yay Çizimi
+            let coils = 8;
+            let path = `M30,0 L30,20`;
+            for(let i=0; i<coils; i++) {
+                let x = (i%2===0)?50:10;
+                let y = 20 + (i * (newH-20)/coils);
+                path += ` L${x},${y}`;
+            }
+            path += ` L30,${newH}`;
+            sPath.setAttribute('d', path);
+        }
+
+        // --- İP ---
+        const pLeft = document.getElementById('p-left');
+        const pRight = document.getElementById('p-right');
+        const pmLeft = document.getElementById('pm-left');
+        const pmRight = document.getElementById('pm-right');
+        let pDragging = false;
+
+        // BAŞLANGIÇ KUTUP DURUMLARI
+        // Sol Sarkaç: HTML'de N-S. Sağ ucu 'S'.
+        // Sağ Sarkaç: HTML'de N-S. Sol ucu 'N'.
+        // S ve N bakışıyor -> ÇEKMELİ.
+        let leftFlipped = false; // False: Sağ ucu S. True: Sağ ucu N.
+        let rightFlipped = false; // False: Sol ucu N. True: Sol ucu S.
+
+        pRight.addEventListener('mousedown', ()=>pDragging=true);
+        window.addEventListener('mouseup', ()=>pDragging=false);
+        document.getElementById('string-canvas').addEventListener('mousemove', e=>{
+            if(!pDragging) return;
+            const rect = document.getElementById('string-canvas').getBoundingClientRect();
+            let x = ((e.clientX - rect.left)/rect.width)*100;
+            if(x<35) x=35; if(x>90) x=90;
+            pRight.style.left = x + '%';
+            updatePendulum();
+        });
+
+        function flipPendulum(id) {
+            const el = document.getElementById(id);
+            if(id==='pm-left') leftFlipped = !leftFlipped;
+            if(id==='pm-right') rightFlipped = !rightFlipped;
+
+            // Görsel Güncelleme
+            let isFlipped = (id==='pm-left') ? leftFlipped : rightFlipped;
+            el.innerHTML = isFlipped ? 
+                `<div class="q-pole s">S</div><div class="q-pole n">N</div>` : 
+                `<div class="q-pole n">N</div><div class="q-pole s">S</div>`;
+            
+            updatePendulum();
+        }
+
+        function updatePendulum() {
+            // Fizik Mantığı:
+            // Solun Sağı (İç Yüz): Normal ise S, Ters ise N.
+            // Sağın Solu (İç Yüz): Normal ise N, Ters ise S.
+            
+            let poleL = leftFlipped ? 'N' : 'S';
+            let poleR = rightFlipped ? 'S' : 'N';
+
+            let isAttracting = (poleL !== poleR); // Zıt ise Çeker.
+
+            let lx = 30; 
+            let rx = parseFloat(pRight.style.left);
+            let dist = rx - lx;
+
+            let angle = 0;
+            if(dist < 35) {
+                angle = (35 - dist) * 1.5;
+                if(angle > 20) angle = 20;
+            }
+
+            if(isAttracting) {
+                // ÇEKME: İpler İÇERİ (/ \)
+                // Sol ip: Sağa döner (+). Sağ ip: Sola döner (-).
+                pLeft.style.transform = `rotate(${angle}deg)`;
+                pRight.style.transform = `rotate(${-angle}deg)`;
+            } else {
+                // İTME: İpler DIŞARI (\ /)
+                // Sol ip: Sola döner (-). Sağ ip: Sağa döner (+).
+                pLeft.style.transform = `rotate(${-angle}deg)`;
+                pRight.style.transform = `rotate(${angle}deg)`;
+            }
+        }
+
+        // Başlat
+        updateSpring();
+        updatePendulum();
+
+    </script>
+</body>
+</html>
