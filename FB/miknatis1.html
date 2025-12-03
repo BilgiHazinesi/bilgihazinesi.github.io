@@ -2,183 +2,538 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Neon Yılan Oyunu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mıknatıs Dedektifi V17 (Hassas Yapışma)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --n-color: #ff0000;
+            --s-color: #0044ff;
+            --bg-color: #f0f2f5;
+            --unknown-bg: #dfe6e9;
+        }
+
         body {
-            background-color: #1a1a1a;
-            color: white;
+            font-family: 'Comic Neue', cursive;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 5px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            touch-action: none;
         }
 
-        h2 {
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px #00ffcc;
+        /* Navigasyon */
+        .nav-container { display: flex; gap: 5px; margin-bottom: 5px; justify-content: center; width: 100%; flex-wrap: wrap; }
+        .nav-btn {
+            padding: 8px 15px; border: none; border-radius: 20px; cursor: pointer;
+            font-weight: bold; color: #555; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-btn.active { background: #2c3e50; color: white; transform: scale(1.05); }
+
+        .panel { display: none; width: 100%; max-width: 900px; height: 90vh; }
+        .panel.active { display: block; }
+
+        .card {
+            background: white; border-radius: 15px; height: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative;
+            border: 2px solid #ccc; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        canvas {
-            border: 2px solid #00ffcc;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-            background-color: #000;
+        .header { background: #dfe6e9; padding: 10px; text-align: center; font-weight: bold; color: #2d3436; border-bottom: 2px solid #b2bec3; }
+        .workspace { flex: 1; position: relative; overflow: hidden; background-image: radial-gradient(#b2bec3 2px, transparent 2px); background-size: 20px 20px; }
+        
+        /* Kontrol Alanı */
+        .control-board {
+            background: #eee; padding: 10px; border-top: 3px solid #b2bec3;
+            display: flex; flex-direction: column; gap: 5px; z-index: 20; overflow-y: auto; max-height: 200px;
         }
+        .ctrl-row { display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .ctrl-label { font-size: 0.8rem; font-weight: bold; width: 80px; text-align: right; }
+        .pole-btn {
+            padding: 5px 10px; border: 2px solid #aaa; border-radius: 5px; cursor: pointer;
+            font-size: 0.75rem; font-weight: bold; background: white;
+        }
+        .pole-btn.active { background: #2d3436; color: white; border-color: #000; }
 
-        #scoreBoard {
-            font-size: 20px;
-            margin-top: 10px;
+        /* Mıknatıs Genel */
+        .pole { 
+            flex: 1; display: flex; align-items: center; justify-content: center; 
+            height: 100%; color: white; font-size: 1.2rem; text-shadow: 1px 1px 2px black; cursor: pointer;
         }
+        .pole.n { background: var(--n-color); }
+        .pole.s { background: var(--s-color); }
+        
+        /* GİZLİ VE TAHMİN MODU */
+        .pole.unknown { background: var(--unknown-bg); color: #636e72; text-shadow: none; }
+        .pole.unknown::after { content: '?'; font-size: 1.5rem; opacity: 0.5; }
+        
+        /* Çizgiler */
+        .q-mag .pole:first-child { border-right: 1px solid rgba(0,0,0,0.2); }
+        .q-mag .pole:last-child { border-left: 1px solid rgba(0,0,0,0.2); }
 
-        .btn {
-            margin-top: 15px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #00ffcc;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 5px;
-            color: #000;
-            transition: 0.3s;
+        .lab-mag {
+            position: absolute; display: flex; width: 120px; height: 40px;
+            border-radius: 4px; border: 2px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            font-weight: bold; cursor: grab; z-index: 10;
+            /* Donanım hızlandırma için */
+            transform: translate3d(0,0,0);
         }
+        .q-mag {
+            position: absolute; display: flex; border: 2px solid #555;
+            font-weight: bold; color: white; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 5;
+        }
+        .q-mag.vertical { width: 60px; height: 90px; flex-direction: column; }
+        .q-mag.horizontal { width: 100px; height: 35px; flex-direction: row; }
 
-        .btn:hover {
-            background-color: #fff;
-            box-shadow: 0 0 15px #fff;
+        .pendulum {
+            position: absolute; top: 0; width: 40px; height: 230px;
+            transform-origin: top center; display: flex; justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: grab;
         }
+        .pendulum-string { width: 3px; height: 100%; background: #2d3436; pointer-events: none; }
+        .drag-handle {
+            position: absolute; top: 0; width: 40px; height: 40px; background: rgba(0,0,0,0.05); 
+            border-radius: 50%; cursor: ew-resize; display: flex; align-items: center; justify-content: center; font-size:1.2rem; color:#555;
+        }
+        #spring-path { fill: none; stroke: #2d3436; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+
+        .lab-controls { padding: 10px; background: #eee; display: flex; justify-content: center; gap: 10px; }
+        .l-btn { padding: 8px 15px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; }
+
+        /* Galeri */
+        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; overflow-y: auto; }
+        .gallery-item { text-align: center; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
     </style>
 </head>
 <body>
 
-    <h2>NEON YILAN</h2>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <div id="scoreBoard">Puan: 0</div>
-    <button class="btn" onclick="startGame()">Oyunu Başlat / Yenile</button>
+    <div class="nav-container">
+        <button class="nav-btn active" onclick="showTab(1)">1. Serbest Lab</button>
+        <button class="nav-btn" onclick="showTab(2)">2. Yay Sorusu</button>
+        <button class="nav-btn" onclick="showTab(3)">3. İp Sorusu</button>
+        <button class="nav-btn" onclick="showTab(4)">4. Çeşitler</button>
+    </div>
+
+    <div id="tab1" class="panel active">
+        <div class="card">
+            <div class="header">Serbest Deney Alanı (Uç Uca Yapışma)</div>
+            <div class="workspace" id="lab-space"></div>
+            <div class="lab-controls">
+                <button class="l-btn" style="background:#27ae60" onclick="labAdd()">➕ Ekle</button>
+                <button class="l-btn" id="btn-break" style="background:#f39c12" onclick="labToggleBreak()">🔨 Kır</button>
+                <button class="l-btn" id="btn-del" style="background:#c0392b" onclick="labToggleDel()">🗑️ Sil</button>
+                <button class="l-btn" style="background:#7f8c8d" onclick="labClear()">Temizle</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab2" class="panel">
+        <div class="card">
+            <div class="header">Yay Sorusu (Kutupları Bul)</div>
+            <div class="workspace" id="spring-space">
+                <svg width="60" height="600" style="position:absolute; left:50%; transform:translateX(-50%); overflow:visible;">
+                    <path id="spring-path" d="" />
+                </svg>
+                <div id="s-top" class="q-mag vertical" style="top:50px; left:50%; transform:translateX(-50%);"></div>
+                <div id="s-bot" class="q-mag vertical" style="top:300px; left:50%; transform:translateX(-50%); cursor:ns-resize;"></div>
+            </div>
+            <div class="control-board">
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Üst:</span>
+                    <button class="pole-btn" onclick="setSpringReal('top','ns')">N-S</button>
+                    <button class="pole-btn" onclick="setSpringReal('top','sn')">S-N</button>
+                    <button class="pole-btn active" onclick="setSpringGameMode('top', true)">GİZLE</button>
+                    <button class="pole-btn" onclick="setSpringGameMode('top', false)">AÇ</button>
+                </div>
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Alt:</span>
+                    <button class="pole-btn" onclick="setSpringReal('bot','ns')">N-S</button>
+                    <button class="pole-btn" onclick="setSpringReal('bot','sn')">S-N</button>
+                    <button class="pole-btn active" onclick="setSpringGameMode('bot', true)">GİZLE</button>
+                    <button class="pole-btn" onclick="setSpringGameMode('bot', false)">AÇ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab3" class="panel">
+        <div class="card">
+            <div class="header">3'lü Sarkaç - Dedektif Modu</div>
+            <div class="workspace" id="string-space">
+                <div style="width:100%; height:15px; background:#2d3436;"></div>
+                <div id="p1" class="pendulum" style="left:20%;">
+                    <div class="drag-handle">↔</div><div class="pendulum-string"></div>
+                    <div class="q-mag horizontal" style="bottom:0;" id="m1"></div>
+                </div>
+                <div id="p2" class="pendulum" style="left:50%;">
+                    <div class="drag-handle">↔</div><div class="pendulum-string"></div>
+                    <div class="q-mag horizontal" style="bottom:0;" id="m2"></div>
+                </div>
+                <div id="p3" class="pendulum" style="left:80%;">
+                    <div class="drag-handle">↔</div><div class="pendulum-string"></div>
+                    <div class="q-mag horizontal" style="bottom:0;" id="m3"></div>
+                </div>
+            </div>
+            <div class="control-board">
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Mıknatıs 1:</span>
+                    <button class="pole-btn" onclick="setStringReal(1, 'ns')">N-S</button>
+                    <button class="pole-btn" onclick="setStringReal(1, 'sn')">S-N</button>
+                    <button class="pole-btn" onclick="revealString(1)">AÇ</button>
+                </div>
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Mıknatıs 2:</span>
+                    <button class="pole-btn" onclick="setStringReal(2, 'ns')">N-S</button>
+                    <button class="pole-btn" onclick="setStringReal(2, 'sn')">S-N</button>
+                    <button class="pole-btn" onclick="revealString(2)">AÇ</button>
+                </div>
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Mıknatıs 3:</span>
+                    <button class="pole-btn" onclick="setStringReal(3, 'ns')">N-S</button>
+                    <button class="pole-btn" onclick="setStringReal(3, 'sn')">S-N</button>
+                    <button class="pole-btn" onclick="revealString(3)">AÇ</button>
+                </div>
+                <div class="ctrl-row">
+                    <button class="pole-btn active" style="width:100%; background:#fdcb6e; color:black;" onclick="hideAllString()">HEPSİNİ GİZLE VE BAŞLAT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab4" class="panel">
+        <div class="card">
+            <div class="header">Mıknatıs Çeşitleri</div>
+            <div class="workspace">
+                <div class="gallery-grid">
+                    <div class="gallery-item">
+                        <svg width="80" height="100" viewBox="0 0 100 120" style="margin:auto;">
+                            <path d="M20,10 L20,80 Q20,120 50,120 Q80,120 80,80 L80,10 H60 L60,80 Q60,100 50,100 Q40,100 40,80 L40,10 Z" fill="#b2bec3" stroke="#333" stroke-width="2"/>
+                            <rect x="20" y="10" width="20" height="40" fill="#ff0000" />
+                            <text x="30" y="35" fill="white" font-weight="bold" text-anchor="middle">N</text>
+                            <rect x="60" y="10" width="20" height="40" fill="#0044ff" />
+                            <text x="70" y="35" fill="white" font-weight="bold" text-anchor="middle">S</text>
+                        </svg>
+                        <div style="font-weight:bold;">U Mıknatıs</div>
+                    </div>
+                    <div class="gallery-item">
+                        <div style="width:100%; height:30px; display:flex; margin:20px auto; border-radius:4px; overflow:hidden; border:1px solid #333;">
+                            <div style="width:50%; background:#ff0000; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center; border-right:1px solid white;">N</div>
+                            <div style="width:50%; background:#0044ff; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center; border-left:1px solid white;">S</div>
+                        </div>
+                        <div style="font-weight:bold;">Çubuk Mıknatıs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('scoreBoard');
-
-        // Oyun Ayarları
-        const gridSize = 20; // Kare boyutu
-        const tileCount = canvas.width / gridSize; // 20x20'lik alan
-        
-        let velocityX = 0;
-        let velocityY = 0;
-        let score = 0;
-        
-        // Yılanın başlangıç konumu ve kuyruğu
-        let snakeHeadX = 10;
-        let snakeHeadY = 10;
-        let trail = [];
-        let tailLength = 5;
-
-        // Yemin konumu
-        let appleX = 15;
-        let appleY = 15;
-
-        let gameInterval;
-
-        // Klavye dinleyicisi
-        document.addEventListener('keydown', keyPush);
-
-        function startGame() {
-            // Değişkenleri sıfırla
-            snakeHeadX = 10;
-            snakeHeadY = 10;
-            trail = [];
-            tailLength = 5;
-            score = 0;
-            velocityX = 0;
-            velocityY = 0; // Başlangıçta hareket etmesin
-            appleX = Math.floor(Math.random() * tileCount);
-            appleY = Math.floor(Math.random() * tileCount);
-            scoreElement.innerText = "Puan: " + score;
-
-            // Önceki döngüyü temizle ve yenisini başlat
-            clearInterval(gameInterval);
-            gameInterval = setInterval(gameLoop, 1000 / 10); // Saniyede 10 kare (Hız)
+        function showTab(idx) {
+            document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === idx-1));
+            document.querySelectorAll('.nav-btn').forEach((b, i) => b.classList.toggle('active', i === idx-1));
+            if(idx===2) updateSpringPhysics();
+            if(idx===3) updateStringPhysics();
         }
 
-        function gameLoop() {
-            // Pozisyonu güncelle
-            snakeHeadX += velocityX;
-            snakeHeadY += velocityY;
+        // TAHMİN FONKSİYONU
+        function togglePoleGuess(element) {
+            let current = parseInt(element.getAttribute('data-guess') || '0');
+            let next = (current + 1) % 3;
+            element.setAttribute('data-guess', next);
+            element.classList.remove('n', 's', 'unknown');
+            element.innerHTML = '';
+            if(next === 0) { element.classList.add('unknown'); }
+            else if (next === 1) { element.classList.add('n'); element.innerHTML = 'N'; }
+            else if (next === 2) { element.classList.add('s'); element.innerHTML = 'S'; }
+        }
 
-            // Duvarlardan geçme mantığı (Sınırsız duvar)
-            if (snakeHeadX < 0) snakeHeadX = tileCount - 1;
-            if (snakeHeadX > tileCount - 1) snakeHeadX = 0;
-            if (snakeHeadY < 0) snakeHeadY = tileCount - 1;
-            if (snakeHeadY > tileCount - 1) snakeHeadY = 0;
+        /* ----------------------------------------------------
+           1. LABORATUVAR (GELİŞMİŞ YAPIŞMA)
+           ---------------------------------------------------- */
+        const labSpace = document.getElementById('lab-space');
+        let labMagnets = []; let labMode = 'move';
 
-            // Arka planı temizle
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function labToggleBreak() { labMode=(labMode==='break')?'move':'break'; updateLabUI(); }
+        function labToggleDel() { labMode=(labMode==='delete')?'move':'delete'; updateLabUI(); }
+        function updateLabUI() {
+            document.getElementById('btn-break').style.border = (labMode==='break')?'3px solid #333':'none';
+            document.getElementById('btn-del').style.border = (labMode==='delete')?'3px solid #333':'none';
+        }
 
-            // Yılanı çiz
-            ctx.fillStyle = '#00ffcc';
-            for (let i = 0; i < trail.length; i++) {
-                ctx.fillRect(trail[i].x * gridSize, trail[i].y * gridSize, gridSize - 2, gridSize - 2);
-                
-                // Kendine çarpma kontrolü
-                if (trail[i].x === snakeHeadX && trail[i].y === snakeHeadY && (velocityX !== 0 || velocityY !== 0)) {
-                    tailLength = 5;
-                    score = 0;
-                    scoreElement.innerText = "Oyun Bitti! Puan: 0";
+        class LabMagnet {
+            constructor(x, y, w, h) {
+                this.x=x; this.y=y; this.w=w||120; this.h=h||40; this.vx=0; this.vy=0; this.flipped=false; this.dragging=false;
+                this.el=document.createElement('div'); this.el.className='lab-mag'; this.render();
+                this.el.addEventListener('mousedown', e=>this.start(e));
+                this.el.addEventListener('touchstart', e=>this.start(e), {passive:false});
+                this.el.addEventListener('dblclick', ()=>{ if(labMode==='move'){ this.flipped=!this.flipped; this.render(); } });
+                labSpace.appendChild(this.el); this.update();
+            }
+            render() {
+                this.el.style.width=this.w+'px'; this.el.style.height=this.h+'px';
+                this.el.innerHTML = this.flipped ? 
+                    `<div class="pole s">S</div><div class="pole n">N</div>` : 
+                    `<div class="pole n">N</div><div class="pole s">S</div>`;
+            }
+            start(e) {
+                if(e.type==='touchstart') e.preventDefault(); e.stopPropagation();
+                if(labMode==='delete') { this.destroy(); return; }
+                if(labMode==='break') {
+                    if(this.w<60) return; this.destroy();
+                    let nw=(this.w/2)-5;
+                    let m1=new LabMagnet(this.x, this.y, nw, this.h);
+                    let m2=new LabMagnet(this.x+nw+10, this.y, nw, this.h);
+                    m1.flipped=this.flipped; m2.flipped=this.flipped; m1.vx=-2; m2.vx=2;
+                    labMagnets.push(m1,m2); return;
                 }
+                this.dragging=true;
+                const cx=e.clientX||e.touches[0].clientX; const cy=e.clientY||e.touches[0].clientY;
+                this.ox=cx-this.x; this.oy=cy-this.y;
             }
-
-            // Hareket izini kaydet
-            trail.push({ x: snakeHeadX, y: snakeHeadY });
-            while (trail.length > tailLength) {
-                trail.shift();
-            }
-
-            // Yemi çiz
-            ctx.fillStyle = '#ff0055'; // Kırmızı elma
-            ctx.fillRect(appleX * gridSize, appleY * gridSize, gridSize - 2, gridSize - 2);
-
-            // Yem yeme kontrolü
-            if (appleX === snakeHeadX && appleY === snakeHeadY) {
-                tailLength++;
-                score += 10;
-                scoreElement.innerText = "Puan: " + score;
-                // Yeni yem konumu
-                appleX = Math.floor(Math.random() * tileCount);
-                appleY = Math.floor(Math.random() * tileCount);
-            }
+            destroy() { this.el.remove(); labMagnets=labMagnets.filter(m=>m!==this); }
+            update() { this.el.style.left=this.x+'px'; this.el.style.top=this.y+'px'; }
         }
 
-        function keyPush(evt) {
-            switch (evt.keyCode) {
-                case 37: // Sol
-                    if(velocityX !== 1) { velocityX = -1; velocityY = 0; }
-                    break;
-                case 38: // Yukarı
-                    if(velocityY !== 1) { velocityX = 0; velocityY = -1; }
-                    break;
-                case 39: // Sağ
-                    if(velocityX !== -1) { velocityX = 1; velocityY = 0; }
-                    break;
-                case 40: // Aşağı
-                    if(velocityY !== -1) { velocityX = 0; velocityY = 1; }
-                    break;
+        function labMove(e) {
+            const cx=e.clientX||(e.touches?e.touches[0].clientX:0);
+            const cy=e.clientY||(e.touches?e.touches[0].clientY:0);
+            labMagnets.forEach(m=>{ if(m.dragging){ m.x=cx-m.ox; m.y=cy-m.oy; m.update(); }});
+        }
+        window.addEventListener('mousemove', labMove); window.addEventListener('touchmove', labMove, {passive:false});
+        window.addEventListener('mouseup', ()=>labMagnets.forEach(m=>m.dragging=false)); 
+        window.addEventListener('touchend', ()=>labMagnets.forEach(m=>m.dragging=false));
+        function labAdd() { labMagnets.push(new LabMagnet(50+Math.random()*100, 50+Math.random()*100)); }
+        function labClear() { labMagnets.forEach(m=>m.el.remove()); labMagnets=[]; }
+
+        function labLoop() {
+            for(let i=0; i<labMagnets.length; i++){
+                let m1=labMagnets[i]; if(m1.dragging) continue;
+                m1.vx*=0.9; m1.vy*=0.9;
+                if(Math.abs(m1.vx)<0.1) m1.vx=0; if(Math.abs(m1.vy)<0.1) m1.vy=0;
+
+                for(let j=0; j<labMagnets.length; j++){
+                    if(i===j) continue; let m2=labMagnets[j];
+                    
+                    // UÇTAN YAPIŞMA (SNAP)
+                    let p1R = m1.flipped ? 'N' : 'S'; let p2L = m2.flipped ? 'S' : 'N';
+                    let p1L = m1.flipped ? 'S' : 'N'; let p2R = m2.flipped ? 'N' : 'S';
+                    
+                    let yAlign = Math.abs(m1.y - m2.y) < 25;
+                    
+                    // Sağ (m1) - Sol (m2)
+                    if(yAlign && Math.abs((m1.x+m1.w) - m2.x) < 25 && p1R !== p2L) {
+                        m1.x = m2.x - m1.w; m1.y = m2.y; m1.vx=0; m1.vy=0; continue;
+                    }
+                    // Sol (m1) - Sağ (m2)
+                    if(yAlign && Math.abs(m1.x - (m2.x+m2.w)) < 25 && p1L !== p2R) {
+                        m1.x = m2.x + m2.w; m1.y = m2.y; m1.vx=0; m1.vy=0; continue;
+                    }
+
+                    // Uzaktan Fizik
+                    let dx=(m2.x+m2.w/2)-(m1.x+m1.w/2); let dy=(m2.y+m2.h/2)-(m1.y+m1.h/2);
+                    let dist=Math.sqrt(dx*dx+dy*dy);
+                    if(dist<50 || dist>250) continue;
+                    
+                    let isM2Right = (m2.x+m2.w/2) > (m1.x+m1.w/2);
+                    let pA = isM2Right ? (m1.flipped?'N':'S') : (m1.flipped?'S':'N');
+                    let pB = isM2Right ? (m2.flipped?'S':'N') : (m2.flipped?'N':'S');
+                    
+                    let attract = (pA !== pB);
+                    let f=2000/(dist*dist); let fx=(dx/dist)*f; let fy=(dy/dist)*f;
+                    if(attract) { m1.vx+=fx; m1.vy+=fy; } else { m1.vx-=fx; m1.vy-=fy; }
+                }
+                m1.x+=m1.vx; m1.y+=m1.vy;
+                if(m1.x<0)m1.x=0; if(m1.y<0)m1.y=0; 
+                if(m1.x>labSpace.clientWidth-m1.w)m1.x=labSpace.clientWidth-m1.w;
+                if(m1.y>labSpace.clientHeight-m1.h)m1.y=labSpace.clientHeight-m1.h;
+                m1.update();
             }
+            requestAnimationFrame(labLoop);
         }
-        
-        // Sayfa yüklenince oyunu hazır beklet
-        window.onload = () => {
-            // İlk çizimi yap
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'white';
-            ctx.font = "20px Arial";
-            ctx.fillText("Başlamak için butona bas", 90, 200);
+        labAdd(); labAdd(); labLoop();
+
+        /* ----------------------------------------------------
+           3. İP SORUSU (GELİŞMİŞ)
+           ---------------------------------------------------- */
+        const p1=document.getElementById('p1'), p2=document.getElementById('p2'), p3=document.getElementById('p3');
+        const m1=document.getElementById('m1'), m2=document.getElementById('m2'), m3=document.getElementById('m3');
+        let dragP=null;
+        let realStates = { 1:'ns', 2:'sn', 3:'ns' };
+        let hiddenStates = { 1:true, 2:true, 3:true };
+
+        [p1, p2, p3].forEach(p => {
+            p.addEventListener('mousedown', (e)=>{ e.stopPropagation(); dragP=p; });
+            p.addEventListener('touchstart', (e)=>{ e.preventDefault(); e.stopPropagation(); dragP=p; }, {passive:false});
+        });
+        const strSpace = document.getElementById('string-space');
+        function moveString(e) {
+            if(!dragP) return;
+            const cx=e.clientX||(e.touches?e.touches[0].clientX:0);
+            let rect = strSpace.getBoundingClientRect();
+            let x = ((cx - rect.left)/rect.width)*100;
+            if(x<5) x=5; if(x>95) x=95;
+            dragP.style.left = x+'%';
+            updateStringPhysics();
         }
+        window.addEventListener('mousemove', moveString); window.addEventListener('touchmove', moveString, {passive:false});
+        window.addEventListener('mouseup', ()=>dragP=null); window.addEventListener('touchend', ()=>dragP=null);
+
+        function renderStringMags() {
+            [1, 2, 3].forEach(id => {
+                let m = document.getElementById('m'+id);
+                let real = realStates[id];
+                let isHidden = hiddenStates[id];
+                
+                if (!m.hasAttribute('data-rendered-mode') || m.getAttribute('data-rendered-mode') !== (isHidden ? 'hidden' : 'visible')) {
+                    m.innerHTML = '';
+                    m.setAttribute('data-rendered-mode', isHidden ? 'hidden' : 'visible');
+                    
+                    let pL = document.createElement('div'); let pR = document.createElement('div');
+                    pL.className = 'pole'; pR.className = 'pole';
+
+                    if (isHidden) {
+                        pL.className += ' unknown'; pL.setAttribute('data-guess', 0);
+                        pR.className += ' unknown'; pR.setAttribute('data-guess', 0);
+                        pL.onclick = function() { togglePoleGuess(this); };
+                        pR.onclick = function() { togglePoleGuess(this); };
+                    } else {
+                        if(real === 'ns') { pL.className += ' n'; pL.innerText = 'N'; pR.className += ' s'; pR.innerText = 'S'; } 
+                        else { pL.className += ' s'; pL.innerText = 'S'; pR.className += ' n'; pR.innerText = 'N'; }
+                    }
+                    m.appendChild(pL); m.appendChild(pR);
+                } else if (!isHidden) {
+                    let p1 = m.children[0]; let p2 = m.children[1];
+                    if(real === 'ns') { p1.className='pole n'; p1.innerText='N'; p2.className='pole s'; p2.innerText='S'; } 
+                    else { p1.className='pole s'; p1.innerText='S'; p2.className='pole n'; p2.innerText='N'; }
+                }
+            });
+        }
+
+        function setStringReal(id, val) { realStates[id]=val; renderStringMags(); updateStringPhysics(); }
+        function revealString(id) { hiddenStates[id]=false; renderStringMags(); }
+        function hideAllString() {
+            hiddenStates[1]=true; hiddenStates[2]=true; hiddenStates[3]=true;
+            document.getElementById('m1').removeAttribute('data-rendered-mode');
+            document.getElementById('m2').removeAttribute('data-rendered-mode');
+            document.getElementById('m3').removeAttribute('data-rendered-mode');
+            renderStringMags(); updateStringPhysics();
+        }
+
+        function updateStringPhysics() {
+            let f1R = (realStates[1]==='ns') ? 'S' : 'N';
+            let f2L = (realStates[2]==='ns') ? 'N' : 'S';
+            let f2R = (realStates[2]==='ns') ? 'S' : 'N';
+            let f3L = (realStates[3]==='ns') ? 'N' : 'S';
+
+            let att12 = (f1R !== f2L); let att23 = (f2R !== f3L);
+
+            let x1=parseFloat(p1.style.left); let x2=parseFloat(p2.style.left); let x3=parseFloat(p3.style.left);
+            let d12=x2-x1; let d23=x3-x2;
+            let a1=0, a2L=0, a2R=0, a3=0;
+
+            if(Math.abs(d12)<25) {
+                let deg=(25-Math.abs(d12))*0.8;
+                if(att12) { a1=deg; a2L=-deg; } else { a1=-deg; a2L=deg; }
+            }
+            if(Math.abs(d23)<25) {
+                let deg=(25-Math.abs(d23))*0.8;
+                if(att23) { a2R=deg; a3=-deg; } else { a2R=-deg; a3=deg; }
+            }
+            p1.style.transform=`rotate(${a1}deg)`;
+            p2.style.transform=`rotate(${a2L+a2R}deg)`;
+            p3.style.transform=`rotate(${a3}deg)`;
+        }
+        hideAllString();
+
+        /* ----------------------------------------------------
+           2. YAY SORUSU
+           ---------------------------------------------------- */
+        const sTop = document.getElementById('s-top');
+        const sBot = document.getElementById('s-bot');
+        const sPath = document.getElementById('spring-path');
+        let sDragging=false;
+        let springReal = { top: 'ns', bot: 'ns' };
+        let springHidden = { top: true, bot: true };
+
+        sBot.addEventListener('mousedown', ()=>sDragging=true);
+        sBot.addEventListener('touchstart', (e)=>{e.preventDefault(); sDragging=true;}, {passive:false});
+        document.getElementById('spring-space').addEventListener('mousemove', e=>{
+            if(!sDragging) return;
+            const cy=e.clientY||e.touches[0].clientY;
+            let rect=document.getElementById('spring-space').getBoundingClientRect();
+            let y=cy-rect.top-45; if(y<180) y=180; if(y>400) y=400;
+            sBot.style.top=y+'px'; updateSpringPhysics();
+        });
+        window.addEventListener('mouseup', ()=>sDragging=false);
+        window.addEventListener('touchend', ()=>sDragging=false);
+
+        function renderSpringMags() {
+            ['top', 'bot'].forEach(id => {
+                let el = document.getElementById('s-'+id);
+                let real = springReal[id];
+                let isHidden = springHidden[id];
+
+                if (!el.hasAttribute('data-rendered-mode') || el.getAttribute('data-rendered-mode') !== (isHidden ? 'hidden' : 'visible')) {
+                    el.innerHTML = '';
+                    el.setAttribute('data-rendered-mode', isHidden ? 'hidden' : 'visible');
+                    
+                    let pUp = document.createElement('div'); let pDown = document.createElement('div');
+                    pUp.className = 'pole'; pDown.className = 'pole';
+                    pUp.style.borderBottom="1px solid rgba(0,0,0,0.2)";
+
+                    if(isHidden) {
+                        pUp.className += ' unknown'; pUp.setAttribute('data-guess', 0);
+                        pDown.className += ' unknown'; pDown.setAttribute('data-guess', 0);
+                        pUp.onclick = function() { togglePoleGuess(this); };
+                        pDown.onclick = function() { togglePoleGuess(this); };
+                    } else {
+                        if(real === 'ns') { pUp.className += ' n'; pUp.innerText='N'; pDown.className += ' s'; pDown.innerText='S'; } 
+                        else { pUp.className += ' s'; pUp.innerText='S'; pDown.className += ' n'; pDown.innerText='N'; }
+                    }
+                    el.appendChild(pUp); el.appendChild(pDown);
+                } else if (!isHidden) {
+                    let p1 = el.children[0]; let p2 = el.children[1];
+                    if(real === 'ns') { p1.className='pole n'; p1.innerText='N'; p2.className='pole s'; p2.innerText='S'; } 
+                    else { p1.className='pole s'; p1.innerText='S'; p2.className='pole n'; p2.innerText='N'; }
+                }
+            });
+        }
+
+        function setSpringReal(who, val) { springReal[who] = val; renderSpringMags(); updateSpringPhysics(); }
+        function setSpringGameMode(who, isHide) {
+            springHidden[who] = isHide;
+            document.getElementById('s-'+who).removeAttribute('data-rendered-mode');
+            renderSpringMags();
+        }
+
+        function updateSpringPhysics() {
+            let fTop = (springReal.top==='ns') ? 'S' : 'N'; // Alt Yüz
+            let fBot = (springReal.bot==='ns') ? 'N' : 'S'; // Üst Yüz
+            
+            let attract = (fTop !== fBot);
+            let tY=140; let bY=parseInt(sBot.style.top); let dist=bY-tY;
+            let offset=0;
+            if(dist<150) {
+                let f=(150-dist)/2;
+                offset = attract ? f : -f; 
+            }
+            let nTY = 50 + offset; sTop.style.top=nTY+'px';
+
+            let coils=10; let path=`M30,0 L30,20`;
+            for(let i=0; i<coils; i++){
+                let x=(i%2===0)?50:10; let y=20+(i*(nTY-20)/coils);
+                path+=` L${x},${y}`;
+            }
+            path+=` L30,${nTY}`; sPath.setAttribute('d', path);
+        }
+        renderSpringMags();
+
     </script>
 </body>
 </html>
