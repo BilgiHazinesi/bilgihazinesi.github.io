@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fen Bilimleri: Mıknatıs Kontrol Paneli (V14)</title>
+    <title>Fen Bilimleri: Mıknatıs Ustası (V15 Final)</title>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,9 +11,6 @@
             --s-color: #0044ff; /* Tam Mavi */
             --bg-color: #f0f2f5;
             --unknown-color: #b2bec3;
-            --btn-bg: #fff;
-            --btn-active: #2d3436;
-            --btn-text-active: #fff;
         }
 
         body {
@@ -34,7 +31,7 @@
         }
         .nav-btn {
             padding: 8px 15px; border: none; border-radius: 20px; cursor: pointer;
-            font-size: 0.95rem; font-weight: bold; color: #555; background: white;
+            font-size: 0.9rem; font-weight: bold; color: #555; background: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.2s; min-width: 90px;
         }
         .nav-btn.active { background: #2c3e50; color: white; transform: scale(1.05); }
@@ -63,45 +60,25 @@
             touch-action: none;
         }
 
-        /* --- KONTROL PANELİ (YENİ) --- */
-        .control-board {
-            background: #eee; padding: 10px; border-top: 3px solid #b2bec3;
-            display: flex; flex-direction: column; gap: 10px; z-index: 20;
-        }
-        .ctrl-row {
-            display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
-        }
-        .ctrl-label { font-weight: bold; min-width: 80px; text-align: right; font-size: 0.9rem; }
-        
-        .pole-btn {
-            padding: 6px 12px; border: 2px solid #aaa; border-radius: 8px; cursor: pointer;
-            font-weight: bold; font-family: inherit; font-size: 0.85rem; background: white; color: #333;
-        }
-        .pole-btn.active { background: #2d3436; color: white; border-color: #2d3436; }
-        .pole-btn.ns { border-left: 5px solid var(--n-color); border-right: 5px solid var(--s-color); }
-        .pole-btn.sn { border-left: 5px solid var(--s-color); border-right: 5px solid var(--n-color); }
-        .pole-btn.hidden { border: 2px dashed #777; background: #ddd; }
-
         /* --- MIKNATIS STİLLERİ --- */
         .pole { 
             flex: 1; display: flex; align-items: center; justify-content: center; 
             height: 100%; width: 100%; color: white; font-size: 1.2rem; 
             text-shadow: 1px 1px 2px black;
         }
-        .pole.n { background: var(--n-color); border-right: 1px solid white; } /* Ortadaki Çizgi */
-        .pole.s { background: var(--s-color); border-left: 1px solid white; } /* Ortadaki Çizgi */
+        .pole.n { background: var(--n-color); border-right: 1px solid white; }
+        .pole.s { background: var(--s-color); border-left: 1px solid white; }
         
-        /* Gizli Mod */
-        .hidden-mag .pole { background: var(--unknown-color) !important; color: #636e72; text-shadow: none; border: none; }
-        .hidden-mag .pole::after { content: '?'; font-size: 1.5rem; }
-        .hidden-mag .pole.n, .hidden-mag .pole.s { content: ''; } 
-
+        /* Lab Mıknatısı */
         .lab-mag {
-            position: absolute; display: flex; width: 120px; height: 40px;
+            position: absolute; display: flex; width: 140px; height: 40px;
             border-radius: 4px; border: 2px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             font-weight: bold; cursor: grab; z-index: 10;
+            /* Donanım hızlandırma için */
+            transform: translate3d(0,0,0);
         }
-        
+
+        /* Soru Mıknatısları (Gizlenebilir) */
         .q-mag {
             position: absolute; display: flex; border: 2px solid #555;
             font-weight: bold; color: white; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -109,13 +86,31 @@
         .q-mag.vertical { width: 60px; height: 90px; flex-direction: column; }
         .q-mag.horizontal { width: 90px; height: 35px; flex-direction: row; }
         
-        /* Dikey mıknatıs için orta çizgi ayarı */
-        .q-mag.vertical .pole.n { border-right: none; border-bottom: 2px solid white; }
-        .q-mag.vertical .pole.s { border-left: none; border-top: 2px solid white; }
+        .hidden-mag .pole { background: var(--unknown-color) !important; color: #636e72; text-shadow: none; border:none; }
+        .hidden-mag .pole::after { content: '?'; font-size: 1.5rem; }
+        .hidden-mag .pole.n, .hidden-mag .pole.s { content: ''; } 
 
-        /* Yay ve İp Görselleri */
-        #spring-path { fill: none; stroke: #2d3436; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+        /* Kontrol Paneli (Sorular İçin) */
+        .control-board {
+            background: #eee; padding: 10px; border-top: 3px solid #b2bec3;
+            display: flex; flex-direction: column; gap: 8px; z-index: 20;
+        }
+        .ctrl-row {
+            display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap;
+        }
+        .ctrl-label { font-weight: bold; font-size: 0.85rem; min-width: 60px; text-align: right; }
+        .pole-btn {
+            padding: 5px 10px; border: 2px solid #aaa; border-radius: 6px; cursor: pointer;
+            font-size: 0.8rem; font-weight: bold; background: white;
+        }
+        .pole-btn.active { background: #2d3436; color: white; border-color: #333; }
         
+        /* Lab Kontrolleri */
+        .lab-controls { padding: 10px; background: #eee; display: flex; justify-content: center; gap: 10px; }
+        .l-btn { padding: 8px 15px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; }
+
+        /* Yay ve İp */
+        #spring-path { fill: none; stroke: #2d3436; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
         .pendulum {
             position: absolute; top: 0; width: 40px; height: 220px;
             transform-origin: top center; display: flex; justify-content: center;
@@ -128,10 +123,6 @@
             border-radius: 50%; cursor: ew-resize; display: flex; align-items: center; justify-content: center;
             font-size: 1.2rem; color: #555;
         }
-
-        /* Lab Kontrolleri */
-        .lab-controls { padding: 10px; background: #eee; display: flex; justify-content: center; gap: 10px; }
-        .l-btn { padding: 8px 15px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; }
         
         /* Galeri */
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; overflow-y: auto; }
@@ -150,7 +141,7 @@
 
     <div id="tab1" class="panel active">
         <div class="card">
-            <div class="header">Serbest Deney Alanı</div>
+            <div class="header">Serbest Deney Alanı (Uç Uca Yapışma)</div>
             <div class="workspace" id="lab-space"></div>
             <div class="lab-controls">
                 <button class="l-btn" style="background:#27ae60" onclick="labAdd()">➕ Ekle</button>
@@ -168,11 +159,9 @@
                 <svg width="60" height="600" style="position:absolute; left:50%; transform:translateX(-50%); overflow:visible;">
                     <path id="spring-path" d="" />
                 </svg>
-
                 <div id="s-top" class="q-mag vertical" style="top:50px; left:50%; transform:translateX(-50%);">
                     <div class="pole s">S</div><div class="pole n">N</div>
                 </div>
-
                 <div id="s-bot" class="q-mag vertical" style="top:300px; left:50%; transform:translateX(-50%); cursor:ns-resize;">
                     <div class="pole s">S</div><div class="pole n">N</div>
                 </div>
@@ -180,16 +169,16 @@
             
             <div class="control-board">
                 <div class="ctrl-row">
-                    <span class="ctrl-label">1. Mıknatıs (Üst):</span>
-                    <button class="pole-btn ns" onclick="setSpringState('top', 'ns')">N - S</button>
-                    <button class="pole-btn sn" onclick="setSpringState('top', 'sn')">S - N</button>
-                    <button class="pole-btn hidden" onclick="setSpringState('top', 'hide')">GİZLE (?)</button>
+                    <span class="ctrl-label">1. Mıknatıs:</span>
+                    <button class="pole-btn" id="btn-st-ns" onclick="setSpringState('top', 'ns')">N-S</button>
+                    <button class="pole-btn" id="btn-st-sn" onclick="setSpringState('top', 'sn')">S-N</button>
+                    <button class="pole-btn" id="btn-st-hide" onclick="setSpringState('top', 'hide')">GİZLE</button>
                 </div>
                 <div class="ctrl-row">
-                    <span class="ctrl-label">2. Mıknatıs (Alt):</span>
-                    <button class="pole-btn ns" onclick="setSpringState('bot', 'ns')">N - S</button>
-                    <button class="pole-btn sn" onclick="setSpringState('bot', 'sn')">S - N</button>
-                    <button class="pole-btn hidden" onclick="setSpringState('bot', 'hide')">GİZLE (?)</button>
+                    <span class="ctrl-label">2. Mıknatıs:</span>
+                    <button class="pole-btn" id="btn-sb-ns" onclick="setSpringState('bot', 'ns')">N-S</button>
+                    <button class="pole-btn" id="btn-sb-sn" onclick="setSpringState('bot', 'sn')">S-N</button>
+                    <button class="pole-btn" id="btn-sb-hide" onclick="setSpringState('bot', 'hide')">GİZLE</button>
                 </div>
             </div>
         </div>
@@ -223,22 +212,22 @@
 
             <div class="control-board">
                 <div class="ctrl-row">
-                    <span class="ctrl-label">1. Mıknatıs (Sol):</span>
-                    <button class="pole-btn ns" onclick="setStringState(1, 'ns')">N - S</button>
-                    <button class="pole-btn sn" onclick="setStringState(1, 'sn')">S - N</button>
-                    <button class="pole-btn hidden" onclick="setStringState(1, 'hide')">?</button>
+                    <span class="ctrl-label">1. (Sol):</span>
+                    <button class="pole-btn" id="btn-p1-ns" onclick="setStringState(1, 'ns')">N-S</button>
+                    <button class="pole-btn" id="btn-p1-sn" onclick="setStringState(1, 'sn')">S-N</button>
+                    <button class="pole-btn" id="btn-p1-hide" onclick="setStringState(1, 'hide')">?</button>
                 </div>
                 <div class="ctrl-row">
-                    <span class="ctrl-label">2. Mıknatıs (Orta):</span>
-                    <button class="pole-btn ns" onclick="setStringState(2, 'ns')">N - S</button>
-                    <button class="pole-btn sn" onclick="setStringState(2, 'sn')">S - N</button>
-                    <button class="pole-btn hidden" onclick="setStringState(2, 'hide')">?</button>
+                    <span class="ctrl-label">2. (Orta):</span>
+                    <button class="pole-btn" id="btn-p2-ns" onclick="setStringState(2, 'ns')">N-S</button>
+                    <button class="pole-btn" id="btn-p2-sn" onclick="setStringState(2, 'sn')">S-N</button>
+                    <button class="pole-btn" id="btn-p2-hide" onclick="setStringState(2, 'hide')">?</button>
                 </div>
                 <div class="ctrl-row">
-                    <span class="ctrl-label">3. Mıknatıs (Sağ):</span>
-                    <button class="pole-btn ns" onclick="setStringState(3, 'ns')">N - S</button>
-                    <button class="pole-btn sn" onclick="setStringState(3, 'sn')">S - N</button>
-                    <button class="pole-btn hidden" onclick="setStringState(3, 'hide')">?</button>
+                    <span class="ctrl-label">3. (Sağ):</span>
+                    <button class="pole-btn" id="btn-p3-ns" onclick="setStringState(3, 'ns')">N-S</button>
+                    <button class="pole-btn" id="btn-p3-sn" onclick="setStringState(3, 'sn')">S-N</button>
+                    <button class="pole-btn" id="btn-p3-hide" onclick="setStringState(3, 'hide')">?</button>
                 </div>
             </div>
         </div>
@@ -266,10 +255,6 @@
                         </div>
                         <div style="font-weight:bold;">Çubuk Mıknatıs</div>
                     </div>
-                     <div class="gallery-item">
-                        <div style="width:60px; height:60px; border-radius:50%; background:radial-gradient(#b2bec3, #2d3436); margin:10px auto;"></div>
-                        <div style="font-weight:bold;">Yuvarlak Mıknatıs</div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -284,7 +269,7 @@
         }
 
         /* ----------------------------------------------------
-           1. LABORATUVAR (Değişiklik Yok - Standart)
+           1. LABORATUVAR (FİZİK MOTORU DÜZELTİLDİ)
            ---------------------------------------------------- */
         const labSpace = document.getElementById('lab-space');
         let labMagnets = []; let labMode = 'move';
@@ -298,7 +283,7 @@
 
         class LabMagnet {
             constructor(x, y, w, h) {
-                this.x=x; this.y=y; this.w=w||120; this.h=h||40; this.vx=0; this.vy=0; this.flipped=false; this.dragging=false;
+                this.x=x; this.y=y; this.w=w||140; this.h=h||40; this.vx=0; this.vy=0; this.flipped=false; this.dragging=false;
                 this.el=document.createElement('div'); this.el.className='lab-mag'; this.render();
                 this.el.addEventListener('mousedown', e=>this.start(e));
                 this.el.addEventListener('touchstart', e=>this.start(e), {passive:false});
@@ -307,7 +292,9 @@
             }
             render() {
                 this.el.style.width=this.w+'px'; this.el.style.height=this.h+'px';
-                this.el.innerHTML = this.flipped ? `<div class="pole s">S</div><div class="pole n">N</div>` : `<div class="pole n">N</div><div class="pole s">S</div>`;
+                this.el.innerHTML = this.flipped ? 
+                    `<div class="pole s">S</div><div class="pole n">N</div>` : 
+                    `<div class="pole n">N</div><div class="pole s">S</div>`;
             }
             start(e) {
                 if(e.type==='touchstart') e.preventDefault(); e.stopPropagation();
@@ -317,7 +304,7 @@
                     let nw=(this.w/2)-5;
                     let m1=new LabMagnet(this.x, this.y, nw, this.h);
                     let m2=new LabMagnet(this.x+nw+10, this.y, nw, this.h);
-                    m1.flipped=this.flipped; m2.flipped=this.flipped; m1.vx=-3; m2.vx=3;
+                    m1.flipped=this.flipped; m2.flipped=this.flipped; m1.vx=-2; m2.vx=2;
                     labMagnets.push(m1,m2); return;
                 }
                 this.dragging=true;
@@ -336,53 +323,84 @@
         window.addEventListener('mousemove', labMove); window.addEventListener('touchmove', labMove, {passive:false});
         window.addEventListener('mouseup', ()=>labMagnets.forEach(m=>m.dragging=false)); 
         window.addEventListener('touchend', ()=>labMagnets.forEach(m=>m.dragging=false));
+        
         function labAdd() { labMagnets.push(new LabMagnet(50+Math.random()*100, 50+Math.random()*100)); }
         function labClear() { labMagnets.forEach(m=>m.el.remove()); labMagnets=[]; }
+
+        // FİZİK MOTORU (Sola kayma ve Yapışma Düzeltildi)
         function labLoop() {
+            // Önce Kuvvetleri Hesapla
             for(let i=0; i<labMagnets.length; i++){
-                let m1=labMagnets[i]; if(m1.dragging) continue;
+                let m1=labMagnets[i];
+                if(m1.dragging) continue;
+
+                // Sürtünme (Durması için)
+                m1.vx *= 0.9; m1.vy *= 0.9;
+                if(Math.abs(m1.vx)<0.1) m1.vx=0;
+                if(Math.abs(m1.vy)<0.1) m1.vy=0;
+
                 for(let j=0; j<labMagnets.length; j++){
                     if(i===j) continue; let m2=labMagnets[j];
-                    let yd=Math.abs((m1.y+m1.h/2)-(m2.y+m2.h/2)); let xd=Math.abs((m2.x)-(m1.x+m1.w));
-                    if(yd<20 && xd<20) {
-                        let p1=m1.flipped?'N':'S'; let p2=m2.flipped?'S':'N';
-                        if(p1!==p2) { m1.x=m2.x-m1.w; m1.y=m2.y; m1.vx=0; m1.vy=0; continue; }
+                    
+                    // Uç Uca Kenetlenme (Snap)
+                    let yDist = Math.abs((m1.y+m1.h/2)-(m2.y+m2.h/2));
+                    // m1 Sağ vs m2 Sol
+                    if(yDist<20 && Math.abs(m2.x - (m1.x+m1.w)) < 20) {
+                        let p1R = m1.flipped ? 'N' : 'S'; let p2L = m2.flipped ? 'S' : 'N';
+                        if(p1R !== p2L) { // ZIT
+                             m1.x = m2.x - m1.w; m1.y = m2.y; m1.vx=0; m1.vy=0; continue;
+                        }
                     }
+                    // m1 Sol vs m2 Sağ
+                    if(yDist<20 && Math.abs(m1.x - (m2.x+m2.w)) < 20) {
+                        let p1L = m1.flipped ? 'S' : 'N'; let p2R = m2.flipped ? 'N' : 'S';
+                        if(p1L !== p2R) {
+                             m1.x = m2.x + m2.w; m1.y = m2.y; m1.vx=0; m1.vy=0; continue;
+                        }
+                    }
+
+                    // Uzaktan Fizik
                     let dx=(m2.x+m2.w/2)-(m1.x+m1.w/2); let dy=(m2.y+m2.h/2)-(m1.y+m1.h/2);
                     let dist=Math.sqrt(dx*dx+dy*dy);
                     if(dist<50 || dist>250) continue;
-                    let isM2Right=(m2.x+m2.w/2)>(m1.x+m1.w/2);
-                    let pA=isM2Right?(m1.flipped?'N':'S'):(m1.flipped?'S':'N');
-                    let pB=isM2Right?(m2.flipped?'S':'N'):(m2.flipped?'N':'S');
-                    let attract=(pA!==pB);
-                    let f=1000/(dist*dist); let fx=(dx/dist)*f; let fy=(dy/dist)*f;
-                    if(attract) { m1.vx+=fx; m1.vy+=fy; } else { m1.vx-=fx; m1.vy-=fy; }
+                    
+                    let isM2Right = (m2.x+m2.w/2) > (m1.x+m1.w/2);
+                    let p1Side = isM2Right ? (m1.flipped?'N':'S') : (m1.flipped?'S':'N');
+                    let p2Side = isM2Right ? (m2.flipped?'S':'N') : (m2.flipped?'N':'S');
+                    
+                    let attract = (p1Side !== p2Side);
+                    let force = 2000 / (dist*dist); // Kuvvet
+                    let fx = (dx/dist)*force; let fy = (dy/dist)*force;
+
+                    if(attract) { m1.vx += fx; m1.vy += fy; } 
+                    else { m1.vx -= fx; m1.vy -= fy; }
                 }
-                m1.x+=m1.vx; m1.y+=m1.vy; m1.vx*=0.9; m1.vy*=0.9;
-                if(m1.x<0)m1.x=0; if(m1.y<0)m1.y=0; 
-                if(m1.x>labSpace.clientWidth-m1.w)m1.x=labSpace.clientWidth-m1.w;
-                if(m1.y>labSpace.clientHeight-m1.h)m1.y=labSpace.clientHeight-m1.h;
-                m1.update();
+            }
+            // Konum Güncelle
+            for(let i=0; i<labMagnets.length; i++){
+                let m=labMagnets[i];
+                if(m.dragging) continue;
+                m.x += m.vx; m.y += m.vy;
+                // Duvarlar
+                if(m.x<0) m.x=0; if(m.y<0) m.y=0;
+                if(m.x > labSpace.clientWidth-m.w) m.x = labSpace.clientWidth-m.w;
+                if(m.y > labSpace.clientHeight-m.h) m.y = labSpace.clientHeight-m.h;
+                m.update();
             }
             requestAnimationFrame(labLoop);
         }
         labAdd(); labAdd(); labLoop();
 
 
-        /* =================================================================
+        /* ----------------------------------------------------
            2. YAY KONTROL SİSTEMİ
-           ================================================================= */
+           ---------------------------------------------------- */
         const sTop = document.getElementById('s-top');
         const sBot = document.getElementById('s-bot');
         const sPath = document.getElementById('spring-path');
         let sDragging=false; 
-        
-        // State: 'ns' | 'sn' | 'hide'
-        let sTopState = 'hide'; 
-        let sBotState = 'hide'; 
-        // Gerçek Fizik State'i (Gizli olsa bile bir değeri olmalı)
-        let sTopReal = 'ns'; 
-        let sBotReal = 'ns';
+        let sTopSt='ns', sBotSt='ns'; // ns, sn, hide
+        let sTopReal='ns', sBotReal='ns'; // gizli olsa bile fizik için
 
         sBot.addEventListener('mousedown', ()=>sDragging=true);
         sBot.addEventListener('touchstart', (e)=>{e.preventDefault(); sDragging=true;}, {passive:false});
@@ -398,84 +416,62 @@
         window.addEventListener('mouseup', ()=>sDragging=false);
         window.addEventListener('touchend', ()=>sDragging=false);
 
-        function setSpringState(which, state) {
-            if(which === 'top') {
-                sTopState = state;
-                if(state !== 'hide') sTopReal = state;
-                else sTopReal = (Math.random() < 0.5) ? 'ns' : 'sn'; // Rastgele ata
-            } else {
-                sBotState = state;
-                if(state !== 'hide') sBotReal = state;
-                else sBotReal = (Math.random() < 0.5) ? 'ns' : 'sn';
-            }
-            renderSpring();
-            updateSpring();
+        function setSpringState(w, st) {
+            // Butonları güncelle
+            const pfx = (w==='top') ? 'btn-st' : 'btn-sb';
+            document.getElementById(pfx+'-ns').classList.remove('active');
+            document.getElementById(pfx+'-sn').classList.remove('active');
+            document.getElementById(pfx+'-hide').classList.remove('active');
+            document.getElementById(pfx+'-'+st).classList.add('active');
+
+            if(w==='top') { sTopSt=st; if(st!=='hide') sTopReal=st; else sTopReal=(Math.random()<0.5)?'ns':'sn'; }
+            else { sBotSt=st; if(st!=='hide') sBotReal=st; else sBotReal=(Math.random()<0.5)?'ns':'sn'; }
+            renderSpring(); updateSpring();
         }
 
         function renderSpring() {
-            // Üst
-            if(sTopState === 'hide') {
-                sTop.className = 'q-mag vertical hidden-mag';
-                sTop.innerHTML = `<div class="pole"></div>`;
-            } else {
-                sTop.className = 'q-mag vertical';
-                sTop.innerHTML = (sTopState==='sn') ? `<div class="pole n">N</div><div class="pole s">S</div>` : `<div class="pole s">S</div><div class="pole n">N</div>`;
+            function r(m, st) {
+                if(st==='hide') { m.className='q-mag vertical hidden-mag'; m.innerHTML=`<div class="pole"></div>`; }
+                else { m.className='q-mag vertical'; m.innerHTML=(st==='sn')?`<div class="pole n">N</div><div class="pole s">S</div>`:`<div class="pole s">S</div><div class="pole n">N</div>`; }
             }
-            // Alt
-            if(sBotState === 'hide') {
-                sBot.className = 'q-mag vertical hidden-mag';
-                sBot.innerHTML = `<div class="pole"></div>`;
-            } else {
-                sBot.className = 'q-mag vertical';
-                sBot.innerHTML = (sBotState==='sn') ? `<div class="pole n">N</div><div class="pole s">S</div>` : `<div class="pole s">S</div><div class="pole n">N</div>`;
-            }
+            r(sTop, sTopSt); r(sBot, sBotSt);
         }
 
         function updateSpring() {
-            // Fizik, Real değere göre çalışır
-            // Top: NS (S altta) | SN (N altta)
-            let faceTop = (sTopReal==='ns') ? 'N' : 'S'; 
-            // Bot: NS (N üstte) | SN (S üstte)
-            let faceBot = (sBotReal==='ns') ? 'S' : 'N'; 
+            let fT = (sTopReal==='ns') ? 'N' : 'S'; // Alt Yüzü
+            let fB = (sBotReal==='ns') ? 'S' : 'N'; // Üst Yüzü
+            let attract = (fT !== fB);
 
-            let attract = (faceTop !== faceBot);
-
-            let topY=80 + 90; let botY=parseInt(sBot.style.top); let dist=botY-topY;
+            let tY=140; let bY=parseInt(sBot.style.top); let dist=bY-tY;
             let offset=0;
             if(dist<150) {
                 let f=(150-dist)/2;
-                offset = attract ? f : -f; // Çek=Uza, İt=Sıkış
+                offset = attract ? f : -f; 
             }
-            let newTopY=80+offset; sTop.style.top=newTopY+'px';
+            let nTY = 50 + offset; sTop.style.top=nTY+'px';
 
             let coils=10; let path=`M30,0 L30,20`;
             for(let i=0; i<coils; i++){
-                let x=(i%2===0)?50:10; let y=20+(i*(newTopY-20)/coils);
+                let x=(i%2===0)?50:10; let y=20+(i*(nTY-20)/coils);
                 path+=` L${x},${y}`;
             }
-            path+=` L30,${newTopY}`; sPath.setAttribute('d', path);
+            path+=` L30,${nTY}`; sPath.setAttribute('d', path);
         }
-        
-        // Başlangıçta gizle
-        setSpringState('top', 'hide'); setSpringState('bot', 'hide');
+        setSpringState('top', 'ns'); setSpringState('bot', 'ns');
 
-
-        /* =================================================================
+        /* ----------------------------------------------------
            3. İP KONTROL SİSTEMİ
-           ================================================================= */
-        const p1=document.getElementById('p1'); const p2=document.getElementById('p2'); const p3=document.getElementById('p3');
-        const m1=document.getElementById('m1'); const m2=document.getElementById('m2'); const m3=document.getElementById('m3');
+           ---------------------------------------------------- */
+        const p1=document.getElementById('p1'), p2=document.getElementById('p2'), p3=document.getElementById('p3');
+        const m1=document.getElementById('m1'), m2=document.getElementById('m2'), m3=document.getElementById('m3');
         let dragP=null;
-
-        // State'ler
         let st1='hide', st2='hide', st3='hide';
-        let r1='ns', r2='ns', r3='ns'; // Real states
+        let r1='ns', r2='ns', r3='ns';
 
         [p1, p2, p3].forEach(p => {
             p.addEventListener('mousedown', (e)=>{ e.stopPropagation(); dragP=p; });
             p.addEventListener('touchstart', (e)=>{ e.preventDefault(); e.stopPropagation(); dragP=p; }, {passive:false});
         });
-
         const strSpace = document.getElementById('string-space');
         function moveString(e) {
             if(!dragP) return;
@@ -490,6 +486,12 @@
         window.addEventListener('mouseup', ()=>dragP=null); window.addEventListener('touchend', ()=>dragP=null);
 
         function setStringState(idx, state) {
+            const pfx = 'btn-p'+idx;
+            document.getElementById(pfx+'-ns').classList.remove('active');
+            document.getElementById(pfx+'-sn').classList.remove('active');
+            document.getElementById(pfx+'-hide').classList.remove('active');
+            document.getElementById(pfx+'-'+state).classList.add('active');
+
             if(idx===1) { st1=state; if(state!=='hide') r1=state; else r1=(Math.random()<0.5)?'ns':'sn'; }
             if(idx===2) { st2=state; if(state!=='hide') r2=state; else r2=(Math.random()<0.5)?'ns':'sn'; }
             if(idx===3) { st3=state; if(state!=='hide') r3=state; else r3=(Math.random()<0.5)?'ns':'sn'; }
@@ -497,28 +499,17 @@
         }
 
         function renderString() {
-            function renderM(m, st, r) {
-                if(st==='hide') {
-                    m.className='q-mag horizontal hidden-mag'; m.innerHTML=`<div class="pole"></div>`;
-                } else {
-                    m.className='q-mag horizontal';
-                    // NS: N solda. SN: S solda.
-                    m.innerHTML = (st==='sn') ? `<div class="pole s">S</div><div class="pole n">N</div>` : `<div class="pole n">N</div><div class="pole s">S</div>`;
-                }
+            function r(m, st) {
+                if(st==='hide') { m.className='q-mag horizontal hidden-mag'; m.innerHTML=`<div class="pole"></div>`; }
+                else { m.className='q-mag horizontal'; m.innerHTML=(st==='sn')?`<div class="pole s">S</div><div class="pole n">N</div>`:`<div class="pole n">N</div><div class="pole s">S</div>`; }
             }
-            renderM(m1, st1, r1);
-            renderM(m2, st2, r2);
-            renderM(m3, st3, r3);
+            r(m1, st1); r(m2, st2); r(m3, st3);
         }
 
         function updateString() {
-            // M1 Sağ Yüz: r1=ns -> S. r1=sn -> N.
             let f1R = (r1==='ns') ? 'S' : 'N';
-            // M2 Sol Yüz: r2=ns -> N. r2=sn -> S.
             let f2L = (r2==='ns') ? 'N' : 'S';
-            // M2 Sağ Yüz: r2=ns -> S. r2=sn -> N.
             let f2R = (r2==='ns') ? 'S' : 'N';
-            // M3 Sol Yüz: r3=ns -> N. r3=sn -> S.
             let f3L = (r3==='ns') ? 'N' : 'S';
 
             let att12 = (f1R !== f2L);
@@ -530,7 +521,6 @@
 
             if(Math.abs(d12)<25) {
                 let deg=(25-Math.abs(d12))*0.8;
-                // Zıt(ÇEK): İpler içe (/ \). Aynı(İT): İpler dışa (\ /).
                 if(att12) { a1=deg; a2L=-deg; } else { a1=-deg; a2L=deg; }
             }
             if(Math.abs(d23)<25) {
@@ -541,8 +531,7 @@
             p2.style.transform=`rotate(${a2L+a2R}deg)`;
             p3.style.transform=`rotate(${a3}deg)`;
         }
-
-        setStringState(1, 'hide'); setStringState(2, 'hide'); setStringState(3, 'hide');
+        setStringState(1, 'ns'); setStringState(2, 'hide'); setStringState(3, 'sn');
 
     </script>
 </body>
