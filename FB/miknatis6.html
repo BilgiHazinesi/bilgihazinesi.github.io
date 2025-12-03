@@ -1,151 +1,148 @@
-Harika bir eğitim materyali vizyonu\! Söylediğiniz 4 maddeyi de dikkate alarak projeyi **"V12.0 - Mobil Uyumlu ve Oyunlaştırılmış Nihai Sürüm"** haline getirdim.
-
-**Yapılan Değişiklikler ve Yenilikler:**
-
-1.  **Görsel Düzeltme:** "At Nalı" mıknatıs kaldırıldı, yerine tam istediğiniz formda **"U Mıknatıs"** (Paralel kollu) çizimi eklendi.
-2.  **Mobil/Tablet Uyumu:** Kodun tamamına `touch-action` ve `preventDefault` komutları eklendi. Artık öğrenciler telefonlarından parmaklarıyla mıknatısları sorunsuzca sürükleyebilirler, sayfa kaymaz.
-3.  **3'lü İp Deneyi:** İp (Sarkaç) bölümüne 3. bir mıknatıs eklendi. Artık ortadaki mıknatısın hem sağdan hem soldan nasıl etkilendiğini gözlemleyebilirsiniz.
-4.  **Kutupları Bul Oyunu (GAMIFICATION):**
-      * **Yay Oyunu:** Mıknatısın kutupları gizlenir (`?`). Öğrenci yayı hareket ettirerek (itiyor mu çekiyor mu?) gizli kutbu tahmin etmeye çalışır.
-      * **İp Oyunu:** Ortadaki mıknatısın kutupları gizlenir. Öğrenci sağ ve sol mıknatısların hareketine bakarak ortadakinin kutbunu bulmaya çalışır.
-
-İşte sınıfınızda öğrencilerinize link olarak atabileceğiniz veya akıllı tahtada açabileceğiniz o kod:
-
-```html
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fen Bilimleri: Mıknatıs Dedektifi</title>
+    <title>Fen Bilimleri: Mıknatıs Dedektifi (Final V13)</title>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --n-color: #ff4757; /* Kırmızı */
-            --s-color: #2f3542; /* Koyu Gri/Mavi (Daha gerçekçi) */
-            --bg-color: #f1f2f6;
-            --unknown-color: #a4b0be; /* Soru işareti rengi */
+            --n-color: #ff0000; /* Tam Kırmızı */
+            --s-color: #0044ff; /* Tam Mavi */
+            --bg-color: #f0f2f5;
+            --unknown-color: #b2bec3;
         }
 
         body {
             font-family: 'Comic Neue', cursive;
             background-color: var(--bg-color);
             margin: 0;
-            padding: 10px;
+            padding: 5px;
             display: flex;
             flex-direction: column;
             align-items: center;
             user-select: none;
-            touch-action: none; /* Mobilde sayfa kaymasını engeller */
+            touch-action: none; /* Mobilde kaymayı önler */
         }
 
         /* --- MENÜ --- */
         .nav-container {
-            display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; width: 100%;
+            display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; width: 100%;
         }
         .nav-btn {
-            padding: 10px 15px; border: none; border-radius: 20px; cursor: pointer;
-            font-size: 1rem; font-weight: bold; color: #555; background: white;
-            box-shadow: 0 3px 0 rgba(0,0,0,0.1); transition: 0.2s; flex: 1; min-width: 120px; max-width: 200px;
+            padding: 8px 12px; border: none; border-radius: 20px; cursor: pointer;
+            font-size: 0.9rem; font-weight: bold; color: #555; background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; min-width: 80px;
         }
-        .nav-btn.active { background: #3742fa; color: white; transform: translateY(2px); box-shadow: none; }
+        .nav-btn.active { background: #2c3e50; color: white; transform: scale(1.05); }
 
         /* --- PANELLER --- */
-        .panel { display: none; width: 100%; max-width: 800px; height: 80vh; animation: fadeIn 0.3s; }
+        .panel { display: none; width: 100%; max-width: 900px; height: 85vh; animation: fadeIn 0.3s; }
         .panel.active { display: block; }
         @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
 
         .card {
             background: white; border-radius: 15px; height: 100%;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative;
-            border: 3px solid #dfe4ea; overflow: hidden;
+            border: 2px solid #ccc; overflow: hidden;
             display: flex; flex-direction: column;
         }
         
         .header {
-            background: #f1f2f6; padding: 10px; text-align: center; 
-            font-size: 1.2rem; font-weight: bold; color: #2f3542; border-bottom: 2px solid #ced6e0;
+            background: #dfe6e9; padding: 10px; text-align: center; 
+            font-size: 1.1rem; font-weight: bold; color: #2d3436; border-bottom: 2px solid #b2bec3;
             display: flex; justify-content: space-between; align-items: center;
         }
 
         .workspace {
             flex: 1; position: relative; overflow: hidden;
-            background-image: radial-gradient(#ced6e0 2px, transparent 2px);
+            background-image: radial-gradient(#b2bec3 2px, transparent 2px);
             background-size: 20px 20px;
-            touch-action: none; /* Önemli: Sürükleme için */
+            touch-action: none;
         }
 
         .controls {
-            padding: 10px; background: #eee; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; z-index: 20;
+            padding: 10px; background: #eee; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; z-index: 20;
         }
         
         .btn {
-            padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
-            font-weight: bold; font-family: inherit; color: white; box-shadow: 0 3px 0 rgba(0,0,0,0.2);
-            font-size: 0.9rem;
+            padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer;
+            font-weight: bold; color: white; box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+            font-size: 0.9rem; font-family: inherit;
         }
         .btn:active { transform: translateY(3px); box-shadow: none; }
-        .btn-green { background: #2ed573; }
-        .btn-orange { background: #ffa502; }
-        .btn-red { background: #ff4757; }
-        .btn-blue { background: #1e90ff; }
+        .btn-green { background: #00b894; }
+        .btn-orange { background: #e17055; }
+        .btn-red { background: #d63031; }
+        .btn-blue { background: #0984e3; }
+        .btn-purple { background: #6c5ce7; }
 
         /* --- MIKNATIS STİLLERİ --- */
-        .pole { flex: 1; display: flex; align-items: center; justify-content: center; height: 100%; width: 100%; color: white; text-shadow: 1px 1px 0 #000;}
+        .pole { flex: 1; display: flex; align-items: center; justify-content: center; height: 100%; width: 100%; color: white; font-size: 1.2rem; text-shadow: 1px 1px 2px black;}
         .pole.n { background: var(--n-color); }
         .pole.s { background: var(--s-color); }
         
-        /* Gizli Mıknatıs Modu (Oyun İçin) */
-        .hidden-pole .pole { background: var(--unknown-color) !important; color: #2f3542; text-shadow: none; }
-        .hidden-pole .pole::after { content: '?'; font-size: 1.5rem; }
-        .hidden-pole .pole.n { content: ''; } 
-        .hidden-pole .pole.s { content: ''; } 
+        /* Gizli Mod */
+        .hidden-mag .pole { background: var(--unknown-color) !important; color: #636e72; text-shadow: none; }
+        .hidden-mag .pole::after { content: '?'; font-size: 1.5rem; }
+        .hidden-mag .pole.n, .hidden-mag .pole.s { content: ''; } 
 
         .lab-mag {
             position: absolute; display: flex; width: 120px; height: 40px;
             border-radius: 4px; border: 2px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            font-size: 1.1rem; font-weight: bold; cursor: grab; z-index: 10;
+            font-weight: bold; cursor: grab; z-index: 10;
         }
         
         .q-mag {
             position: absolute; display: flex; border: 2px solid #555;
-            font-size: 1rem; font-weight: bold; color: white; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            font-weight: bold; color: white; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         .q-mag.vertical { width: 60px; height: 90px; flex-direction: column; }
         .q-mag.horizontal { width: 90px; height: 35px; flex-direction: row; }
 
         /* Yay ve İp Görselleri */
-        #spring-path { fill: none; stroke: #2f3542; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+        #spring-path { fill: none; stroke: #2d3436; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+        
         .pendulum {
-            position: absolute; top: 0; width: 2px; height: 200px; transform-origin: top center;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; top: 0; width: 40px; height: 200px; /* Tıklama alanı genişletildi */
+            transform-origin: top center; display: flex; justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: grab;
         }
-        .string { width: 2px; height: 100%; background: #2f3542; margin: 0 auto; }
+        .pendulum-string { width: 2px; height: 100%; background: #2d3436; pointer-events: none; }
+        .drag-handle {
+            position: absolute; top: 0; width: 40px; height: 40px; background: rgba(0,0,0,0.1); 
+            border-radius: 50%; cursor: ew-resize; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: #555;
+        }
 
-        /* Oyun Modu Bildirimi */
-        .game-status {
-            font-size: 0.9rem; background: #fff3cd; padding: 5px 10px; border-radius: 5px; color: #856404; display: none;
+        /* Oyun Mesajı */
+        .game-toast {
+            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 20px;
+            border: 2px solid #fdcb6e; font-weight: bold; color: #d63031; display: none; pointer-events: none;
+            z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         /* Galeri */
-        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; overflow-y: auto; height: 100%; }
-        .gallery-item { text-align: center; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; overflow-y: auto; }
+        .gallery-item { text-align: center; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
     </style>
 </head>
 <body>
 
     <div class="nav-container">
-        <button class="nav-btn active" onclick="showTab(1)">1. Serbest Lab</button>
-        <button class="nav-btn" onclick="showTab(2)">2. Yay Oyunu</button>
-        <button class="nav-btn" onclick="showTab(3)">3. İp Oyunu (3'lü)</button>
+        <button class="nav-btn active" onclick="showTab(1)">1. Lab</button>
+        <button class="nav-btn" onclick="showTab(2)">2. Yay Sorusu</button>
+        <button class="nav-btn" onclick="showTab(3)">3. İp Sorusu</button>
         <button class="nav-btn" onclick="showTab(4)">4. Çeşitler</button>
     </div>
 
     <div id="tab1" class="panel active">
         <div class="card">
             <div class="header">
-                <span>Serbest Deney</span>
+                <span>Serbest Lab</span>
                 <span style="font-size:0.8rem; font-weight:normal;">Mıknatısa Çift Tıkla = Çevir</span>
             </div>
             <div class="workspace" id="lab-space"></div>
@@ -162,14 +159,16 @@ Harika bir eğitim materyali vizyonu\! Söylediğiniz 4 maddeyi de dikkate alara
         <div class="card">
             <div class="header">
                 <span>Yay Kuvveti</span>
-                <div id="spring-game-msg" class="game-status">🕵️ Kutupları Bul Modu Aktif!</div>
+                <button class="btn btn-purple" style="padding:4px 10px; font-size:0.8rem;" onclick="toggleSpringGame()">🎮 KUTUPLARI BUL OYUNU</button>
             </div>
+            <div id="spring-msg" class="game-toast">Gizli Kutbu Tahmin Et!</div>
+            
             <div class="workspace" id="spring-space">
                 <svg width="60" height="600" style="position:absolute; left:50%; transform:translateX(-50%); overflow:visible;">
                     <path id="spring-path" d="" />
                 </svg>
 
-                <div id="s-top" class="q-mag vertical" style="top:80px; left:50%; transform:translateX(-50%);">
+                <div id="s-top" class="q-mag vertical" style="top:50px; left:50%; transform:translateX(-50%);">
                     <div class="pole s">S</div><div class="pole n">N</div>
                 </div>
 
@@ -178,9 +177,9 @@ Harika bir eğitim materyali vizyonu\! Söylediğiniz 4 maddeyi de dikkate alara
                 </div>
             </div>
             <div class="controls">
-                <button class="btn btn-blue" onclick="toggleSpringGame()">🎮 Oyunu Başlat/Bitir</button>
-                <button class="btn btn-orange" id="btn-reveal-spring" style="display:none;" onclick="revealSpring()">👁️ Göster</button>
-                <button class="btn btn-green" onclick="flipSpring('bot')">Altı Çevir 🔄</button>
+                <button class="btn btn-orange" id="btn-reveal-spring" style="display:none;" onclick="revealSpring()">👁️ GÖSTER</button>
+                <button class="btn btn-green" onclick="flipSpring('top')">Üstü Çevir</button>
+                <button class="btn btn-green" onclick="flipSpring('bot')">Altı Çevir</button>
             </div>
         </div>
     </div>
@@ -189,69 +188,71 @@ Harika bir eğitim materyali vizyonu\! Söylediğiniz 4 maddeyi de dikkate alara
         <div class="card">
             <div class="header">
                 <span>3'lü Sarkaç</span>
-                <div id="string-game-msg" class="game-status">🕵️ Ortadaki Mıknatısı Bul!</div>
+                <button class="btn btn-purple" style="padding:4px 10px; font-size:0.8rem;" onclick="toggleStringGame()">🎮 ORTADAKİNİ BUL OYUNU</button>
             </div>
+            <div id="string-msg" class="game-toast">Ortadaki Mıknatısı Bul!</div>
+
             <div class="workspace" id="string-space">
-                <div style="width:100%; height:15px; background:#2f3542;"></div>
-                
+                <div style="width:100%; height:15px; background:#2d3436;"></div>
+                <div style="width:100%; text-align:center; color:#777; font-size:0.8rem; margin-top:2px;">Gri dairelerden tutup ipleri sürükleyin</div>
+
                 <div id="p1" class="pendulum" style="left:20%;">
-                    <div class="string"></div>
-                    <div class="q-mag horizontal" style="bottom:0; left:-45px;" id="m1">
+                    <div class="drag-handle">↔</div>
+                    <div class="pendulum-string"></div>
+                    <div class="q-mag horizontal" style="bottom:0;" id="m1">
                         <div class="pole n">N</div><div class="pole s">S</div>
                     </div>
                 </div>
 
-                <div id="p2" class="pendulum" style="left:50%; cursor:ew-resize;">
-                     <div style="position:absolute; top:40%; background:rgba(255,255,255,0.8); padding:2px 5px; border-radius:5px; font-size:0.7rem; pointer-events:none; width:60px; text-align:center; left:50%; transform:translateX(-50%);">↔ Sürükle</div>
-                    <div class="string"></div>
-                    <div class="q-mag horizontal" style="bottom:0; left:-45px;" id="m2">
+                <div id="p2" class="pendulum" style="left:50%;">
+                    <div class="drag-handle">↔</div>
+                    <div class="pendulum-string"></div>
+                    <div class="q-mag horizontal" style="bottom:0;" id="m2">
                         <div class="pole n">N</div><div class="pole s">S</div>
                     </div>
                 </div>
 
                 <div id="p3" class="pendulum" style="left:80%;">
-                    <div class="string"></div>
-                    <div class="q-mag horizontal" style="bottom:0; left:-45px;" id="m3">
+                    <div class="drag-handle">↔</div>
+                    <div class="pendulum-string"></div>
+                    <div class="q-mag horizontal" style="bottom:0;" id="m3">
                         <div class="pole n">N</div><div class="pole s">S</div>
                     </div>
                 </div>
             </div>
             <div class="controls">
-                <button class="btn btn-blue" onclick="toggleStringGame()">🎮 Oyunu Başlat/Bitir</button>
-                <button class="btn btn-orange" id="btn-reveal-string" style="display:none;" onclick="revealString()">👁️ Göster</button>
-                <div style="width:100%; display:flex; justify-content:center; gap:5px; margin-top:5px;">
-                    <button class="btn btn-green" onclick="flipString(1)">Solu Çevir</button>
-                    <button class="btn btn-green" onclick="flipString(2)">Ortayı Çevir</button>
-                    <button class="btn btn-green" onclick="flipString(3)">Sağı Çevir</button>
-                </div>
+                <button class="btn btn-orange" id="btn-reveal-string" style="display:none;" onclick="revealString()">👁️ GÖSTER</button>
+                <button class="btn btn-blue" onclick="flipString(1)">Sol Çevir</button>
+                <button class="btn btn-blue" onclick="flipString(2)">Orta Çevir</button>
+                <button class="btn btn-blue" onclick="flipString(3)">Sağ Çevir</button>
             </div>
         </div>
     </div>
 
     <div id="tab4" class="panel">
         <div class="card">
-            <div class="header">Mıknatıs Türleri</div>
+            <div class="header">Mıknatıs Çeşitleri</div>
             <div class="workspace">
                 <div class="gallery-grid">
                     <div class="gallery-item">
-                        <svg width="100" height="120" viewBox="0 0 100 120" style="margin:auto;">
-                            <path d="M20,10 L20,80 Q20,120 50,120 Q80,120 80,80 L80,10 H60 L60,80 Q60,100 50,100 Q40,100 40,80 L40,10 Z" fill="#bdc3c7" stroke="#333" stroke-width="2"/>
-                            <rect x="20" y="10" width="20" height="30" fill="#ff4757" />
-                            <text x="30" y="30" fill="white" font-weight="bold" text-anchor="middle">N</text>
-                            <rect x="60" y="10" width="20" height="30" fill="#2f3542" />
-                            <text x="70" y="30" fill="white" font-weight="bold" text-anchor="middle">S</text>
+                        <svg width="80" height="100" viewBox="0 0 100 120" style="margin:auto;">
+                            <path d="M20,10 L20,80 Q20,120 50,120 Q80,120 80,80 L80,10 H60 L60,80 Q60,100 50,100 Q40,100 40,80 L40,10 Z" fill="#b2bec3" stroke="#333" stroke-width="2"/>
+                            <rect x="20" y="10" width="20" height="40" fill="#ff0000" />
+                            <text x="30" y="35" fill="white" font-weight="bold" text-anchor="middle">N</text>
+                            <rect x="60" y="10" width="20" height="40" fill="#0044ff" />
+                            <text x="70" y="35" fill="white" font-weight="bold" text-anchor="middle">S</text>
                         </svg>
                         <div style="font-weight:bold; margin-top:5px;">U Mıknatıs</div>
                     </div>
                     <div class="gallery-item">
-                        <div style="width:100%; height:30px; display:flex; margin:45px auto; border-radius:4px; overflow:hidden;">
-                            <div style="width:50%; background:#ff4757; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center;">N</div>
-                            <div style="width:50%; background:#2f3542; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center;">S</div>
+                        <div style="width:100%; height:30px; display:flex; margin:20px auto; border-radius:4px; overflow:hidden;">
+                            <div style="width:50%; background:#ff0000; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center;">N</div>
+                            <div style="width:50%; background:#0044ff; color:white; font-weight:bold; display:flex; justify-content:center; align-items:center;">S</div>
                         </div>
                         <div style="font-weight:bold;">Çubuk Mıknatıs</div>
                     </div>
                      <div class="gallery-item">
-                        <div style="width:70px; height:70px; border-radius:50%; background:radial-gradient(#bdc3c7, #2f3542); margin:25px auto;"></div>
+                        <div style="width:60px; height:60px; border-radius:50%; background:radial-gradient(#b2bec3, #2d3436); margin:10px auto;"></div>
                         <div style="font-weight:bold;">Yuvarlak Mıknatıs</div>
                     </div>
                 </div>
@@ -260,7 +261,7 @@ Harika bir eğitim materyali vizyonu\! Söylediğiniz 4 maddeyi de dikkate alara
     </div>
 
     <script>
-        // --- TAB YÖNETİMİ ---
+        // --- SEKME GEÇİŞİ ---
         function showTab(idx) {
             document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === idx-1));
             document.querySelectorAll('.nav-btn').forEach((b, i) => b.classList.toggle('active', i === idx-1));
@@ -268,17 +269,17 @@ Harika bir eğitim materyali vizyonu\! Söylediğiniz 4 maddeyi de dikkate alara
             if(idx===3) updateString();
         }
 
-        /* =================================================================
-           1. SERBEST LABORATUVAR (MOBİL UYUMLU + YAPIŞMA)
-           ================================================================= */
+        /* ----------------------------------------------------
+           TAB 1: LABORATUVAR (Yapışma + Kırma + Silme)
+           ---------------------------------------------------- */
         const labSpace = document.getElementById('lab-space');
         let labMagnets = []; let labMode = 'move';
 
-        function labToggleBreak() { labMode=(labMode==='break')?'move':'break'; updateLabBtn(); }
-        function labToggleDel() { labMode=(labMode==='delete')?'move':'delete'; updateLabBtn(); }
-        function updateLabBtn() {
-            document.getElementById('btn-break').style.border = (labMode==='break') ? '2px solid #333' : 'none';
-            document.getElementById('btn-del').style.border = (labMode==='delete') ? '2px solid #333' : 'none';
+        function labToggleBreak() { labMode=(labMode==='break')?'move':'break'; updateLabUI(); }
+        function labToggleDel() { labMode=(labMode==='delete')?'move':'delete'; updateLabUI(); }
+        function updateLabUI() {
+            document.getElementById('btn-break').style.border = (labMode==='break')?'3px solid #333':'none';
+            document.getElementById('btn-del').style.border = (labMode==='delete')?'3px solid #333':'none';
         }
 
         class LabMagnet {
@@ -286,21 +287,20 @@ Harika bir eğitim materyali vizyonu\! Söylediğiniz 4 maddeyi de dikkate alara
                 this.x=x; this.y=y; this.w=w||120; this.h=h||40; this.vx=0; this.vy=0; this.flipped=false; this.dragging=false;
                 this.el=document.createElement('div'); this.el.className='lab-mag'; this.render();
                 
-                // Mouse & Touch Events
                 this.el.addEventListener('mousedown', e=>this.start(e));
                 this.el.addEventListener('touchstart', e=>this.start(e), {passive:false});
-                
                 this.el.addEventListener('dblclick', ()=>{ if(labMode==='move'){ this.flipped=!this.flipped; this.render(); } });
                 
                 labSpace.appendChild(this.el); this.update();
             }
             render() {
                 this.el.style.width=this.w+'px'; this.el.style.height=this.h+'px';
-                this.el.innerHTML = this.flipped ? `<div class="pole s">S</div><div class="pole n">N</div>` : `<div class="pole n">N</div><div class="pole s">S</div>`;
+                this.el.innerHTML = this.flipped ? 
+                    `<div class="pole s">S</div><div class="pole n">N</div>` : 
+                    `<div class="pole n">N</div><div class="pole s">S</div>`;
             }
             start(e) {
-                if(e.type === 'touchstart') e.preventDefault(); 
-                e.stopPropagation();
+                if(e.type==='touchstart') e.preventDefault(); e.stopPropagation();
                 if(labMode==='delete') { this.destroy(); return; }
                 if(labMode==='break') {
                     if(this.w<60) return; this.destroy();
@@ -311,71 +311,55 @@ Harika bir eğitim materyali vizyonu\! Söylediğiniz 4 maddeyi de dikkate alara
                     labMagnets.push(m1,m2); return;
                 }
                 this.dragging=true;
-                const clientX = e.clientX || e.touches[0].clientX;
-                const clientY = e.clientY || e.touches[0].clientY;
-                this.ox = clientX - this.x; this.oy = clientY - this.y;
+                const cx=e.clientX||e.touches[0].clientX; const cy=e.clientY||e.touches[0].clientY;
+                this.ox=cx-this.x; this.oy=cy-this.y;
             }
             destroy() { this.el.remove(); labMagnets=labMagnets.filter(m=>m!==this); }
             update() { this.el.style.left=this.x+'px'; this.el.style.top=this.y+'px'; }
         }
 
-        // Global Drag Events (Mobile & Desktop)
-        function handleMove(e) {
-            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-            labMagnets.forEach(m=>{
-                if(m.dragging){
-                    m.x = clientX - m.ox; m.y = clientY - m.oy;
-                    m.update();
-                }
-            });
+        // Lab Global Drag
+        function labMove(e) {
+            const cx=e.clientX||(e.touches?e.touches[0].clientX:0);
+            const cy=e.clientY||(e.touches?e.touches[0].clientY:0);
+            labMagnets.forEach(m=>{ if(m.dragging){ m.x=cx-m.ox; m.y=cy-m.oy; m.update(); }});
         }
-        function handleEnd() { labMagnets.forEach(m=>m.dragging=false); }
-        
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchmove', handleMove, {passive:false});
-        window.addEventListener('mouseup', handleEnd);
-        window.addEventListener('touchend', handleEnd);
+        function labEnd() { labMagnets.forEach(m=>m.dragging=false); }
+        window.addEventListener('mousemove', labMove); window.addEventListener('touchmove', labMove, {passive:false});
+        window.addEventListener('mouseup', labEnd); window.addEventListener('touchend', labEnd);
 
         function labAdd() { labMagnets.push(new LabMagnet(50+Math.random()*100, 50+Math.random()*100)); }
         function labClear() { labMagnets.forEach(m=>m.el.remove()); labMagnets=[]; }
 
+        // Lab Fizik (Kenetlenme Dahil)
         function labLoop() {
             for(let i=0; i<labMagnets.length; i++){
                 let m1=labMagnets[i]; if(m1.dragging) continue;
                 for(let j=0; j<labMagnets.length; j++){
                     if(i===j) continue; let m2=labMagnets[j];
                     
-                    // Kenetlenme (Snap) Kontrolü
-                    let yDist = Math.abs((m1.y+m1.h/2) - (m2.y+m2.h/2));
-                    let m1R = m1.x + m1.w; let m2L = m2.x;
-                    let distX = Math.abs(m2L - m1R);
+                    // Kenetlenme
+                    let yd=Math.abs((m1.y+m1.h/2)-(m2.y+m2.h/2));
+                    let xd=Math.abs((m2.x)-(m1.x+m1.w)); // m1 sağ m2 sol
                     
-                    // Sağ-Sol Yapışma (Basitleştirilmiş)
-                    if(yDist < 20 && distX < 20) {
-                         // Kutupları kontrol et: m1 Sağ vs m2 Sol
-                         let p1 = m1.flipped ? 'N' : 'S';
-                         let p2 = m2.flipped ? 'S' : 'N';
-                         if(p1 !== p2) { // ZIT -> Yapış
-                             m1.x = m2.x - m1.w; m1.y = m2.y; m1.vx=0; m1.vy=0; continue;
-                         }
+                    if(yd<20 && xd<20) {
+                        let p1=m1.flipped?'N':'S'; let p2=m2.flipped?'S':'N';
+                        if(p1!==p2) { m1.x=m2.x-m1.w; m1.y=m2.y; m1.vx=0; m1.vy=0; continue; }
                     }
 
-                    // Uzaktan İtme/Çekme
+                    // Uzak Fizik
                     let dx=(m2.x+m2.w/2)-(m1.x+m1.w/2); let dy=(m2.y+m2.h/2)-(m1.y+m1.h/2);
                     let dist=Math.sqrt(dx*dx+dy*dy);
                     if(dist<50 || dist>250) continue;
-                    
                     let isM2Right = (m2.x+m2.w/2) > (m1.x+m1.w/2);
-                    let pA = isM2Right ? (m1.flipped?'n':'s') : (m1.flipped?'s':'n');
-                    let pB = isM2Right ? (m2.flipped?'s':'n') : (m2.flipped?'n':'s');
+                    let pA = isM2Right ? (m1.flipped?'N':'S') : (m1.flipped?'S':'N');
+                    let pB = isM2Right ? (m2.flipped?'S':'N') : (m2.flipped?'N':'S');
                     let attract = (pA !== pB);
                     let f=1000/(dist*dist); let fx=(dx/dist)*f; let fy=(dy/dist)*f;
                     if(attract) { m1.vx+=fx; m1.vy+=fy; } else { m1.vx-=fx; m1.vy-=fy; }
                 }
                 m1.x+=m1.vx; m1.y+=m1.vy; m1.vx*=0.9; m1.vy*=0.9;
-                // Duvarlar
-                if(m1.x<0)m1.x=0; if(m1.y<0)m1.y=0; 
+                if(m1.x<0)m1.x=0; if(m1.y<0)m1.y=0;
                 if(m1.x>labSpace.clientWidth-m1.w)m1.x=labSpace.clientWidth-m1.w;
                 if(m1.y>labSpace.clientHeight-m1.h)m1.y=labSpace.clientHeight-m1.h;
                 m1.update();
@@ -385,216 +369,173 @@ Harika bir eğitim materyali vizyonu\! Söylediğiniz 4 maddeyi de dikkate alara
         labAdd(); labAdd(); labLoop();
 
 
-        /* =================================================================
-           2. YAY OYUNU (GAMIFICATION)
-           ================================================================= */
-        const sTop = document.getElementById('s-top');
-        const sBot = document.getElementById('s-bot');
-        const sPath = document.getElementById('spring-path');
+        /* ----------------------------------------------------
+           TAB 2: YAY OYUNU (GİZLEME ÖZELLİĞİ EKLENDİ)
+           ---------------------------------------------------- */
+        const sTop=document.getElementById('s-top');
+        const sBot=document.getElementById('s-bot');
+        const sPath=document.getElementById('spring-path');
         let sDragging=false; 
         let sBotFlipped=false; let sTopFlipped=false;
         let isSpringGame=false;
 
-        // Mobil Uyumlu Eventler
         sBot.addEventListener('mousedown', ()=>sDragging=true);
         sBot.addEventListener('touchstart', (e)=>{e.preventDefault(); sDragging=true;}, {passive:false});
         
-        const springSpace = document.getElementById('spring-space');
-        function moveSpring(e) {
+        function springMove(e) {
             if(!sDragging) return;
-            const clientY = e.clientY || e.touches[0].clientY;
-            let rect = springSpace.getBoundingClientRect();
-            let y = clientY - rect.top - 45;
-            if(y<180) y=180; if(y>400) y=400;
-            sBot.style.top=y+'px';
-            updateSpring();
+            const cy=e.clientY||e.touches[0].clientY;
+            let rect=document.getElementById('spring-space').getBoundingClientRect();
+            let y=cy-rect.top-45; if(y<180) y=180; if(y>400) y=400;
+            sBot.style.top=y+'px'; updateSpring();
         }
-        springSpace.addEventListener('mousemove', moveSpring);
-        springSpace.addEventListener('touchmove', moveSpring, {passive:false});
+        document.getElementById('spring-space').addEventListener('mousemove', springMove);
+        document.getElementById('spring-space').addEventListener('touchmove', springMove, {passive:false});
         window.addEventListener('mouseup', ()=>sDragging=false);
         window.addEventListener('touchend', ()=>sDragging=false);
 
-        function flipSpring(which) {
-            if(which==='bot') sBotFlipped=!sBotFlipped;
-            renderSpringMags();
-            updateSpring();
+        function flipSpring(w) {
+            if(w==='top') sTopFlipped=!sTopFlipped; else sBotFlipped=!sBotFlipped;
+            renderSpring(); updateSpring();
         }
 
-        function renderSpringMags() {
-            // Oyun Modu: Sadece alttakini gizle
+        function toggleSpringGame() {
+            isSpringGame = !isSpringGame;
+            document.getElementById('spring-msg').style.display=isSpringGame?'block':'none';
+            document.getElementById('btn-reveal-spring').style.display=isSpringGame?'inline-block':'none';
+            if(isSpringGame) sBotFlipped = Math.random()<0.5; // Rastgele
+            renderSpring();
+        }
+        function revealSpring() {
+            isSpringGame=false;
+            document.getElementById('spring-msg').style.display='none';
+            document.getElementById('btn-reveal-spring').style.display='none';
+            renderSpring();
+        }
+
+        function renderSpring() {
+            sTop.innerHTML = sTopFlipped ? `<div class="pole n">N</div><div class="pole s">S</div>` : `<div class="pole s">S</div><div class="pole n">N</div>`;
+            
             if(isSpringGame) {
-                sBot.className = 'q-mag vertical hidden-pole';
-                sBot.innerHTML = `<div class="pole"></div>`; // Gizli
+                sBot.className = 'q-mag vertical hidden-mag';
+                sBot.innerHTML = `<div class="pole"></div>`;
             } else {
                 sBot.className = 'q-mag vertical';
                 sBot.innerHTML = sBotFlipped ? `<div class="pole n">N</div><div class="pole s">S</div>` : `<div class="pole s">S</div><div class="pole n">N</div>`;
             }
-            // Üstteki her zaman açık
-            sTop.innerHTML = sTopFlipped ? `<div class="pole n">N</div><div class="pole s">S</div>` : `<div class="pole s">S</div><div class="pole n">N</div>`;
         }
 
         function updateSpring() {
-            let faceTop = sTopFlipped ? 'S' : 'N';
-            let faceBot = sBotFlipped ? 'N' : 'S'; // Alttakinin üst yüzü
-            let attract = (faceTop !== faceBot);
-
-            let topY = 80 + 90; // Üst altı
-            let botY = parseInt(sBot.style.top);
-            let dist = botY - topY;
-
-            let offset = 0;
-            if(dist < 150) {
-                let f = (150-dist)/2;
-                offset = attract ? f : -f;
+            let fT = sTopFlipped?'S':'N'; let fB = sBotFlipped?'N':'S';
+            let attract = (fT!==fB);
+            
+            let tY=140; let bY=parseInt(sBot.style.top); let dist=bY-tY;
+            let offset=0;
+            if(dist<150) {
+                let f=(150-dist)/2;
+                offset = attract ? f : -f; 
             }
-            let newTopY = 80 + offset;
-            sTop.style.top = newTopY + 'px';
+            let nTY = 50 + offset; 
+            sTop.style.top=nTY+'px';
 
-            // Yay Çiz
             let coils=10; let path=`M30,0 L30,20`;
             for(let i=0; i<coils; i++){
-                let x=(i%2===0)?50:10; let y=20+(i*(newTopY-20)/coils);
+                let x=(i%2===0)?50:10; let y=20+(i*(nTY-20)/coils);
                 path+=` L${x},${y}`;
             }
-            path+=` L30,${newTopY}`; sPath.setAttribute('d', path);
+            path+=` L30,${nTY}`; sPath.setAttribute('d', path);
         }
+        renderSpring();
 
-        // Oyun Butonları
-        function toggleSpringGame() {
-            isSpringGame = !isSpringGame;
-            document.getElementById('spring-game-msg').style.display = isSpringGame ? 'block' : 'none';
-            document.getElementById('btn-reveal-spring').style.display = isSpringGame ? 'inline-block' : 'none';
-            // Rastgele bir durum ata
-            if(isSpringGame) {
-                sBotFlipped = Math.random() < 0.5;
-            }
-            renderSpringMags();
-            updateSpring();
-        }
-        function revealSpring() {
-            isSpringGame = false; // Oyunu bitir ve göster
-            document.getElementById('spring-game-msg').style.display = 'none';
-            document.getElementById('btn-reveal-spring').style.display = 'none';
-            renderSpringMags();
-        }
-
-
-        /* =================================================================
-           3. İP OYUNU (3 MIKNATIS + OYUN)
-           ================================================================= */
+        /* ----------------------------------------------------
+           TAB 3: İP OYUNU (3 MIKNATIS + SÜRÜKLENEBİLİR)
+           ---------------------------------------------------- */
         const p1=document.getElementById('p1'); const p2=document.getElementById('p2'); const p3=document.getElementById('p3');
         const m1=document.getElementById('m1'); const m2=document.getElementById('m2'); const m3=document.getElementById('m3');
-        let pDragging=false;
-        let f1=false; let f2=false; let f3=false; // Flipped states
+        let f1=false; let f2=false; let f3=false;
         let isStringGame=false;
+        let draggingPendulum = null;
 
-        p2.addEventListener('mousedown', ()=>pDragging=true);
-        p2.addEventListener('touchstart', (e)=>{e.preventDefault(); pDragging=true;}, {passive:false});
-        
+        // Tüm sarkaçlara dinleyici ekle
+        [p1, p2, p3].forEach(p => {
+            p.addEventListener('mousedown', (e)=>{ e.stopPropagation(); draggingPendulum=p; });
+            p.addEventListener('touchstart', (e)=>{ e.preventDefault(); e.stopPropagation(); draggingPendulum=p; }, {passive:false});
+        });
+
         const stringSpace = document.getElementById('string-space');
         function moveString(e) {
-            if(!pDragging) return;
-            const clientX = e.clientX || e.touches[0].clientX;
+            if(!draggingPendulum) return;
+            const cx=e.clientX||(e.touches?e.touches[0].clientX:0);
             let rect = stringSpace.getBoundingClientRect();
-            let x = ((clientX - rect.left)/rect.width)*100;
-            if(x<30) x=30; if(x>70) x=70; // 3 tane olduğu için sınırları daralttık
-            p2.style.left = x+'%';
+            let x = ((cx - rect.left)/rect.width)*100;
+            if(x<5) x=5; if(x>95) x=95;
+            draggingPendulum.style.left = x+'%';
             updateString();
         }
-        stringSpace.addEventListener('mousemove', moveString);
-        stringSpace.addEventListener('touchmove', moveString, {passive:false});
-        window.addEventListener('mouseup', ()=>pDragging=false);
-        window.addEventListener('touchend', ()=>pDragging=false);
+        window.addEventListener('mousemove', moveString); window.addEventListener('touchmove', moveString, {passive:false});
+        window.addEventListener('mouseup', ()=>draggingPendulum=null); window.addEventListener('touchend', ()=>draggingPendulum=null);
 
-        function flipString(num) {
-            if(num===1) f1=!f1;
-            if(num===2) f2=!f2;
-            if(num===3) f3=!f3;
-            renderStringMags();
-            updateString();
+        function flipString(n) {
+            if(n===1) f1=!f1; if(n===2) f2=!f2; if(n===3) f3=!f3;
+            renderString(); updateString();
         }
 
-        function renderStringMags() {
-            // Sol
+        function toggleStringGame() {
+            isStringGame=!isStringGame;
+            document.getElementById('string-msg').style.display=isStringGame?'block':'none';
+            document.getElementById('btn-reveal-string').style.display=isStringGame?'inline-block':'none';
+            if(isStringGame) f2 = Math.random()<0.5; 
+            renderString();
+        }
+        function revealString() {
+            isStringGame=false;
+            document.getElementById('string-msg').style.display='none';
+            document.getElementById('btn-reveal-string').style.display='none';
+            renderString();
+        }
+
+        function renderString() {
             m1.innerHTML = f1 ? `<div class="pole s">S</div><div class="pole n">N</div>` : `<div class="pole n">N</div><div class="pole s">S</div>`;
+            m3.innerHTML = f3 ? `<div class="pole s">S</div><div class="pole n">N</div>` : `<div class="pole n">N</div><div class="pole s">S</div>`;
             
-            // Orta (Oyun modundaysa gizle)
             if(isStringGame) {
-                m2.className = 'q-mag horizontal hidden-pole';
+                m2.className = 'q-mag horizontal hidden-mag';
                 m2.innerHTML = `<div class="pole"></div>`;
             } else {
                 m2.className = 'q-mag horizontal';
                 m2.innerHTML = f2 ? `<div class="pole s">S</div><div class="pole n">N</div>` : `<div class="pole n">N</div><div class="pole s">S</div>`;
             }
-
-            // Sağ
-            m3.innerHTML = f3 ? `<div class="pole s">S</div><div class="pole n">N</div>` : `<div class="pole n">N</div><div class="pole s">S</div>`;
         }
 
         function updateString() {
-            // M1-M2 Etkileşimi
-            // M1 Sağ Yüz: f1?N:S | M2 Sol Yüz: f2?S:N
-            let face1R = f1 ? 'N' : 'S';
-            let face2L = f2 ? 'S' : 'N';
+            // F1: Sağ Yüz? f1?N:S. F2: Sol Yüz? f2?S:N.
+            let face1R = f1 ? 'N' : 'S'; let face2L = f2 ? 'S' : 'N';
+            let face2R = f2 ? 'N' : 'S'; let face3L = f3 ? 'S' : 'N';
+            
             let attract12 = (face1R !== face2L);
-
-            // M2-M3 Etkileşimi
-            // M2 Sağ Yüz: f2?N:S | M3 Sol Yüz: f3?S:N
-            let face2R = f2 ? 'N' : 'S';
-            let face3L = f3 ? 'S' : 'N';
             let attract23 = (face2R !== face3L);
 
-            let x1=20; let x2=parseFloat(p2.style.left); let x3=80;
+            let x1=parseFloat(p1.style.left); let x2=parseFloat(p2.style.left); let x3=parseFloat(p3.style.left);
             
-            // Açı Hesapları
-            let dist12 = x2 - x1;
-            let dist23 = x3 - x2;
+            let dist12 = x2-x1; let dist23 = x3-x2;
+            let a1=0, a2L=0, a2R=0, a3=0;
 
-            let ang1=0, ang2L=0, ang2R=0, ang3=0;
-
-            if(dist12 < 30) {
-                let deg = (30-dist12)*0.8;
-                // Zıt(ÇEK): İpler içe (/ \). Aynı(İT): İpler dışa (\ /)
-                if(attract12) { ang1 = deg; ang2L = -deg; } // / \
-                else { ang1 = -deg; ang2L = deg; } // \ /
+            if(Math.abs(dist12)<25) {
+                let deg=(25-Math.abs(dist12))*0.8;
+                // Zıt(ÇEK): İpler İÇ (/ \). Aynı(İT): İpler DIŞ (\ /).
+                if(attract12) { a1=deg; a2L=-deg; } else { a1=-deg; a2L=deg; }
+            }
+            if(Math.abs(dist23)<25) {
+                let deg=(25-Math.abs(dist23))*0.8;
+                if(attract23) { a2R=deg; a3=-deg; } else { a2R=-deg; a3=deg; }
             }
 
-            if(dist23 < 30) {
-                let deg = (30-dist23)*0.8;
-                if(attract23) { ang2R = deg; ang3 = -deg; } // / \
-                else { ang2R = -deg; ang3 = deg; } // \ /
-            }
-
-            // Ortadaki sarkacın açısı iki tarafın toplamıdır
-            let ang2 = ang2L + ang2R;
-
-            p1.style.transform = `rotate(${ang1}deg)`;
-            p2.style.transform = `rotate(${ang2}deg)`;
-            p3.style.transform = `rotate(${ang3}deg)`;
+            p1.style.transform=`rotate(${a1}deg)`;
+            p2.style.transform=`rotate(${a2L+a2R}deg)`;
+            p3.style.transform=`rotate(${a3}deg)`;
         }
-
-        function toggleStringGame() {
-            isStringGame = !isStringGame;
-            document.getElementById('string-game-msg').style.display = isStringGame ? 'block' : 'none';
-            document.getElementById('btn-reveal-string').style.display = isStringGame ? 'inline-block' : 'none';
-            if(isStringGame) {
-                f2 = Math.random() < 0.5; // Rastgele
-            }
-            renderStringMags();
-            updateString();
-        }
-        function revealString() {
-            isStringGame = false;
-            document.getElementById('string-game-msg').style.display = 'none';
-            document.getElementById('btn-reveal-string').style.display = 'none';
-            renderStringMags();
-        }
-
-        // Başlat
-        updateSpring();
-        updateString();
+        renderString(); updateString();
 
     </script>
 </body>
 </html>
-```
