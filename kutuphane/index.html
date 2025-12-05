@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4/D Bulut Kütüphane (Online)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .status-indicator { font-size: 0.9rem; font-weight: bold; padding: 5px 10px; border-radius: 5px; }
+        .status-online { color: #27ae60; background: #e8f5e9; }
+        .status-loading { color: #e67e22; background: #fff3cd; }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
+        .tab-btn { flex: 1; min-width: 120px; padding: 15px; border: none; background: white; border-radius: 10px; cursor: pointer; font-weight: 600; color: #7f8c8d; transition: 0.3s; }
+        .tab-btn.active { background: var(--accent); color: white; }
+
+        .content-section { display: none; animation: fadeIn 0.3s; }
+        .content-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end; }
+        
+        input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; box-sizing: border-box; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-primary { background: var(--accent); }
+        .btn-success { background: var(--success); }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-whatsapp { background: #25D366; }
+        .btn-secondary { background: #7f8c8d; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .badge-reading { background: #fff3cd; color: #856404; }
+        .badge-returned { background: #d4edda; color: #155724; }
+
+        /* Loader */
+        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="loader">
+    <div class="spinner"></div>
+    <p style="margin-top:15px; font-weight:bold; color:#555;">Veriler Buluttan Çekiliyor...</p>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>☁️ 4/D Bulut Kütüphane</h1>
+        <div id="connectionStatus" class="status-indicator status-loading">Bağlanıyor...</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('lend')"><i class="fas fa-book-reader"></i> Kitap Ver</button>
+        <button class="tab-btn" onclick="switchTab('report')"><i class="fab fa-whatsapp"></i> Raporla</button>
+        <button class="tab-btn" onclick="switchTab('manager')"><i class="fas fa-edit"></i> Kitaplar</button>
+        <button class="tab-btn" onclick="switchTab('stats')"><i class="fas fa-chart-pie"></i> İstatistik</button>
+    </div>
+
+    <div id="lend" class="content-section active">
+        <div class="card" style="border-left: 5px solid #3498db;">
+            <div class="form-grid">
+                <div>
+                    <label>Öğrenci:</label>
+                    <input type="text" list="studentList" id="studentInput" placeholder="Öğrenci adı..." oninput="renderMainTable()" autocomplete="off">
+                    <datalist id="studentList"></datalist>
+                </div>
+                <div>
+                    <label>Kitap:</label>
+                    <input type="text" list="bookList" id="bookInput" placeholder="Kitap adı..." autocomplete="off">
+                    <datalist id="bookList"></datalist>
+                </div>
+                <button class="btn btn-primary" onclick="lendBook()">Teslim Et</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="tableTitle" style="margin:0;">📋 Güncel Durum</h3>
+                <button class="btn btn-secondary" style="font-size:0.8rem;" onclick="clearFilter()">Temizle</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="mainTable">
+                    <thead><tr><th>Tarih</th><th>Öğrenci</th><th>Kitap</th><th>Durum</th><th>İşlem</th></tr></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <p id="emptyMsg" style="text-align:center; color:#999; display:none; padding:20px;">Kayıt bulunamadı.</p>
+        </div>
+    </div>
+
+    <div id="report" class="content-section">
+        <div class="card" style="border-left: 5px solid #25D366;">
+            <div style="display:flex; gap:10px;">
+                <input type="text" list="studentList" id="reportStudentInput" placeholder="Öğrenci seç..." style="flex:1;">
+                <button class="btn btn-primary" onclick="generateReport()">Oluştur</button>
+            </div>
+            <div id="reportOutput" style="background:#e8f5e9; padding:15px; margin-top:15px; border-radius:8px; white-space:pre-wrap; border:1px solid #c8e6c9;"></div>
+            <button class="btn btn-whatsapp" onclick="copyReport()" style="margin-top:10px; width:100%; justify-content:center;">Kopyala</button>
+        </div>
+    </div>
+
+    <div id="manager" class="content-section">
+        <div class="card">
+            <h3>➕ Yeni Kitap Ekle</h3>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="newBookInput" placeholder="Kitap adı...">
+                <button class="btn btn-success" onclick="addNewBook()">Ekle</button>
+            </div>
+        </div>
+        <div class="card">
+            <h3>✏️ Düzenle</h3>
+            <input type="text" id="manageBookSearch" onkeyup="renderBookManager()" placeholder="Kitap ara...">
+            <div id="bookManagerList" style="margin-top:10px; max-height:300px; overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <div id="stats" class="content-section">
+        <div class="card">
+            <h3>🏆 En Çok Okuyanlar</h3>
+            <table id="rankingTable">
+                <thead><tr><th>Sıra</th><th>Öğrenci</th><th>Sayı</th></tr></thead>
+                <tbody id="rankingBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- AYARLAR ---
+    // AŞAĞIDAKİ ADRESE KENDİ GOOGLE SCRIPT URL'NİZİ YAPIŞTIRIN
+    const API_URL = "https://script.google.com/macros/s/AKfycbzBjB2Hmw6vpU2a1RyQsRsbcLgTviv4IeaOJMn0DPekb9RCfsam0nCwHOUNblB9nzqd/exec"; 
+
+    // Varsayılan Veriler (İlk Açılış İçin)
+    const defaultStudents = ["ELİF ADA KEKEÇ", "EYLÜL AFAT", "EYLÜL MUTAF", "KADİR BERKTAŞ", "NİL TİRYAKİ", "DENİZ GÜNEY", "AHMET ARİN AĞTÜRK", "GÜLNİHAL KARAKAŞ", "DOĞA BORA", "HAKAN AKDENİZ", "YEKTA URAS DEMİRER", "İDİL DEMİRCİ", "HAMZA KAAN ÇEVEN", "DURU AYKANAT", "HÜSEYİN ÇAĞAN GÜRGAH", "NAZ KARABAĞLI", "AHMET CEVDET KORKMAZ", "BEYZA DAĞDELEN", "DENİZ KİMYON", "MASAL DEFNE TEL", "DURU BÜKÜN", "İPEK MİMAROĞLU", "WAFA MAKANSSI", "AYNUR BUDAK"];
+    const defaultBooks = ["Küçük Prens", "Şeker Portakalı", "Keloğlan Masalları"];
+
+    let students = [];
+    let books = [];
+    let records = [];
+
+    // --- BAŞLANGIÇ & VERİ ÇEKME ---
+    window.onload = function() {
+        if(API_URL.includes("BURAYA")) {
+            alert("Lütfen HTML kodunu düzenleyip Google Script Linkini yapıştırın!");
+            document.getElementById('loader').style.display = 'none';
+            return;
+        }
+        fetchData();
+    };
+
+    function fetchData() {
+        document.getElementById('loader').style.display = 'flex';
+        fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+            students = (data.students && data.students.length > 0) ? data.students : defaultStudents.sort();
+            books = (data.books && data.books.length > 0) ? data.books : defaultBooks.sort();
+            records = data.records || [];
+            
+            updateUI();
+            document.getElementById('connectionStatus').innerText = "🟢 Online (Senkronize)";
+            document.getElementById('connectionStatus').className = "status-indicator status-online";
+            document.getElementById('loader').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Hata:', error);
+            alert("Veriler çekilemedi! İnternet bağlantınızı kontrol edin.");
+            document.getElementById('loader').style.display = 'none';
+        });
+    }
+
+    function syncData() {
+        // Veriyi Google'a Gönder
+        document.getElementById('connectionStatus').innerText = "🟡 Kaydediliyor...";
+        document.getElementById('connectionStatus').className = "status-indicator status-loading";
+        
+        const payload = JSON.stringify({ students, books, records });
+
+        fetch(API_URL, {
+            method: 'POST',
+            body: payload
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('connectionStatus').innerText = "🟢 Kaydedildi";
+            document.getElementById('connectionStatus').className = "status-indicator status-online";
+        })
+        .catch(error => {
+            alert("Kaydetme hatası!");
+            document.getElementById('connectionStatus').innerText = "🔴 Hata!";
+        });
+    }
+
+    function updateUI() {
+        populateDatalists();
+        renderMainTable();
+        renderBookManager();
+        calculateStats();
+    }
+
+    function switchTab(id) {
+        document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    function populateDatalists() {
+        const sList = document.getElementById('studentList');
+        const bList = document.getElementById('bookList');
+        sList.innerHTML = ''; bList.innerHTML = '';
+        students.forEach(s => { let o=document.createElement('option'); o.value=s; sList.appendChild(o); });
+        books.forEach(b => { let o=document.createElement('option'); o.value=b; bList.appendChild(o); });
+    }
+
+    // --- İŞLEMLER ---
+    function lendBook() {
+        const sVal = document.getElementById('studentInput').value.trim().toUpperCase();
+        const bVal = document.getElementById('bookInput').value.trim();
+        if(!sVal || !bVal) { alert("Öğrenci ve kitap seçin!"); return; }
+
+        if(!students.includes(sVal)) students.push(sVal);
+        if(!books.includes(bVal)) books.push(bVal);
+
+        records.unshift({
+            id: Date.now(),
+            date: new Date().toLocaleDateString('tr-TR'),
+            student: sVal,
+            book: bVal,
+            status: "Okuyor",
+            returnDate: "-"
+        });
+
+        document.getElementById('bookInput').value = "";
+        document.getElementById('bookInput').focus();
+        
+        updateUI();
+        syncData(); // Buluta kaydet
+    }
+
+    function renderMainTable() {
+        const sVal = document.getElementById('studentInput').value.trim().toUpperCase();
+        const tbody = document.getElementById('tableBody');
+        const title = document.getElementById('tableTitle');
+        tbody.innerHTML = "";
+        
+        let displayData = [];
+        if(sVal === "") {
+            title.innerText = "📋 Sınıfta Okunan Kitaplar";
+            displayData = records.filter(r => r.status === "Okuyor");
+        } else {
+            title.innerText = "👤 " + sVal + " Geçmişi";
+            displayData = records.filter(r => r.student === sVal);
+        }
+
+        if(displayData.length === 0) {
+            document.getElementById('emptyMsg').style.display = 'block';
+        } else {
+            document.getElementById('emptyMsg').style.display = 'none';
+            displayData.forEach(r => {
+                let isReading = r.status === "Okuyor";
+                let btn = isReading 
+                    ? `<button class="btn btn-warning" style="font-size:0.8rem; padding:5px;" onclick="returnBook(${r.id}, '${r.student}')">İade Al</button>`
+                    : `<span>${r.returnDate}</span>`;
+                
+                let row = `<tr>
+                    <td>${r.date}</td>
+                    <td>${r.student}</td>
+                    <td>${r.book}</td>
+                    <td><span class="badge ${isReading?'badge-reading':'badge-returned'}">${r.status}</span></td>
+                    <td>${btn}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+    }
+
+    function returnBook(id, sName) {
+        const rec = records.find(r => r.id === id);
+        if(rec) {
+            rec.status = "İade Etti";
+            rec.returnDate = new Date().toLocaleDateString('tr-TR');
+            updateUI();
+            syncData(); // Buluta kaydet
+
+            if(confirm("İade alındı. Yeni kitap verelim mi?")) {
+                document.getElementById('studentInput').value = sName;
+                renderMainTable();
+                document.getElementById('bookInput').focus();
+            }
+        }
+    }
+
+    function clearFilter() {
+        document.getElementById('studentInput').value = "";
+        renderMainTable();
+    }
+
+    // --- YÖNETİM & RAPOR ---
+    function addNewBook() {
+        const val = document.getElementById('newBookInput').value.trim();
+        if(val && !books.includes(val)) {
+            books.push(val); books.sort();
+            document.getElementById('newBookInput').value = "";
+            updateUI();
+            syncData();
+            alert("Kitap eklendi.");
+        }
+    }
+
+    function renderBookManager() {
+        const filter = document.getElementById('manageBookSearch').value.toLowerCase();
+        const div = document.getElementById('bookManagerList');
+        div.innerHTML = "";
+        books.forEach(b => {
+            if(b.toLowerCase().includes(filter)) {
+                let item = document.createElement('div');
+                item.style.padding = "10px";
+                item.style.borderBottom = "1px solid #eee";
+                item.innerHTML = `📘 ${b} <button class="btn btn-secondary" style="font-size:0.7rem; float:right;" onclick="renameBook('${b}')">Düzenle</button>`;
+                div.appendChild(item);
+            }
+        });
+    }
+
+    function renameBook(oldName) {
+        let newName = prompt("Yeni ad:", oldName);
+        if(newName && newName !== oldName) {
+            books[books.indexOf(oldName)] = newName;
+            records.forEach(r => { if(r.book === oldName) r.book = newName; });
+            updateUI();
+            syncData();
+        }
+    }
+
+    function generateReport() {
+        const sVal = document.getElementById('reportStudentInput').value.trim().toUpperCase();
+        if(!sVal) return;
+        const sRecs = records.filter(r => r.student === sVal);
+        const reading = sRecs.filter(r => r.status === "Okuyor");
+        const done = sRecs.filter(r => r.status === "İade Etti");
+
+        let msg = `Sayın Velimiz,\nÖğrencimiz *${sVal}*, 4/D kütüphanesinden ${done.length} kitap okumuştur.\n\n`;
+        if(reading.length > 0) msg += `📖 *ŞU AN OKUDUĞU:* ${reading[0].book}\n\n`;
+        else msg += `📖 Şu an elinde kitap yok.\n\n`;
+        
+        if(done.length > 0) {
+            msg += `📚 *Okudukları:*\n`;
+            done.forEach((r,i) => msg += `${i+1}. ${r.book}\n`);
+        }
+        document.getElementById('reportOutput').innerText = msg + "\nZeynal Öğretmen";
+    }
+    
+    function copyReport() {
+        navigator.clipboard.writeText(document.getElementById('reportOutput').innerText);
+        alert("Kopyalandı!");
+    }
+
+    function calculateStats() {
+        let counts = {};
+        records.forEach(r => { if(r.status === "İade Etti") counts[r.student] = (counts[r.student]||0)+1; });
+        let sorted = Object.keys(counts).map(k => ({n:k, c:counts[k]})).sort((a,b)=>b.c - a.c);
+        let html = "";
+        sorted.forEach((s,i) => html += `<tr><td>${i+1}</td><td>${s.n}</td><td>${s.c}</td></tr>`);
+        document.getElementById('rankingBody').innerHTML = html;
+    }
+</script>
+</body>
+</html>
