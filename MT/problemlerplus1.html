@@ -18,7 +18,7 @@
             align-items: center;
         }
 
-        /* --- GİRİŞ EKRANI (YENİ) --- */
+        /* --- GİRİŞ EKRANI --- */
         #loginScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(44, 62, 80, 0.95);
@@ -202,8 +202,8 @@
         <div class="subtitle" id="welcomeMsg"></div>
 
         <div id="sceneWheel" class="scene-wheel">
-            <div style="text-align:center"><div class="wheel-container"><div class="pointer"></div><div class="wheel" id="wheel1"></div></div><h3>1. Çark</h3></div>
-            <div style="text-align:center"><div class="wheel-container"><div class="pointer"></div><div class="wheel" id="wheel2"></div></div><h3>2. Çark</h3></div>
+            <div style="text-align:center"><div class="wheel-container"><div class="pointer"></div><div class="wheel" id="wheel1"></div></div><h3>1. Çark (12'şer Ritmik)</h3></div>
+            <div style="text-align:center"><div class="wheel-container"><div class="pointer"></div><div class="wheel" id="wheel2"></div></div><h3>2. Çark (50'şer Ritmik)</h3></div>
         </div>
 
         <div id="sceneJar" class="scene-jar">
@@ -237,7 +237,7 @@
 <script>
     // --- ÖĞRENCİ VERİSİ ---
     let studentName = "";
-    let studentResults = []; // { q: 1, answer: 10, correct: true, attempts: 1 }
+    let studentResults = []; 
 
     function startGame() {
         const nameInput = document.getElementById('studentName').value;
@@ -255,25 +255,37 @@
     /* SORU VERİLERİ */
     const questions = [
         {
+            // SORU 1: FARKLI ÖRÜNTÜLER VE SAYILAR (DÜZENLENDİ)
+            // Çark 1: 36'dan başla, 12'şer art. (36, 48, 60, [72], 84, 96, 108, 120) -> Eksik: 72
+            // Çark 2: 250'den başla, 50'şer art. (250, 300, 350, 400, 450, 500, 550, 600)
+            // Dönüş: 1.5 tur. (Tam karşı). 250 -> 450.
             id: 1, type: 'wheel', attempts: 0, solved: false,
-            data1: [865, 878, 891, null, 917, 930, 943, 956], secret1: 904,
-            data2: [865, 878, 891, 904, 917, 930, 943, 956],
-            text: "<strong>Soru 1:</strong><br>1. Çarkta sayıların dizilişine bakarak kuralı bul ve <span class='highlight'>?</span> yerine gelmesi gereken sayıyı hesapla.<br>2. Çarkta ibre şu an en küçük sayıyı (865) gösteriyor. Çark saat yönünde <span class='highlight'>bir buçuk tur</span> dönerse ibre hangi sayıya gelir?<br><strong>Görev:</strong> Bu iki sayıyı topla.",
-            solve: () => { return { val: 1821, desc: "Eksik: 904. Hedef: 917. Toplam: 1821" }; } // 904 + 917
+            data1: [36, 48, 60, null, 84, 96, 108, 120], secret1: 72,
+            data2: [250, 300, 350, 400, 450, 500, 550, 600],
+            text: "<strong>Soru 1:</strong><br>1. Çarkta (12'şer artan) örüntüyü incele ve <span class='highlight'>?</span> yerine gelmesi gereken sayıyı bul.<br>2. Çarkta (50'şer artan) ibre şu an en küçük sayıyı (250) gösteriyor. Çark saat yönünde <span class='highlight'>bir buçuk tur</span> dönerse ibre hangi sayıya gelir?<br><strong>Görev:</strong> Bu iki sayıyı topla.",
+            solve: () => { 
+                // Eksik: 72. 
+                // Hedef (250'nin karşısı): 450. 
+                // Toplam: 522.
+                return { val: 522, desc: "1. Çark Eksik (12'şer artıyor): 72.<br>2. Çark Dönüş (250'nin tam karşısı): 450.<br>Toplam: 72 + 450 = <b>522</b>." }; 
+            }
         },
         {
+            // SORU 2: KAVANOZ (DEĞİŞMEDİ)
             id: 2, type: 'jar', attempts: 0, solved: false,
             data1: [4127, 2098, 8560, 1073, 5439], data2: [47, 19, 86, 33, 94],
             text: "<strong>Soru 2:</strong><br>1. Kavanozdan <span class='highlight'>basamak değerleri toplamı en büyük</span> olan sayıyı seç.<br>2. Kavanozdan <span class='highlight'>sayı değerleri toplamı en küçük</span> olan sayıyı seç.<br><strong>Görev:</strong> Bu iki sayının çarpımını en yakın yüzlüğe yuvarla.",
             solve: () => { return { val: 282500, desc: "8560 x 33 = 282480 -> 282500" }; }
         },
         {
+            // SORU 3: JAR (DEĞİŞMEDİ)
             id: 3, type: 'jar', attempts: 0, solved: false,
             data1: [482, 156, 273, 391, 129], data2: [95, 63, 84, 72, 58],
             text: "<strong>Soru 3 (Eleme Oyunu):</strong><br>Her turda en büyük toplar seçiliyor.<br><strong>Görev:</strong> 2. turda seçilen sayıların çarpımı ile 5. turda seçilen sayıların çarpımını topla.",
             solve: () => { return { val: 40326, desc: "2. Tur(391x84) + 5. Tur(129x58) = 40326" }; }
         },
         {
+            // SORU 4: JAR (DEĞİŞMEDİ)
             id: 4, type: 'jar', attempts: 0, solved: false,
             data1: [146, null, 150, 156, 154], secret1: 152,
             data2: [67, 78, 75, null, 83], secret2: 86,
@@ -281,12 +293,14 @@
             solve: () => { return { val: 3634, desc: "Max(156x86) - Min(146x67) = 3634" }; }
         },
         {
+            // SORU 5: JAR (DEĞİŞMEDİ)
             id: 5, type: 'jar', attempts: 0, solved: false,
             data1: [8507, 9214, 1059, 7643, 4321], data2: [123, 357, 218, 444, 119],
             text: "<strong>Soru 5 (Aralık Farkı):</strong><br>1. Kavanoz Max (9214) ve 2. Kavanoz Min (119) sayılarının <em>arasına</em> gelebilecek en büyük ve en küçük doğal sayının farkını bul.<br><strong>Görev:</strong> Bu fark, rakamları farklı, toplamı 25 olan en büyük 5 basamaklı sayıdan ne kadar azdır?",
             solve: () => { return { val: 89617, desc: "Hedef 98710 - Fark 9093 = 89617" }; }
         },
         {
+            // SORU 6: FARM (DEĞİŞMEDİ)
             id: 6, type: 'farm', attempts: 0, solved: false,
             text: "<strong>Soru 6 (Çiftçi Fatma):</strong><br>• Tüm domatesler 60 kg'lık kasalara konunca 88 kasa gerekiyor.<br>• Fatma domateslerin bir kısmını 60 kg'lık 50 kasaya, kalanını 40 kg'lık kasalara koyarsa toplam kaç kasa gerekir?",
             solve: () => { return { val: 107, desc: "Toplam 5280kg. Kalan 2280kg/40=57 kasa. 50+57=107." }; }
@@ -378,8 +392,7 @@
             }
         }
         
-        // Sonuçları kaydet (Her denemede güncelle veya son durumu tut)
-        // Basitlik için sadece son durumu güncelliyoruz
+        // Sonuçları kaydet
         const existingResult = studentResults.find(r => r.question === q.id);
         if(existingResult) {
             existingResult.status = status;
@@ -395,7 +408,7 @@
     function submitResults() {
         if(confirm("Sonuçları öğretmene göndermek istiyor musun?")) {
             const data = {
-                _replyto: "noreply@mathgame.com", // Formspree requirement fix
+                _replyto: "noreply@mathgame.com", 
                 message: `Öğrenci: ${studentName}\n\n` + 
                          studentResults.map(r => `Soru ${r.question}: ${r.status} (Cevap: ${r.answer})`).join('\n')
             };
@@ -419,9 +432,6 @@
             });
         }
     }
-
-    // Başlangıçta 
-    // init() çağrısı startGame() içinden yapılacak
 </script>
 
 </body>
