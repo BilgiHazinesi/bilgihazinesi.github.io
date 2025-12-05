@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematik Ustası: Zorlu Görevler</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f4f6f8;
+            color: #2c3e50;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+            border-top: 8px solid #c0392b;
+        }
+
+        h1 { color: #c0392b; margin: 0 0 10px 0; font-size: 2em; }
+        .subtitle { color: #7f8c8d; font-size: 1em; margin-bottom: 20px; font-style: italic; }
+
+        /* Navigasyon */
+        .nav-panel {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; background: #eceff1; padding: 10px; border-radius: 10px;
+        }
+        .nav-btn {
+            background: #455a64; color: white; border: none; padding: 10px 20px;
+            border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .nav-btn:hover { background: #546e7a; }
+        .q-indicator { font-weight: bold; color: #37474f; font-size: 1.1em; }
+
+        /* --- SAHNE: ÇARKLAR --- */
+        .scene-wheel {
+            display: none; justify-content: center; gap: 50px; margin: 30px 0; flex-wrap: wrap;
+        }
+        .wheel-container { position: relative; width: 220px; height: 220px; }
+        
+        .pointer {
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; 
+            border-left: 18px solid transparent; border-right: 18px solid transparent;
+            border-top: 35px solid #d35400; z-index: 10;
+            filter: drop-shadow(0 3px 2px rgba(0,0,0,0.3));
+        }
+
+        .wheel {
+            width: 100%; height: 100%; border-radius: 50%; border: 6px solid #2c3e50;
+            background: conic-gradient(
+                from -22.5deg,
+                #f1c40f 0deg 45deg, #e67e22 45deg 90deg, #e74c3c 90deg 135deg, 
+                #8e44ad 135deg 180deg, #2980b9 180deg 225deg, #1abc9c 225deg 270deg, 
+                #27ae60 270deg 315deg, #7f8c8d 315deg 360deg
+            );
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .wheel-num {
+            position: absolute; top: 50%; left: 50%; font-size: 19px; font-weight: bold; color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; width: 0; height: 0;
+        }
+        /* Pozisyonlar */
+        .wn0 { transform: rotate(0deg) translateY(-80px) rotate(0deg); }
+        .wn1 { transform: rotate(45deg) translateY(-80px) rotate(-45deg); }
+        .wn2 { transform: rotate(90deg) translateY(-80px) rotate(-90deg); }
+        .wn3 { transform: rotate(135deg) translateY(-80px) rotate(-135deg); }
+        .wn4 { transform: rotate(180deg) translateY(-80px) rotate(-180deg); }
+        .wn5 { transform: rotate(225deg) translateY(-80px) rotate(-225deg); }
+        .wn6 { transform: rotate(270deg) translateY(-80px) rotate(-270deg); }
+        .wn7 { transform: rotate(315deg) translateY(-80px) rotate(-315deg); }
+
+        .missing-mark { background: #c0392b; color: white; padding: 2px 8px; border-radius: 5px; font-size: 20px; }
+
+        /* --- SAHNE: KAVANOZLAR --- */
+        .scene-jar {
+            display: none; justify-content: center; gap: 60px; margin: 30px 0; flex-wrap: wrap;
+        }
+        .jar-box { display: flex; flex-direction: column; align-items: center; }
+        .jar {
+            width: 170px; height: 240px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(52, 152, 219, 0.2));
+            border: 4px solid #2980b9; border-top: none; border-radius: 0 0 35px 35px;
+            display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-end;
+            padding: 10px; gap: 8px; position: relative;
+            box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1);
+        }
+        .lid { width: 190px; height: 25px; background: #546e7a; border-radius: 5px; margin-bottom: -4px; z-index: 5; }
+        
+        .ball {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ffcc80, #ff9800);
+            color: #d35400; font-weight: bold; font-size: 14px;
+            display: flex; justify-content: center; align-items: center;
+            border: 2px solid rgba(255,255,255,0.8); box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+        }
+        .ball.blue { background: radial-gradient(circle at 35% 35%, #81d4fa, #039be5); color: #01579b; }
+        .ball.mystery { background: #34495e; color: #fff; font-size: 22px; animation: pulse 2s infinite; border-color: #f1c40f; }
+        
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
+
+        /* --- SORU KARTI --- */
+        .question-card {
+            background: #fff3e0; border-left: 6px solid #ff9800;
+            padding: 25px; text-align: left; border-radius: 10px; margin: 20px 0;
+            font-size: 1.15em; line-height: 1.6;
+        }
+        .highlight { font-weight: bold; color: #d84315; background: rgba(255, 255, 255, 0.6); padding: 2px 6px; border-radius: 4px; }
+
+        .input-area { display: flex; justify-content: center; gap: 10px; align-items: center; flex-wrap: wrap; }
+        input { padding: 15px; width: 180px; text-align: center; font-size: 20px; border: 2px solid #b0bec5; border-radius: 8px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #e67e22; box-shadow: 0 0 8px rgba(230, 126, 34, 0.3); }
+        
+        .btn-check { background: #27ae60; color: white; border: none; padding: 15px 35px; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; transition: 0.2s; }
+        .btn-check:hover { background: #219150; transform: translateY(-2px); }
+
+        .feedback { margin-top: 20px; padding: 20px; border-radius: 10px; text-align: left; display: none; border: 1px solid transparent; font-size: 1.05em; }
+        .correct { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; }
+        .wrong { background: #ffebee; color: #c0392b; border-color: #ef9a9a; }
+        .info { background: #e3f2fd; color: #0277bd; border-color: #90caf9; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav-panel">
+        <button class="nav-btn" onclick="prevQ()">❮ Önceki</button>
+        <span class="q-indicator">SORU <span id="qNum">1</span> / 5</span>
+        <button class="nav-btn" onclick="nextQ()">Sonraki ❯</button>
+    </div>
+
+    <h1>🧠 Matematik Ustası</h1>
+    <div class="subtitle">Dikkat: Sayılar yuvarlanmamış, kurallar gizlenmiştir!</div>
+
+    <div id="sceneWheel" class="scene-wheel">
+        <div style="text-align:center">
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <div class="wheel" id="wheel1"></div>
+            </div>
+            <h3>1. Çark</h3>
+        </div>
+        <div style="text-align:center">
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <div class="wheel" id="wheel2"></div>
+            </div>
+            <h3>2. Çark</h3>
+        </div>
+    </div>
+
+    <div id="sceneJar" class="scene-jar">
+        <div class="jar-box">
+            <div class="lid"></div>
+            <div class="jar" id="jar1"></div>
+            <h3>1. Kavanoz</h3>
+        </div>
+        <div class="jar-box">
+            <div class="lid"></div>
+            <div class="jar" id="jar2"></div>
+            <h3>2. Kavanoz</h3>
+        </div>
+    </div>
+
+    <div class="question-card">
+        <div id="qText">Soru Yükleniyor...</div>
+    </div>
+
+    <div class="input-area">
+        <input type="number" id="userAns" placeholder="Cevabınız">
+        <button class="btn-check" onclick="checkAnswer()">KONTROL ET</button>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+    const questions = [
+        {
+            // SORU 1: ÇARK
+            id: 1, type: 'wheel', attempts: 0, solved: false,
+            data1: [865, 878, 891, null, 917, 930, 943, 956], 
+            secret1: 904,
+            data2: [865, 878, 891, 904, 917, 930, 943, 956],
+            text: "<strong>Soru 1:</strong><br>1. Çarkta sayıların dizilişine bakarak kuralı bul ve <span class='highlight'>?</span> yerine gelmesi gereken sayıyı hesapla.<br>2. Çarkta ibre şu an en küçük sayıyı (865) gösteriyor. Çark saat yönünde <span class='highlight'>bir buçuk tur</span> dönerse ibre hangi sayıya gelir?<br><strong>Görev:</strong> Bu iki sayıyı topla.",
+            solve: () => {
+                const missing = 904;
+                const target = 917; 
+                return { 
+                    val: missing + target, 
+                    desc: `Örüntü kuralı: Sayılar 13'er artıyor.<br>Eksik sayı: 891 + 13 = <b>904</b>.<br>1.5 tur dönüş tam karşıyı gösterir: <b>917</b>.<br>Toplam: 904 + 917 = <b>${missing + target}</b>.` 
+                };
+            }
+        },
+        {
+            // SORU 2: KAVANOZ
+            id: 2, type: 'jar', attempts: 0, solved: false,
+            data1: [4127, 2098, 8560, 1073, 5439],
+            data2: [47, 19, 86, 33, 94],
+            text: "<strong>Soru 2:</strong><br>1. Kavanozdan <span class='highlight'>basamak değerleri toplamı en büyük</span> olan sayıyı seç.<br>2. Kavanozdan <span class='highlight'>sayı değerleri toplamı en küçük</span> olan sayıyı seç.<br><strong>Görev:</strong> Bu iki sayının çarpımını en yakın yüzlüğe yuvarla.",
+            solve: () => {
+                // J1 Max: 8560. J2 Min Rakam Toplamı: 33 (6).
+                // 8560 * 33 = 282480 -> 282500
+                return { 
+                    val: 282500, 
+                    desc: `1. Kavanoz (En Büyük): 8560.<br>2. Kavanoz (Rakamları toplamı en az olan): 33.<br>Çarpım: 8560 x 33 = 282.480<br>Yuvarlanmış: <b>282.500</b>.` 
+                };
+            }
+        },
+        {
+            // SORU 3: ORİJİNAL GÖRSEL UYARLAMASI
+            id: 3, type: 'jar', attempts: 0, solved: false,
+            data1: [482, 156, 273, 391, 129],
+            data2: [95, 63, 84, 72, 58],
+            text: "<strong>Soru 3 (Eleme Oyunu):</strong><br>Ali 1. Kavanozdan, Ayşe 2. Kavanozdan top çekiyor.<br>• Kural: Her ikisi de her seferinde kavanozda kalan toplar arasından <u>en büyüğünü</u> alıyor.<br>• Alınan toplar geri konulmuyor.<br><strong>Görev:</strong> 2. turda aldıkları sayıların çarpımı ile 5. turda (son turda) aldıkları sayıların çarpımını topla.",
+            solve: () => {
+                // Tur 2: 391 * 84 = 32844. Tur 5: 129 * 58 = 7482. Toplam: 40326.
+                return { 
+                    val: 40326, 
+                    desc: `2. Tur (391 x 84) = 32.844<br>5. Tur (129 x 58) = 7.482<br>Toplam: <b>40.326</b>` 
+                };
+            }
+        },
+        {
+            // SORU 4: ZORLU ÖRÜNTÜ
+            id: 4, type: 'jar', attempts: 0, solved: false,
+            data1: [146, null, 150, 156, 154], 
+            secret1: 152,
+            data2: [67, 78, 75, null, 83], 
+            secret2: 86,
+            text: "<strong>Soru 4 (Gizli Kural):</strong><br>Kavanozlardaki sayıların artış ve azalışlarını incele. Kuralları bul ve <span class='highlight'>?</span> ile gösterilen eksik sayıları tamamla.<br><strong>Görev:</strong> Kavanozlardaki (eksikler dahil) tüm sayılar arasından;<br>• Çarpımları en büyük olabilecek iki sayıyı çarp,<br>• Çarpımları en küçük olabilecek iki sayıyı çarp,<br>• Bu iki sonucun farkını bul.",
+            solve: () => {
+                // J1: 146,150,152,154,156. J2: 67,75,78,83,86.
+                // Max: 156*86=13416. Min: 146*67=9782. Fark: 3634.
+                return { 
+                    val: 3634, 
+                    desc: `Eksik sayılar: 152 ve 86.<br>En büyük çarpım (156x86) = 13.416<br>En küçük çarpım (146x67) = 9.782<br>Fark: <b>3.634</b>` 
+                };
+            }
+        },
+        {
+            // SORU 5: YENİ NESİL (ARALIK MANTIĞI)
+            id: 5, type: 'jar', attempts: 0, solved: false,
+            data1: [8507, 9214, 1059, 7643, 4321], 
+            data2: [123, 357, 218, 444, 119],
+            text: "<strong>Soru 5 (Süper Soru):</strong><br>1. Kavanozdan <span class='highlight'>en büyük</span> sayıyı bul.<br>2. Kavanozdan <span class='highlight'>en küçük</span> sayıyı bul.<br><strong>1. Bölüm:</strong> Bu iki sayının <em>arasına</em> gelebilecek en büyük doğal sayı ile en küçük doğal sayının farkını bul.<br><strong>2. Bölüm:</strong> Bulduğun bu fark; <em>rakamları birbirinden farklı, sayı değerleri toplamı 25 olan 5 basamaklı en büyük doğal sayıdan</em> ne kadar azdır?",
+            solve: () => {
+                // J1 Max: 9214. J2 Min: 119.
+                // Aradaki sayılar: (119, 9214).
+                // Aradaki En Büyük: 9213. Aradaki En Küçük: 120.
+                // Fark (X): 9213 - 120 = 9093.
+                
+                // Hedef Sayı: 98710.
+                // Sonuç: 98710 - 9093 = 89617.
+                return { 
+                    val: 89617, 
+                    desc: `<strong>1. Adım:</strong> 9214 ile 119 arasındaki en büyük sayı (9213) ve en küçük sayı (120). Farkı: 9093.<br><strong>2. Adım:</strong> Hedef sayı (9+8+7+1+0=25): <b>98710</b>.<br><strong>Sonuç:</strong> 98710 - 9093 = <b>89.617</b>` 
+                };
+            }
+        }
+    ];
+
+    let currentQIdx = 0;
+
+    function init() {
+        loadQuestion(0);
+    }
+
+    function loadQuestion(idx) {
+        currentQIdx = idx;
+        const q = questions[idx];
+
+        document.getElementById('qNum').innerText = idx + 1;
+        document.getElementById('qText').innerHTML = q.text;
+        document.getElementById('userAns').value = '';
+        
+        const fb = document.getElementById('feedback');
+        if (q.solved) {
+            fb.style.display = 'block';
+            fb.className = 'feedback correct';
+            fb.innerHTML = `✅ Bu soruyu zaten çözdün.`;
+        } else {
+            fb.style.display = 'none';
+        }
+
+        const wScene = document.getElementById('sceneWheel');
+        const jScene = document.getElementById('sceneJar');
+
+        if (q.type === 'wheel') {
+            wScene.style.display = 'flex';
+            jScene.style.display = 'none';
+            renderWheels(q);
+        } else {
+            wScene.style.display = 'none';
+            jScene.style.display = 'flex';
+            renderJars(q);
+        }
+    }
+
+    function renderWheels(q) {
+        createWheelSlice('wheel1', q.data1);
+        createWheelSlice('wheel2', q.data2);
+    }
+
+    function createWheelSlice(id, data) {
+        const el = document.getElementById(id);
+        el.innerHTML = '';
+        data.forEach((val, i) => {
+            let div = document.createElement('div');
+            div.className = `wheel-num wn${i}`;
+            if (val === null) div.innerHTML = "<span class='missing-mark'>?</span>";
+            else div.innerText = val;
+            el.appendChild(div);
+        });
+    }
+
+    function renderJars(q) {
+        fillJar('jar1', q.data1, 'ball');
+        fillJar('jar2', q.data2, 'ball blue');
+    }
+
+    function fillJar(id, data, className) {
+        const el = document.getElementById(id);
+        el.innerHTML = '';
+        data.forEach(val => {
+            let ball = document.createElement('div');
+            ball.className = className;
+            if (val === null) {
+                ball.innerHTML = "?";
+                ball.classList.add('mystery');
+            } else {
+                ball.innerText = val;
+            }
+            el.appendChild(ball);
+        });
+    }
+
+    function checkAnswer() {
+        const q = questions[currentQIdx];
+        const userIn = parseInt(document.getElementById('userAns').value);
+        const fb = document.getElementById('feedback');
+
+        if (isNaN(userIn)) { alert("Lütfen sayı giriniz."); return; }
+        if (q.solved) { alert("Bu soru zaten tamamlandı."); return; }
+
+        const sol = q.solve();
+
+        if (userIn === sol.val) {
+            q.solved = true;
+            fb.style.display = 'block';
+            fb.className = 'feedback correct';
+            fb.innerHTML = `🎉 <strong>Tebrikler! Doğru Cevap.</strong><br>${sol.desc}`;
+        } else {
+            q.attempts++;
+            fb.style.display = 'block';
+            
+            if (q.attempts >= 3) {
+                fb.className = 'feedback info';
+                fb.innerHTML = `😔 <strong>3 Deneme Bitti.</strong><br>Doğru Cevap: <strong>${sol.val}</strong><br>Çözüm: ${sol.desc}`;
+            } else {
+                fb.className = 'feedback wrong';
+                fb.innerHTML = `⚠️ <strong>Yanlış.</strong> Tekrar hesapla! (Deneme: ${q.attempts}/3)`;
+            }
+        }
+    }
+
+    function nextQ() {
+        if (currentQIdx < questions.length - 1) loadQuestion(currentQIdx + 1);
+        else alert("Tüm soruları bitirdin!");
+    }
+
+    function prevQ() {
+        if (currentQIdx > 0) loadQuestion(currentQIdx - 1);
+        else alert("İlk sorudasınız.");
+    }
+
+    init();
+
+</script>
+
+</body>
+</html>
