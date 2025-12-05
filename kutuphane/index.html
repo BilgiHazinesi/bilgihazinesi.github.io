@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4/D Bulut Kütüphane (Tam Liste)</title>
+    <title>4/D Bulut Kütüphane (V9 - Kitap Takip)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --bg: #f0f2f5; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1100px; margin: 0 auto; }
         
@@ -47,7 +47,17 @@
         .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* İlk Kurulum Uyarısı */
+        /* Kitap Listesi Tasarımı (V9) */
+        .book-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; flex-wrap: wrap; gap: 10px; }
+        .book-item:hover { background: #f9f9f9; }
+        .book-info { flex: 1; }
+        .book-name { font-weight: bold; font-size: 1rem; color: #2c3e50; display: block; }
+        .book-status { font-size: 0.85rem; margin-top: 5px; display: inline-block; padding: 4px 10px; border-radius: 12px; }
+        
+        .status-out { color: #c0392b; background: #fadbd8; border: 1px solid #e6b0aa; }
+        .status-in { color: #27ae60; background: #e8f5e9; border: 1px solid #a9dfbf; }
+        .status-new { color: #2980b9; background: #eaf2f8; border: 1px solid #a9cce3; }
+
         #firstSetupMsg { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; border: 1px solid #ffeeba; }
     </style>
 </head>
@@ -72,7 +82,7 @@
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('lend')"><i class="fas fa-book-reader"></i> Kitap Ver</button>
         <button class="tab-btn" onclick="switchTab('report')"><i class="fab fa-whatsapp"></i> Raporla</button>
-        <button class="tab-btn" onclick="switchTab('manager')"><i class="fas fa-edit"></i> Kitaplar</button>
+        <button class="tab-btn" onclick="switchTab('manager')"><i class="fas fa-search"></i> Kitap Durumu</button>
         <button class="tab-btn" onclick="switchTab('stats')"><i class="fas fa-chart-pie"></i> İstatistik</button>
     </div>
 
@@ -120,17 +130,21 @@
     </div>
 
     <div id="manager" class="content-section">
+        <div class="card" style="border-left: 5px solid #9b59b6;">
+            <h3>🔍 Kitap Arama & Durum Sorgulama</h3>
+            <p style="font-size:0.9rem; color:#666; margin-bottom:10px;">Kitabın kimde olduğunu görmek için adını yazın.</p>
+            <input type="text" id="manageBookSearch" onkeyup="renderBookManager()" placeholder="Kitap ara...">
+            
+            <div id="bookManagerList" style="margin-top:15px; max-height:500px; overflow-y:auto; border-top:1px solid #eee;">
+                </div>
+        </div>
+        
         <div class="card">
             <h3>➕ Yeni Kitap Ekle</h3>
             <div style="display:flex; gap:10px;">
-                <input type="text" id="newBookInput" placeholder="Kitap adı...">
+                <input type="text" id="newBookInput" placeholder="Yeni kitap adı...">
                 <button class="btn btn-success" onclick="addNewBook()">Ekle</button>
             </div>
-        </div>
-        <div class="card">
-            <h3>✏️ Düzenle</h3>
-            <input type="text" id="manageBookSearch" onkeyup="renderBookManager()" placeholder="Kitap ara...">
-            <div id="bookManagerList" style="margin-top:10px; max-height:300px; overflow-y:auto;"></div>
         </div>
     </div>
 
@@ -146,10 +160,10 @@
 </div>
 
 <script>
-    // --- LÜTFEN GOOGLE SCRIPT LINKINI BURAYA TEKRAR YAPIŞTIRIN ---
+    // --- LÜTFEN LINKI BURAYA YAPIŞTIRIN ---
     const API_URL = "https://script.google.com/macros/s/AKfycbxoJHY-fAuYMfE7gAIgMZyBX_kklKyZkN-AK0IkOUy8s2DrSSNCtgWJ_bWLU0EWQAkf/exec"; 
 
-    // SİZİN TAM LİSTENİZ (KODUN İÇİNE GÖMDÜM)
+    // ÖN TANIMLI LİSTELER
     const myStudents = [
         "AHMET ARİN AĞTÜRK", "AHMET CEVDET KORKMAZ", "AYNUR BUDAK", "BEYZA DAĞDELEN", 
         "DENİZ GÜNEY", "DENİZ KİMYON", "DOĞA BORA", "DURU AYKANAT", "DURU BÜKÜN", 
@@ -197,24 +211,21 @@
         fetch(API_URL)
         .then(response => response.json())
         .then(data => {
-            // Eğer Buluttan veri gelirse onu kullan, yoksa bizim listeyi kullan
             if (data.students && data.students.length > 5) {
                 students = data.students;
-                document.getElementById('firstSetupMsg').style.display = 'none'; // Veri varsa butonu gizle
+                document.getElementById('firstSetupMsg').style.display = 'none';
             }
             if (data.books && data.books.length > 5) {
                 books = data.books;
             }
             records = data.records || [];
-            
             updateUI();
             setOnlineStatus(true);
             document.getElementById('loader').style.display = 'none';
         })
         .catch(error => {
-            console.error('Bağlantı Hatası:', error);
-            alert("Bulut bağlantısında sorun var, ancak kitaplarınız şu an ekranda görünecek.");
-            // Hata olsa bile listeyi göster
+            console.error('Hata:', error);
+            alert("Bağlantı sağlanamadı ancak yerel verilerle çalışabilirsiniz.");
             updateUI();
             setOnlineStatus(false);
             document.getElementById('loader').style.display = 'none';
@@ -222,7 +233,6 @@
     }
 
     function forceSync() {
-        // İlk kurulum için zorla kaydet
         students = myStudents;
         books = myBooks;
         syncData(true);
@@ -241,28 +251,22 @@
 
     function syncData(isFirstSetup = false) {
         document.getElementById('connectionStatus').innerText = "🟡 Kaydediliyor...";
-        
         const payload = JSON.stringify({ students, books, records });
-
-        fetch(API_URL, {
-            method: 'POST',
-            body: payload
-        })
+        fetch(API_URL, { method: 'POST', body: payload })
         .then(response => response.json())
         .then(data => {
             setOnlineStatus(true);
             if(isFirstSetup) {
-                alert("✅ Harika! Tüm kitap ve öğrenci listesi buluta kaydedildi. Artık her yerden erişebilirsiniz.");
+                alert("Veriler Buluta Kaydedildi!");
                 document.getElementById('firstSetupMsg').style.display = 'none';
             }
         })
         .catch(error => {
-            alert("Kaydetme hatası! İnternet bağlantınızı kontrol edin.");
+            alert("Kaydetme hatası!");
             setOnlineStatus(false);
         });
     }
 
-    // --- ARAYÜZ GÜNCELLEMELERİ ---
     function updateUI() {
         populateDatalists();
         renderMainTable();
@@ -285,7 +289,6 @@
         event.currentTarget.classList.add('active');
     }
 
-    // --- OPERASYONLAR ---
     function lendBook() {
         const sVal = document.getElementById('studentInput').value.trim().toUpperCase();
         const bVal = document.getElementById('bookInput').value.trim();
@@ -333,14 +336,7 @@
                 let btn = isReading 
                     ? `<button class="btn btn-warning" style="font-size:0.8rem; padding:5px;" onclick="returnBook(${r.id}, '${r.student}')">İade Al</button>`
                     : `<span>${r.returnDate}</span>`;
-                
-                let row = `<tr>
-                    <td>${r.date}</td>
-                    <td>${r.student}</td>
-                    <td>${r.book}</td>
-                    <td><span class="badge ${isReading?'badge-reading':'badge-returned'}">${r.status}</span></td>
-                    <td>${btn}</td>
-                </tr>`;
+                let row = `<tr><td>${r.date}</td><td>${r.student}</td><td>${r.book}</td><td><span class="badge ${isReading?'badge-reading':'badge-returned'}">${r.status}</span></td><td>${btn}</td></tr>`;
                 tbody.innerHTML += row;
             });
         }
@@ -370,19 +366,43 @@
             document.getElementById('newBookInput').value = "";
             updateUI();
             syncData();
+            alert("Kitap Eklendi");
         }
     }
 
+    // --- KİTAP DURUMU VE ARAMA FONKSİYONU (V9) ---
     function renderBookManager() {
         const filter = document.getElementById('manageBookSearch').value.toLowerCase();
         const div = document.getElementById('bookManagerList');
         div.innerHTML = "";
+
         books.forEach(b => {
             if(b.toLowerCase().includes(filter)) {
+                // Kitabın son durumunu bul
+                // Bu kitapla ilgili kayıtları bul (En yenisi en üstte)
+                const history = records.filter(r => r.book === b);
+                
+                let statusHtml = "";
+                if(history.length === 0) {
+                    statusHtml = `<span class="book-status status-new">✨ Hiç Okunmadı</span>`;
+                } else {
+                    const lastRec = history[0]; // En güncel kayıt
+                    if(lastRec.status === "Okuyor") {
+                        statusHtml = `<span class="book-status status-out">🔴 ŞU AN: ${lastRec.student}</span>`;
+                    } else {
+                        statusHtml = `<span class="book-status status-in">🟢 RAFTA (Son: ${lastRec.student})</span>`;
+                    }
+                }
+
                 let item = document.createElement('div');
-                item.style.padding = "10px";
-                item.style.borderBottom = "1px solid #eee";
-                item.innerHTML = `📘 ${b} <button class="btn btn-secondary" style="font-size:0.7rem; float:right;" onclick="renameBook('${b}')">Düzenle</button>`;
+                item.className = "book-item";
+                item.innerHTML = `
+                    <div class="book-info">
+                        <span class="book-name">📘 ${b}</span>
+                        ${statusHtml}
+                    </div>
+                    <button class="btn btn-secondary" style="font-size:0.7rem;" onclick="renameBook('${b}')">Düzenle</button>
+                `;
                 div.appendChild(item);
             }
         });
