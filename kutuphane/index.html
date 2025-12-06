@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4/D Bulut Kütüphane (V10 - Tam Kontrol)</title>
+    <title>4/D Bulut Kütüphane (V11 - Akıllı Sıralama)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --bg: #f0f2f5; }
@@ -15,8 +15,9 @@
         .status-online { color: #27ae60; background: #e8f5e9; }
         .status-offline { color: #c0392b; background: #fadbd8; }
         
+        /* Sekmeler */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-        .tab-btn { flex: 1; min-width: 120px; padding: 15px; border: none; background: white; border-radius: 10px; cursor: pointer; font-weight: 600; color: #7f8c8d; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .tab-btn { flex: 1; min-width: 120px; padding: 15px; border: none; background: white; border-radius: 10px; cursor: pointer; font-weight: 600; color: #7f8c8d; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; gap: 8px; }
         .tab-btn.active { background: var(--accent); color: white; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3); }
 
         .content-section { display: none; animation: fadeIn 0.3s; }
@@ -48,35 +49,43 @@
         .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* V10 Kitap Kartı Tasarımı */
-        .book-card { border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
-        .book-card.status-out { border-left: 5px solid #e74c3c; background: #fff5f5; }
+        /* V11 - FİLTRE BUTONLARI */
+        .filter-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
+        .filter-btn { flex: 1; padding: 10px; border: 2px solid #eee; border-radius: 8px; background: white; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; }
+        .filter-btn:hover { background: #f9f9f9; }
+        .filter-btn.active-all { background: #3498db; color: white; border-color: #3498db; }
+        .filter-btn.active-out { background: #e74c3c; color: white; border-color: #e74c3c; }
+        .filter-btn.active-in { background: #27ae60; color: white; border-color: #27ae60; }
+
+        /* V11 - KİTAP KARTI */
+        .book-card { border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #fafafa; transition: 0.3s; }
+        .book-card.status-out { border-left: 5px solid #e74c3c; background: #fffbfb; }
         .book-card.status-in { border-left: 5px solid #27ae60; background: #f0fdf4; }
-        .book-card.status-new { border-left: 5px solid #3498db; }
         
         .book-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; color: #2c3e50; }
         .book-detail { font-size: 0.9rem; color: #666; display: flex; align-items: center; gap: 5px; }
         .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; }
         .dot-red { background-color: #e74c3c; }
         .dot-green { background-color: #27ae60; }
+        .dot-blue { background-color: #3498db; }
     </style>
 </head>
 <body>
 
 <div id="loader">
     <div class="spinner"></div>
-    <p style="margin-top:15px; font-weight:bold; color:#555;">Kütüphane Verileri Doğrulanıyor...</p>
+    <p style="margin-top:15px; font-weight:bold; color:#555;">Kütüphane Verileri Analiz Ediliyor...</p>
 </div>
 
 <div class="container">
     <div class="header">
-        <h1>☁️ 4/D Bulut Kütüphane <span style="font-size:0.5em; color:#999;">v10</span></h1>
+        <h1>☁️ 4/D Bulut Kütüphane <span style="font-size:0.5em; color:#999;">v11</span></h1>
         <div id="connectionStatus" class="status-indicator status-offline">Bağlanıyor...</div>
     </div>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('lend')"><i class="fas fa-hand-holding-heart"></i> Kitap Ver/Al</button>
-        <button class="tab-btn" onclick="switchTab('manager')"><i class="fas fa-search"></i> Kitap Sorgula</button>
+        <button class="tab-btn" onclick="switchTab('manager')"><i class="fas fa-search"></i> Kitap Durumu</button>
         <button class="tab-btn" onclick="switchTab('report')"><i class="fab fa-whatsapp"></i> Raporla</button>
         <button class="tab-btn" onclick="switchTab('stats')"><i class="fas fa-chart-pie"></i> İstatistik</button>
     </div>
@@ -115,11 +124,17 @@
 
     <div id="manager" class="content-section">
         <div class="card" style="border-left: 5px solid #9b59b6;">
-            <h3>🔍 Kitap Arama Motoru</h3>
-            <p style="margin-bottom:15px; color:#666;">Hangi kitabın kimde olduğunu görmek için ismini yazın.</p>
-            <input type="text" id="manageBookSearch" onkeyup="renderBookManager()" placeholder="Kitap ara (Örn: Küçük Prens)..." style="width:100%; padding:15px; font-size:1.1rem;">
+            <h3>🔍 Kütüphane Durumu</h3>
             
-            <div id="bookManagerList" style="margin-top:20px;">
+            <div class="filter-buttons">
+                <button class="filter-btn active-all" onclick="filterBooks('all', this)">📋 Tümü</button>
+                <button class="filter-btn" onclick="filterBooks('out', this)">🔴 Sadece Verilenler</button>
+                <button class="filter-btn" onclick="filterBooks('in', this)">🟢 Sadece Raftakiler</button>
+            </div>
+
+            <input type="text" id="manageBookSearch" onkeyup="renderBookManager()" placeholder="Kitap adı ile ara..." style="width:100%; padding:15px; font-size:1.1rem; margin-bottom:15px;">
+            
+            <div id="bookManagerList">
                 </div>
         </div>
         
@@ -127,7 +142,7 @@
             <h3>➕ Yeni Kitap Ekle</h3>
             <div style="display:flex; gap:10px;">
                 <input type="text" id="newBookInput" placeholder="Yeni kitap adı...">
-                <button class="btn btn-success" onclick="addNewBook()">Listeye Ekle</button>
+                <button class="btn btn-success" onclick="addNewBook()">Ekle</button>
             </div>
         </div>
     </div>
@@ -139,7 +154,7 @@
                 <button class="btn btn-primary" onclick="generateReport()">Oluştur</button>
             </div>
             <div id="reportOutput" style="background:#e8f5e9; padding:15px; margin-top:15px; border-radius:8px; white-space:pre-wrap; border:1px solid #c8e6c9; min-height:100px;"></div>
-            <button class="btn btn-whatsapp" onclick="copyReport()" style="margin-top:10px; width:100%; justify-content:center;">Mesajı Kopyala</button>
+            <button class="btn btn-whatsapp" onclick="copyReport()" style="margin-top:10px; width:100%; justify-content:center;">Kopyala</button>
         </div>
     </div>
 
@@ -158,46 +173,39 @@
     // --- BURAYA KENDİ LİNKİNİZİ YAPIŞTIRIN ---
     const API_URL = "https://script.google.com/macros/s/AKfycbxoJHY-fAuYMfE7gAIgMZyBX_kklKyZkN-AK0IkOUy8s2DrSSNCtgWJ_bWLU0EWQAkf/exec"; 
 
-    // --- YEREL YEDEK LİSTELER (SADECE ACİL DURUM İÇİN) ---
-    const backupStudents = ["ELİF ADA KEKEÇ", "EYLÜL AFAT", "EYLÜL MUTAF", "KADİR BERKTAŞ", "NİL TİRYAKİ", "DENİZ GÜNEY", "AHMET ARİN AĞTÜRK", "GÜLNİHAL KARAKAŞ", "DOĞA BORA", "HAKAN AKDENİZ", "YEKTA URAS DEMİRER", "İDİL DEMİRCİ", "HAMZA KAAN ÇEVEN", "DURU AYKANAT", "HÜSEYİN ÇAĞAN GÜRGAH", "NAZ KARABAĞLI", "AHMET CEVDET KORKMAZ", "BEYZA DAĞDELEN", "DENİZ KİMYON", "MASAL DEFNE TEL", "DURU BÜKÜN", "İPEK MİMAROĞLU", "WAFA MAKANSSI", "AYNUR BUDAK"];
-    
     // Değişkenler
     let students = [];
     let books = [];
     let records = [];
+    let currentFilter = 'all'; // all, out, in
 
     window.onload = function() {
         if(API_URL.includes("BURAYA")) {
-            alert("Lütfen HTML kodunu açıp Google Script Linkini yapıştırın!");
+            alert("API Linkini yapıştırmayı unuttunuz!");
             document.getElementById('loader').style.display = 'none';
             return;
         }
         fetchData();
     };
 
-    // --- VERİ ÇEKME ---
     function fetchData() {
         fetch(API_URL)
         .then(response => response.json())
         .then(data => {
-            // Google'dan veri gelirse yükle
-            if (data.students && data.students.length > 0) students = data.students;
-            else students = backupStudents.sort(); // Boşsa yedekten al
+            if (data.students) students = data.students;
+            if (data.books) books = data.books;
             
-            if (data.books && data.books.length > 0) books = data.books;
-            
-            // Kayıtları ID'ye göre (Yeniden eskiye) sırala ki hatalı durum oluşmasın
-            records = (data.records || []).sort((a, b) => b.id - a.id);
+            // --- KRİTİK DÜZELTME (V11) ---
+            // ID numarasını (Tarihi) matematiksel sayıya çevirip sıralıyoruz.
+            // Bu sayede eski kayıtlar asla yenilerin önüne geçemez.
+            records = (data.records || []).sort((a, b) => Number(b.id) - Number(a.id));
             
             updateUI();
             setOnlineStatus(true);
             document.getElementById('loader').style.display = 'none';
         })
         .catch(error => {
-            console.error(error);
-            alert("İnternet bağlantısı yok veya link hatalı. Çevrimdışı modda açılıyor.");
-            students = backupStudents.sort();
-            updateUI();
+            alert("Bağlantı hatası! Çevrimdışı modda açılıyor.");
             setOnlineStatus(false);
             document.getElementById('loader').style.display = 'none';
         });
@@ -205,39 +213,17 @@
 
     function setOnlineStatus(isOnline) {
         const el = document.getElementById('connectionStatus');
-        if(isOnline) {
-            el.innerText = "🟢 Online";
-            el.className = "status-indicator status-online";
-        } else {
-            el.innerText = "🔴 Çevrimdışı";
-            el.className = "status-indicator status-offline";
-        }
+        if(isOnline) { el.innerText = "🟢 Online"; el.className = "status-indicator status-online"; }
+        else { el.innerText = "🔴 Çevrimdışı"; el.className = "status-indicator status-offline"; }
     }
 
-    // --- GÜVENLİ KAYDETME (ZORLA SIFIRLAMAYI ENGELLEME) ---
     function syncData() {
-        // Eğer yerel liste boşsa sunucuyu ezmemek için kaydetme!
-        if(students.length === 0 && books.length === 0) {
-            alert("Güvenlik Uyarısı: Veri listesi boş görünüyor. Kayıt engellendi.");
-            return;
-        }
-
         document.getElementById('connectionStatus').innerText = "🟡 Kaydediliyor...";
-        
         const payload = JSON.stringify({ students, books, records });
-
-        fetch(API_URL, {
-            method: 'POST',
-            body: payload
-        })
+        fetch(API_URL, { method: 'POST', body: payload })
         .then(response => response.json())
-        .then(data => {
-            setOnlineStatus(true);
-        })
-        .catch(error => {
-            alert("Kaydetme sırasında hata oluştu!");
-            setOnlineStatus(false);
-        });
+        .then(data => setOnlineStatus(true))
+        .catch(error => setOnlineStatus(false));
     }
 
     function updateUI() {
@@ -262,16 +248,15 @@
         event.currentTarget.classList.add('active');
     }
 
-    // --- 1. KİTAP VERME ---
+    // --- OPERASYONLAR ---
     function lendBook() {
         const sVal = document.getElementById('studentInput').value.trim().toUpperCase();
         const bVal = document.getElementById('bookInput').value.trim();
-        if(!sVal || !bVal) { alert("Lütfen öğrenci ve kitap seçin!"); return; }
+        if(!sVal || !bVal) { alert("Öğrenci ve kitap seçin!"); return; }
 
         if(!students.includes(sVal)) students.push(sVal);
         if(!books.includes(bVal)) books.push(bVal);
 
-        // Yeni kaydı en başa ekle
         records.unshift({
             id: Date.now(),
             date: new Date().toLocaleDateString('tr-TR'),
@@ -281,9 +266,11 @@
             returnDate: "-"
         });
 
-        document.getElementById('bookInput').value = ""; // Sadece kitabı temizle (Seri verim için)
+        document.getElementById('bookInput').value = "";
         document.getElementById('bookInput').focus();
         
+        // Yeniden sırala ve güncelle
+        records.sort((a, b) => Number(b.id) - Number(a.id));
         updateUI();
         syncData();
     }
@@ -313,13 +300,7 @@
                     ? `<button class="btn btn-warning" style="font-size:0.8rem; padding:5px 10px;" onclick="returnBook(${r.id}, '${r.student}')">İade Al</button>`
                     : `<span>${r.returnDate}</span>`;
                 
-                let row = `<tr>
-                    <td>${r.date}</td>
-                    <td>${r.student}</td>
-                    <td>${r.book}</td>
-                    <td><span class="badge ${isReading?'badge-reading':'badge-returned'}">${r.status}</span></td>
-                    <td>${btn}</td>
-                </tr>`;
+                let row = `<tr><td>${r.date}</td><td>${r.student}</td><td>${r.book}</td><td><span class="badge ${isReading?'badge-reading':'badge-returned'}">${r.status}</span></td><td>${btn}</td></tr>`;
                 tbody.innerHTML += row;
             });
         }
@@ -330,11 +311,13 @@
         if(rec) {
             rec.status = "İade Etti";
             rec.returnDate = new Date().toLocaleDateString('tr-TR');
+            // Değişiklikten sonra tekrar ID'ye göre garanti sıralama yapalım
+            records.sort((a, b) => Number(b.id) - Number(a.id));
+            
             updateUI();
             syncData();
             
-            // Eğer öğrenci filtresi yoksa tablo güncellensin
-            if(confirm("İade alındı. Bu öğrenciye yeni kitap verecek misiniz?")) {
+            if(confirm("İade alındı. Yeni kitap verecek misiniz?")) {
                 document.getElementById('studentInput').value = sName;
                 renderMainTable();
                 document.getElementById('bookInput').focus();
@@ -344,47 +327,82 @@
     
     function clearFilter() { document.getElementById('studentInput').value = ""; renderMainTable(); }
 
-    // --- 2. KİTAP DURUMU (BUG FIX YAPILDI) ---
+    // --- KİTAP DURUMU VE FİLTRELEME (V11 GÜNCELLEMESİ) ---
+    function filterBooks(type, btn) {
+        currentFilter = type;
+        // Buton renklerini ayarla
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.className = 'filter-btn'; // Hepsini sıfırla
+        });
+        
+        if(type === 'all') btn.className += ' active-all';
+        if(type === 'out') btn.className += ' active-out';
+        if(type === 'in') btn.className += ' active-in';
+
+        renderBookManager();
+    }
+
     function renderBookManager() {
-        const filter = document.getElementById('manageBookSearch').value.toLowerCase();
+        const filterText = document.getElementById('manageBookSearch').value.toLowerCase();
         const div = document.getElementById('bookManagerList');
         div.innerHTML = "";
 
-        // Sadece arama yapıldığında veya boşken ilk 20'yi göster
-        let visibleBooks = books.filter(b => b.toLowerCase().includes(filter));
-        if(filter === "") visibleBooks = visibleBooks.slice(0, 10); // Performans için
+        // Önce kitapları işle ve durumlarını belirle
+        let processedBooks = books.map(b => {
+            // ID'ye göre sayısal sıralama (En yeni en üstte)
+            const history = records.filter(r => r.book === b).sort((a, b) => Number(b.id) - Number(a.id));
+            let status = 'new'; // Hiç okunmadı
+            let lastRec = null;
 
-        visibleBooks.forEach(b => {
-            // BU KİTAPLA İLGİLİ KAYITLARI BUL VE TARİHE GÖRE SIRALA (EN YENİ EN ÜSTTE)
-            // Fix: Sadece bu kitaba ait kayıtları alıp ID'ye göre (zaman damgası) sıralıyoruz.
-            const history = records.filter(r => r.book === b).sort((x, y) => y.id - x.id);
+            if (history.length > 0) {
+                lastRec = history[0];
+                status = (lastRec.status === "Okuyor") ? 'out' : 'in';
+            }
+            return { name: b, status: status, lastRec: lastRec };
+        });
+
+        // FİLTRELEME (Butonlara göre)
+        let visibleBooks = processedBooks.filter(item => {
+            // Arama metni filtresi
+            if (!item.name.toLowerCase().includes(filterText)) return false;
             
-            let statusClass = "status-new";
-            let statusText = "<span class='dot dot-green'></span> Rafta (Hiç okunmadı)";
-            let btnHtml = `<button class="btn btn-secondary" style="font-size:0.7rem;" onclick="renameBook('${b}')">Düzenle</button>`;
+            // Buton filtresi
+            if (currentFilter === 'all') return true;
+            if (currentFilter === 'out' && item.status === 'out') return true;
+            if (currentFilter === 'in' && (item.status === 'in' || item.status === 'new')) return true;
+            
+            return false;
+        });
 
-            if(history.length > 0) {
-                const lastRec = history[0]; // En güncel kayıt
-                
-                if(lastRec.status === "Okuyor") {
-                    statusClass = "status-out";
-                    statusText = `<span class='dot dot-red'></span> <strong>${lastRec.student}</strong> okuyor (${lastRec.date})`;
-                } else {
-                    statusClass = "status-in";
-                    statusText = `<span class='dot dot-green'></span> Rafta (Son okuyan: ${lastRec.student} - ${lastRec.returnDate})`;
-                }
+        visibleBooks.forEach(item => {
+            let statusHtml = "";
+            let cardClass = "";
+
+            if(item.status === 'out') {
+                cardClass = "status-out";
+                statusHtml = `<span class='dot dot-red'></span> <strong>${item.lastRec.student}</strong> okuyor (${item.lastRec.date})`;
+            } else if (item.status === 'in') {
+                cardClass = "status-in";
+                statusHtml = `<span class='dot dot-green'></span> Rafta (Son: ${item.lastRec.student})`;
+            } else {
+                cardClass = "status-in"; // Yeni kitaplar da raftadır
+                statusHtml = `<span class='dot dot-blue'></span> Rafta (Hiç okunmadı)`;
             }
 
             let html = `
-            <div class="book-card ${statusClass}">
+            <div class="book-card ${cardClass}">
                 <div class="book-info">
-                    <h4>📘 ${b}</h4>
-                    <div class="book-detail">${statusText}</div>
+                    <h4>📘 ${item.name}</h4>
+                    <div class="book-detail">${statusHtml}</div>
                 </div>
-                ${btnHtml}
+                <button class="btn btn-secondary" style="font-size:0.7rem;" onclick="renameBook('${item.name}')">Düzenle</button>
             </div>`;
             div.innerHTML += html;
         });
+
+        if(visibleBooks.length === 0) {
+            div.innerHTML = "<p style='text-align:center; color:#999; padding:20px;'>Bu kriterde kitap bulunamadı.</p>";
+        }
     }
 
     function addNewBook() {
@@ -394,23 +412,19 @@
             document.getElementById('newBookInput').value = "";
             updateUI();
             syncData();
-            alert("Kitap Eklendi");
         }
     }
 
     function renameBook(oldName) {
         let newName = prompt("Kitap adını düzenle:", oldName);
         if(newName && newName !== oldName) {
-            // Kitap ismini listede güncelle
             books[books.indexOf(oldName)] = newName;
-            // Geçmiş kayıtlardaki ismini de güncelle
             records.forEach(r => { if(r.book === oldName) r.book = newName; });
             updateUI();
             syncData();
         }
     }
 
-    // --- 3. RAPORLAMA ---
     function generateReport() {
         const sVal = document.getElementById('reportStudentInput').value.trim().toUpperCase();
         if(!sVal) return;
@@ -419,10 +433,8 @@
         const done = sRecs.filter(r => r.status === "İade Etti");
 
         let msg = `Sayın Velimiz,\nÖğrencimiz *${sVal}*, 4/D kütüphanesinden şu ana kadar *${done.length}* kitap okumuştur.\n\n`;
-        
         if(reading.length > 0) msg += `🔴 *ŞU AN OKUDUĞU:* ${reading[0].book}\n   (Veriliş: ${reading[0].date})\n\n`;
         else msg += `🟢 Şu an elinde okuldan kitap yoktur.\n\n`;
-        
         if(done.length > 0) {
             msg += `📚 *Okuyup Teslim Ettikleri:*\n`;
             done.forEach((r,i) => msg += `${i+1}. ${r.book} (${r.returnDate})\n`);
@@ -432,7 +444,6 @@
     
     function copyReport() { navigator.clipboard.writeText(document.getElementById('reportOutput').innerText); alert("Kopyalandı!"); }
     
-    // --- 4. İSTATİSTİK ---
     function calculateStats() {
         let counts = {};
         records.forEach(r => { if(r.status === "İade Etti") counts[r.student] = (counts[r.student]||0)+1; });
