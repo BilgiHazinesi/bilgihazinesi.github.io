@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4/D Bulut Kütüphane (V14 - Kesin Eşleşme)</title>
+    <title>4/D Bulut Kütüphane (V15 - Kesin Komut)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --bg: #f0f2f5; }
@@ -48,7 +48,7 @@
         .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* V14 GÜNCELLEMELERİ */
+        /* FİLTRE BUTONLARI */
         .filter-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
         .filter-btn { flex: 1; padding: 15px; border: 2px solid #eee; border-radius: 8px; background: white; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .filter-btn span { font-size: 1.5rem; display: block; margin-bottom: 5px; }
@@ -78,7 +78,7 @@
 
 <div class="container">
     <div class="header">
-        <h1>☁️ 4/D Bulut Kütüphane <span style="font-size:0.5em; color:#999;">v14</span></h1>
+        <h1>☁️ 4/D Bulut Kütüphane <span style="font-size:0.5em; color:#999;">v15</span></h1>
         <div id="connectionStatus" class="status-indicator status-offline">Bağlanıyor...</div>
     </div>
 
@@ -124,7 +124,7 @@
     <div id="manager" class="content-section">
         <div class="card" style="border-left: 5px solid #9b59b6;">
             <h3>🔍 Kütüphane Durumu</h3>
-            <p style="color:#666; margin-bottom:15px; font-size:0.9rem;">Hatalı yazımları yok sayan <b>Akıllı Eşleşme</b> aktiftir.</p>
+            <p style="color:#666; margin-bottom:15px; font-size:0.9rem;">Listedeki "Okuyor" kayıtlarıyla doğrudan senkronizedir.</p>
             
             <div class="filter-buttons">
                 <button class="filter-btn active-all" onclick="filterBooks('all', this)">
@@ -184,8 +184,8 @@
     let records = [];
     let currentFilter = 'all';
     
-    // KİTAP DURUM HARİTASI (Normalize Edilmiş)
-    let bookStatusMap = {}; 
+    // Aktif Okunan Kitaplar Listesi (Basit ve Net)
+    let activeBooksMap = {}; 
 
     window.onload = function() {
         if(API_URL.includes("BURAYA")) {
@@ -231,8 +231,8 @@
     }
 
     function updateUI() {
-        // Durumları hesapla (NORMALİZE EDEREK)
-        calculateBookStatuses();
+        // V15: Önce "Okuyor" olanları kesin olarak belirle
+        identifyActiveBooks();
         
         populateDatalists();
         renderMainTable();
@@ -240,44 +240,36 @@
         calculateStats();
     }
 
-    // --- V14: KESİN ÇÖZÜM MOTORU (NORMALİZASYON) ---
-    // Bu fonksiyon her türlü harf ve boşluk hatasını yok eder.
+    // --- V15: NORMALİZASYON FONKSİYONU ---
+    // Harf hatası, boşluk hatası affeder.
     function normalizeStr(str) {
         if(!str) return "";
         return str.toString().trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr-TR');
     }
 
-    function calculateBookStatuses() {
-        bookStatusMap = {}; // Sıfırla
+    // --- V15: KESİN DURUM TESPİTİ ---
+    function identifyActiveBooks() {
+        activeBooksMap = {}; // Sıfırla
         
-        // Kayıtları tararken kitap isimlerini "STANDART" hale getirip kaydediyoruz
+        // Mantık: Records listesini dön.
+        // Eğer bir kaydın durumu "Okuyor" ise, o kitabı KİLİTLE.
+        // İade edildiyse listedeki statüsü "İade Etti"ye dönüşür, o yüzden "Okuyor" kaydı kalmaz.
+        
         records.forEach(r => {
-            let cleanName = normalizeStr(r.book); 
-            
-            // Eğer bu temiz isim için daha önce kayıt girmediysek (En güncel kayıt)
-            if (!bookStatusMap[cleanName]) {
-                bookStatusMap[cleanName] = {
-                    status: r.status, 
+            if(r.status === "Okuyor") {
+                let cleanName = normalizeStr(r.book);
+                // Bu kitap şu an birinde. Kaydet.
+                activeBooksMap[cleanName] = {
                     student: r.student,
                     date: r.date
                 };
             }
         });
-        
+
         // Sayaçları güncelle
-        let outCount = 0;
-        let inCount = 0;
-        
-        books.forEach(b => {
-            let cleanName = normalizeStr(b);
-            let info = bookStatusMap[cleanName];
-            
-            if (info && info.status === "Okuyor") {
-                outCount++;
-            } else {
-                inCount++;
-            }
-        });
+        let outCount = Object.keys(activeBooksMap).length;
+        let inCount = books.length - outCount;
+        if(inCount < 0) inCount = 0; // Güvenlik
         
         document.getElementById('count-all').innerText = books.length;
         document.getElementById('count-out').innerText = outCount;
@@ -316,8 +308,6 @@
             status: "Okuyor",
             returnDate: "-"
         });
-
-        records.sort((a, b) => Number(b.id) - Number(a.id)); 
 
         document.getElementById('bookInput').value = "";
         document.getElementById('bookInput').focus();
@@ -363,8 +353,6 @@
             rec.status = "İade Etti";
             rec.returnDate = new Date().toLocaleDateString('tr-TR');
             
-            records.sort((a, b) => Number(b.id) - Number(a.id));
-            
             updateUI(); 
             syncData();
             
@@ -378,7 +366,7 @@
     
     function clearFilter() { document.getElementById('studentInput').value = ""; renderMainTable(); }
 
-    // --- V14: KESİN EŞLEŞTİRMELİ KİTAP YÖNETİMİ ---
+    // --- V15: KESİN LİSTELEME ---
     function filterBooks(type, btn) {
         currentFilter = type;
         document.querySelectorAll('.filter-btn').forEach(b => {
@@ -399,24 +387,22 @@
 
         // Her kitabı işle
         let processedBooks = books.map(b => {
-            // İSİM STANDARDI: Boşlukları ve büyük küçüğü yok sayarak eşleştir
             let cleanName = normalizeStr(b);
-            let info = bookStatusMap[cleanName]; 
+            
+            // BURASI KRİTİK: Sadece "Okuyor" listesine bakıyoruz.
+            // Varsa KIRMIZI, yoksa YEŞİL. Bitti.
+            let activeInfo = activeBooksMap[cleanName];
             
             let status = 'in'; 
             let student = '';
             let date = '';
 
-            if (info && info.status === "Okuyor") {
+            if (activeInfo) {
                 status = 'out';
-                student = info.student;
-                date = info.date;
-            } else if (info && info.status === "İade Etti") {
-                status = 'in';
-                student = info.student + " (Son Okuyan)";
+                student = activeInfo.student;
+                date = activeInfo.date;
             } else {
                 status = 'in';
-                student = "Hiç Okunmadı";
             }
 
             return { name: b, status: status, student: student, date: date };
@@ -431,6 +417,7 @@
             return false;
         });
 
+        // Önce kırmızılar (öncelikli) görünsün
         visibleBooks.sort((a, b) => {
             if (a.status === 'out' && b.status === 'in') return -1;
             if (a.status === 'in' && b.status === 'out') return 1;
@@ -446,7 +433,7 @@
                 statusHtml = `<span class='dot dot-red'></span> <strong>${item.student}</strong> okuyor <span style='font-size:0.8em; color:#888; margin-left:5px;'>(${item.date})</span>`;
             } else {
                 cardClass = "status-in";
-                statusHtml = `<span class='dot dot-green'></span> Rafta <span style='font-size:0.8em; color:#888; margin-left:5px;'>(${item.student})</span>`;
+                statusHtml = `<span class='dot dot-green'></span> Rafta (Müsait)`;
             }
 
             let html = `
