@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4/D Bulut Kütüphane (V16 - Akıllı Raf)</title>
+    <title>4/D Bulut Kütüphane (V18 - Müfettiş Modu)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --bg: #f0f2f5; }
@@ -36,6 +36,7 @@
         .btn-warning { background: var(--warning); color: white; }
         .btn-whatsapp { background: #25D366; }
         .btn-secondary { background: #7f8c8d; }
+        .btn-delete { background: #e74c3c; color: white; padding: 4px 8px; font-size: 0.7rem; border-radius: 4px; margin-left: 10px; cursor: pointer; border: none; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { text-align: left; padding: 15px; border-bottom: 1px solid #eee; }
@@ -48,12 +49,11 @@
         .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* V16 BUTON & KART TASARIMI */
+        /* FİLTRE BUTONLARI */
         .filter-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
         .filter-btn { flex: 1; padding: 15px; border: 2px solid #eee; border-radius: 8px; background: white; cursor: pointer; font-weight: bold; color: #555; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .filter-btn span { font-size: 1.5rem; display: block; margin-bottom: 5px; }
         .filter-btn:hover { background: #f9f9f9; transform: translateY(-2px); }
-        
         .filter-btn.active-all { background: #3498db; color: white; border-color: #3498db; }
         .filter-btn.active-out { background: #e74c3c; color: white; border-color: #e74c3c; }
         .filter-btn.active-in { background: #27ae60; color: white; border-color: #27ae60; }
@@ -63,8 +63,10 @@
         .book-card.status-in { border-left: 6px solid #27ae60; background: #f0fdf4; }
         
         .book-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; color: #2c3e50; }
-        .book-detail { font-size: 0.9rem; color: #666; display: flex; align-items: center; gap: 5px; }
-        .dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .book-detail { font-size: 0.95rem; color: #666; display: flex; flex-direction: column; gap: 5px; }
+        .multi-user { display:flex; align-items:center; gap:5px; margin-bottom:4px; font-weight:500; }
+        .count-badge { background: #e74c3c; color: white; font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; margin-left: 8px; }
+        .dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; flex-shrink: 0; }
         .dot-red { background-color: #e74c3c; }
         .dot-green { background-color: #27ae60; }
     </style>
@@ -73,12 +75,12 @@
 
 <div id="loader">
     <div class="spinner"></div>
-    <p style="margin-top:15px; font-weight:bold; color:#555;">Kütüphane Hazırlanıyor...</p>
+    <p style="margin-top:15px; font-weight:bold; color:#555;">Kütüphane Taranıyor...</p>
 </div>
 
 <div class="container">
     <div class="header">
-        <h1>☁️ 4/D Bulut Kütüphane <span style="font-size:0.5em; color:#999;">v16</span></h1>
+        <h1>☁️ 4/D Bulut Kütüphane <span style="font-size:0.5em; color:#999;">v18</span></h1>
         <div id="connectionStatus" class="status-indicator status-offline">Bağlanıyor...</div>
     </div>
 
@@ -124,14 +126,14 @@
     <div id="manager" class="content-section">
         <div class="card" style="border-left: 5px solid #9b59b6;">
             <h3>🔍 Kütüphane Durumu</h3>
-            <p style="color:#666; margin-bottom:15px; font-size:0.9rem;">Yeşil olanlar rafta (varsa son okuyan görünür), kırmızı olanlar şu an öğrencide.</p>
+            <p style="color:#666; margin-bottom:15px; font-size:0.9rem;">Hatalı kayıtları ismin yanındaki <b>[X] Sil</b> butonu ile silebilirsiniz.</p>
             
             <div class="filter-buttons">
                 <button class="filter-btn active-all" onclick="filterBooks('all', this)">
                     <span id="count-all">0</span> Tümü
                 </button>
                 <button class="filter-btn" onclick="filterBooks('out', this)">
-                    <span id="count-out">0</span> 🔴 Verilenler
+                    <span id="count-out">0</span> 🔴 Dışarıda
                 </button>
                 <button class="filter-btn" onclick="filterBooks('in', this)">
                     <span id="count-in">0</span> 🟢 Raftakiler
@@ -185,8 +187,8 @@
     let currentFilter = 'all';
     
     // ANALİZ LİSTELERİ
-    let activeBooksMap = {}; // Şu an kimde?
-    let lastHistoryMap = {}; // En son kim iade etti?
+    let activeBooksMap = {}; 
+    let lastHistoryMap = {}; 
 
     window.onload = function() {
         if(API_URL.includes("BURAYA")) {
@@ -232,53 +234,52 @@
     }
 
     function updateUI() {
-        // V16: Veri Analizi
         analyzeLibraryData();
-        
         populateDatalists();
         renderMainTable();
         renderBookManager();
         calculateStats();
     }
 
-    // --- V16: NORMALİZASYON ---
     function normalizeStr(str) {
         if(!str) return "";
         return str.toString().trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr-TR');
     }
 
-    // --- V16: ANALİZ MOTORU ---
+    // --- V18: ANALİZ VE SAYAÇ DÜZELTME ---
     function analyzeLibraryData() {
         activeBooksMap = {}; 
         lastHistoryMap = {};
+        let totalOut = 0; // Toplam kaç adet kitap dışarıda?
         
-        // Kayıtları tara (En yeniden en eskiye)
         records.forEach(r => {
             let cleanName = normalizeStr(r.book); 
             
-            // 1. ŞU AN KİMDE? (Kesin Bilgi)
             if(r.status === "Okuyor") {
-                // Eğer bu kitap için daha önce "aktif" kaydı bulmadıysak, bu günceldir.
-                if (!activeBooksMap[cleanName]) {
-                    activeBooksMap[cleanName] = { student: r.student, date: r.date };
-                }
+                if (!activeBooksMap[cleanName]) activeBooksMap[cleanName] = [];
+                
+                activeBooksMap[cleanName].push({
+                    student: r.student,
+                    date: r.date,
+                    id: r.id // V18: Silme işlemi için ID gerekli
+                });
+                totalOut++;
             } 
-            // 2. EN SON KİM İADE ETTİ? (Raf Geçmişi)
             else if (r.status === "İade Etti") {
-                if (!lastHistoryMap[cleanName]) {
-                    lastHistoryMap[cleanName] = r.student; // Sadece en son iade edeni kaydet
-                }
+                if (!lastHistoryMap[cleanName]) lastHistoryMap[cleanName] = r.student;
             }
         });
         
-        // Sayaçları güncelle
-        let outCount = Object.keys(activeBooksMap).length;
-        let inCount = books.length - outCount;
-        if(inCount < 0) inCount = 0;
-        
+        // Sayaçlar
         document.getElementById('count-all').innerText = books.length;
-        document.getElementById('count-out').innerText = outCount;
-        document.getElementById('count-in').innerText = inCount;
+        document.getElementById('count-out').innerText = totalOut;
+        
+        // Raftakiler (Yaklaşık hesap: Kitap sayısı - Dışarıdakiler)
+        // Eğer bir kitabın 2 kopyası varsa ve 1'i dışarıdaysa, raf sayısını tam bilemeyiz ama
+        // En azından hiç dışarıda olmayanları sayabiliriz.
+        let uniqueOut = Object.keys(activeBooksMap).length;
+        let inCount = books.length - uniqueOut; 
+        document.getElementById('count-in').innerText = inCount < 0 ? 0 : inCount;
     }
 
     function populateDatalists() {
@@ -315,10 +316,8 @@
         });
 
         records.sort((a, b) => Number(b.id) - Number(a.id)); 
-
         document.getElementById('bookInput').value = "";
         document.getElementById('bookInput').focus();
-        
         updateUI(); 
         syncData();
     }
@@ -359,10 +358,9 @@
         if(rec) {
             rec.status = "İade Etti";
             rec.returnDate = new Date().toLocaleDateString('tr-TR');
-            
+            records.sort((a, b) => Number(b.id) - Number(a.id));
             updateUI(); 
             syncData();
-            
             if(confirm("İade alındı. Yeni kitap verecek misiniz?")) {
                 document.getElementById('studentInput').value = sName;
                 renderMainTable();
@@ -371,19 +369,24 @@
         }
     }
     
+    // V18: HATALI KAYDI SİLME (Müfettiş Yetkisi)
+    function deleteRecord(id) {
+        if(confirm("Bu kaydı tamamen silmek istiyor musunuz? (Yanlışlıkla girilenler için)")) {
+            records = records.filter(r => r.id !== id);
+            updateUI();
+            syncData();
+        }
+    }
+    
     function clearFilter() { document.getElementById('studentInput').value = ""; renderMainTable(); }
 
-    // --- V16: AKILLI RAF SİSTEMİ ---
+    // --- KİTAP YÖNETİMİ ---
     function filterBooks(type, btn) {
         currentFilter = type;
-        document.querySelectorAll('.filter-btn').forEach(b => {
-            b.className = 'filter-btn';
-        });
-        
+        document.querySelectorAll('.filter-btn').forEach(b => b.className = 'filter-btn');
         if(type === 'all') btn.className += ' active-all';
         if(type === 'out') btn.className += ' active-out';
         if(type === 'in') btn.className += ' active-in';
-
         renderBookManager();
     }
 
@@ -392,36 +395,37 @@
         const div = document.getElementById('bookManagerList');
         div.innerHTML = "";
 
-        // Her kitabı işle
         let processedBooks = books.map(b => {
             let cleanName = normalizeStr(b);
-            
-            // 1. Önce bu kitap şu an kimde ona bak? (KESİN BİLGİ)
-            let activeInfo = activeBooksMap[cleanName];
+            let activeList = activeBooksMap[cleanName]; 
             
             let status = 'in'; 
-            let displayText = '';
-            
-            if (activeInfo) {
-                // KİTAP DIŞARIDA
+            let displayHtml = '';
+            let countBadge = '';
+
+            if (activeList && activeList.length > 0) {
                 status = 'out';
-                displayText = `<span class='dot dot-red'></span> <strong>${activeInfo.student}</strong> okuyor <span style='font-size:0.8em; color:#888;'>(${activeInfo.date})</span>`;
+                if(activeList.length > 1) countBadge = `<span class="count-badge">${activeList.length} Adet Dışarıda</span>`;
+                
+                activeList.forEach(item => {
+                    // V18: Silme Butonu Eklendi
+                    displayHtml += `<div class='multi-user'>
+                        <span class='dot dot-red'></span> 
+                        <strong>${item.student}</strong> 
+                        <span style='font-size:0.8em; color:#888; margin-left:5px;'>(${item.date})</span>
+                        <button class="btn-delete" onclick="deleteRecord(${item.id})">Sil [X]</button>
+                    </div>`;
+                });
             } else {
-                // KİTAP RAFTA
                 status = 'in';
-                // Rafta ama geçmişi var mı?
                 let lastReader = lastHistoryMap[cleanName];
-                if(lastReader) {
-                     displayText = `<span class='dot dot-green'></span> Rafta (Son Okuyan: ${lastReader})`;
-                } else {
-                     displayText = `<span class='dot dot-green'></span> Rafta (Hiç Okunmadı)`;
-                }
+                if(lastReader) displayHtml = `<div class='multi-user'><span class='dot dot-green'></span> Rafta (Son: ${lastReader})</div>`;
+                else displayHtml = `<div class='multi-user'><span class='dot dot-green'></span> Rafta (Hiç Okunmadı)</div>`;
             }
 
-            return { name: b, status: status, html: displayText };
+            return { name: b, status: status, html: displayHtml, badge: countBadge };
         });
 
-        // FİLTRELEME
         let visibleBooks = processedBooks.filter(item => {
             if (!item.name.toLowerCase().includes(filterText)) return false;
             if (currentFilter === 'all') return true;
@@ -430,7 +434,6 @@
             return false;
         });
 
-        // SIRALAMA: Kırmızılar en üstte
         visibleBooks.sort((a, b) => {
             if (a.status === 'out' && b.status === 'in') return -1;
             if (a.status === 'in' && b.status === 'out') return 1;
@@ -439,11 +442,10 @@
 
         visibleBooks.forEach(item => {
             let cardClass = (item.status === 'out') ? 'status-out' : 'status-in';
-
             let html = `
             <div class="book-card ${cardClass}">
                 <div class="book-info">
-                    <h4>📘 ${item.name}</h4>
+                    <h4>📘 ${item.name} ${item.badge}</h4>
                     <div class="book-detail">${item.html}</div>
                 </div>
                 <button class="btn btn-secondary" style="font-size:0.7rem;" onclick="renameBook('${item.name}')">Düzenle</button>
@@ -484,8 +486,13 @@
         const done = sRecs.filter(r => r.status === "İade Etti");
 
         let msg = `Sayın Velimiz,\nÖğrencimiz *${sVal}*, 4/D kütüphanesinden şu ana kadar *${done.length}* kitap okumuştur.\n\n`;
-        if(reading.length > 0) msg += `🔴 *ŞU AN OKUDUĞU:* ${reading[0].book}\n   (Veriliş: ${reading[0].date})\n\n`;
+        if(reading.length > 0) {
+             msg += `🔴 *ŞU AN OKUDUĞU:* \n`;
+             reading.forEach(r => msg += `- ${r.book} (${r.date})\n`);
+             msg += `\n`;
+        }
         else msg += `🟢 Şu an elinde okuldan kitap yoktur.\n\n`;
+        
         if(done.length > 0) {
             msg += `📚 *Okuyup Teslim Ettikleri:*\n`;
             done.forEach((r,i) => msg += `${i+1}. ${r.book} (${r.returnDate})\n`);
