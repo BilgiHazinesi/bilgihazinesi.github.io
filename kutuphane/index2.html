@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>4/D Liquid Library (V24)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- LIQUID THEME --- */
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-shine: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --primary-grad: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            --success-grad: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --accent-glow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            /* Hareketli Arka Plan Efekti */
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            background-size: cover;
+            color: var(--text-main);
+            margin: 0; padding: 0; padding-bottom: 90px;
+            min-height: 100vh;
+        }
+
+        /* --- LIQUID CARD --- */
+        .liquid-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255,255,255,0.3);
+            border-radius: 24px;
+            padding: 20px; margin-bottom: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            position: relative; overflow: hidden;
+            transition: transform 0.2s;
+        }
+        
+        /* Kartın Üzerindeki Işık Yansıması */
+        .liquid-card::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%;
+            background: linear-gradient(120deg, transparent 30%, var(--glass-shine) 50%, transparent 70%);
+            transform: skewX(-20deg) translateX(-150%);
+            transition: transform 0.5s; pointer-events: none;
+        }
+        .liquid-card:active::after { transform: skewX(-20deg) translateX(150%); }
+
+        /* --- HEADER --- */
+        .app-header {
+            padding: 20px; position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
+        }
+        .app-title { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .status-pill {
+            font-size: 0.7rem; padding: 6px 12px; border-radius: 20px;
+            background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+            display: flex; align-items: center; gap: 6px; font-weight: 600; text-transform: uppercase;
+        }
+        .led { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px currentColor; }
+        .online .led { background: #10b981; color: #10b981; }
+        .offline .led { background: #ef4444; color: #ef4444; }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; display: none; }
+        .section { display: none; animation: floatUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .section.active { display: block; }
+        @keyframes floatUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* --- FORM ELEMENTS --- */
+        input, select {
+            width: 100%; padding: 16px; font-size: 1rem;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px; color: white;
+            margin-bottom: 12px; transition: 0.3s;
+        }
+        input:focus, select:focus { background: rgba(0, 0, 0, 0.5); border-color: #3b82f6; box-shadow: var(--accent-glow); }
+        option { background: #1e293b; color: white; }
+
+        /* --- BUTTONS --- */
+        .btn {
+            width: 100%; padding: 16px; border: none; border-radius: 16px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            transition: 0.2s; position: relative; overflow: hidden;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary { background: var(--primary-grad); color: white; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4); }
+        .btn-success { background: var(--success-grad); color: white; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
+        
+        /* --- LIST ITEMS --- */
+        .list-item {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
+            border-radius: 18px; padding: 16px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .item-text h4 { margin: 0; font-size: 1rem; color: white; font-weight: 600; }
+        .item-text p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-muted); }
+
+        /* --- BOOK TREE MODULE (YENİ) --- */
+        .tree-card {
+            display: flex; flex-direction: column; gap: 10px;
+            border-left: 4px solid var(--glass-border);
+        }
+        .tree-card.completed {
+            border-left-color: #10b981;
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), transparent);
+        }
+        .tree-controls { display: flex; gap: 10px; align-items: center; }
+        .tree-select { flex: 1; margin: 0; font-size: 0.9rem; padding: 12px; }
+        .tree-btn {
+            padding: 12px 16px; border-radius: 14px; border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.05); color: var(--text-muted);
+            cursor: pointer; font-size: 1.2rem; transition: 0.3s;
+        }
+        .tree-btn.active {
+            background: var(--success-grad); color: white; border-color: transparent;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); transform: scale(1.05);
+        }
+
+        /* --- DOCK NAVIGATION --- */
+        .dock {
+            position: fixed; bottom: 20px; left: 20px; right: 20px; height: 75px;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.15); border-top: 1px solid rgba(255,255,255,0.3);
+            border-radius: 28px;
+            display: flex; justify-content: space-evenly; align-items: center;
+            z-index: 1000; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .dock-item {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-muted); background: none; border: none;
+            font-size: 0.7rem; transition: 0.3s; padding: 10px; border-radius: 12px;
+        }
+        .dock-item i { font-size: 1.6rem; margin-bottom: 4px; transition: 0.3s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .dock-item.active { color: white; background: rgba(255,255,255,0.1); transform: translateY(-10px); }
+        .dock-item.active i { filter: drop-shadow(0 0 10px rgba(255,255,255,0.8)); transform: scale(1.1); }
+
+        /* --- LOGIN & LOADER --- */
+        #loginOverlay {
+            position: fixed; inset: 0; z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+            background-color: #0f172a;
+            background-image: var(--bg-mesh); background-size: cover;
+        }
+        .login-box {
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(40px);
+            padding: 40px; border-radius: 32px; border: 1px solid rgba(255,255,255,0.2);
+            width: 90%; max-width: 380px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        #loader { display: none; margin-top: 20px; font-weight: 600; color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.5); }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <div style="font-size:3rem; margin-bottom:10px;">🔒</div>
+        <h2 style="margin:0 0 10px 0; color:white;">4/D Kütüphane</h2>
+        <p style="color:rgba(255,255,255,0.6); margin-bottom:20px;">Öğretmen Girişi</p>
+        <input type="password" id="appPassword" placeholder="Şifreniz" style="text-align:center; font-size:1.2rem; letter-spacing:3px;">
+        <button class="btn btn-primary" onclick="login()">Giriş Yap</button>
+        <div id="loader">Veriler Senkronize Ediliyor...</div>
+    </div>
+</div>
+
+<div id="appContainer">
+    <div class="app-header">
+        <div class="app-title">📚 Liquid Library</div>
+        <div class="status-pill online" id="statusPill">
+            <span class="led"></span> <span id="statusText">Online</span>
+        </div>
+    </div>
+
+    <div class="container" style="display:block;">
+        
+        <div id="tab-lend" class="section active">
+            <div class="liquid-card">
+                <h3 style="margin-top:0; margin-bottom:15px; color:#60a5fa;"><i class="fas fa-bolt"></i> Hızlı İşlem</h3>
+                <input type="text" list="studentList" id="studentInput" placeholder="Öğrenci Seçin..." oninput="renderHistory()">
+                <datalist id="studentList"></datalist>
+                <input type="text" list="bookList" id="bookInput" placeholder="Kitap Seçin...">
+                <datalist id="bookList"></datalist>
+                <button class="btn btn-primary" onclick="lendBook()">Kitabı Teslim Et</button>
+            </div>
+            
+            <div class="liquid-card" style="padding-bottom:10px;">
+                <h4 style="margin:0 0 15px 0; color:var(--text-muted);">📋 Son Hareketler</h4>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <div id="tab-tree" class="section">
+            <div class="liquid-card">
+                <h3 style="margin-top:0; margin-bottom:10px; color:#34d399;"><i class="fas fa-tree"></i> Kitap Ağacı</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">
+                    İade edilen kitaplar için öğrencinin seçtiği kartı işaretleyin ve ağaca asıp asmadığını kontrol edin.
+                </p>
+                <div id="treeList"></div>
+            </div>
+        </div>
+
+        <div id="tab-books" class="section">
+            <div class="liquid-card">
+                <h3 style="margin:0 0 15px 0; color:#f472b6;"><i class="fas fa-search"></i> Durum Kontrolü</h3>
+                <input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="renderBookManager()">
+                <div id="bookManagerList"></div>
+            </div>
+        </div>
+
+        <div id="tab-report" class="section">
+            <div class="liquid-card">
+                <h3 style="margin:0 0 15px 0; color:#fcd34d;"><i class="fas fa-chart-line"></i> Karne Raporu</h3>
+                <input type="text" list="studentList" id="reportStudentInput" placeholder="Öğrenci Seçin...">
+                <button class="btn btn-success" onclick="generateReport()">Rapor Oluştur</button>
+                <div id="reportOutput" style="background:rgba(0,0,0,0.3); padding:15px; border-radius:16px; margin:15px 0; white-space:pre-wrap; font-size:0.9rem; color:#e2e8f0; border:1px solid var(--glass-border);">...</div>
+                <button class="btn btn-primary" onclick="copyReport()">Kopyala</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="dock">
+        <button class="dock-item active" onclick="switchTab('lend', this)"><i class="fas fa-home"></i><span>Giriş</span></button>
+        <button class="dock-item" onclick="switchTab('tree', this)"><i class="fas fa-leaf"></i><span>Ağaç</span></button>
+        <button class="dock-item" onclick="switchTab('books', this)"><i class="fas fa-book-open"></i><span>Durum</span></button>
+        <button class="dock-item" onclick="switchTab('report', this)"><i class="fas fa-file-invoice"></i><span>Rapor</span></button>
+    </div>
+</div>
+
+<script>
+    // --- API LINK ---
+    const API_URL = "https://script.google.com/macros/s/AKfycbx3IoRsVhIzuAJzr4UzBCq6qLay0HFMOueJtm1JCmGINEanpX2ccPIdMePGYPhdFyp3/exec"; 
+
+    // PDF'ten Çekilen 9 Çıkış Kartı
+    const exitCards = [
+        "1. Macera Hatırası Kartı",
+        "2. Öğrenen Profil Kartı",
+        "3. Duygu Kartı",
+        "4. Bağlantı Kartı",
+        "5. Eleştiri Kartı",
+        "6. Soru Kartı",
+        "7. Yaratıcı Yeniden Yazım Kartı",
+        "8. Öğrenme ve Gelişim Kartı",
+        "9. Kitap Tavsiye Kartı"
+    ];
+
+    let students = [];
+    let books = [];
+    let records = [];
+    let userPassword = "";
+
+    // Giriş Fonksiyonu
+    function login() {
+        let pass = document.getElementById('appPassword').value;
+        if(!pass) return;
+        document.getElementById('loader').style.display = 'block';
+        
+        fetch(API_URL + "?password=" + encodeURIComponent(pass))
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) {
+                alert("Hatalı Şifre!");
+                document.getElementById('loader').style.display = 'none';
+            } else {
+                userPassword = pass;
+                processData(data);
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+            }
+        })
+        .catch(err => {
+            alert("Bağlantı Hatası! İnternetinizi kontrol edin.");
+            document.getElementById('loader').style.display = 'none';
+        });
+    }
+
+    function processData(data) {
+        if(data.students) students = data.students;
+        if(data.books) books = data.books;
+        // ID'ye göre (Yeniden eskiye) sırala
+        records = (data.records || []).sort((a,b) => Number(b.id) - Number(a.id));
+        updateUI();
+    }
+
+    function syncData() {
+        document.getElementById('statusPill').className = "status-pill offline";
+        document.getElementById('statusText').innerText = "Kaydediliyor...";
+        
+        const payload = JSON.stringify({ students, books, records, auth_password: userPassword });
+        
+        fetch(API_URL, { method: 'POST', body: payload })
+        .then(res => {
+            document.getElementById('statusPill').className = "status-pill online";
+            document.getElementById('statusText').innerText = "Online";
+        });
+    }
+
+    function updateUI() {
+        populateDatalists();
+        renderHistory();
+        renderTreeManager();
+        renderBookManager();
+    }
+
+    function switchTab(id, btn) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + id).classList.add('active');
+        document.querySelectorAll('.dock-item').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function normalizeStr(str) {
+        return str ? str.toString().trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr-TR') : "";
+    }
+
+    // --- 1. KİTAP VER/AL ---
+    function lendBook() {
+        const s = document.getElementById('studentInput').value.trim().toUpperCase();
+        const b = document.getElementById('bookInput').value.trim();
+        if(!s || !b) { alert("Eksik bilgi!"); return; }
+        
+        if(!students.includes(s)) students.push(s);
+        if(!books.includes(b)) books.push(b);
+
+        records.unshift({ 
+            id: Date.now(), 
+            date: new Date().toLocaleDateString('tr-TR'), 
+            student: s, book: b, 
+            status: "Okuyor", returnDate: "-",
+            exitCard: "", tree: false 
+        });
+        
+        records.sort((a,b) => b.id - a.id);
+        document.getElementById('bookInput').value = "";
+        updateUI(); syncData();
+    }
+
+    function returnBook(id) {
+        let rec = records.find(r => r.id === id);
+        if(rec) {
+            rec.status = "İade Etti";
+            rec.returnDate = new Date().toLocaleDateString('tr-TR');
+            updateUI(); syncData();
+            // Kullanıcıyı Ağaç sekmesine yönlendir (Görsel ipucu)
+            if(confirm("Kitap iade alındı. Değerlendirme kartını girmek için Ağaç bölümüne gitmek ister misiniz?")) {
+                switchTab('tree', document.querySelectorAll('.dock-item')[1]);
+            }
+        }
+    }
+
+    function renderHistory() {
+        const sVal = document.getElementById('studentInput').value.trim().toUpperCase();
+        const div = document.getElementById('historyList');
+        div.innerHTML = "";
+        
+        let list = sVal ? records.filter(r => r.student === sVal) : records.filter(r => r.status === "Okuyor");
+        
+        if(list.length === 0) div.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Kayıt yok.</p>";
+
+        list.forEach(r => {
+            let isReading = r.status === "Okuyor";
+            let btnHtml = isReading 
+                ? `<button style="background:linear-gradient(135deg, #f59e0b, #d97706); border:none; padding:8px 12px; border-radius:10px; color:#fff; font-weight:bold; cursor:pointer; box-shadow:0 4px 10px rgba(245, 158, 11, 0.4);" onclick="returnBook(${r.id})">İade Al</button>`
+                : `<span style="color:var(--text-muted); font-size:0.8rem;">${r.returnDate}</span>`;
+
+            div.innerHTML += `
+            <div class="list-item">
+                <div class="item-text">
+                    <h4 style="color:${isReading ? '#f87171' : '#34d399'}">${r.book}</h4>
+                    <p>👤 ${r.student} (${r.date})</p>
+                </div>
+                ${btnHtml}
+            </div>`;
+        });
+    }
+
+    // --- 2. KİTAP AĞACI VE ÇIKIŞ KARTLARI ---
+    function renderTreeManager() {
+        const div = document.getElementById('treeList');
+        div.innerHTML = "";
+
+        // İade edilmiş olanları göster (En yeni iadeler üstte)
+        let returnedBooks = records.filter(r => r.status === "İade Etti").slice(0, 50);
+
+        if(returnedBooks.length === 0) {
+            div.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Değerlendirme bekleyen kitap yok.</p>";
+            return;
+        }
+
+        returnedBooks.forEach(r => {
+            let isTree = r.tree === true;
+            let currentCard = r.exitCard || "";
+            let cardClass = isTree ? "completed" : "";
+            let btnClass = isTree ? "active" : "";
+            let btnIcon = isTree ? "✅" : "🌳";
+
+            // Dropdown seçenekleri
+            let options = `<option value="">Kart Seçilmedi</option>`;
+            exitCards.forEach(cardName => {
+                let selected = (currentCard === cardName) ? "selected" : "";
+                options += `<option value="${cardName}" ${selected}>${cardName}</option>`;
+            });
+
+            div.innerHTML += `
+            <div class="list-item tree-card ${cardClass}">
+                <div class="item-text">
+                    <h4>📘 ${r.book}</h4>
+                    <p>👤 ${r.student} (İade: ${r.returnDate})</p>
+                </div>
+                <div class="tree-controls">
+                    <select class="tree-select" onchange="updateExitCard(${r.id}, this.value)">
+                        ${options}
+                    </select>
+                    <button class="tree-btn ${btnClass}" onclick="toggleTree(${r.id})">
+                        ${btnIcon}
+                    </button>
+                </div>
+            </div>`;
+        });
+    }
+
+    function updateExitCard(id, val) {
+        let rec = records.find(r => r.id === id);
+        if(rec) {
+            rec.exitCard = val;
+            syncData();
+        }
+    }
+
+    function toggleTree(id) {
+        let rec = records.find(r => r.id === id);
+        if(rec) {
+            rec.tree = !rec.tree;
+            renderTreeManager();
+            syncData();
+        }
+    }
+
+    // --- 3. KİTAP DURUMU ---
+    function renderBookManager() {
+        const search = document.getElementById('bookSearch').value.toLowerCase();
+        const div = document.getElementById('bookManagerList');
+        div.innerHTML = "";
+
+        let filtered = books.filter(b => b.toLowerCase().includes(search));
+        
+        filtered.forEach(b => {
+            // Kitabın durumunu belirle (Okuyor listesinde var mı?)
+            let cleanName = normalizeStr(b);
+            let activeRecs = records.filter(r => r.status === "Okuyor" && normalizeStr(r.book) === cleanName);
+            
+            let info = "";
+            let borderColor = "rgba(255,255,255,0.1)";
+
+            if(active.length > 0) {
+                borderColor = "#ef4444"; // Kırmızı
+                activeRecs.forEach(r => {
+                    info += `<div style="color:#f87171; font-size:0.9rem; margin-top:5px;"><i class="fas fa-user-clock"></i> ${r.student} (${r.date})</div>`;
+                });
+            } else {
+                borderColor = "#10b981"; // Yeşil
+                info = `<div style="color:#34d399; font-size:0.9rem;"><i class="fas fa-check-circle"></i> Rafta Müsait</div>`;
+            }
+
+            div.innerHTML += `
+            <div class="list-item" style="border-left: 4px solid ${borderColor};">
+                <div style="width:100%">
+                    <h4>${b}</h4>
+                    ${info}
+                </div>
+            </div>`;
+        });
+    }
+
+    // --- 4. RAPOR ---
+    function generateReport() {
+        const s = document.getElementById('reportStudentInput').value.trim().toUpperCase();
+        if(!s) return;
+        
+        let myRecs = records.filter(r => r.student === s).sort((a,b) => a.id - b.id);
+        
+        let txt = `Sayın Velimiz,\nÖğrencimiz *${s}* toplam *${myRecs.length}* kitap okumuştur.\n\n`;
+        
+        myRecs.forEach((r, i) => {
+            let status = "";
+            if (r.status === "Okuyor") {
+                status = "🔴 Şu An Okuyor";
+            } else {
+                let treeIcon = r.tree ? "🌳" : "";
+                let cardInfo = r.exitCard ? `\n   📝 ${r.exitCard}` : "";
+                status = `✅ Teslim: ${r.returnDate} ${treeIcon}${cardInfo}`;
+            }
+            txt += `${i+1}. ${r.book}\n   ${status}\n`;
+        });
+        
+        txt += `\nZeynal Öğretmen`;
+        document.getElementById('reportOutput').innerText = txt;
+    }
+
+    function copyReport() {
+        navigator.clipboard.writeText(document.getElementById('reportOutput').innerText);
+        alert("Kopyalandı!");
+    }
+
+    function populateDatalists() {
+        let sl = document.getElementById('studentList'); sl.innerHTML = '';
+        students.sort().forEach(s => sl.innerHTML += `<option value="${s}">`);
+        let bl = document.getElementById('bookList'); bl.innerHTML = '';
+        books.sort().forEach(b => bl.innerHTML += `<option value="${b}">`);
+    }
+</script>
+</body>
+</html>
