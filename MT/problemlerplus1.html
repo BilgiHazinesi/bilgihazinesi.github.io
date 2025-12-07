@@ -235,6 +235,9 @@
     </div>
 
 <script>
+    // --- LÜTFEN GOOGLE APPS SCRIPT URL'NİZİ BURAYA YAPIŞTIRIN ---
+    const GOOGLE_SCRIPT_URL = "BURAYA_GOOGLE_WEB_APP_URL_YAPISTIR"; 
+    
     // --- ÖĞRENCİ VERİSİ ---
     let studentName = "";
     let studentResults = []; 
@@ -252,26 +255,16 @@
         init();
     }
 
-    /* SORU VERİLERİ */
+    /* SORU VERİLERİ (SENİN KODUN AYNI ŞEKİLDE) */
     const questions = [
         {
-            // SORU 1: GÜNCELLENMİŞ VERSİYON (İPUCUSUZ)
-            // Çark 1: 97'den başla, 123'er art.
-            // Dizi: 97, 220, 343, 466, 589(Gizli), 712, 835, 958
-            // Çark 2: 32'den başla, (+7, -3) örüntüsü.
-            // Dizi: 32, 39, 36, 43, 40(Karşı), 47, 44, 51.
-            // Dönüş: 1.5 tur (Tam karşıdaki sayı).
-            // Çark 2'de ibre en küçük sayı (32) yani 0. indekste.
-            // 1.5 tur (4 birim) dönünce -> 0. indeksin karşısı -> 4. indeks.
-            // 4. indeks hesaplama: 32(+7)39(-3)36(+7)43(-3)40.
-            // Hedef: 40.
-            // Toplam: 589 + 40 = 629.
+            // SORU 1: (SENİN İSTEDİĞİN GİBİ - İPUCUSUZ)
             id: 1, type: 'wheel', attempts: 0, solved: false,
-            data1: [97, 220, 343, 466, null, 712, 835, 958], secret1: 589,
-            data2: [32, 39, 36, 43, 40, 47, 44, 51],
+            data1: [97, 220, 343, 466, null, 712, 835, 958], secret1: 589, // +123
+            data2: [32, 39, 36, 43, 40, 47, 44, 51], // +7, -3
             text: "<strong>Soru 1:</strong><br>1. Çarkta sayıların dizilişine bakarak kuralı bul ve <span class='highlight'>?</span> yerine gelmesi gereken sayıyı hesapla.<br>2. Çarkta (Sağdaki) ibre şu an başlangıç sayısını (32) gösteriyor. Çark saat yönünde <span class='highlight'>bir buçuk tur</span> dönerse ibre hangi sayıya gelir?<br><strong>Görev:</strong> Bu iki sayıyı topla.",
             solve: () => { 
-                return { val: 629, desc: "1. Çark Eksik Sayı: 589 (123'er artıyor).<br>2. Çark Hedef Sayı: 40 (32'nin tam karşısı).<br>Toplam: 589 + 40 = <b>629</b>." }; 
+                return { val: 629, desc: "1. Çark Eksik Sayı: 589.<br>2. Çark Hedef Sayı: 40.<br>Toplam: 589 + 40 = <b>629</b>." }; 
             }
         },
         {
@@ -410,29 +403,33 @@
     function prevQ() { if (currentQIdx > 0) loadQuestion(currentQIdx - 1); }
 
     function submitResults() {
+        // Uyarı: Link girilmemişse
+        if(GOOGLE_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbzJrRNfql4uAaIsaKNOlfVnTYssa0rj4FGC4-hw3GGa06422aVR3-ZYV4sZHMByxl8TIw/exec") {
+            alert("Lütfen HTML kodunun içindeki 'GOOGLE_SCRIPT_URL' kısmına Google Script linkini yapıştırın.");
+            return;
+        }
+
         if(confirm("Sonuçları öğretmene göndermek istiyor musun?")) {
+            const resultText = studentResults.map(r => `Soru ${r.question}: ${r.status} (Cevap: ${r.answer})`).join('\n');
+            
             const data = {
-                _replyto: "noreply@mathgame.com", 
-                message: `Öğrenci: ${studentName}\n\n` + 
-                         studentResults.map(r => `Soru ${r.question}: ${r.status} (Cevap: ${r.answer})`).join('\n')
+                name: studentName,
+                results: resultText
             };
 
-            fetch("https://formspree.io/f/xkgdzvzy", {
+            fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
+                mode: "no-cors",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             })
             .then(response => {
-                if (response.ok) {
-                    alert("✅ Sonuçlar başarıyla öğretmene gönderildi! Aferin!");
-                    document.getElementById('finishBtn').disabled = true;
-                    document.getElementById('finishBtn').innerText = "GÖNDERİLDİ";
-                } else {
-                    alert("❌ Bir hata oluştu. Lütfen tekrar dene.");
-                }
+                alert("✅ Sonuçlar başarıyla öğretmene gönderildi! Aferin!");
+                document.getElementById('finishBtn').disabled = true;
+                document.getElementById('finishBtn').innerText = "GÖNDERİLDİ";
             })
             .catch(error => {
-                alert("❌ Bağlantı hatası.");
+                alert("❌ Bir hata oluştu. İnternetini kontrol et.");
             });
         }
     }
