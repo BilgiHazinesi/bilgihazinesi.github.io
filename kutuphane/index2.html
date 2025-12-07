@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>4/D Liquid Library (V24)</title>
+    <title>4/D Liquid Library (V24.1)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* --- LIQUID THEME --- */
@@ -24,7 +24,6 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
-            /* Hareketli Arka Plan Efekti */
             background-image: 
                 radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
                 radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
@@ -32,7 +31,7 @@
             background-attachment: fixed;
             background-size: cover;
             color: var(--text-main);
-            margin: 0; padding: 0; padding-bottom: 90px;
+            margin: 0; padding: 0; padding-bottom: 100px;
             min-height: 100vh;
         }
 
@@ -50,7 +49,6 @@
             transition: transform 0.2s;
         }
         
-        /* Kartın Üzerindeki Işık Yansıması */
         .liquid-card::after {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%;
             background: linear-gradient(120deg, transparent 30%, var(--glass-shine) 50%, transparent 70%);
@@ -116,7 +114,7 @@
         .item-text h4 { margin: 0; font-size: 1rem; color: white; font-weight: 600; }
         .item-text p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-muted); }
 
-        /* --- BOOK TREE MODULE (YENİ) --- */
+        /* --- BOOK TREE MODULE --- */
         .tree-card {
             display: flex; flex-direction: column; gap: 10px;
             border-left: 4px solid var(--glass-border);
@@ -171,6 +169,7 @@
         }
         
         #loader { display: none; margin-top: 20px; font-weight: 600; color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.5); }
+        .error-text { color: #ef4444; font-size: 0.9rem; margin-top: 15px; display: none; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -182,7 +181,8 @@
         <p style="color:rgba(255,255,255,0.6); margin-bottom:20px;">Öğretmen Girişi</p>
         <input type="password" id="appPassword" placeholder="Şifreniz" style="text-align:center; font-size:1.2rem; letter-spacing:3px;">
         <button class="btn btn-primary" onclick="login()">Giriş Yap</button>
-        <div id="loader">Veriler Senkronize Ediliyor...</div>
+        <div id="loader">Bağlantı Kuruluyor...</div>
+        <div id="errorMsg" class="error-text"></div>
     </div>
 </div>
 
@@ -215,9 +215,7 @@
         <div id="tab-tree" class="section">
             <div class="liquid-card">
                 <h3 style="margin-top:0; margin-bottom:10px; color:#34d399;"><i class="fas fa-tree"></i> Kitap Ağacı</h3>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">
-                    İade edilen kitaplar için öğrencinin seçtiği kartı işaretleyin ve ağaca asıp asmadığını kontrol edin.
-                </p>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">İade edilen kitapların değerlendirme kartları.</p>
                 <div id="treeList"></div>
             </div>
         </div>
@@ -251,39 +249,46 @@
 </div>
 
 <script>
-    // --- API LINK ---
-    const API_URL = "https://script.google.com/macros/s/AKfycbx3IoRsVhIzuAJzr4UzBCq6qLay0HFMOueJtm1JCmGINEanpX2ccPIdMePGYPhdFyp3/exec"; 
+    // --- LÜTFEN KENDİ GOOGLE SCRIPT LİNKİNİZİ BURAYA YAPIŞTIRIN ---
+    const API_URL = "https://script.google.com/macros/s/AKfycbzE6cQOUS8C2J6pKWM8po8mhrmRD-JeTLTeBlzOXZVojAKRBSWW_w-6vxBNNLiIng6H/exec"; 
 
     // PDF'ten Çekilen 9 Çıkış Kartı
-    const exitCards = [
-        "1. Macera Hatırası Kartı",
-        "2. Öğrenen Profil Kartı",
-        "3. Duygu Kartı",
-        "4. Bağlantı Kartı",
-        "5. Eleştiri Kartı",
-        "6. Soru Kartı",
-        "7. Yaratıcı Yeniden Yazım Kartı",
-        "8. Öğrenme ve Gelişim Kartı",
-        "9. Kitap Tavsiye Kartı"
-    ];
+    const exitCards = ["1. Macera Hatırası Kartı", "2. Öğrenen Profil Kartı", "3. Duygu Kartı", "4. Bağlantı Kartı", "5. Eleştiri Kartı", "6. Soru Kartı", "7. Yaratıcı Yeniden Yazım Kartı", "8. Öğrenme ve Gelişim Kartı", "9. Kitap Tavsiye Kartı"];
 
     let students = [];
     let books = [];
     let records = [];
     let userPassword = "";
 
-    // Giriş Fonksiyonu
+    // Giriş Fonksiyonu (Hata Yakalamalı)
     function login() {
         let pass = document.getElementById('appPassword').value;
         if(!pass) return;
-        document.getElementById('loader').style.display = 'block';
+        
+        let loader = document.getElementById('loader');
+        let errorMsg = document.getElementById('errorMsg');
+        
+        loader.style.display = 'block';
+        errorMsg.style.display = 'none';
+        
+        // Hata ayıklama için URL kontrolü
+        if(API_URL.includes("BURAYA")) {
+            loader.style.display = 'none';
+            errorMsg.innerText = "HATA: API Linki Yapıştırılmamış!";
+            errorMsg.style.display = 'block';
+            return;
+        }
         
         fetch(API_URL + "?password=" + encodeURIComponent(pass))
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("HTTP Hatası: " + res.status);
+            return res.json();
+        })
         .then(data => {
             if(data.error) {
-                alert("Hatalı Şifre!");
-                document.getElementById('loader').style.display = 'none';
+                loader.style.display = 'none';
+                errorMsg.innerText = "❌ Şifre Yanlış!";
+                errorMsg.style.display = 'block';
             } else {
                 userPassword = pass;
                 processData(data);
@@ -292,15 +297,16 @@
             }
         })
         .catch(err => {
-            alert("Bağlantı Hatası! İnternetinizi kontrol edin.");
-            document.getElementById('loader').style.display = 'none';
+            console.error(err);
+            loader.style.display = 'none';
+            errorMsg.innerText = "⚠️ Bağlantı Hatası! Linki veya interneti kontrol edin.";
+            errorMsg.style.display = 'block';
         });
     }
 
     function processData(data) {
         if(data.students) students = data.students;
         if(data.books) books = data.books;
-        // ID'ye göre (Yeniden eskiye) sırala
         records = (data.records || []).sort((a,b) => Number(b.id) - Number(a.id));
         updateUI();
     }
@@ -308,9 +314,7 @@
     function syncData() {
         document.getElementById('statusPill').className = "status-pill offline";
         document.getElementById('statusText').innerText = "Kaydediliyor...";
-        
         const payload = JSON.stringify({ students, books, records, auth_password: userPassword });
-        
         fetch(API_URL, { method: 'POST', body: payload })
         .then(res => {
             document.getElementById('statusPill').className = "status-pill online";
@@ -364,8 +368,7 @@
             rec.status = "İade Etti";
             rec.returnDate = new Date().toLocaleDateString('tr-TR');
             updateUI(); syncData();
-            // Kullanıcıyı Ağaç sekmesine yönlendir (Görsel ipucu)
-            if(confirm("Kitap iade alındı. Değerlendirme kartını girmek için Ağaç bölümüne gitmek ister misiniz?")) {
+            if(confirm("Kitap iade alındı. Ağaç bölümüne gidip kart seçmek ister misiniz?")) {
                 switchTab('tree', document.querySelectorAll('.dock-item')[1]);
             }
         }
@@ -397,16 +400,14 @@
         });
     }
 
-    // --- 2. KİTAP AĞACI VE ÇIKIŞ KARTLARI ---
+    // --- 2. KİTAP AĞACI ---
     function renderTreeManager() {
         const div = document.getElementById('treeList');
         div.innerHTML = "";
-
-        // İade edilmiş olanları göster (En yeni iadeler üstte)
         let returnedBooks = records.filter(r => r.status === "İade Etti").slice(0, 50);
 
         if(returnedBooks.length === 0) {
-            div.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Değerlendirme bekleyen kitap yok.</p>";
+            div.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>Bekleyen kitap yok.</p>";
             return;
         }
 
@@ -417,7 +418,6 @@
             let btnClass = isTree ? "active" : "";
             let btnIcon = isTree ? "✅" : "🌳";
 
-            // Dropdown seçenekleri
             let options = `<option value="">Kart Seçilmedi</option>`;
             exitCards.forEach(cardName => {
                 let selected = (currentCard === cardName) ? "selected" : "";
@@ -431,12 +431,8 @@
                     <p>👤 ${r.student} (İade: ${r.returnDate})</p>
                 </div>
                 <div class="tree-controls">
-                    <select class="tree-select" onchange="updateExitCard(${r.id}, this.value)">
-                        ${options}
-                    </select>
-                    <button class="tree-btn ${btnClass}" onclick="toggleTree(${r.id})">
-                        ${btnIcon}
-                    </button>
+                    <select class="tree-select" onchange="updateExitCard(${r.id}, this.value)">${options}</select>
+                    <button class="tree-btn ${btnClass}" onclick="toggleTree(${r.id})">${btnIcon}</button>
                 </div>
             </div>`;
         });
@@ -444,18 +440,14 @@
 
     function updateExitCard(id, val) {
         let rec = records.find(r => r.id === id);
-        if(rec) {
-            rec.exitCard = val;
-            syncData();
-        }
+        if(rec) { rec.exitCard = val; syncData(); }
     }
 
     function toggleTree(id) {
         let rec = records.find(r => r.id === id);
         if(rec) {
             rec.tree = !rec.tree;
-            renderTreeManager();
-            syncData();
+            renderTreeManager(); syncData();
         }
     }
 
@@ -468,29 +460,25 @@
         let filtered = books.filter(b => b.toLowerCase().includes(search));
         
         filtered.forEach(b => {
-            // Kitabın durumunu belirle (Okuyor listesinde var mı?)
             let cleanName = normalizeStr(b);
             let activeRecs = records.filter(r => r.status === "Okuyor" && normalizeStr(r.book) === cleanName);
             
             let info = "";
             let borderColor = "rgba(255,255,255,0.1)";
 
-            if(active.length > 0) {
-                borderColor = "#ef4444"; // Kırmızı
+            if(activeRecs.length > 0) {
+                borderColor = "#ef4444";
                 activeRecs.forEach(r => {
-                    info += `<div style="color:#f87171; font-size:0.9rem; margin-top:5px;"><i class="fas fa-user-clock"></i> ${r.student} (${r.date})</div>`;
+                    info += `<div style="color:#f87171; font-size:0.9rem; margin-top:5px;">🔴 ${r.student} (${r.date})</div>`;
                 });
             } else {
-                borderColor = "#10b981"; // Yeşil
-                info = `<div style="color:#34d399; font-size:0.9rem;"><i class="fas fa-check-circle"></i> Rafta Müsait</div>`;
+                borderColor = "#10b981";
+                info = `<div style="color:#34d399; font-size:0.9rem;">🟢 Rafta Müsait</div>`;
             }
 
             div.innerHTML += `
             <div class="list-item" style="border-left: 4px solid ${borderColor};">
-                <div style="width:100%">
-                    <h4>${b}</h4>
-                    ${info}
-                </div>
+                <div style="width:100%"><h4>${b}</h4>${info}</div>
             </div>`;
         });
     }
@@ -499,23 +487,13 @@
     function generateReport() {
         const s = document.getElementById('reportStudentInput').value.trim().toUpperCase();
         if(!s) return;
-        
         let myRecs = records.filter(r => r.student === s).sort((a,b) => a.id - b.id);
-        
         let txt = `Sayın Velimiz,\nÖğrencimiz *${s}* toplam *${myRecs.length}* kitap okumuştur.\n\n`;
-        
         myRecs.forEach((r, i) => {
-            let status = "";
-            if (r.status === "Okuyor") {
-                status = "🔴 Şu An Okuyor";
-            } else {
-                let treeIcon = r.tree ? "🌳" : "";
-                let cardInfo = r.exitCard ? `\n   📝 ${r.exitCard}` : "";
-                status = `✅ Teslim: ${r.returnDate} ${treeIcon}${cardInfo}`;
-            }
-            txt += `${i+1}. ${r.book}\n   ${status}\n`;
+            let status = r.status === "Okuyor" ? "🔴 Okuyor" : `✅ Teslim: ${r.returnDate}`;
+            let treeInfo = r.tree ? " (🌳 Ağaca Asıldı)" : "";
+            txt += `${i+1}. ${r.book}\n   ${status}${treeInfo}\n`;
         });
-        
         txt += `\nZeynal Öğretmen`;
         document.getElementById('reportOutput').innerText = txt;
     }
