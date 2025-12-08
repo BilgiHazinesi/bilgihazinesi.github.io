@@ -2,226 +2,254 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zeynal Öğretmenle Kelime Avı</title>
     <style>
-        /* FONT DEĞİŞİKLİĞİ: Modern ve Türkçe karakter dostu "Nunito" */
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+        /* Modern Font: Nunito */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
         
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary: #4a90e2; /* Modern Mavi */
+            --accent: #f5a623;  /* Yumuşak Turuncu */
+            --success: #2ecc71; /* Canlı Yeşil */
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
         body {
-            font-family: 'Nunito', sans-serif; /* Modern Font */
-            background-color: #eef2f3;
-            /* Arka plan: Modern geometrik ve silik desen */
-            background-image: radial-gradient(#dce4e8 15%, transparent 16%),
-                              radial-gradient(#dce4e8 15%, transparent 16%);
-            background-size: 60px 60px;
-            background-position: 0 0, 30px 30px;
-            color: #2c3e50;
-            text-align: center;
-            padding: 20px;
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
             margin: 0;
-            min-height: 100vh;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
         }
 
         .container {
-            max-width: 700px;
-            width: 95%;
-            margin-top: 30px;
-            padding: 40px;
-            background-color: #ffffff;
-            border-radius: 25px;
-            /* Modern gölge efekti (Soft Shadow) */
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
             position: relative;
         }
 
-        /* Modern Başlık Stili */
         h1 {
-            font-weight: 900; /* Kalın */
-            color: #2c3e50;
-            font-size: 2.8em;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
             margin-bottom: 5px;
-            letter-spacing: -1px; /* Harfleri biraz yaklaştırarak modern görünüm */
-            line-height: 1.2;
         }
         
         .subtitle {
-            font-size: 1.2em;
-            color: #7f8c8d;
-            margin-bottom: 30px;
-            font-weight: 400;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
         }
 
-        /* İstatistik Paneli */
+        /* İstatistik Çubuğu */
         .stats-bar {
             display: flex;
             justify-content: space-between;
-            background-color: #f8f9fa;
-            padding: 15px 25px;
-            border-radius: 15px;
-            margin-bottom: 25px;
+            background: #ecf0f1;
+            padding: 10px 20px;
+            border-radius: 12px;
             font-weight: 700;
-            color: #34495e;
-            border: 1px solid #e9ecef;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
         }
 
-        /* Harf Kutuları - Modern Tasarım */
-        #word-display {
+        /* İpucu Alanı */
+        #hint-box {
+            background-color: #fff8e1; /* Çok açık sarı */
+            border-left: 5px solid var(--accent);
+            color: #5d4037;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1.1rem;
+            line-height: 1.4;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        /* Kelime Alanı Düzeni */
+        #word-area {
+            display: flex;
+            flex-direction: column; /* Kelimeleri alt alta diz */
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        /* Her Kelime Grubu */
+        .word-row {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin: 30px 0;
-            flex-wrap: wrap;
+            gap: 6px; /* Harfler arası boşluk */
+            flex-wrap: nowrap; /* Asla alt satıra geçme (kelime içinde) */
+            width: 100%;
         }
-        
+
+        /* Harf Kutuları */
         .letter-box {
-            width: 50px;
-            height: 60px;
-            border-radius: 12px;
-            background-color: #ecf0f1;
-            font-size: 2em;
-            font-weight: 800; /* Kalın font */
+            width: 45px;
+            height: 55px;
+            background-color: #f1f2f6;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #bdc3c7; /* Kapalıyken silik renk */
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Yaylanma efekti */
-            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.05);
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: transparent; /* Kapalıyken yazı yok */
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            user-select: none;
+            box-shadow: 0 3px 0 #dfe4ea;
+        }
+
+        .letter-box.revealed {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* MOBİL UYUMLULUK: Ekran daraldıkça kutuları küçült */
+        @media (max-width: 500px) {
+            .letter-box {
+                width: 32px; /* Daha küçük */
+                height: 42px;
+                font-size: 1.2rem;
+                border-radius: 6px;
+            }
+            .word-row { gap: 3px; } /* Boşluğu azalt */
+            h1 { font-size: 1.5rem; }
+        }
+
+        /* Çok uzun kelimeler için ekstra küçültme (Script ekleyecek) */
+        .word-row.long-word .letter-box {
+            width: 24px;
+            height: 34px;
+            font-size: 1rem;
+        }
+
+        /* Giriş Alanı */
+        .input-group {
+            margin-top: 10px;
         }
         
-        .letter-box.revealed {
-            background-color: #3498db; /* Mavi */
-            color: white;
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
-        }
-
-        /* İpucu Kutusu */
-        #hint-box {
-            font-size: 1.4em;
-            color: #2c3e50;
-            margin: 20px 0;
-            padding: 20px;
-            background-color: #fff3cd; /* Açık Sarı */
-            border-left: 6px solid #ffc107;
-            border-radius: 8px;
-            text-align: left;
-            line-height: 1.5;
-        }
-
-        /* İnput Alanı */
         input[type="text"] {
-            padding: 15px 20px;
             width: 70%;
-            border-radius: 15px;
-            border: 2px solid #dfe6e9;
+            padding: 12px;
+            font-size: 1.2rem;
             text-align: center;
-            font-size: 1.3em;
+            border: 2px solid #dfe6e9;
+            border-radius: 12px;
+            outline: none;
             font-family: 'Nunito', sans-serif;
             font-weight: 700;
-            color: #2d3436;
-            outline: none;
+            color: var(--text-dark);
             transition: 0.3s;
-            background: #fdfdfd;
         }
         input[type="text"]:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+            border-color: var(--primary);
         }
 
         /* Butonlar */
-        button {
-            padding: 14px 28px;
+        .btn {
             border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 1.1em;
+            padding: 12px 24px;
+            border-radius: 50px;
             font-family: 'Nunito', sans-serif;
-            font-weight: 800;
-            margin: 10px 5px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
             color: white;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin: 5px;
+            display: inline-block;
         }
-        button:hover { transform: translateY(-2px); }
-        button:active { transform: translateY(1px); }
+        .btn:active { transform: scale(0.96); }
         
-        #btn-letter { background-color: #f39c12; box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3); }
-        #btn-submit { background-color: #2ecc71; box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3); }
-        #btn-restart { background-color: #e74c3c; margin-top: 20px; }
+        .btn-letter { background-color: var(--accent); box-shadow: 0 4px 15px rgba(245, 166, 35, 0.4); }
+        .btn-submit { background-color: var(--success); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4); }
 
-        .feedback { 
-            margin-top: 15px; 
-            font-weight: 800; 
-            font-size: 1.3em; 
-            min-height: 30px;
+        .feedback {
+            margin-top: 15px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            min-height: 25px;
         }
 
-        /* Yükleme Ekranı */
-        #loading-screen {
+        /* Loading & Final Screen */
+        #loading-screen, #final-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; display: flex; justify-content: center; align-items: center;
-            z-index: 9999; flex-direction: column;
+            background: white; z-index: 100;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
         }
-        .spinner {
-            width: 50px; height: 50px; border: 5px solid #ecf0f1;
-            border-top-color: #3498db; border-radius: 50%;
-            animation: spin 1s linear infinite; margin-bottom: 20px;
+        .loader {
+            width: 40px; height: 40px; border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
-        <div class="spinner"></div>
-        <h3 style="color:#3498db;">Sorular Hazırlanıyor...</h3>
+        <div class="loader"></div>
+        <p style="margin-top:15px; font-weight:bold; color:#7f8c8d;">Sorular Yükleniyor...</p>
     </div>
 
-    <div id="game-area" class="container" style="display:none;">
-        <h1>Zeynal Öğretmenle<br>Kelime Avı</h1>
-        <div class="subtitle">Bakalım bugün kaç puan toplayacaksın?</div>
+    <div id="game-area" class="container" style="display: none;">
+        <h1>Kelime Avı</h1>
+        <div class="subtitle">Zeynal Öğretmen</div>
         
         <div class="stats-bar">
             <span id="q-count">Soru: 1/10</span>
-            <span id="score" style="color:#e67e22;">Puan: 0</span>
+            <span id="score">Puan: 0</span>
         </div>
 
-        <div id="hint-box">İpucu yükleniyor...</div>
-        
-        <div id="word-display"></div>
-        
-        <div>
-            <button id="btn-letter">Harf Al (-100 Puan)</button>
+        <div id="hint-box">...</div>
+
+        <div id="word-area"></div>
+
+        <div class="input-group">
+            <button class="btn btn-letter" id="btn-letter">Harf Al (-100 Puan)</button>
             <br><br>
-            <input type="text" id="guess-input" placeholder="Cevabını buraya yaz..." autocomplete="off" onkeypress="handleEnter(event)">
-            <br>
-            <button id="btn-submit" onclick="checkGuess()">Kontrol Et</button>
+            <input type="text" id="guess-input" placeholder="Cevap..." autocomplete="off">
+            <br><br>
+            <button class="btn btn-submit" id="btn-submit">Kontrol Et</button>
         </div>
-        
+
         <div id="feedback" class="feedback"></div>
     </div>
 
-    <div id="final-screen" class="container" style="display:none; text-align:center;">
-        <h1 style="color:#2ecc71;">Tebrikler Şampiyon! 🏆</h1>
-        <p style="font-size: 1.4em; color:#7f8c8d;">Tüm soruları başarıyla tamamladın.</p>
-        
-        <div style="background:#f8f9fa; padding:20px; border-radius:15px; margin:20px 0;">
-            <div style="font-size:1.2em; color:#95a5a6;">TOPLAM PUAN</div>
-            <div id="final-score" style="font-size:3em; color:#2c3e50; font-weight:900;">0</div>
-        </div>
-
-        <button id="btn-restart" onclick="location.reload()">Tekrar Oyna</button>
+    <div id="final-screen" style="display: none; text-align: center;">
+        <h1 style="font-size: 2.5rem; color: var(--success);">Oyun Bitti!</h1>
+        <p>Toplam Puanın</p>
+        <div style="font-size: 4rem; font-weight: 900; color: var(--text-dark);" id="final-score">0</div>
+        <br>
+        <button class="btn btn-letter" onclick="location.reload()">Tekrar Oyna</button>
     </div>
 
     <script>
         // ============================================================
-        // AYARLAR: GOOGLE SHEETS CSV LİNKİNİZİ AŞAĞIYA YAPIŞTIRIN
+        // AYARLAR: CSV LINKINI BURAYA YAPISTIRIN
         // ============================================================
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoGIsfx3q4A24MbeGif6c1Nnr6NSOw5PS40df8j34MyppgdNp4T4My20jeEH0kKJrpuehciw3J_QgR/pub?gid=0&single=true&output=csv"; 
         // ============================================================
@@ -229,139 +257,186 @@
         let questions = [];
         let currentQ = 0;
         let score = 0;
-        let revealed = [];
+        let revealed = []; // Hangi harfler açık? (Tüm kelime düzleminde index)
+        let fullWordClean = ""; // Boşluksuz ham kelime (karşılaştırma için)
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchData();
+            
+            // Enter tuşu desteği
+            document.getElementById('guess-input').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') checkGuess();
+            });
+
+            // Buton tanımları
+            document.getElementById('btn-letter').onclick = getLetter;
+            document.getElementById('btn-submit').onclick = checkGuess;
         });
 
         function fetchData() {
             if(SHEET_CSV_URL.includes("BURAYA_GOOGLE")) {
-                alert("Lütfen Google Sheets CSV linkini koda ekleyin!");
+                alert("Lütfen kodu düzenleyip Google Sheets Linkini yapıştırın.");
                 return;
             }
 
             fetch(SHEET_CSV_URL)
-                .then(response => response.text())
+                .then(r => r.text())
                 .then(data => {
                     parseCSV(data);
                     document.getElementById('loading-screen').style.display = 'none';
                     if(questions.length > 0) {
                         document.getElementById('game-area').style.display = 'block';
                         loadQuestion();
-                    } else {
-                        alert("Tablodan soru çekilemedi. Tablonun dolu olduğundan emin olun.");
                     }
                 })
-                .catch(error => {
-                    console.error("Hata:", error);
-                    alert("Veri çekilemedi. Bağlantınızı kontrol edin.");
-                });
+                .catch(e => alert("Bağlantı hatası: " + e));
         }
 
-        function parseCSV(csvText) {
-            const rows = csvText.split(/\r?\n/);
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
-                if (!row) continue;
-                
-                const parts = row.split(',');
-                if (parts.length >= 2) {
-                    // Türkçe karakter sorunu olmaması için trim yapıyoruz
-                    const word = parts[0].trim(); 
-                    const hint = parts.slice(1).join(',').trim();
-                    
-                    if(word && hint) {
-                        questions.push({ word: word, hint: hint });
-                    }
+        function parseCSV(text) {
+            const rows = text.split(/\r?\n/);
+            for(let i=1; i<rows.length; i++) {
+                const row = rows[i].split(',');
+                if(row.length >= 2) {
+                    const w = row[0].trim();
+                    const h = row.slice(1).join(',').trim();
+                    if(w && h) questions.push({word: w, hint: h});
                 }
             }
         }
 
-        // --- TÜRKÇE KARAKTER UYUMLU BÜYÜTME FONKSİYONU ---
-        // Bu fonksiyon i -> İ ve ı -> I dönüşümünü doğru yapar.
-        function toTurkishUpper(text) {
-            return text.toLocaleUpperCase('tr-TR');
+        // Türkçe Büyütme (i -> İ, ı -> I)
+        function toTrUpper(str) {
+            return str.toLocaleUpperCase('tr-TR');
         }
 
         function loadQuestion() {
-            if (currentQ >= questions.length) {
+            if(currentQ >= questions.length) {
                 showFinal();
                 return;
             }
 
             const q = questions[currentQ];
-            document.getElementById('q-count').innerText = `Soru: ${currentQ + 1}/${questions.length}`;
-            document.getElementById('hint-box').innerText = q.hint;
-            document.getElementById('guess-input').value = "";
-            document.getElementById('feedback').innerText = "";
+            fullWordClean = q.word.replace(/\s+/g, ''); // Boşlukları sil
             
-            const display = document.getElementById('word-display');
-            display.innerHTML = "";
-            // Cevabı kontrol için alıyoruz ama ekrana basarken orijinal halini saklıyoruz
-            revealed = new Array(q.word.length).fill(false);
+            // UI Güncelle
+            document.getElementById('q-count').innerText = `Soru: ${currentQ+1}/${questions.length}`;
+            document.getElementById('score').innerText = `Puan: ${score}`;
+            document.getElementById('hint-box').innerText = q.hint;
+            document.getElementById('guess-input').value = '';
+            document.getElementById('feedback').innerText = '';
+            
+            renderWordLayout(q.word);
+            
+            // Revealed dizisini sıfırla (Boşluksuz uzunluk kadar)
+            revealed = new Array(fullWordClean.length).fill(false);
+            
+            // Butonları aktif et
+            document.getElementById('btn-letter').disabled = false;
+            document.getElementById('btn-submit').disabled = false;
+            document.getElementById('guess-input').disabled = false;
+        }
 
-            for (let i = 0; i < q.word.length; i++) {
-                let box = document.createElement('div');
-                box.className = 'letter-box';
-                box.id = `box-${i}`;
-                // Karakter boşluksa (kelime arası) otomatik açalım
-                if(q.word[i] === ' ') {
-                    box.style.opacity = "0"; // Boşluk görünmez
-                    revealed[i] = true;
-                } else {
-                    box.innerText = "?";
+        function renderWordLayout(wordRaw) {
+            const area = document.getElementById('word-area');
+            area.innerHTML = '';
+            
+            // Kelimeyi boşluklara göre ayır (Çok kelimeli cevaplar için)
+            const words = wordRaw.split(/\s+/);
+            
+            let globalCharIndex = 0; // Tüm harflerin global indexi
+
+            words.forEach(word => {
+                const row = document.createElement('div');
+                row.className = 'word-row';
+                
+                // Eğer kelime 12 harften uzunsa "long-word" sınıfı ekle (Mobil için küçültür)
+                if(word.length > 11) {
+                    row.classList.add('long-word');
                 }
-                display.appendChild(box);
+
+                for(let i=0; i<word.length; i++) {
+                    const char = word[i];
+                    const box = document.createElement('div');
+                    box.className = 'letter-box';
+                    box.dataset.char = toTrUpper(char); // Harfi sakla
+                    box.dataset.index = globalCharIndex; // Global indexi ata
+                    box.innerText = "?";
+                    
+                    row.appendChild(box);
+                    globalCharIndex++;
+                }
+                area.appendChild(row);
+            });
+        }
+
+        function getLetter() {
+            // Kapalı olan harflerin indexlerini bul
+            let closedIndices = [];
+            revealed.forEach((isOpen, idx) => {
+                if(!isOpen) closedIndices.push(idx);
+            });
+
+            if(closedIndices.length === 0) return;
+
+            // Rastgele birini seç
+            const rnd = closedIndices[Math.floor(Math.random() * closedIndices.length)];
+            
+            // Aç
+            revealed[rnd] = true;
+            updateBoxes();
+            
+            // Puan Kır
+            score -= 100;
+            document.getElementById('score').innerText = `Puan: ${score}`;
+
+            // KONTROL: Hepsi açıldı mı?
+            // Eğer hepsi açıldıysa OTOMATİK TAMAMLA (Yazmaya gerek yok)
+            if(revealed.every(Boolean)) {
+                autoFinishQuestion();
             }
         }
 
-        document.getElementById('btn-letter').onclick = function() {
-            const q = questions[currentQ];
-            let unrevealedIndices = [];
-            revealed.forEach((r, index) => { if (!r) unrevealedIndices.push(index); });
+        function updateBoxes() {
+            const boxes = document.querySelectorAll('.letter-box');
+            boxes.forEach(box => {
+                const idx = parseInt(box.dataset.index);
+                if(revealed[idx]) {
+                    box.classList.add('revealed');
+                    box.innerText = box.dataset.char;
+                }
+            });
+        }
 
-            if (unrevealedIndices.length > 0) {
-                let randomIndex = unrevealedIndices[Math.floor(Math.random() * unrevealedIndices.length)];
-                // Harfi gösterirken de Türkçe büyütme kullanıyoruz ki estetik dursun
-                revealLetter(randomIndex, toTurkishUpper(q.word[randomIndex]));
-                
-                score -= 100;
-                updateScore();
-            }
-        };
-
-        function revealLetter(index, char) {
-            revealed[index] = true;
-            let box = document.getElementById(`box-${index}`);
-            box.innerText = char;
-            box.classList.add('revealed');
+        // Harfler bitince otomatik geçiş
+        function autoFinishQuestion() {
+            document.getElementById('feedback').style.color = "#2ecc71";
+            document.getElementById('feedback').innerText = "Tüm harfler açıldı! Harikasın!";
+            disableInputs();
+            
+            setTimeout(() => {
+                currentQ++;
+                loadQuestion();
+            }, 2000);
         }
 
         function checkGuess() {
-            const input = document.getElementById('guess-input');
-            const userGuessRaw = input.value.trim();
-            const correctWordRaw = questions[currentQ].word.trim();
+            const inputVal = document.getElementById('guess-input').value.trim();
+            const guess = toTrUpper(inputVal);
+            const correct = toTrUpper(fullWordClean); // Boşluksuz doğru cevap
 
-            // --- KRİTİK NOKTA: TÜRKÇE KARŞILAŞTIRMA ---
-            // Hem öğrencinin yazdığını hem de doğru cevabı Türkçe kurallarına göre büyütüyoruz.
-            // Böylece "i" -> "İ" ve "ı" -> "I" olur. Eşleşme hatasız sağlanır.
-            const userGuess = toTurkishUpper(userGuessRaw);
-            const correctWord = toTurkishUpper(correctWordRaw);
-
-            if (userGuess === correctWord) {
+            if(guess === correct) {
+                // Doğru Bildi!
                 document.getElementById('feedback').style.color = "#2ecc71";
-                document.getElementById('feedback').innerText = "Harika! Doğru Cevap!";
+                document.getElementById('feedback').innerText = "✅ Doğru Cevap!";
                 
-                score += (correctWord.replace(/\s/g, '').length * 100);
-                updateScore();
-
-                // Tüm harfleri aç
-                for(let i=0; i<correctWordRaw.length; i++) {
-                    if(correctWordRaw[i] !== ' ') {
-                        revealLetter(i, toTurkishUpper(correctWordRaw[i]));
-                    }
-                }
+                // Kapalı harf sayısı kadar puan ekle
+                const closedCount = revealed.filter(r => !r).length;
+                score += (closedCount * 100);
+                
+                // Hepsini görünür yap
+                revealed.fill(true);
+                updateBoxes();
+                disableInputs();
 
                 setTimeout(() => {
                     currentQ++;
@@ -369,30 +444,25 @@
                 }, 1500);
 
             } else {
+                // Yanlış
                 document.getElementById('feedback').style.color = "#e74c3c";
-                document.getElementById('feedback').innerText = "Yanlış cevap, tekrar dene!";
-                shakeInput();
+                document.getElementById('feedback').innerText = "❌ Yanlış, tekrar dene!";
+                // Inputu salla efekti
+                const inp = document.getElementById('guess-input');
+                inp.style.borderColor = "red";
+                setTimeout(() => inp.style.borderColor = "#dfe6e9", 500);
             }
         }
 
-        function updateScore() {
-            document.getElementById('score').innerText = `Puan: ${score}`;
-        }
-
-        function handleEnter(e) {
-            if (e.key === "Enter") checkGuess();
-        }
-
-        function shakeInput() {
-            const input = document.getElementById('guess-input');
-            input.style.transform = "translateX(10px)";
-            setTimeout(() => { input.style.transform = "translateX(-10px)"; }, 100);
-            setTimeout(() => { input.style.transform = "translateX(0)"; }, 200);
+        function disableInputs() {
+            document.getElementById('btn-letter').disabled = true;
+            document.getElementById('btn-submit').disabled = true;
+            document.getElementById('guess-input').disabled = true;
         }
 
         function showFinal() {
             document.getElementById('game-area').style.display = 'none';
-            document.getElementById('final-screen').style.display = 'block';
+            document.getElementById('final-screen').style.display = 'flex';
             document.getElementById('final-score').innerText = score;
         }
 
