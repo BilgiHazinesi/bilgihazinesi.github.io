@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zeynal Öğretmenle Eğitim Oyunları</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
+        
+        :root {
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --primary: #4a90e2; /* Klasik Mavi */
+            --bundle: #9b59b6;  /* Bundle Moru */
+            --accent: #f1c40f; 
+            --success: #2ecc71; 
+            --text-dark: #2c3e50;
+            --box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0; padding: 15px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 650px; width: 100%;
+            background: var(--card-bg); padding: 25px;
+            border-radius: 24px; box-shadow: var(--box-shadow);
+            text-align: center; position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Başlıklar ve Badge */
+        h1 { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin: 5px 0; }
+        
+        .mode-badge {
+            display: inline-block; padding: 5px 15px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 700; color: white; margin-bottom: 10px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .bg-classic { background-color: var(--primary); }
+        .bg-bundle { background-color: var(--bundle); }
+
+        .stats-bar {
+            display: flex; justify-content: space-between; background: #ecf0f1;
+            padding: 10px 20px; border-radius: 12px; font-weight: 700;
+            font-size: 1rem; margin-bottom: 20px; color: var(--text-dark);
+        }
+
+        /* İpucu Kutusu */
+        #hint-box {
+            background-color: #fffceb; border-left: 5px solid var(--accent);
+            color: #5d4037; padding: 15px; border-radius: 8px;
+            text-align: left; font-size: 1.1rem; line-height: 1.4;
+            margin-bottom: 25px; font-weight: 700;
+        }
+
+        /* --- OYUN ALANLARI --- */
+        #word-area {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 15px; margin-bottom: 25px; width: 100%;
+        }
+
+        /* Bundle Modu İçin Grup */
+        .question-group {
+            width: 100%; display: flex; flex-direction: column; align-items: center;
+            padding: 10px; background: #fafafa; border-radius: 15px; border: 1px solid #eee;
+        }
+        .question-group.solved { background-color: #e8f8f5; border-color: var(--success); }
+
+        /* Satır Yapısı */
+        .word-row {
+            display: flex; justify-content: center; gap: 5px; flex-wrap: nowrap;
+        }
+
+        /* Harf Kutusu */
+        .letter-box {
+            width: 42px; height: 52px; background-color: #e0e6ed;
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; font-size: 1.5rem; font-weight: 800;
+            color: transparent; transition: all 0.3s ease; user-select: none;
+            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1);
+        }
+
+        /* Açılan Harf */
+        .letter-box.revealed {
+            background-color: var(--primary); color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); transform: translateY(-3px);
+        }
+        /* Bundle Modunda Rengi Değiştir */
+        .bundle-mode .letter-box.revealed { background-color: var(--bundle); }
+        .question-group.solved .letter-box { background-color: var(--success); }
+
+        /* Mobil Uyum */
+        @media (max-width: 500px) {
+            .letter-box { width: 30px; height: 40px; font-size: 1.1rem; border-radius: 6px; }
+            .word-row { gap: 3px; }
+            h1 { font-size: 1.5rem; }
+        }
+        .word-row.long-word .letter-box { width: 22px; height: 32px; font-size: 0.9rem; }
+
+        /* Giriş Alanı */
+        input[type="text"] {
+            width: 70%; padding: 14px; font-size: 1.2rem; text-align: center;
+            border: 2px solid #dfe6e9; border-radius: 15px; outline: none;
+            font-family: 'Nunito', sans-serif; font-weight: 700;
+            color: var(--text-dark); transition: 0.3s; background: #fff;
+        }
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        .btn {
+            border: none; padding: 12px 28px; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 1rem;
+            cursor: pointer; transition: transform 0.1s; color: white;
+            margin: 10px 5px; display: inline-block;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-letter { background-color: var(--accent); color: #5d4037; }
+        .btn-submit { background-color: var(--success); }
+
+        .feedback { margin-top: 15px; font-weight: 800; font-size: 1.2rem; min-height: 30px; }
+
+        /* Yükleme ve Final */
+        #loading-screen, #final-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 999; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        .loader {
+            width: 50px; height: 50px; border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Konfeti */
+        .confetti {
+            position: absolute; width: 10px; height: 10px;
+            background-color: #f00; animation: fall linear forwards;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <p style="margin-top:20px; font-weight:bold; color:#b2bec3;">Sorular Hazırlanıyor...</p>
+    </div>
+
+    <div id="game-area" class="container" style="display: none;">
+        
+        <div id="mode-badge" class="mode-badge bg-classic">KELİME AVI</div>
+        <h1 id="game-title">Kelimeyi Bul</h1>
+        
+        <div class="stats-bar">
+            <span id="q-count">Soru: 1/10</span>
+            <span id="score">Puan: 0</span>
+        </div>
+
+        <div id="hint-box">...</div>
+        <div id="word-area"></div>
+
+        <div>
+            <button class="btn btn-letter" id="btn-letter">Harf Al (-100)</button>
+            <br>
+            <input type="text" id="guess-input" placeholder="Cevabını yaz..." autocomplete="off">
+            <br>
+            <button class="btn btn-submit" id="btn-submit">YANITLA</button>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+    </div>
+
+    <div id="final-screen" style="display: none; text-align: center;">
+        <h1 style="font-size: 3rem; color: var(--success);">TEBRİKLER! 🏆</h1>
+        <p style="color: #636e72; font-size: 1.3rem;">Bütün bölümleri başarıyla bitirdin.</p>
+        <div style="font-size: 5rem; font-weight: 900; color: var(--text-dark); margin: 20px 0;" id="final-score">0</div>
+        <button class="btn btn-submit" onclick="location.reload()">Başa Dön</button>
+    </div>
+
+    <script>
+        // ============================================================
+        // AYARLAR: CSV LINKINI BURAYA YAPISTIRIN
+        // ============================================================
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoGIsfx3q4A24MbeGif6c1Nnr6NSOw5PS40df8j34MyppgdNp4T4My20jeEH0kKJrpuehciw3J_QgR/pub?gid=0&single=true&output=csv"; 
+        // ============================================================
+
+        // Kuyruklar
+        let classicQueue = [];
+        let bundleQueue = [];
+        
+        // Oyun Durumu
+        let gamePhase = "CLASSIC"; // 'CLASSIC' veya 'BUNDLE'
+        let currentIndex = 0;
+        let score = 0;
+        
+        // Aktif Soru Verileri
+        let activeData = null; 
+        // Bundle için aktif veri yapısı: { title, items: [{word, hint, revealed[], solved}] }
+        // Classic için aktif veri yapısı: { word, hint, revealed[] }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+            document.getElementById('guess-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') checkGuess();
+            });
+            document.getElementById('btn-letter').onclick = getLetter;
+            document.getElementById('btn-submit').onclick = checkGuess;
+        });
+
+        function fetchData() {
+            if(SHEET_CSV_URL.includes("BURAYA_GOOGLE")) {
+                alert("Lütfen Google Sheets Linkini koda ekleyin.");
+                return;
+            }
+            fetch(SHEET_CSV_URL)
+                .then(r => r.text())
+                .then(data => {
+                    parseCSV(data);
+                    document.getElementById('loading-screen').style.display = 'none';
+                    startGame();
+                })
+                .catch(e => alert("Hata: " + e));
+        }
+
+        function parseCSV(text) {
+            const rows = text.split(/\r?\n/);
+            let lastBundle = null;
+
+            for(let i=1; i<rows.length; i++) {
+                const row = rows[i].split(',');
+                if(row.length < 2) continue;
+
+                const colA = row[0].trim(); // Kelime (Klasik) veya Konu (Bundle)
+                const colB = row[1] ? row[1].trim() : ""; // İpucu
+                const colC = row.length > 2 ? row.slice(2).join(',').trim() : ""; // Bundle Kelimeleri
+
+                if(colC.length > 1) {
+                    // --- BUNDLE MODU (C sütunu dolu) ---
+                    // Eğer A sütunu doluysa yeni konu başlat
+                    if(colA.length > 0) {
+                        lastBundle = {
+                            title: colA,
+                            hint: colB,
+                            items: [] // Kelimeler buraya
+                        };
+                        bundleQueue.push(lastBundle);
+                    }
+                    
+                    // Eğer henüz bir bundle yoksa (ilk satırda konu yazılmadıysa) hata önle
+                    if(!lastBundle && bundleQueue.length === 0) {
+                        lastBundle = { title: "Karma Konu", hint: "Kelimeleri Bul", items: [] };
+                        bundleQueue.push(lastBundle);
+                    } else if (!lastBundle) {
+                        // Eğer A boşsa bir önceki bundle'a devam et
+                        lastBundle = bundleQueue[bundleQueue.length-1];
+                    }
+
+                    // C sütunundaki kelimeleri virgülle ayırıp ekle
+                    const words = colC.split(',');
+                    words.forEach(w => {
+                        const cleanW = w.trim();
+                        if(cleanW) {
+                            lastBundle.items.push({
+                                word: cleanW,
+                                solved: false,
+                                revealed: new Array(cleanW.replace(/\s+/g, '').length).fill(false)
+                            });
+                        }
+                    });
+
+                } else if (colA.length > 0) {
+                    // --- KLASİK MOD (C sütunu boş, A ve B dolu) ---
+                    classicQueue.push({
+                        word: colA,
+                        hint: colB,
+                        revealed: new Array(colA.replace(/\s+/g, '').length).fill(false)
+                    });
+                }
+            }
+        }
+
+        function startGame() {
+            if (classicQueue.length > 0) {
+                gamePhase = "CLASSIC";
+                currentIndex = 0;
+                loadQuestion();
+            } else if (bundleQueue.length > 0) {
+                gamePhase = "BUNDLE";
+                currentIndex = 0;
+                loadQuestion();
+            } else {
+                alert("Tabloda soru bulunamadı.");
+            }
+            document.getElementById('game-area').style.display = 'block';
+        }
+
+        function toTrUpper(str) {
+            return str.toLocaleUpperCase('tr-TR');
+        }
+
+        function loadQuestion() {
+            const container = document.getElementById('game-area');
+            const badge = document.getElementById('mode-badge');
+            const title = document.getElementById('game-title');
+            const wordArea = document.getElementById('word-area');
+            const hintBox = document.getElementById('hint-box');
+            
+            // Reset UI
+            wordArea.innerHTML = '';
+            document.getElementById('feedback').innerText = '';
+            document.getElementById('guess-input').value = '';
+            document.getElementById('score').innerText = `Puan: ${score}`;
+            document.getElementById('btn-letter').disabled = false;
+            document.getElementById('btn-submit').disabled = false;
+            document.getElementById('guess-input').disabled = false;
+
+            if (gamePhase === "CLASSIC") {
+                // Klasik Mod Yükle
+                if (currentIndex >= classicQueue.length) {
+                    // Klasik bitti, Bundle'a geç
+                    if (bundleQueue.length > 0) {
+                        gamePhase = "BUNDLE";
+                        currentIndex = 0;
+                        loadQuestion(); // Recursive call for next phase
+                        return;
+                    } else {
+                        showFinal();
+                        return;
+                    }
+                }
+
+                activeData = classicQueue[currentIndex];
+                container.classList.remove('bundle-mode');
+                badge.innerText = "BÖLÜM 1: KELİME AVI";
+                badge.className = "mode-badge bg-classic";
+                title.innerText = "Sözcüğü Bul";
+                title.style.color = "var(--primary)";
+                document.getElementById('q-count').innerText = `Soru: ${currentIndex + 1}/${classicQueue.length}`;
+                hintBox.innerText = activeData.hint;
+
+                renderWordRow(activeData.word, activeData.revealed, wordArea, false);
+
+            } else {
+                // Bundle Mod Yükle
+                if (currentIndex >= bundleQueue.length) {
+                    showFinal();
+                    return;
+                }
+
+                activeData = bundleQueue[currentIndex];
+                container.classList.add('bundle-mode');
+                badge.innerText = "BÖLÜM 2: KONU EŞLEŞTİRME";
+                badge.className = "mode-badge bg-bundle";
+                title.innerText = activeData.title;
+                title.style.color = "var(--bundle)";
+                document.getElementById('q-count').innerText = `Konu: ${currentIndex + 1}/${bundleQueue.length}`;
+                hintBox.innerText = activeData.hint || "Bu konuyla ilgili tüm kelimeleri bul!";
+
+                // Bundle içindeki tüm kelimeleri çiz
+                activeData.items.forEach((item, idx) => {
+                    // Grup divi
+                    const group = document.createElement('div');
+                    group.className = 'question-group' + (item.solved ? ' solved' : '');
+                    
+                    renderWordRow(item.word, item.revealed, group, item.solved, idx);
+                    wordArea.appendChild(group);
+                });
+            }
+        }
+
+        function renderWordRow(wordStr, revealedArr, targetElement, isSolved, itemIdx = null) {
+            const row = document.createElement('div');
+            row.className = 'word-row';
+            if (wordStr.length > 11) row.classList.add('long-word');
+
+            const chars = wordStr.split('');
+            let charCounter = 0;
+
+            chars.forEach(char => {
+                if (char === ' ') {
+                    const spacer = document.createElement('div');
+                    spacer.style.width = "10px";
+                    row.appendChild(spacer);
+                } else {
+                    const box = document.createElement('div');
+                    box.className = 'letter-box';
+                    if (isSolved || revealedArr[charCounter]) {
+                        box.classList.add('revealed');
+                        box.innerText = toTrUpper(char);
+                    } else {
+                        box.innerText = "?";
+                    }
+                    // Data attributes for logic
+                    box.dataset.char = toTrUpper(char);
+                    if (itemIdx !== null) box.dataset.itemIdx = itemIdx; // Bundle için
+                    box.dataset.charIdx = charCounter;
+                    
+                    row.appendChild(box);
+                    charCounter++;
+                }
+            });
+            targetElement.appendChild(row);
+        }
+
+        function getLetter() {
+            if (gamePhase === "CLASSIC") {
+                // Klasik Harf
+                let closed = [];
+                activeData.revealed.forEach((r, i) => { if (!r) closed.push(i); });
+                
+                if (closed.length > 0) {
+                    const rnd = closed[Math.floor(Math.random() * closed.length)];
+                    activeData.revealed[rnd] = true;
+                    score -= 100;
+                    refreshUI();
+                    
+                    if(activeData.revealed.every(Boolean)) nextQuestionDelay();
+                }
+            } else {
+                // Bundle Harf
+                let candidates = [];
+                activeData.items.forEach((item, iIdx) => {
+                    if(!item.solved) {
+                        item.revealed.forEach((r, cIdx) => {
+                            if(!r) candidates.push({iIdx, cIdx});
+                        });
+                    }
+                });
+
+                if (candidates.length > 0) {
+                    const choice = candidates[Math.floor(Math.random() * candidates.length)];
+                    const targetItem = activeData.items[choice.iIdx];
+                    targetItem.revealed[choice.cIdx] = true;
+                    score -= 100;
+                    
+                    // Kelime tamamlandı mı?
+                    if(targetItem.revealed.every(Boolean) && !targetItem.solved) {
+                        targetItem.solved = true;
+                        giveFeedback(true, "Kelime Tamamlandı!");
+                    }
+                    
+                    refreshUI();
+                    checkBundleFinished();
+                }
+            }
+        }
+
+        function checkGuess() {
+            const input = document.getElementById('guess-input');
+            const guess = toTrUpper(input.value.trim()).replace(/\s+/g, ''); // Boşluksuz kontrol
+            if (!guess) return;
+
+            if (gamePhase === "CLASSIC") {
+                const target = toTrUpper(activeData.word).replace(/\s+/g, '');
+                if (guess === target) {
+                    activeData.revealed.fill(true);
+                    score += 500; // Tam puan
+                    giveFeedback(true, "Doğru Cevap!");
+                    refreshUI();
+                    nextQuestionDelay();
+                } else {
+                    giveFeedback(false, "Yanlış Cevap");
+                }
+            } else {
+                // Bundle Guess
+                let found = false;
+                activeData.items.forEach(item => {
+                    if (!item.solved) {
+                        const target = toTrUpper(item.word).replace(/\s+/g, '');
+                        if (guess === target) {
+                            item.solved = true;
+                            item.revealed.fill(true);
+                            score += 300;
+                            found = true;
+                        }
+                    }
+                });
+
+                if (found) {
+                    input.value = "";
+                    giveFeedback(true, "Harika! Birini buldun!");
+                    refreshUI();
+                    checkBundleFinished();
+                } else {
+                    giveFeedback(false, "Bu kelime yok veya bulundu.");
+                }
+            }
+        }
+
+        function refreshUI() {
+            document.getElementById('score').innerText = `Puan: ${score}`;
+            const wordArea = document.getElementById('word-area');
+            wordArea.innerHTML = ''; // Temizle ve yeniden çiz
+
+            if (gamePhase === "CLASSIC") {
+                renderWordRow(activeData.word, activeData.revealed, wordArea, false);
+            } else {
+                activeData.items.forEach((item, idx) => {
+                    const group = document.createElement('div');
+                    group.className = 'question-group' + (item.solved ? ' solved' : '');
+                    renderWordRow(item.word, item.revealed, group, item.solved, idx);
+                    wordArea.appendChild(group);
+                });
+            }
+        }
+
+        function nextQuestionDelay() {
+            document.getElementById('btn-letter').disabled = true;
+            document.getElementById('btn-submit').disabled = true;
+            document.getElementById('guess-input').disabled = true;
+            
+            setTimeout(() => {
+                currentIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function checkBundleFinished() {
+            if(activeData.items.every(i => i.solved)) {
+                giveFeedback(true, "Tüm Konu Bitti!");
+                nextQuestionDelay();
+            }
+        }
+
+        function giveFeedback(success, msg) {
+            const el = document.getElementById('feedback');
+            el.style.color = success ? "var(--success)" : "#e74c3c";
+            el.innerText = msg;
+            if(!success) {
+                const inp = document.getElementById('guess-input');
+                inp.style.borderColor = "#e74c3c";
+                setTimeout(() => inp.style.borderColor = "#dfe6e9", 500);
+            }
+        }
+
+        function showFinal() {
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('final-screen').style.display = 'flex';
+            document.getElementById('final-score').innerText = score;
+            startConfetti();
+        }
+
+        function startConfetti() {
+            const colors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6'];
+            for(let i=0; i<100; i++) {
+                let confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(confetti);
+            }
+        }
+
+    </script>
+</body>
+</html>
