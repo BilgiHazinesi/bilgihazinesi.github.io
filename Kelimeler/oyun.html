@@ -7,12 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f4f6f8;
-            --primary: #3498db; /* Kelime Avı */
-            --bundle: #e67e22;  /* Wordle */
+            --bg-color: #f3f4f6;
+            --primary: #2980b9; /* Kelime Avı Rengi */
+            --bundle: #d35400;  /* Wordle Rengi */
             --correct: #27ae60; /* Yeşil */
-            --present: #f1c40f; /* Sarı */
-            --absent: #95a5a6;  /* Gri */
+            --present: #f39c12; /* Sarı */
+            --absent: #7f8c8d;  /* Gri */
             --text: #2c3e50;
         }
 
@@ -27,118 +27,127 @@
 
         .container {
             max-width: 600px; width: 100%;
-            background: white; border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            background: white; border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             overflow: hidden; margin-top: 10px;
-            min-height: 600px;
         }
 
-        /* --- TABLAR --- */
-        .tabs { display: flex; background: #dfe6e9; }
+        /* --- SEKMELER --- */
+        .tabs { display: flex; background: #ecf0f1; border-bottom: 2px solid #bdc3c7; }
         .tab-btn {
-            flex: 1; padding: 18px; border: none; cursor: pointer;
-            font-size: 1.1rem; font-weight: 800; color: #7f8c8d;
-            background: transparent; transition: 0.3s;
-            border-bottom: 5px solid transparent;
+            flex: 1; padding: 15px; border: none; background: transparent;
+            font-size: 1.1rem; font-weight: 800; color: #95a5a6;
+            cursor: pointer; transition: 0.3s;
         }
-        .tab-btn.active.tab-classic { color: var(--primary); border-bottom-color: var(--primary); background: white; }
-        .tab-btn.active.tab-bundle { color: var(--bundle); border-bottom-color: var(--bundle); background: white; }
+        .tab-btn.active.tab-classic { background: white; color: var(--primary); border-top: 4px solid var(--primary); }
+        .tab-btn.active.tab-bundle { background: white; color: var(--bundle); border-top: 4px solid var(--bundle); }
 
         .tab-content { display: none; padding: 20px; text-align: center; }
-        .tab-content.active { display: block; animation: fade 0.4s; }
+        .tab-content.active { display: block; animation: fade 0.3s; }
         @keyframes fade { from {opacity:0} to {opacity:1} }
 
-        /* --- OYUN ALANLARI --- */
-        h2 { margin: 0 0 5px 0; font-weight: 900; }
-        .sub-info { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 20px; font-weight: 700; }
+        /* --- OYUN ELEMANLARI --- */
+        h2 { margin: 0 0 10px 0; font-weight: 900; }
+        .info-bar { font-size: 0.9rem; color: #7f8c8d; font-weight: 700; margin-bottom: 20px; }
         
-        /* Kelime Avı */
-        .hint-box { background: #e3f2fd; color: #1565c0; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-weight: 700; }
-        .ka-container { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; }
+        .hint-box {
+            background: #eaf2f8; color: #2c3e50; padding: 15px;
+            border-radius: 8px; margin-bottom: 20px; font-weight: 700; border-left: 5px solid var(--primary);
+        }
+
+        /* KELİME AVI KUTULARI */
+        .ka-board { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; }
         .ka-box {
-            width: 42px; height: 52px; background: #ecf0f1; border-radius: 8px;
+            width: 45px; height: 55px; background: #dfe6e9; border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.5rem; font-weight: 800; color: transparent;
         }
         .ka-box.revealed { background: var(--primary); color: white; }
 
-        /* Wordle Grid */
-        .grid-container { 
-            display: flex; flex-direction: column; gap: 5px; 
-            align-items: center; margin-bottom: 20px; 
+        /* WORDLE GRID */
+        .w-grid { 
+            display: grid; gap: 5px; justify-content: center; margin-bottom: 20px; 
+            /* Grid şablonu JS ile dinamik ayarlanacak */
         }
-        .grid-row { display: flex; gap: 5px; }
         .w-box {
-            width: 48px; height: 48px; border: 2px solid #dee2e6;
+            width: 50px; height: 50px; border: 2px solid #dcdde1;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.8rem; font-weight: 900; text-transform: uppercase;
-            background: white;
+            color: var(--text); background: white;
         }
         .w-correct { background: var(--correct); color: white; border-color: var(--correct); }
         .w-present { background: var(--present); color: white; border-color: var(--present); }
         .w-absent { background: var(--absent); color: white; border-color: var(--absent); }
 
-        /* Kontroller */
+        /* INPUT VE BUTONLAR */
         input[type="text"] {
-            width: 70%; padding: 14px; font-size: 1.2rem; text-align: center;
-            border: 2px solid #dfe6e9; border-radius: 50px; outline: none;
-            font-weight: 700; text-transform: uppercase; margin-bottom: 10px;
+            padding: 12px; width: 70%; border: 2px solid #bdc3c7;
+            border-radius: 50px; text-align: center; font-size: 1.2rem;
+            font-weight: 700; outline: none; text-transform: uppercase;
         }
         input:focus { border-color: var(--text); }
-        
-        .btn { padding: 12px 30px; border-radius: 50px; border: none; color: white; font-weight: 800; cursor: pointer; }
+
+        .btn {
+            padding: 12px 30px; border-radius: 50px; border: none; margin-top: 10px;
+            color: white; font-weight: 800; cursor: pointer; font-size: 1rem;
+        }
         .btn-c { background: var(--primary); }
         .btn-b { background: var(--bundle); }
-        .btn-hint { background: #f1c40f; color: #5d4037; margin-bottom: 5px; }
+        .btn-hint { background: #f1c40f; color: #5d4037; padding: 8px 20px; font-size: 0.9rem; margin-bottom: 10px; }
 
-        .feedback { min-height: 25px; margin-top: 10px; font-weight: 800; font-size: 1.1rem; }
+        .feedback { margin-top: 15px; min-height: 25px; font-weight: 800; font-size: 1.2rem; }
 
         #loader {
-            position: fixed; top:0; left:0; width:100%; height:100%; background:white;
-            z-index:999; display:flex; justify-content:center; align-items:center; flex-direction:column;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 999; display: flex; 
+            flex-direction: column; justify-content: center; align-items: center;
         }
-        .spinner { width:40px; height:40px; border:5px solid #eee; border-top:5px solid var(--primary); border-radius:50%; animation:spin 1s linear infinite; }
-        @keyframes spin { 100% {transform: rotate(360deg);} }
+        .spinner {
+            width: 40px; height: 40px; border: 5px solid #ecf0f1; 
+            border-top: 5px solid var(--primary); border-radius: 50%; 
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div id="loader">
     <div class="spinner"></div>
-    <h3 style="color:#7f8c8d; margin-top:15px;">Yükleniyor...</h3>
+    <p style="margin-top:15px; color:#95a5a6; font-weight:bold;">Sorular Yükleniyor...</p>
 </div>
 
-<div class="container" id="game-app" style="display:none;">
+<div class="container" id="app" style="display:none;">
     
     <div class="tabs">
-        <button class="tab-btn tab-classic active" onclick="openTab('classic')">KELİME AVI</button>
-        <button class="tab-btn tab-bundle" onclick="openTab('bundle')">BUNDLE (WORDLE)</button>
+        <button class="tab-btn tab-classic active" onclick="showTab('classic')">KELİME AVI</button>
+        <button class="tab-btn tab-bundle" onclick="showTab('bundle')">BUNDLE (WORDLE)</button>
     </div>
 
     <div id="classic" class="tab-content active">
         <h2 style="color:var(--primary)">Kelime Avı</h2>
-        <div class="sub-info">Soru: <span id="c-idx">1</span></div>
+        <div class="info-bar">Soru: <span id="c-idx">1</span></div>
         
         <div id="c-hint" class="hint-box">...</div>
-        <div id="c-board" class="ka-container"></div>
-        
-        <button class="btn btn-hint" onclick="buyLetter()">Harf Al (-100)</button><br>
-        <input type="text" id="c-input" placeholder="TAHMİN ET"><br>
+        <div id="c-board" class="ka-board"></div>
+
+        <button class="btn btn-hint" onclick="buyLetter()">Harf İpucu Al</button><br>
+        <input type="text" id="c-input" placeholder="TAHMİNİNİZ">
+        <br>
         <button class="btn btn-c" onclick="checkClassic()">YANITLA</button>
-        
         <div id="c-msg" class="feedback"></div>
     </div>
 
     <div id="bundle" class="tab-content">
-        <h2 style="color:var(--bundle)">Bundle</h2>
-        <div class="sub-info">Soru: <span id="b-idx">1</span> | Puan: <span id="b-score">0</span></div>
-        <p style="font-size:0.9rem; color:#7f8c8d;">Bu kelimeyi bulmak için 6 hakkın var.</p>
+        <h2 style="color:var(--bundle)">Bundle (Wordle)</h2>
+        <div class="info-bar">Soru: <span id="b-idx">1</span> | Kalan Hak: <span id="b-lives">6</span></div>
+        <p style="font-size:0.9rem; color:#7f8c8d; margin-bottom:15px;">Kelimeyi bulmak için 6 deneme hakkın var.</p>
 
-        <div id="b-grid" class="grid-container"></div>
+        <div id="b-grid" class="w-grid"></div>
 
-        <input type="text" id="b-input" placeholder="KELİME GİR"><br>
+        <input type="text" id="b-input" placeholder="KELİME GİRİN">
+        <br>
         <button class="btn btn-b" onclick="checkBundle()">KONTROL ET</button>
-        
         <div id="b-msg" class="feedback"></div>
     </div>
 
@@ -146,7 +155,7 @@
 
 <script>
     // ==========================================
-    // AYARLAR: CSV LİNKİ BURAYA
+    // AYARLAR: CSV LİNKİNİ BURAYA YAPIŞTIRIN
     // ==========================================
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoGIsfx3q4A24MbeGif6c1Nnr6NSOw5PS40df8j34MyppgdNp4T4My20jeEH0kKJrpuehciw3J_QgR/pub?gid=0&single=true&output=csv"; 
     // ==========================================
@@ -154,235 +163,291 @@
     let classicList = [];
     let bundleList = [];
 
-    // Durum Değişkenleri
-    let cState = { idx: 0, revealed: [] };
-    let bState = { idx: 0, score: 0, guesses: [], gameOver: false };
+    // Kelime Avı Durumu
+    let cIndex = 0;
+    let cRevealed = []; // [true, false, false...]
+
+    // Wordle Durumu
+    let bIndex = 0;
+    let bGuesses = []; // ["ELMA", "ARMA"]
+    let bGameOver = false;
 
     document.addEventListener('DOMContentLoaded', () => {
         fetchData();
-        // Enter tuşu
-        document.getElementById('c-input').addEventListener('keypress', e=>{if(e.key==='Enter') checkClassic()});
-        document.getElementById('b-input').addEventListener('keypress', e=>{if(e.key==='Enter') checkBundle()});
+        // Enter tuşu desteği
+        document.getElementById('c-input').addEventListener('keyup', e => { if(e.key==='Enter') checkClassic(); });
+        document.getElementById('b-input').addEventListener('keyup', e => { if(e.key==='Enter') checkBundle(); });
     });
 
     function fetchData() {
-        if(CSV_URL.includes("BURAYA")) { alert("CSV Linkini ekleyiniz!"); return; }
-        fetch(CSV_URL).then(r=>r.text()).then(txt => {
-            parseCSV(txt);
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('game-app').style.display = 'block';
-            initClassic();
-            initBundle();
-        }).catch(e => alert("Hata: " + e));
+        if(CSV_URL.includes("BURAYA")) { alert("Lütfen CSV Linkini Ekleyin!"); return; }
+        
+        fetch(CSV_URL)
+            .then(r => r.text())
+            .then(text => {
+                parseCSV(text);
+                
+                // Yükleme ekranını kapat
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+
+                // Oyunları Başlat
+                initClassic();
+                initBundle();
+            })
+            .catch(err => alert("Hata oluştu: " + err));
     }
 
-    function parseCSV(text) {
-        const rows = text.split(/\r?\n/);
+    // --- EN ÖNEMLİ KISIM: DOĞRU AYRIŞTIRMA ---
+    function parseCSV(csvText) {
+        const rows = csvText.split(/\r?\n/);
+        
+        // 1. satır başlıktır, o yüzden i=1'den başlıyoruz
         for(let i=1; i<rows.length; i++) {
-            // Basit virgül ayrımı
-            const row = rows[i].split(',');
-            if(!row || row.length < 1) continue;
+            // Excel CSV'sinde bazen tırnak işaretleri olur, onları temizleyelim
+            // Satırı virgülle parçala ama tırnak içindeki virgülleri koru (Basit regex)
+            let row = rows[i];
+            
+            // Basit split (Genelde yeterli)
+            let cols = row.split(',');
 
-            // Sütunları Temizle (Tırnak ve boşlukları sil)
+            // Veri Temizliği (Tırnakları kaldır, boşlukları sil)
             const clean = (str) => str ? str.replace(/^"|"$/g, '').trim() : "";
             
-            const colA = clean(row[0]);
-            const colB = clean(row[1]);
-            const colC = clean(row[2]); // Sadece C sütunu
+            const colA = clean(cols[0]); // Kelime Avı Sorusu
+            const colB = clean(cols[1]); // İpucu
+            const colC = clean(cols[2]); // Bundle Kelimesi
 
-            // 1. Kural: A ve B varsa Klasik'e ekle
-            if(colA.length > 0) {
+            // LİSTE 1: A ve B doluysa Kelime Avı'na ekle
+            if(colA && colB) {
                 classicList.push({ word: colA, hint: colB });
             }
 
-            // 2. Kural: C varsa Bundle'a ekle (A ve B'den bağımsız)
-            if(colC.length > 0) {
-                // Güvenlik: 20 karakterden uzunsa hatalı okumadır, alma.
-                if(colC.length < 20) {
+            // LİSTE 2: C doluysa Bundle'a ekle (Sadece kelimeyi al)
+            if(colC) {
+                // Güvenlik: 1 harften uzun, 20 harften kısa olmalı (Hata önleyici)
+                if(colC.length > 1 && colC.length < 20) {
                     bundleList.push(colC);
                 }
             }
         }
     }
 
-    function openTab(tab) {
-        document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
-        document.getElementById(tab).classList.add('active');
-        document.querySelector(`.tab-${tab}`).classList.add('active');
+    function showTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        document.querySelector(`.tab-${tabName}`).classList.add('active');
     }
 
-    function toTr(s) { return s.toLocaleUpperCase('tr-TR'); }
+    function toTr(str) { return str.toLocaleUpperCase('tr-TR'); }
 
-    // === KELİME AVI MOTORU ===
+    // =================================================
+    // 1. OYUN: KELİME AVI
+    // =================================================
     function initClassic() {
-        if(cState.idx >= classicList.length) {
-            document.getElementById('classic').innerHTML = "<h2>Bitti!</h2><p>Tüm kelimeler bulundu.</p>";
+        if(cIndex >= classicList.length) {
+            document.getElementById('classic').innerHTML = "<h2>Tebrikler!</h2><p>Tüm kelimeler bulundu.</p>";
             return;
         }
-        const q = classicList[cState.idx];
-        cState.revealed = new Array(q.word.length).fill(false);
         
-        document.getElementById('c-idx').innerText = (cState.idx + 1) + "/" + classicList.length;
-        document.getElementById('c-hint').innerText = q.hint || "İpucu Yok";
+        const q = classicList[cIndex];
+        // Harf durumu dizisini sıfırla
+        cRevealed = new Array(q.word.length).fill(false);
+
+        // UI Güncelle
+        document.getElementById('c-idx').innerText = (cIndex + 1) + " / " + classicList.length;
+        document.getElementById('c-hint').innerText = q.hint;
         document.getElementById('c-msg').innerText = "";
         document.getElementById('c-input').value = "";
+        
         renderClassicBoard();
     }
 
     function renderClassicBoard() {
         const board = document.getElementById('c-board');
-        board.innerHTML = '';
-        const w = classicList[cState.idx].word;
-        for(let i=0; i<w.length; i++) {
-            const b = document.createElement('div');
-            b.className = 'ka-box';
-            if(w[i] === ' ') {
-                b.style.opacity = 0; cState.revealed[i] = true;
-            } else if(cState.revealed[i]) {
-                b.classList.add('revealed');
-                b.innerText = toTr(w[i]);
+        board.innerHTML = "";
+        const word = classicList[cIndex].word;
+
+        for(let i=0; i<word.length; i++) {
+            const div = document.createElement('div');
+            div.className = 'ka-box';
+            
+            if(word[i] === ' ') {
+                div.style.opacity = 0; // Boşluk
+                cRevealed[i] = true; 
+            } else if(cRevealed[i]) {
+                div.classList.add('revealed');
+                div.innerText = toTr(word[i]);
             } else {
-                b.innerText = "?";
+                div.innerText = "?";
             }
-            board.appendChild(b);
+            board.appendChild(div);
         }
     }
 
     function buyLetter() {
-        const closed = [];
-        cState.revealed.forEach((r,i) => { if(!r) closed.push(i); });
-        if(closed.length > 0) {
-            const rnd = closed[Math.floor(Math.random()*closed.length)];
-            cState.revealed[rnd] = true;
+        const closedIndices = [];
+        cRevealed.forEach((val, i) => { if(!val) closedIndices.push(i); });
+        
+        if(closedIndices.length > 0) {
+            const rnd = closedIndices[Math.floor(Math.random() * closedIndices.length)];
+            cRevealed[rnd] = true;
             renderClassicBoard();
         }
     }
 
     function checkClassic() {
-        const inp = document.getElementById('c-input');
-        const guess = toTr(inp.value).replace(/\s/g,'');
-        const target = toTr(classicList[cState.idx].word).replace(/\s/g,'');
-        
-        if(guess === target) {
+        const input = document.getElementById('c-input');
+        const userGuess = toTr(input.value).replace(/\s+/g, '');
+        const correct = toTr(classicList[cIndex].word).replace(/\s+/g, '');
+
+        if(userGuess === correct) {
+            document.getElementById('c-msg').style.color = "var(--primary)";
             document.getElementById('c-msg').innerText = "DOĞRU!";
-            document.getElementById('c-msg').style.color = "var(--correct)";
-            cState.revealed.fill(true);
+            cRevealed.fill(true);
             renderClassicBoard();
-            setTimeout(() => { cState.idx++; initClassic(); }, 1500);
+            setTimeout(() => {
+                cIndex++;
+                initClassic();
+            }, 1500);
         } else {
-            document.getElementById('c-msg').innerText = "YANLIŞ";
             document.getElementById('c-msg').style.color = "red";
+            document.getElementById('c-msg').innerText = "YANLIŞ";
         }
     }
 
-    // === BUNDLE (WORDLE) MOTORU ===
+    // =================================================
+    // 2. OYUN: BUNDLE (WORDLE)
+    // =================================================
     function initBundle() {
-        if(bState.idx >= bundleList.length) {
-            document.getElementById('bundle').innerHTML = `<h2>Tebrikler!</h2><p>Tüm Bundle Soruları Bitti.</p><h1>Puan: ${bState.score}</h1>`;
+        if(bIndex >= bundleList.length) {
+            document.getElementById('bundle').innerHTML = "<h2>Harika!</h2><p>Tüm Wordle soruları bitti.</p>";
             return;
         }
-        
-        bState.guesses = [];
-        bState.gameOver = false;
-        const targetWord = toTr(bundleList[bState.idx]).replace(/\s/g,''); // Hedef kelime
-        
-        document.getElementById('b-idx').innerText = (bState.idx + 1) + "/" + bundleList.length;
-        document.getElementById('b-score').innerText = bState.score;
+
+        bGuesses = [];
+        bGameOver = false;
+        const target = toTr(bundleList[bIndex]).replace(/\s+/g, '');
+        const wordLen = target.length;
+
+        // UI Güncelle
+        document.getElementById('b-idx').innerText = (bIndex + 1) + " / " + bundleList.length;
+        document.getElementById('b-lives').innerText = 6;
         document.getElementById('b-msg').innerText = "";
         document.getElementById('b-input').value = "";
         document.getElementById('b-input').disabled = false;
         
-        // Input limitini kelime uzunluğuna eşitle
-        document.getElementById('b-input').setAttribute('maxlength', targetWord.length);
-        document.getElementById('b-input').setAttribute('placeholder', `${targetWord.length} HARFLİ KELİME`);
+        // Input sınırla
+        document.getElementById('b-input').setAttribute('maxlength', wordLen);
+        document.getElementById('b-input').setAttribute('placeholder', `${wordLen} HARFLİ KELİME`);
+
+        // Grid CSS'ini kelime uzunluğuna göre ayarla (Örn: 5 kutu yan yana)
+        const grid = document.getElementById('b-grid');
+        grid.style.gridTemplateColumns = `repeat(${wordLen}, 50px)`;
         
         renderBundleGrid();
     }
 
     function renderBundleGrid() {
         const grid = document.getElementById('b-grid');
-        grid.innerHTML = '';
-        const target = toTr(bundleList[bState.idx]).replace(/\s/g,'');
+        grid.innerHTML = "";
+        const target = toTr(bundleList[bIndex]).replace(/\s+/g, '');
         const len = target.length;
 
-        // Geçmiş tahminleri çiz
-        bState.guesses.forEach(guess => {
-            const row = document.createElement('div');
-            row.className = 'grid-row';
+        // 1. Geçmiş tahminleri çiz
+        bGuesses.forEach(guess => {
+            // Renkleri hesapla
+            const status = checkWordleColors(guess, target);
             
-            // Renk algoritması
-            const tChars = target.split('');
-            const gChars = guess.split('');
-            const status = new Array(len).fill('w-absent');
-            const taken = new Array(len).fill(false);
-
-            // 1. Yeşiller
-            gChars.forEach((c, i) => {
-                if(c === tChars[i]) { status[i] = 'w-correct'; taken[i] = true; }
-            });
-            // 2. Sarılar
-            gChars.forEach((c, i) => {
-                if(status[i] !== 'w-correct') {
-                    const found = tChars.findIndex((tc, ti) => tc === c && !taken[ti]);
-                    if(found !== -1) { status[i] = 'w-present'; taken[found] = true; }
-                }
-            });
-
             for(let i=0; i<len; i++) {
-                const b = document.createElement('div');
-                b.className = `w-box ${status[i]}`;
-                b.innerText = gChars[i];
-                row.appendChild(b);
+                const box = document.createElement('div');
+                box.className = `w-box ${status[i]}`; // w-correct, w-present vb.
+                box.innerText = guess[i];
+                grid.appendChild(box);
             }
-            grid.appendChild(row);
         });
 
-        // Kalan hakları (Boş satırları) çiz
-        const remaining = 6 - bState.guesses.length;
-        for(let i=0; i<remaining; i++) {
-            const row = document.createElement('div');
-            row.className = 'grid-row';
-            for(let j=0; j<len; j++) {
-                const b = document.createElement('div');
-                b.className = 'w-box';
-                row.appendChild(b);
+        // 2. Kalan haklar için boş kutular çiz
+        const remainingRows = 6 - bGuesses.length;
+        for(let r=0; r<remainingRows; r++) {
+            for(let c=0; c<len; c++) {
+                const box = document.createElement('div');
+                box.className = 'w-box';
+                grid.appendChild(box);
             }
-            grid.appendChild(row);
         }
     }
 
-    function checkBundle() {
-        if(bState.gameOver) return;
-        const inp = document.getElementById('b-input');
-        const guess = toTr(inp.value.trim()).replace(/\s/g,'');
-        const target = toTr(bundleList[bState.idx]).replace(/\s/g,'');
+    function checkWordleColors(guess, target) {
+        let status = new Array(guess.length).fill('w-absent');
+        let tChars = target.split('');
+        let gChars = guess.split('');
+        let taken = new Array(target.length).fill(false);
 
+        // 1. Adım: Yeşilleri (Tam Doğru) Bul
+        for(let i=0; i<gChars.length; i++) {
+            if(gChars[i] === tChars[i]) {
+                status[i] = 'w-correct';
+                taken[i] = true;
+            }
+        }
+
+        // 2. Adım: Sarıları (Yanlış Yer) Bul
+        for(let i=0; i<gChars.length; i++) {
+            if(status[i] !== 'w-correct') {
+                // Hedef kelimede bu harf var mı ve henüz eşleşmemiş mi?
+                let foundIndex = tChars.findIndex((tc, ti) => tc === gChars[i] && !taken[ti]);
+                if(foundIndex !== -1) {
+                    status[i] = 'w-present';
+                    taken[foundIndex] = true;
+                }
+            }
+        }
+        return status;
+    }
+
+    function checkBundle() {
+        if(bGameOver) return;
+        
+        const input = document.getElementById('b-input');
+        const guess = toTr(input.value).replace(/\s+/g, ''); // Boşluksuz
+        const target = toTr(bundleList[bIndex]).replace(/\s+/g, ''); // Boşluksuz
+
+        // Uzunluk kontrolü
         if(guess.length !== target.length) {
             document.getElementById('b-msg').innerText = `${target.length} Harfli Olmalı!`;
             document.getElementById('b-msg').style.color = "#e67e22";
             return;
         }
 
-        bState.guesses.push(guess);
-        inp.value = "";
+        bGuesses.push(guess);
+        input.value = "";
         renderBundleGrid();
 
+        document.getElementById('b-lives').innerText = 6 - bGuesses.length;
+
+        // KAZANMA DURUMU
         if(guess === target) {
-            // Kazandı
-            bState.score += (700 - (bState.guesses.length * 100));
             document.getElementById('b-msg').innerText = "HARİKA!";
             document.getElementById('b-msg').style.color = "var(--correct)";
-            bState.gameOver = true;
-            inp.disabled = true;
-            setTimeout(() => { bState.idx++; initBundle(); }, 2000);
-        } else if(bState.guesses.length >= 6) {
-            // Kaybetti
+            bGameOver = true;
+            input.disabled = true;
+            setTimeout(() => {
+                bIndex++;
+                initBundle();
+            }, 2000);
+        } 
+        // KAYBETME DURUMU
+        else if(bGuesses.length >= 6) {
             document.getElementById('b-msg').innerText = `CEVAP: ${target}`;
             document.getElementById('b-msg').style.color = "red";
-            bState.gameOver = true;
-            inp.disabled = true;
-            setTimeout(() => { bState.idx++; initBundle(); }, 3000);
+            bGameOver = true;
+            input.disabled = true;
+            setTimeout(() => {
+                bIndex++;
+                initBundle();
+            }, 3000);
         }
     }
 
