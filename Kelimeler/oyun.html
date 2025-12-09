@@ -3,119 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zeynal Öğretmen - Eğitim Oyunu</title>
+    <title>Zeynal Öğretmen - Eğitim Platformu</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
         
         :root {
-            --bg-color: #f0f4f8;
+            --bg-color: #eef2f5;
             --card-bg: #ffffff;
-            --primary: #3498db; /* Klasik Mavi */
-            --bundle: #9b59b6;  /* Bundle Moru */
+            --primary: #3498db; /* Kelime Avı Rengi */
+            --secondary: #9b59b6; /* Bundle Rengi */
             --accent: #f1c40f; 
             --success: #2ecc71; 
-            --text-dark: #2c3e50;
-            --box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --text: #2c3e50;
+            --shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
 
         body {
             font-family: 'Nunito', sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-dark);
+            color: var(--text);
             margin: 0; padding: 15px;
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
         }
 
-        .container {
+        .main-container {
             max-width: 650px; width: 100%;
-            background: var(--card-bg); padding: 25px;
-            border-radius: 20px; box-shadow: var(--box-shadow);
-            text-align: center; position: relative;
+            background: var(--card-bg); 
+            border-radius: 25px; box-shadow: var(--shadow);
+            overflow: hidden; position: relative;
         }
 
-        h1 { font-size: 1.8rem; font-weight: 900; margin: 10px 0; color: var(--primary); }
+        /* --- SEKME (TAB) YAPISI --- */
+        .tabs-header {
+            display: flex; background: #dfe6e9; p-padding: 5px;
+        }
+        .tab-btn {
+            flex: 1; padding: 15px; border: none; outline: none;
+            cursor: pointer; font-family: 'Nunito', sans-serif;
+            font-weight: 800; font-size: 1rem; color: #7f8c8d;
+            background: transparent; transition: all 0.3s;
+            border-bottom: 4px solid transparent;
+        }
+        .tab-btn.active { background: white; color: var(--text); }
         
-        .mode-badge {
-            display: inline-block; padding: 6px 16px; border-radius: 20px;
-            font-size: 0.85rem; font-weight: 800; color: white; margin-bottom: 15px;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .bg-classic { background-color: var(--primary); }
-        .bg-bundle { background-color: var(--bundle); }
+        /* Sekme Renkleri */
+        .tab-btn[data-tab="classic"].active { border-bottom-color: var(--primary); color: var(--primary); }
+        .tab-btn[data-tab="bundle"].active { border-bottom-color: var(--secondary); color: var(--secondary); }
 
-        .stats-bar {
-            display: flex; justify-content: space-between; background: #ecf0f1;
-            padding: 10px 20px; border-radius: 12px; font-weight: 700;
-            font-size: 1rem; margin-bottom: 20px; color: #7f8c8d;
-        }
+        /* --- İÇERİK ALANI --- */
+        .tab-content { display: none; padding: 25px; text-align: center; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        #hint-box {
-            background-color: #fffceb; border-left: 5px solid var(--accent);
-            color: #5d4037; padding: 15px; border-radius: 10px;
-            text-align: left; font-size: 1.15rem; line-height: 1.4;
+        /* Başlıklar */
+        h2 { margin: 0 0 10px 0; font-weight: 900; font-size: 1.6rem; }
+        .classic-theme h2 { color: var(--primary); }
+        .bundle-theme h2 { color: var(--secondary); }
+
+        .stats {
+            display: flex; justify-content: space-between; background: #f1f2f6;
+            padding: 8px 15px; border-radius: 10px; font-weight: 700; color: #7f8c8d;
+            margin-bottom: 20px; font-size: 0.9rem;
+        }
+        .score-val { color: var(--success); font-weight: 900; }
+
+        /* İpucu Kutusu */
+        .hint-box {
+            background: #fff9db; border-left: 5px solid var(--accent);
+            padding: 15px; border-radius: 8px; text-align: left;
+            font-size: 1.1rem; line-height: 1.4; color: #5d4037;
             margin-bottom: 25px; font-weight: 700;
         }
 
-        /* OYUN ALANLARI */
-        #word-area {
-            display: flex; flex-direction: column; align-items: center;
-            gap: 15px; margin-bottom: 25px; width: 100%;
+        /* --- OYUN ALANI --- */
+        .word-area {
+            display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 25px;
         }
 
         .word-row { display: flex; justify-content: center; gap: 5px; flex-wrap: nowrap; }
-        
+
         .letter-box {
-            width: 44px; height: 54px; background-color: #dfe6e9;
-            border-radius: 10px; display: flex; align-items: center;
-            justify-content: center; font-size: 1.6rem; font-weight: 800;
-            color: transparent; transition: all 0.2s ease; user-select: none;
-            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1);
-        }
-        .letter-box.revealed {
-            background-color: var(--primary); color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15); transform: translateY(-3px);
+            width: 42px; height: 52px; background: #dfe6e9;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 800; color: transparent;
+            transition: 0.2s; user-select: none; box-shadow: inset 0 -3px rgba(0,0,0,0.1);
         }
         
-        /* Bundle Modunda Renkler */
-        .bundle-active .letter-box.revealed { background-color: var(--bundle); }
+        /* Klasik Mod Açık Harf */
+        .classic-theme .letter-box.revealed { background: var(--primary); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
+        /* Bundle Mod Açık Harf */
+        .bundle-theme .letter-box.revealed { background: var(--secondary); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(155, 89, 182, 0.3); }
+        
+        /* Bundle Çözülen Grup */
         .question-group {
-            width: 100%; padding: 10px; background: #fafafa; border-radius: 15px; border: 1px solid #eee;
-            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            width: 100%; padding: 10px; background: #fafafa; 
+            border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; gap: 5px;
         }
-        .question-group.solved .letter-box { background-color: var(--success); }
-        .question-group.solved { background-color: #e8f8f5; border-color: var(--success); }
+        .question-group.solved { background: #e8f8f5; border-color: var(--success); }
+        .question-group.solved .letter-box { background: var(--success); }
 
         /* Mobil */
         @media (max-width: 500px) {
-            .letter-box { width: 32px; height: 42px; font-size: 1.2rem; border-radius: 6px; }
+            .letter-box { width: 30px; height: 40px; font-size: 1.1rem; }
             .word-row { gap: 3px; }
-            h1 { font-size: 1.5rem; }
+            .tab-btn { font-size: 0.9rem; padding: 12px; }
         }
         .word-row.long-word .letter-box { width: 22px; height: 32px; font-size: 0.9rem; }
 
+        /* Kontrol Alanı */
+        .control-area { margin-top: 10px; }
+        
         input[type="text"] {
-            width: 70%; padding: 14px; font-size: 1.2rem; text-align: center;
-            border: 2px solid #dfe6e9; border-radius: 15px; outline: none;
-            font-family: 'Nunito', sans-serif; font-weight: 700;
-            color: var(--text-dark); transition: 0.3s; background: #fff;
+            width: 70%; padding: 12px; font-size: 1.1rem; text-align: center;
+            border: 2px solid #dfe6e9; border-radius: 50px; outline: none;
+            font-family: 'Nunito', sans-serif; font-weight: 700; color: var(--text);
+            transition: 0.3s; background: white; margin-bottom: 10px;
         }
-        input[type="text"]:focus { border-color: var(--primary); }
-        .bundle-active input[type="text"]:focus { border-color: var(--bundle); }
+        .classic-theme input:focus { border-color: var(--primary); }
+        .bundle-theme input:focus { border-color: var(--secondary); }
 
         .btn {
-            border: none; padding: 12px 24px; border-radius: 50px;
+            border: none; padding: 10px 25px; border-radius: 50px;
             font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 1rem;
-            cursor: pointer; transition: transform 0.1s; color: white;
-            margin: 10px 5px; display: inline-block;
+            cursor: pointer; color: white; margin: 5px; display: inline-block;
+            transition: transform 0.1s;
         }
         .btn:active { transform: scale(0.95); }
-        .btn-letter { background-color: var(--accent); color: #5d4037; }
-        .btn-submit { background-color: var(--success); }
+        .btn-hint { background: var(--accent); color: #5d4037; }
+        .btn-check { background: var(--success); }
 
-        .feedback { margin-top: 15px; font-weight: 800; font-size: 1.2rem; min-height: 30px; }
+        .feedback { min-height: 25px; margin-top: 10px; font-weight: 800; font-size: 1.1rem; }
 
-        #loading-screen, #final-screen {
+        /* Yükleme Ekranı */
+        #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; z-index: 999; display: flex;
             flex-direction: column; justify-content: center; align-items: center;
@@ -127,80 +148,95 @@
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .confetti {
-            position: absolute; width: 10px; height: 10px;
-            background-color: #f00; animation: fall linear forwards;
-        }
+        /* Konfeti */
+        .confetti { position: absolute; width: 10px; height: 10px; background: red; animation: fall linear forwards; }
         @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
         <div class="loader"></div>
-        <p style="margin-top:20px; font-weight:bold; color:#b2bec3;">Sorular Ayrıştırılıyor...</p>
+        <p style="margin-top:20px; color:#95a5a6; font-weight:bold;">Sorular Yükleniyor...</p>
     </div>
 
-    <div id="game-area" class="container" style="display: none;">
+    <div class="main-container" id="game-container" style="display:none;">
         
-        <div id="mode-badge" class="mode-badge">...</div>
-        <h1 id="game-title">...</h1>
-        
-        <div class="stats-bar">
-            <span id="q-count">Soru: 0/0</span>
-            <span id="score">Puan: 0</span>
+        <div class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab('classic')" data-tab="classic">🧩 KELİMELER</button>
+            <button class="tab-btn" onclick="switchTab('bundle')" data-tab="bundle">📚 BUNDLE TAHMİN</button>
         </div>
 
-        <div id="hint-box">...</div>
-        <div id="word-area"></div>
+        <div id="tab-classic" class="tab-content classic-theme active">
+            <h2>Kelime Avı</h2>
+            <div class="stats">
+                <span id="c-count">Soru: 1/?</span>
+                <span>Puan: <span id="c-score" class="score-val">0</span></span>
+            </div>
 
-        <div>
-            <button class="btn btn-letter" id="btn-letter">Harf Al (-100)</button>
-            <br>
-            <input type="text" id="guess-input" placeholder="Cevabını yaz..." autocomplete="off">
-            <br>
-            <button class="btn btn-submit" id="btn-submit">YANITLA</button>
+            <div id="c-hint" class="hint-box">...</div>
+            <div id="c-word-area" class="word-area"></div>
+            
+            <div class="control-area">
+                <button class="btn btn-hint" onclick="getLetterClassic()">Harf Al (-100)</button><br>
+                <input type="text" id="c-input" placeholder="Cevabı yaz..." autocomplete="off"><br>
+                <button class="btn btn-check" onclick="checkClassic()">YANITLA</button>
+            </div>
+            <div id="c-feedback" class="feedback"></div>
         </div>
 
-        <div id="feedback" class="feedback"></div>
-    </div>
+        <div id="tab-bundle" class="tab-content bundle-theme">
+            <h2 id="b-title">Bundle Konusu</h2>
+            <div class="stats">
+                <span id="b-count">Bölüm: 1/?</span>
+                <span>Puan: <span id="b-score" class="score-val">0</span></span>
+            </div>
 
-    <div id="final-screen" style="display: none; text-align: center;">
-        <h1 style="font-size: 3rem; color: var(--success);">TEBRİKLER! 🏆</h1>
-        <p style="color: #636e72; font-size: 1.3rem;">Bütün etapları tamamladın!</p>
-        <div style="font-size: 5rem; font-weight: 900; color: var(--text-dark); margin: 20px 0;" id="final-score">0</div>
-        <button class="btn btn-submit" onclick="location.reload()">Başa Dön</button>
+            <div id="b-hint" class="hint-box">...</div>
+            <div id="b-word-area" class="word-area"></div>
+            
+            <div class="control-area">
+                <button class="btn btn-hint" onclick="getLetterBundle()">Harf Al (-100)</button><br>
+                <input type="text" id="b-input" placeholder="Cevabı yaz..." autocomplete="off"><br>
+                <button class="btn btn-check" onclick="checkBundle()">YANITLA</button>
+            </div>
+            <div id="b-feedback" class="feedback"></div>
+        </div>
+
     </div>
 
     <script>
         // ============================================================
-        // AYARLAR: CSV LİNKİ BURAYA
+        // AYARLAR: CSV LİNKİNİ BURAYA YAPIŞTIR
         // ============================================================
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoGIsfx3q4A24MbeGif6c1Nnr6NSOw5PS40df8j34MyppgdNp4T4My20jeEH0kKJrpuehciw3J_QgR/pub?gid=0&single=true&output=csv"; 
         // ============================================================
 
-        // Veri Torbaları
-        let classicQuestions = [];
-        let bundleQuestions = [];
-        
-        // Oyun Durumu
-        let currentPhase = 0; // 0: Hazırlık, 1: Klasik, 2: Bundle
-        let qIndex = 0;
-        let score = 0;
-        let activeQuestion = null; // Şu anki sorunun datası
+        // VERİ DEPOLARI
+        let classicData = [];
+        let bundleData = [];
+
+        // OYUN DURUMLARI (STATE)
+        let state = {
+            classic: { idx: 0, score: 0, finished: false },
+            bundle: { idx: 0, score: 0, finished: false }
+        };
+
+        // Mevcut görünüm
+        let activeTab = 'classic'; 
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchData();
-            document.getElementById('guess-input').addEventListener('keypress', (e) => {
-                if(e.key === 'Enter') checkGuess();
-            });
-            document.getElementById('btn-letter').onclick = getLetter;
-            document.getElementById('btn-submit').onclick = checkGuess;
+            
+            // Enter tuşu desteği
+            document.getElementById('c-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') checkClassic(); });
+            document.getElementById('b-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') checkBundle(); });
         });
 
         function fetchData() {
             if(SHEET_CSV_URL.includes("BURAYA_GOOGLE")) {
-                alert("Lütfen CSV linkini koda ekleyin!");
+                alert("Lütfen CSV linkini ekleyiniz!");
                 return;
             }
             fetch(SHEET_CSV_URL)
@@ -208,32 +244,34 @@
                 .then(data => {
                     parseCSV(data);
                     document.getElementById('loading-screen').style.display = 'none';
-                    startClassicPhase();
+                    document.getElementById('game-container').style.display = 'block';
+                    
+                    // İlk yüklemeler
+                    loadClassicQuestion();
+                    loadBundleQuestion();
                 })
                 .catch(e => alert("Hata: " + e));
         }
 
-        // --- KESİN AYRIŞTIRMA MANTIĞI ---
+        // --- CSV AYRIŞTIRMA (SENİN İSTEDİĞİN MANTIK) ---
         function parseCSV(text) {
             const rows = text.split(/\r?\n/);
             
             for(let i=1; i<rows.length; i++) {
-                const row = rows[i].split(','); 
+                const row = rows[i].split(',');
                 if(row.length < 2) continue;
 
-                // Sütunları Temizle
-                const colA = row[0].trim(); // Soru veya Konu
+                const colA = row[0].trim(); // Kelime (Klasik) veya Konu (Bundle)
                 const colB = row[1] ? row[1].trim() : ""; // İpucu
                 const colC = row.length > 2 ? row.slice(2).join(',').trim() : ""; // Cevaplar (Bundle)
 
-                // KURAL: C sütunu doluysa BUNDLE, boşsa KLASİK
                 if (colC.length > 0) {
-                    // Bundle Ekle
+                    // --- BUNDLE (C Dolu) ---
                     if(colA.length > 0) {
                         const words = colC.split(',').map(w => w.trim()).filter(w => w.length > 0);
-                        bundleQuestions.push({
-                            title: colA, // Konu
-                            hint: colB, // İpucu
+                        bundleData.push({
+                            title: colA,
+                            hint: colB,
                             items: words.map(w => ({
                                 word: w,
                                 solved: false,
@@ -242,11 +280,11 @@
                         });
                     }
                 } else {
-                    // Klasik Ekle (Sadece A ve B var)
+                    // --- KLASİK (C Boş, A ve B Dolu) ---
                     if(colA.length > 0) {
-                        classicQuestions.push({
-                            word: colA, // Cevap
-                            hint: colB, // İpucu
+                        classicData.push({
+                            word: colA,
+                            hint: colB,
                             revealed: new Array(colA.replace(/\s+/g, '').length).fill(false)
                         });
                     }
@@ -254,108 +292,205 @@
             }
         }
 
-        function toTrUpper(str) {
-            return str.toLocaleUpperCase('tr-TR');
+        // --- SEKME DEĞİŞTİRME ---
+        function switchTab(tabName) {
+            activeTab = tabName;
+            
+            // Butonları güncelle
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.dataset.tab === tabName) btn.classList.add('active');
+            });
+
+            // İçeriği güncelle
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('tab-' + tabName).classList.add('active');
         }
 
-        // --- FAZ 1: KLASİK ---
-        function startClassicPhase() {
-            if(classicQuestions.length === 0) {
-                // Klasik yoksa direkt Bundle'a geç
-                startBundlePhase();
-                return;
-            }
-            currentPhase = 1;
-            qIndex = 0;
-            document.getElementById('game-area').style.display = 'block';
-            document.getElementById('game-area').classList.remove('bundle-active');
-            loadClassicQuestion();
-        }
+        function toTrUpper(str) { return str.toLocaleUpperCase('tr-TR'); }
 
+        // ==========================================
+        // 1. SEKME: KLASİK OYUN MANTIĞI
+        // ==========================================
         function loadClassicQuestion() {
-            if(qIndex >= classicQuestions.length) {
-                // Klasikler bitti, Bundle'a geç
-                startBundlePhase();
+            if(classicData.length === 0) {
+                document.getElementById('tab-classic').innerHTML = "<h2>Sorular Bitti!</h2>";
+                return;
+            }
+            if(state.classic.idx >= classicData.length) {
+                document.getElementById('tab-classic').innerHTML = `<h2>Tebrikler!</h2><p>Tüm kelimeler bitti.</p><h1>${state.classic.score}</h1>`;
+                startConfetti();
                 return;
             }
 
-            activeQuestion = classicQuestions[qIndex];
-            
-            // UI Ayarla
-            const badge = document.getElementById('mode-badge');
-            badge.innerText = "1. BÖLÜM: KLASİK";
-            badge.className = "mode-badge bg-classic";
-            
-            const title = document.getElementById('game-title');
-            title.innerText = "Gizli Kelimeyi Bul";
-            title.style.color = "var(--primary)";
+            const q = classicData[state.classic.idx];
+            document.getElementById('c-count').innerText = `Soru: ${state.classic.idx + 1}/${classicData.length}`;
+            document.getElementById('c-score').innerText = state.classic.score;
+            document.getElementById('c-hint').innerText = q.hint;
+            document.getElementById('c-input').value = "";
+            document.getElementById('c-feedback').innerText = "";
 
-            updateStats(qIndex + 1, classicQuestions.length);
-            
-            document.getElementById('hint-box').innerText = activeQuestion.hint;
-            resetInputArea();
-            
-            // Kelimeyi Çiz
-            const wordArea = document.getElementById('word-area');
-            wordArea.innerHTML = '';
-            renderWordRow(activeQuestion.word, activeQuestion.revealed, wordArea, false);
+            const area = document.getElementById('c-word-area');
+            area.innerHTML = '';
+            renderWordRow(q.word, q.revealed, area, false, 'c');
         }
 
-        // --- FAZ 2: BUNDLE ---
-        function startBundlePhase() {
-            if(bundleQuestions.length === 0) {
-                showFinal();
-                return;
+        function getLetterClassic() {
+            const q = classicData[state.classic.idx];
+            let closed = [];
+            q.revealed.forEach((r, i) => { if(!r) closed.push(i); });
+
+            if(closed.length > 0) {
+                const rnd = closed[Math.floor(Math.random() * closed.length)];
+                q.revealed[rnd] = true;
+                state.classic.score -= 100;
+                
+                // UI Güncelle
+                loadClassicQuestion(); // Re-render
+                
+                if(q.revealed.every(Boolean)) {
+                     // Harflerle bittiyse otomatik geç
+                     setTimeout(() => {
+                         state.classic.idx++;
+                         loadClassicQuestion();
+                     }, 1500);
+                }
             }
-            currentPhase = 2;
-            qIndex = 0;
-            document.getElementById('game-area').style.display = 'block';
-            document.getElementById('game-area').classList.add('bundle-active');
-            loadBundleQuestion();
         }
 
+        function checkClassic() {
+            const input = document.getElementById('c-input');
+            const guess = toTrUpper(input.value.trim()).replace(/\s+/g, '');
+            const q = classicData[state.classic.idx];
+            const target = toTrUpper(q.word).replace(/\s+/g, '');
+
+            if(guess === target) {
+                document.getElementById('c-feedback').innerText = "DOĞRU!";
+                document.getElementById('c-feedback').style.color = "var(--success)";
+                state.classic.score += 500;
+                q.revealed.fill(true);
+                loadClassicQuestion(); // Harfleri aç
+                setTimeout(() => {
+                    state.classic.idx++;
+                    loadClassicQuestion();
+                }, 1500);
+            } else {
+                document.getElementById('c-feedback').innerText = "YANLIŞ";
+                document.getElementById('c-feedback').style.color = "red";
+            }
+        }
+
+
+        // ==========================================
+        // 2. SEKME: BUNDLE OYUN MANTIĞI
+        // ==========================================
         function loadBundleQuestion() {
-            if(qIndex >= bundleQuestions.length) {
-                showFinal();
+            if(bundleData.length === 0) {
+                document.getElementById('tab-bundle').innerHTML = "<h2>Bundle Bulunamadı</h2>";
+                return;
+            }
+            if(state.bundle.idx >= bundleData.length) {
+                document.getElementById('tab-bundle').innerHTML = `<h2>Harika!</h2><p>Tüm bundlelar bitti.</p><h1>${state.bundle.score}</h1>`;
+                startConfetti();
                 return;
             }
 
-            activeQuestion = bundleQuestions[qIndex];
+            const q = bundleData[state.bundle.idx];
+            document.getElementById('b-title').innerText = q.title;
+            document.getElementById('b-count').innerText = `Bölüm: ${state.bundle.idx + 1}/${bundleData.length}`;
+            document.getElementById('b-score').innerText = state.bundle.score;
+            document.getElementById('b-hint').innerText = q.hint;
+            document.getElementById('b-input').value = "";
+            document.getElementById('b-feedback').innerText = "";
 
-            // UI Ayarla
-            const badge = document.getElementById('mode-badge');
-            badge.innerText = "2. BÖLÜM: KONU EŞLEŞTİRME";
-            badge.className = "mode-badge bg-bundle";
-            
-            const title = document.getElementById('game-title');
-            title.innerText = activeQuestion.title; // Konu Başlığı
-            title.style.color = "var(--bundle)";
+            const area = document.getElementById('b-word-area');
+            area.innerHTML = '';
 
-            updateStats(qIndex + 1, bundleQuestions.length);
-
-            document.getElementById('hint-box').innerText = activeQuestion.hint;
-            resetInputArea();
-
-            // Kelimeleri Çiz
-            const wordArea = document.getElementById('word-area');
-            wordArea.innerHTML = '';
-            
-            activeQuestion.items.forEach((item, idx) => {
+            q.items.forEach((item, idx) => {
                 const group = document.createElement('div');
                 group.className = 'question-group' + (item.solved ? ' solved' : '');
-                renderWordRow(item.word, item.revealed, group, item.solved);
-                wordArea.appendChild(group);
+                renderWordRow(item.word, item.revealed, group, item.solved, 'b');
+                area.appendChild(group);
             });
         }
 
+        function getLetterBundle() {
+            const q = bundleData[state.bundle.idx];
+            let candidates = [];
+            
+            q.items.forEach((item, iIdx) => {
+                if(!item.solved) {
+                    item.revealed.forEach((r, cIdx) => { if(!r) candidates.push({iIdx, cIdx}); });
+                }
+            });
+
+            if(candidates.length > 0) {
+                const choice = candidates[Math.floor(Math.random() * candidates.length)];
+                const item = q.items[choice.iIdx];
+                item.revealed[choice.cIdx] = true;
+                state.bundle.score -= 100;
+
+                if(item.revealed.every(Boolean) && !item.solved) {
+                    item.solved = true;
+                }
+
+                loadBundleQuestion(); // Re-render
+
+                if(q.items.every(i => i.solved)) {
+                    setTimeout(() => {
+                        state.bundle.idx++;
+                        loadBundleQuestion();
+                    }, 2000);
+                }
+            }
+        }
+
+        function checkBundle() {
+            const input = document.getElementById('b-input');
+            const guess = toTrUpper(input.value.trim()).replace(/\s+/g, '');
+            const q = bundleData[state.bundle.idx];
+            let found = false;
+
+            q.items.forEach(item => {
+                if(!item.solved) {
+                    const target = toTrUpper(item.word).replace(/\s+/g, '');
+                    if(guess === target) {
+                        item.solved = true;
+                        item.revealed.fill(true);
+                        state.bundle.score += 300;
+                        found = true;
+                    }
+                }
+            });
+
+            if(found) {
+                document.getElementById('b-feedback').innerText = "BULUNDU!";
+                document.getElementById('b-feedback').style.color = "var(--success)";
+                loadBundleQuestion();
+                
+                if(q.items.every(i => i.solved)) {
+                    setTimeout(() => {
+                        state.bundle.idx++;
+                        loadBundleQuestion();
+                    }, 2000);
+                }
+            } else {
+                document.getElementById('b-feedback').innerText = "LİSTEDE YOK";
+                document.getElementById('b-feedback').style.color = "red";
+            }
+        }
+
+
         // --- ORTAK RENDER FONKSİYONU ---
-        function renderWordRow(wordStr, revealedArr, container, isSolved) {
+        function renderWordRow(wordStr, revealedArr, container, isSolved, prefix) {
             const row = document.createElement('div');
             row.className = 'word-row';
             if(wordStr.length > 11) row.classList.add('long-word');
 
             const chars = wordStr.split('');
-            let charCount = 0;
+            let cCount = 0;
 
             chars.forEach(char => {
                 if(char === ' ') {
@@ -365,181 +500,26 @@
                 } else {
                     const box = document.createElement('div');
                     box.className = 'letter-box';
-                    if(isSolved || revealedArr[charCount]) {
+                    if(isSolved || revealedArr[cCount]) {
                         box.classList.add('revealed');
                         box.innerText = toTrUpper(char);
                     } else {
                         box.innerText = "?";
                     }
                     row.appendChild(box);
-                    charCount++;
+                    cCount++;
                 }
             });
             container.appendChild(row);
         }
 
-        // --- OYUN MANTIĞI ---
-        function getLetter() {
-            if(currentPhase === 1) {
-                // Klasik Harf
-                let closedIndices = [];
-                activeQuestion.revealed.forEach((r, i) => { if(!r) closedIndices.push(i); });
-                
-                if(closedIndices.length > 0) {
-                    const rnd = closedIndices[Math.floor(Math.random() * closedIndices.length)];
-                    activeQuestion.revealed[rnd] = true;
-                    score -= 100;
-                    refreshUI();
-                    
-                    if(activeQuestion.revealed.every(Boolean)) {
-                        giveFeedback(true, "Harfler bitti, devam ediliyor...");
-                        nextDelay(loadClassicQuestion);
-                    }
-                }
-            } else {
-                // Bundle Harf
-                let candidates = [];
-                activeQuestion.items.forEach((item, iIdx) => {
-                    if(!item.solved) {
-                        item.revealed.forEach((r, cIdx) => {
-                            if(!r) candidates.push({iIdx, cIdx});
-                        });
-                    }
-                });
-
-                if(candidates.length > 0) {
-                    const choice = candidates[Math.floor(Math.random() * candidates.length)];
-                    const targetItem = activeQuestion.items[choice.iIdx];
-                    targetItem.revealed[choice.cIdx] = true;
-                    score -= 100;
-                    
-                    // Kelime tamamlandı mı?
-                    if(targetItem.revealed.every(Boolean) && !targetItem.solved) {
-                        targetItem.solved = true;
-                        giveFeedback(true, "Kelime Tamamlandı!");
-                    }
-                    
-                    refreshUI();
-                    
-                    // Bundle bitti mi?
-                    if(activeQuestion.items.every(i => i.solved)) {
-                        giveFeedback(true, "Konu Tamamlandı!");
-                        nextDelay(loadBundleQuestion);
-                    }
-                }
-            }
-        }
-
-        function checkGuess() {
-            const input = document.getElementById('guess-input');
-            const val = toTrUpper(input.value.trim()).replace(/\s+/g, '');
-            if(!val) return;
-
-            if(currentPhase === 1) {
-                // Klasik Kontrol
-                const target = toTrUpper(activeQuestion.word).replace(/\s+/g, '');
-                if(val === target) {
-                    activeQuestion.revealed.fill(true);
-                    score += 500;
-                    giveFeedback(true, "Doğru Cevap!");
-                    refreshUI();
-                    nextDelay(loadClassicQuestion);
-                } else {
-                    giveFeedback(false, "Yanlış Cevap");
-                }
-            } else {
-                // Bundle Kontrol
-                let found = false;
-                activeQuestion.items.forEach(item => {
-                    if(!item.solved) {
-                        const target = toTrUpper(item.word).replace(/\s+/g, '');
-                        if(val === target) {
-                            item.solved = true;
-                            item.revealed.fill(true);
-                            score += 300;
-                            found = true;
-                        }
-                    }
-                });
-
-                if(found) {
-                    input.value = '';
-                    giveFeedback(true, "Harika! Birini buldun!");
-                    refreshUI();
-                    if(activeQuestion.items.every(i => i.solved)) {
-                        giveFeedback(true, "Konu Tamamlandı!");
-                        nextDelay(loadBundleQuestion);
-                    }
-                } else {
-                    giveFeedback(false, "Bulunamadı veya zaten açık.");
-                }
-            }
-        }
-
-        // --- YARDIMCILAR ---
-        function refreshUI() {
-            document.getElementById('score').innerText = `Puan: ${score}`;
-            const wordArea = document.getElementById('word-area');
-            wordArea.innerHTML = '';
-
-            if(currentPhase === 1) {
-                renderWordRow(activeQuestion.word, activeQuestion.revealed, wordArea, false);
-            } else {
-                activeQuestion.items.forEach(item => {
-                    const group = document.createElement('div');
-                    group.className = 'question-group' + (item.solved ? ' solved' : '');
-                    renderWordRow(item.word, item.revealed, group, item.solved);
-                    wordArea.appendChild(group);
-                });
-            }
-        }
-
-        function nextDelay(callback) {
-            document.getElementById('guess-input').disabled = true;
-            document.getElementById('btn-submit').disabled = true;
-            setTimeout(() => {
-                qIndex++;
-                callback();
-            }, 1500);
-        }
-
-        function resetInputArea() {
-            document.getElementById('guess-input').value = '';
-            document.getElementById('feedback').innerText = '';
-            document.getElementById('score').innerText = `Puan: ${score}`;
-            document.getElementById('guess-input').disabled = false;
-            document.getElementById('btn-submit').disabled = false;
-        }
-
-        function updateStats(current, total) {
-            document.getElementById('q-count').innerText = `Soru: ${current}/${total}`;
-        }
-
-        function giveFeedback(success, msg) {
-            const el = document.getElementById('feedback');
-            el.innerText = msg;
-            el.style.color = success ? "var(--success)" : "#e74c3c";
-            if(!success) {
-                const inp = document.getElementById('guess-input');
-                inp.style.borderColor = "#e74c3c";
-                setTimeout(() => inp.style.borderColor = "#dfe6e9", 500);
-            }
-        }
-
-        function showFinal() {
-            document.getElementById('game-area').style.display = 'none';
-            document.getElementById('final-screen').style.display = 'flex';
-            document.getElementById('final-score').innerText = score;
-            startConfetti();
-        }
-
         function startConfetti() {
             const colors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6'];
-            for(let i=0; i<100; i++) {
+            for(let i=0; i<50; i++) {
                 let c = document.createElement('div');
                 c.className = 'confetti';
                 c.style.left = Math.random() * 100 + 'vw';
-                c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                c.style.background = colors[Math.floor(Math.random() * colors.length)];
                 c.style.animationDuration = (Math.random() * 3 + 2) + 's';
                 document.body.appendChild(c);
             }
