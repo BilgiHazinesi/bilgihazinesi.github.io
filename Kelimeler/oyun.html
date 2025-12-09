@@ -7,12 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f0f2f5;
-            --primary: #4a90e2; /* Kelime Avı Mavi */
-            --bundle: #e67e22;  /* Bundle Turuncu */
+            --bg-color: #f8f9fa;
+            --primary: #3498db; /* Mavi - Kelime Avı */
+            --bundle: #e67e22;  /* Turuncu - Bundle */
             --correct: #27ae60; /* Yeşil */
             --present: #f1c40f; /* Sarı */
-            --absent: #7f8c8d;  /* Gri */
+            --absent: #95a5a6;  /* Gri */
             --text: #2c3e50;
         }
 
@@ -27,424 +27,348 @@
 
         .container {
             max-width: 600px; width: 100%;
-            background: white; border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            overflow: hidden; min-height: 600px;
+            background: white; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden; margin-top: 10px;
         }
 
-        /* SEKME BUTONLARI */
-        .tabs { display: flex; background: #dfe6e9; }
+        /* --- SEKMELER (TABS) --- */
+        .tabs { display: flex; border-bottom: 2px solid #ecf0f1; }
         .tab-btn {
-            flex: 1; padding: 18px; border: none; cursor: pointer;
-            font-size: 1.1rem; font-weight: 800; color: #7f8c8d;
-            background: transparent; transition: 0.3s;
-            border-bottom: 5px solid transparent;
+            flex: 1; padding: 15px; border: none; background: #fff;
+            font-size: 1rem; font-weight: 800; color: #95a5a6;
+            cursor: pointer; transition: 0.3s;
         }
-        .tab-btn.active-classic { color: var(--primary); border-bottom-color: var(--primary); background: white; }
-        .tab-btn.active-bundle { color: var(--bundle); border-bottom-color: var(--bundle); background: white; }
+        .tab-btn.active.tab-classic { color: var(--primary); border-bottom: 4px solid var(--primary); background: #ebf5fb; }
+        .tab-btn.active.tab-bundle { color: var(--bundle); border-bottom: 4px solid var(--bundle); background: #fdf2e9; }
 
         .tab-content { display: none; padding: 20px; text-align: center; }
-        .tab-content.active { display: block; animation: fadeIn 0.4s; }
+        .tab-content.active { display: block; animation: fadeEffect 0.5s; }
+        @keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
+        /* --- OYUN ALANLARI --- */
         h2 { margin: 0 0 10px 0; font-weight: 900; }
+        .info-bar { font-weight: 700; color: #7f8c8d; margin-bottom: 15px; font-size: 0.9rem; }
+        
         .hint-box {
-            background: #fff3cd; color: #856404; padding: 15px;
-            border-radius: 10px; margin-bottom: 20px; font-weight: 700;
+            background: #fff3cd; color: #856404; padding: 10px;
+            border-radius: 8px; margin-bottom: 20px; font-weight: 700;
         }
 
-        /* --- KELİME AVI STİLLERİ --- */
-        .word-container {
-            display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; flex-wrap: wrap;
-        }
+        /* Kelime Avı Kutuları */
+        .ka-container { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         .ka-box {
-            width: 45px; height: 55px; background: #e9ecef; border-radius: 8px;
+            width: 40px; height: 50px; background: #e9ecef; border-radius: 6px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.6rem; font-weight: 800; color: transparent;
-            box-shadow: inset 0 -3px rgba(0,0,0,0.1);
+            font-size: 1.4rem; font-weight: 800; color: transparent;
         }
-        .ka-box.revealed { background: var(--primary); color: white; text-shadow: 1px 1px 0 rgba(0,0,0,0.2); }
+        .ka-box.revealed { background: var(--primary); color: white; }
 
-        /* --- BUNDLE (WORDLE) STİLLERİ --- */
-        .grid {
-            display: grid; gap: 5px; justify-content: center; margin-bottom: 20px;
-        }
+        /* Bundle Grid */
+        .grid { display: grid; gap: 5px; justify-content: center; margin-bottom: 20px; }
         .grid-row { display: flex; gap: 5px; }
         .w-box {
-            width: 50px; height: 50px; border: 2px solid #dee2e6;
+            width: 45px; height: 45px; border: 2px solid #dee2e6;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.8rem; font-weight: 900; text-transform: uppercase;
-            color: var(--text);
+            font-size: 1.5rem; font-weight: 900; text-transform: uppercase;
         }
-        /* Bundle Renkleri */
-        .w-correct { background-color: var(--correct); color: white; border-color: var(--correct); }
-        .w-present { background-color: var(--present); color: white; border-color: var(--present); }
-        .w-absent  { background-color: var(--absent); color: white; border-color: var(--absent); }
+        .w-correct { background: var(--correct); color: white; border-color: var(--correct); }
+        .w-present { background: var(--present); color: white; border-color: var(--present); }
+        .w-absent { background: var(--absent); color: white; border-color: var(--absent); }
 
-        /* ORTAK KONTROLLER */
+        /* Input ve Butonlar */
         input[type="text"] {
-            width: 70%; padding: 15px; font-size: 1.2rem; text-align: center;
-            border: 2px solid #dfe6e9; border-radius: 50px; outline: none;
-            font-weight: 700; margin-bottom: 10px; text-transform: uppercase;
+            padding: 12px; width: 60%; border: 2px solid #dfe6e9;
+            border-radius: 50px; text-align: center; font-weight: 700;
+            font-size: 1.1rem; outline: none; margin-bottom: 10px;
+            text-transform: uppercase;
         }
-        input[type="text"]:focus { border-color: var(--primary); }
+        input:focus { border-color: var(--text); }
         
-        button {
-            padding: 12px 30px; border-radius: 50px; border: none;
-            font-weight: 800; cursor: pointer; font-size: 1rem; color: white;
-            transition: transform 0.1s; margin: 5px;
+        .btn {
+            padding: 10px 25px; border: none; border-radius: 50px;
+            color: white; font-weight: 800; cursor: pointer; margin: 5px;
         }
-        button:active { transform: scale(0.95); }
-        .btn-hint { background: #f39c12; }
-        .btn-submit { background: var(--primary); }
-        .btn-bundle { background: var(--bundle); }
-        
-        .feedback { height: 30px; font-weight: 800; margin-top: 10px; font-size: 1.2rem; }
+        .btn:active { transform: scale(0.95); }
+        .btn-hint { background: #f1c40f; color: #5d4037; }
+        .btn-check-c { background: var(--primary); }
+        .btn-check-b { background: var(--bundle); }
 
-        /* Konfeti */
-        .confetti { position: fixed; width: 10px; height: 10px; top: -10px; z-index: 999; animation: fall linear forwards; }
-        @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+        .feedback { min-height: 25px; font-weight: 800; margin-top: 10px; font-size: 1.1rem; }
 
-        /* Yükleme Ekranı */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 1000; display: flex; justify-content: center; align-items: center;
-            flex-direction: column;
+            background: white; z-index: 999; display: flex; justify-content: center; align-items: center;
         }
-        .spinner {
-            width: 40px; height: 40px; border: 5px solid #f3f3f3;
-            border-top: 5px solid var(--primary); border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div id="loader">
-    <div class="spinner"></div>
-    <h3 style="color:#7f8c8d; margin-top:20px;">Oyun Hazırlanıyor...</h3>
-</div>
+<div id="loader"><h3>Yükleniyor...</h3></div>
 
-<div class="container" id="game-container" style="display:none;">
-    
+<div class="container" id="game-app" style="display:none;">
     <div class="tabs">
-        <button class="tab-btn active-classic" onclick="openTab('classic')" id="btn-tab-classic">KELİME AVI</button>
-        <button class="tab-btn" onclick="openTab('bundle')" id="btn-tab-bundle">BUNDLE (WORDLE)</button>
+        <button class="tab-btn tab-classic active" onclick="switchTab('classic')">KELİME AVI</button>
+        <button class="tab-btn tab-bundle" onclick="switchTab('bundle')">BUNDLE (WORDLE)</button>
     </div>
 
     <div id="classic" class="tab-content active">
         <h2 style="color:var(--primary)">Kelime Avı</h2>
-        <div style="color:#7f8c8d; margin-bottom:15px; font-weight:700;">
-            Soru: <span id="c-idx">1</span> | Puan: <span id="c-score" style="color:var(--primary)">0</span>
-        </div>
-        
-        <div class="hint-box" id="c-hint">...</div>
-        <div class="word-container" id="c-board"></div>
+        <div class="info-bar">Soru: <span id="c-idx">1</span></div>
+        <div id="c-hint" class="hint-box">...</div>
+        <div id="c-board" class="ka-container"></div>
         
         <div>
-            <button class="btn-hint" onclick="buyLetter()">Harf Al (-100)</button>
-            <br>
-            <input type="text" id="c-input" placeholder="TAHMİNİNİZ" maxlength="20">
-            <br>
-            <button class="btn-submit" onclick="checkClassic()">YANITLA</button>
+            <button class="btn btn-hint" onclick="c_getLetter()">Harf Al</button><br>
+            <input type="text" id="c-input" placeholder="Cevabı Yaz"><br>
+            <button class="btn btn-check-c" onclick="c_check()">YANITLA</button>
         </div>
-        <div class="feedback" id="c-msg"></div>
+        <div id="c-msg" class="feedback"></div>
     </div>
 
     <div id="bundle" class="tab-content">
         <h2 style="color:var(--bundle)">Bundle</h2>
-        <p style="color:#7f8c8d; font-size:0.9rem;">Gizli kelimeyi bulmak için 6 hakkın var!</p>
-        <div style="color:#7f8c8d; margin-bottom:15px; font-weight:700;">
-            Bölüm: <span id="b-idx">1</span> | Puan: <span id="b-score" style="color:var(--bundle)">0</span>
+        <div class="info-bar">Soru: <span id="b-idx">1</span> (6 Hakkın Var)</div>
+        <div id="b-grid" class="grid"></div>
+        
+        <div>
+            <input type="text" id="b-input" placeholder="TAHMİN ET"><br>
+            <button class="btn btn-check-b" onclick="b_check()">KONTROL ET</button>
         </div>
-
-        <div class="grid" id="b-grid"></div>
-
-        <div id="b-controls">
-            <input type="text" id="b-input" placeholder="KELİME GİRİN" maxlength="20">
-            <br>
-            <button class="btn-bundle" onclick="checkBundle()">KONTROL ET</button>
-        </div>
-        <div class="feedback" id="b-msg"></div>
+        <div id="b-msg" class="feedback"></div>
     </div>
-
 </div>
 
 <script>
-    // ==========================================
-    // AYARLAR: CSV LİNKİNİ BURAYA YAPIŞTIRIN
-    // ==========================================
+    // CSV LINKINI BURAYA EKLE
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoGIsfx3q4A24MbeGif6c1Nnr6NSOw5PS40df8j34MyppgdNp4T4My20jeEH0kKJrpuehciw3J_QgR/pub?gid=0&single=true&output=csv";
-    // ==========================================
 
-    let classicData = [];
-    let bundleData = []; // Sadece C sütunu kelimeleri
-    
-    // Oyun Durumları
-    let cState = { idx: 0, score: 0, revealed: [] };
-    let bState = { idx: 0, score: 0, guesses: [], gameOver: false };
+    let listClassic = []; // {word, hint} -> A ve B sütunundan
+    let listBundle = [];  // {word} -> C sütunundan
+
+    // Oyun Durumu
+    let cState = { idx: 0, revealed: [] };
+    let bState = { idx: 0, guesses: [], gameOver: false };
 
     document.addEventListener('DOMContentLoaded', () => {
         fetchData();
-        // Enter tuşu desteği
-        document.getElementById('c-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') checkClassic(); });
-        document.getElementById('b-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') checkBundle(); });
+        document.getElementById('c-input').addEventListener('keypress', e => { if(e.key==='Enter') c_check(); });
+        document.getElementById('b-input').addEventListener('keypress', e => { if(e.key==='Enter') b_check(); });
     });
 
     function fetchData() {
-        if(CSV_URL.includes("BURAYA")) { alert("Lütfen CSV Linkini Ekleyin!"); return; }
+        if(CSV_URL.includes("BURAYA")) { alert("Lütfen CSV linkini ekleyin."); return; }
         fetch(CSV_URL).then(r => r.text()).then(txt => {
             parseCSV(txt);
             document.getElementById('loader').style.display = 'none';
-            document.getElementById('game-container').style.display = 'block';
+            document.getElementById('game-app').style.display = 'block';
             initClassic();
             initBundle();
         }).catch(e => alert("Hata: " + e));
     }
 
+    // --- KRİTİK NOKTA: AYRIŞTIRMA MANTIĞI ---
     function parseCSV(text) {
         const rows = text.split(/\r?\n/);
         for(let i=1; i<rows.length; i++) {
+            // Satırı virgülle ayır (Basit parser)
             const row = rows[i].split(',');
-            if(row.length < 1) continue;
             
+            // Eğer satır boşsa geç
+            if(row.length < 1) continue;
+
+            // Sütunları Temizle
             const colA = row[0] ? row[0].trim() : "";
             const colB = row[1] ? row[1].trim() : "";
-            const colC = row.length > 2 ? row.slice(2).join(',').trim() : "";
+            const colC = row[2] ? row[2].trim() : ""; // Sadece C hücresi (3. sütun)
 
-            // MANTIK: C Doluysa -> Bundle, C Boşsa -> Klasik
+            // 1. Kural: A ve B doluysa -> Kelime Avı listesine ekle
+            if(colA.length > 0) {
+                listClassic.push({ word: colA, hint: colB });
+            }
+
+            // 2. Kural: C doluysa -> Bundle listesine ekle (A ve B'den bağımsız)
             if(colC.length > 0) {
-                // Bundle için sadece kelimeye ihtiyacımız var
-                bundleData.push(colC);
-            } else if(colA.length > 0) {
-                classicData.push({ word: colA, hint: colB });
+                listBundle.push(colC);
             }
         }
     }
 
-    function toTrUpper(s) { return s.toLocaleUpperCase('tr-TR'); }
-
-    // --- SEKME GEÇİŞİ ---
-    function openTab(tab) {
+    function switchTab(tab) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.className = 'tab-btn');
-        
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(tab).classList.add('active');
-        document.getElementById('btn-tab-' + tab).classList.add(tab === 'classic' ? 'active-classic' : 'active-bundle');
+        document.querySelector(`.tab-${tab}`).classList.add('active');
     }
 
-    // ==========================================
-    // 1. KELİME AVI (KLASİK)
-    // ==========================================
+    function toTr(s) { return s.toLocaleUpperCase('tr-TR'); }
+
+    // === KELİME AVI MOTORU ===
     function initClassic() {
-        if(cState.idx >= classicData.length) {
-            document.getElementById('classic').innerHTML = `<h2>Tebrikler!</h2><h1>Puan: ${cState.score}</h1>`;
-            startConfetti();
+        if(cState.idx >= listClassic.length) {
+            document.getElementById('classic').innerHTML = "<h2>Bitti!</h2><p>Kelime Avı Tamamlandı.</p>";
             return;
         }
-        const q = classicData[cState.idx];
+        const q = listClassic[cState.idx];
         cState.revealed = new Array(q.word.length).fill(false);
         
-        document.getElementById('c-idx').innerText = (cState.idx + 1) + "/" + classicData.length;
-        document.getElementById('c-score').innerText = cState.score;
+        document.getElementById('c-idx').innerText = (cState.idx + 1) + " / " + listClassic.length;
         document.getElementById('c-hint').innerText = q.hint;
-        document.getElementById('c-input').value = "";
         document.getElementById('c-msg').innerText = "";
+        document.getElementById('c-input').value = "";
         
-        renderClassicBoard();
+        c_render();
     }
 
-    function renderClassicBoard() {
+    function c_render() {
         const board = document.getElementById('c-board');
         board.innerHTML = '';
-        const word = classicData[cState.idx].word;
-        
-        for(let i=0; i<word.length; i++) {
-            const box = document.createElement('div');
-            box.className = 'ka-box';
-            if(word[i] === ' ') {
-                box.style.opacity = 0; // Boşluk
-                cState.revealed[i] = true;
+        const w = listClassic[cState.idx].word;
+        for(let i=0; i<w.length; i++) {
+            const d = document.createElement('div');
+            d.className = 'ka-box';
+            if(w[i] === ' ') {
+                d.style.opacity = 0; cState.revealed[i] = true;
             } else if(cState.revealed[i]) {
-                box.classList.add('revealed');
-                box.innerText = toTrUpper(word[i]);
+                d.className += ' revealed'; d.innerText = toTr(w[i]);
             } else {
-                box.innerText = "?";
+                d.innerText = "?";
             }
-            board.appendChild(box);
+            board.appendChild(d);
         }
     }
 
-    function buyLetter() {
+    function c_getLetter() {
         const closed = [];
         cState.revealed.forEach((r, i) => { if(!r) closed.push(i); });
         if(closed.length > 0) {
-            const rnd = closed[Math.floor(Math.random() * closed.length)];
+            const rnd = closed[Math.floor(Math.random()*closed.length)];
             cState.revealed[rnd] = true;
-            cState.score -= 100;
-            renderClassicBoard();
-            document.getElementById('c-score').innerText = cState.score;
+            c_render();
         }
     }
 
-    function checkClassic() {
-        const guess = toTrUpper(document.getElementById('c-input').value.trim()).replace(/\s/g, '');
-        const target = toTrUpper(classicData[cState.idx].word).replace(/\s/g, '');
+    function c_check() {
+        const inp = document.getElementById('c-input');
+        const guess = toTr(inp.value).replace(/\s/g,'');
+        const target = toTr(listClassic[cState.idx].word).replace(/\s/g,'');
         
         if(guess === target) {
-            cState.score += 500;
-            cState.idx++;
             document.getElementById('c-msg').style.color = "var(--correct)";
             document.getElementById('c-msg').innerText = "DOĞRU!";
-            setTimeout(initClassic, 1500);
+            cState.revealed.fill(true);
+            c_render();
+            setTimeout(() => { cState.idx++; initClassic(); }, 1500);
         } else {
             document.getElementById('c-msg').style.color = "red";
             document.getElementById('c-msg').innerText = "YANLIŞ";
         }
     }
 
-    // ==========================================
-    // 2. BUNDLE (WORDLE)
-    // ==========================================
+    // === BUNDLE (WORDLE) MOTORU ===
     function initBundle() {
-        if(bState.idx >= bundleData.length) {
-            document.getElementById('bundle').innerHTML = `<h2>Tüm Bundlelar Bitti!</h2><h1>Puan: ${bState.score}</h1>`;
-            startConfetti();
+        if(bState.idx >= listBundle.length) {
+            document.getElementById('bundle').innerHTML = "<h2>Bitti!</h2><p>Tüm Bundle Soruları Çözüldü.</p>";
             return;
         }
         bState.guesses = [];
         bState.gameOver = false;
         
-        document.getElementById('b-idx').innerText = (bState.idx + 1) + "/" + bundleData.length;
-        document.getElementById('b-score').innerText = bState.score;
+        document.getElementById('b-idx').innerText = (bState.idx + 1) + " / " + listBundle.length;
         document.getElementById('b-input').value = "";
         document.getElementById('b-input').disabled = false;
         document.getElementById('b-msg').innerText = "";
         
-        // Input uzunluğunu kelimeye göre ayarla
-        const targetLen = bundleData[bState.idx].replace(/\s/g,'').length;
-        document.getElementById('b-input').setAttribute('maxlength', targetLen);
-        document.getElementById('b-input').setAttribute('placeholder', `${targetLen} HARFLİ KELİME`);
-
-        renderBundleGrid();
+        // Input uzunluk ayarı
+        const wLen = listBundle[bState.idx].length;
+        document.getElementById('b-input').setAttribute('maxlength', wLen);
+        document.getElementById('b-input').setAttribute('placeholder', `${wLen} HARFLİ KELİME`);
+        
+        b_render();
     }
 
-    function renderBundleGrid() {
+    function b_render() {
         const grid = document.getElementById('b-grid');
         grid.innerHTML = '';
-        const target = toTrUpper(bundleData[bState.idx]).replace(/\s/g, '');
+        const target = toTr(listBundle[bState.idx]);
         const len = target.length;
 
-        // Geçmiş tahminleri çiz
-        bState.guesses.forEach(guess => {
+        // Tahminleri Çiz
+        bState.guesses.forEach(g => {
             const row = document.createElement('div');
             row.className = 'grid-row';
             
-            // Harf kontrolü (Wordle Mantığı)
-            const targetChars = target.split('');
-            const guessChars = guess.split('');
-            
-            // Önce yeşilleri bul
+            // Renk Mantığı
+            const tChars = target.split('');
+            const gChars = g.split('');
             const status = new Array(len).fill('w-absent');
             const taken = new Array(len).fill(false);
 
-            guessChars.forEach((char, i) => {
-                if(char === targetChars[i]) {
-                    status[i] = 'w-correct';
-                    taken[i] = true;
-                }
+            // 1. Yeşilleri Bul
+            gChars.forEach((c, i) => {
+                if(c === tChars[i]) { status[i] = 'w-correct'; taken[i] = true; }
             });
-
-            // Sonra sarıları bul
-            guessChars.forEach((char, i) => {
+            // 2. Sarıları Bul
+            gChars.forEach((c, i) => {
                 if(status[i] !== 'w-correct') {
-                    const foundIdx = targetChars.findIndex((c, tI) => c === char && !taken[tI]);
-                    if(foundIdx !== -1) {
-                        status[i] = 'w-present';
-                        taken[foundIdx] = true;
-                    }
+                    const found = tChars.findIndex((tc, ti) => tc === c && !taken[ti]);
+                    if(found !== -1) { status[i] = 'w-present'; taken[found] = true; }
                 }
             });
 
-            // Kutuları oluştur
             for(let i=0; i<len; i++) {
-                const box = document.createElement('div');
-                box.className = `w-box ${status[i]}`;
-                box.innerText = guessChars[i];
-                row.appendChild(box);
+                const b = document.createElement('div');
+                b.className = `w-box ${status[i]}`;
+                b.innerText = gChars[i];
+                row.appendChild(b);
             }
             grid.appendChild(row);
         });
 
-        // Boş satırları çiz (Toplam 6 hak)
-        const remaining = 6 - bState.guesses.length;
-        for(let i=0; i<remaining; i++) {
-            const row = document.createElement('div');
-            row.className = 'grid-row';
+        // Boş Satırlar (Kalan Haklar)
+        const remain = 6 - bState.guesses.length;
+        for(let i=0; i<remain; i++) {
+            const r = document.createElement('div');
+            r.className = 'grid-row';
             for(let j=0; j<len; j++) {
-                const box = document.createElement('div');
-                box.className = 'w-box';
-                row.appendChild(box);
+                const b = document.createElement('div');
+                b.className = 'w-box';
+                r.appendChild(b);
             }
-            grid.appendChild(row);
+            grid.appendChild(r);
         }
     }
 
-    function checkBundle() {
+    function b_check() {
         if(bState.gameOver) return;
-        
-        const input = document.getElementById('b-input');
-        const guess = toTrUpper(input.value.trim()).replace(/\s/g, '');
-        const target = toTrUpper(bundleData[bState.idx]).replace(/\s/g, '');
+        const inp = document.getElementById('b-input');
+        const guess = toTr(inp.value.trim());
+        const target = toTr(listBundle[bState.idx]);
 
         if(guess.length !== target.length) {
-            document.getElementById('b-msg').innerText = `Kelime ${target.length} harfli olmalı!`;
-            document.getElementById('b-msg').style.color = "orange";
+            document.getElementById('b-msg').style.color = "#e67e22";
+            document.getElementById('b-msg').innerText = `${target.length} Harfli Olmalı!`;
             return;
         }
 
         bState.guesses.push(guess);
-        input.value = "";
-        renderBundleGrid();
+        inp.value = "";
+        b_render();
 
         if(guess === target) {
-            // KAZANDI
-            bState.score += (700 - (bState.guesses.length * 100)); // Hızlı bilirse çok puan
-            document.getElementById('b-msg').innerText = "HARİKA!";
             document.getElementById('b-msg').style.color = "var(--correct)";
+            document.getElementById('b-msg').innerText = "BULDUN!";
             bState.gameOver = true;
-            input.disabled = true;
-            setTimeout(() => {
-                bState.idx++;
-                initBundle();
-            }, 2000);
+            inp.disabled = true;
+            setTimeout(() => { bState.idx++; initBundle(); }, 2000);
         } else if(bState.guesses.length >= 6) {
-            // KAYBETTİ
-            document.getElementById('b-msg').innerText = `Bilemedin! Cevap: ${target}`;
             document.getElementById('b-msg').style.color = "red";
+            document.getElementById('b-msg').innerText = `CEVAP: ${target}`;
             bState.gameOver = true;
-            input.disabled = true;
-            setTimeout(() => {
-                bState.idx++; // Pas geç
-                initBundle();
-            }, 3000);
+            inp.disabled = true;
+            setTimeout(() => { bState.idx++; initBundle(); }, 3000);
         }
     }
-
-    function startConfetti() {
-        const colors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71'];
-        for(let i=0; i<100; i++) {
-            let c = document.createElement('div');
-            c.className = 'confetti';
-            c.style.left = Math.random()*100+'vw';
-            c.style.background = colors[Math.floor(Math.random()*colors.length)];
-            c.style.animationDuration = (Math.random()*3+2)+'s';
-            document.body.appendChild(c);
-        }
-    }
-
 </script>
 </body>
 </html>
