@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilgi Hazinesi: 3'lü Süper Tarama</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #eaf2f8;
+            color: #2c3e50;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- GİRİŞ EKRANI --- */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.98);
+            z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 20px; text-align: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5); border: 5px solid #2980b9;
+            width: 90%; max-width: 400px;
+        }
+        .login-input {
+            width: 85%; padding: 15px; font-size: 18px; margin: 10px 0;
+            border: 2px solid #bdc3c7; border-radius: 10px; text-align: center; font-family: inherit;
+        }
+        .start-btn {
+            background: #27ae60; color: white; border: none; padding: 15px 40px;
+            font-size: 20px; border-radius: 10px; cursor: pointer; font-weight: bold;
+            width: 100%; transition: 0.3s; margin-top: 15px;
+        }
+        .start-btn:hover { transform: scale(1.05); }
+
+        /* --- OYUN ALANI --- */
+        #gameContainer {
+            display: none; background: white; padding: 25px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 850px; width: 100%;
+            text-align: center; border-top: 8px solid #f39c12;
+        }
+        h2 { color: #d35400; margin-top: 0; }
+
+        /* Navigasyon */
+        .nav-panel {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; background: #ecf0f1; padding: 10px; border-radius: 10px;
+        }
+        .nav-btn {
+            background: #7f8c8d; color: white; border: none; padding: 8px 20px;
+            border-radius: 5px; cursor: pointer; font-weight: bold;
+        }
+
+        /* --- GÖRSEL SAHNELER --- */
+        .scene { display: none; } 
+
+        /* Soru 2: Mıknatıs (Hareketi Değiştirilmedi) */
+        .magnet-scene {
+            display: flex; justify-content: center; gap: 40px; margin: 50px 0; height: 150px;
+            align-items: flex-start;
+        }
+        .magnet-wrapper {
+            position: relative; display: flex; flex-direction: column; align-items: center;
+            transform-origin: top center; transition: transform 1s;
+        }
+        .string { width: 4px; height: 60px; background: #7f8c8d; margin-bottom: -2px; }
+        .magnet {
+            display: flex; width: 120px; height: 40px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden;
+            border: 2px solid #34495e;
+        }
+        .pole {
+            width: 50%; height: 100%; display: flex; justify-content: center; align-items: center;
+            font-weight: bold; font-size: 20px; color: white;
+        }
+        .pole.n { background: #e74c3c; } .pole.s { background: #3498db; }
+        .pole.unknown { background: #bdc3c7; color: #2c3e50; font-size: 24px; }
+        
+        /* Önceki Konumlar Korundu */
+        .m1-pos { transform: rotate(15deg); }
+        .m2-pos { transform: rotate(-10deg); }
+        .m3-pos { transform: rotate(20deg); }
+
+        /* Soru 3: Un Çuvalı */
+        .sack-container { display: flex; justify-content: center; gap: 40px; margin: 30px 0; }
+        .sack {
+            width: 90px; height: 110px;
+            background: radial-gradient(circle at 30% 30%, #fff3e0, #deb887);
+            border: 3px solid #8d6e63; border-radius: 10px 10px 25px 25px;
+            position: relative; box-shadow: 0 8px 10px rgba(0,0,0,0.2);
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; color: #5d4037; font-size: 20px;
+        }
+        .sack::before { content: ''; position: absolute; top: 20px; left: -5px; width: 96px; height: 6px; background: #5d4037; border-radius: 5px; }
+        .sack-label { text-align: center; margin-top: 10px; font-weight: bold; color: #5d4037; }
+
+        /* --- SORU METNİ VE INPUTLAR --- */
+        .question-text {
+            background: #fff8e1; border-left: 6px solid #f39c12;
+            padding: 20px; text-align: left; border-radius: 10px; margin-bottom: 20px;
+            font-size: 1.15em; line-height: 1.6;
+        }
+        .input-area { margin-top: 20px; display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 10px;}
+        
+        /* Genel Input */
+        #userAns { padding: 12px; width: 250px; border: 2px solid #bdc3c7; border-radius: 5px; font-size: 18px; text-align: center; display: block; }
+        
+        /* Mıknatıs Özel Inputları */
+        #magnetInputs { display: none; flex-direction: row; gap: 15px; align-items: center; justify-content: center; }
+        .mag-group { display: flex; gap: 5px; flex-direction: column; align-items: center; }
+        .mag-row { display: flex; gap: 5px; }
+        .pole-input { 
+            width: 40px; height: 40px; text-align: center; font-size: 20px; font-weight: bold; 
+            border: 2px solid #3498db; border-radius: 5px; text-transform: uppercase;
+        }
+        .pole-input::placeholder { color: #ccc; font-weight: normal; }
+
+        .btn-check {
+            background: #27ae60; color: white; border: none; padding: 12px 30px;
+            border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px;
+        }
+        .btn-check:hover { background: #219150; }
+
+        .feedback { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; text-align: left; }
+        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .wrong { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+        .btn-finish {
+            background: #c0392b; color: white; border: none; padding: 15px 40px;
+            font-size: 18px; border-radius: 30px; margin-top: 30px; cursor: pointer; display: none;
+            box-shadow: 0 5px #922b21; transition: 0.2s;
+        }
+        .btn-finish:active { transform: translateY(4px); box-shadow: none; }
+
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen">
+        <div class="login-box">
+            <h1>🎒 Bilgi Hazinesi</h1>
+            <h3>3'lü Süper Tarama</h3>
+            
+            <p><b>Sınıfını Seç:</b></p>
+            <select id="studentClass" class="login-input">
+                <option value="">-- Seçiniz --</option>
+                <option value="4-A">4-A</option>
+                <option value="4-B">4-B</option>
+                <option value="4-C">4-C</option>
+                <option value="4-D">4-D</option>
+            </select>
+
+            <p><b>Adın Soyadın:</b></p>
+            <input type="text" id="studentName" class="login-input" placeholder="Tam Adın">
+            
+            <button class="start-btn" onclick="startGame()">BAŞLA</button>
+        </div>
+    </div>
+
+    <div id="gameContainer">
+        <div class="nav-panel">
+            <button class="nav-btn" onclick="prevQ()">❮ Geri</button>
+            <span>SORU <span id="qNum">1</span> / 3</span>
+            <button class="nav-btn" onclick="nextQ()">İleri ❯</button>
+        </div>
+
+        <h2 id="qTitle">...</h2>
+
+        <div id="scene1" class="scene">
+            <div class="question-text">
+                Deniz, Yekta, Bora, Arın ve Naz isimli beş öğrenci, yemekhanede arka arkaya sıraya girmişlerdir.<br><br>
+                • Sırada toplam 5 kişi vardır.<br>
+                • Gruptaki kız öğrenci, sıranın <u>tam ortasındadır</u>.<br>
+                • Deniz'in arkasında sadece 1 kişi vardır.<br>
+                • Bora sıranın ilk sırasında değildir.<br>
+                • Yekta; Naz ile bir diğer arkadaşının tam arasındadır.<br><br>
+                <strong>SORU:</strong> Sıranın <u>en sonundaki</u> kişi ile <u>en başındaki</u> kişinin isimlerini sırayla yan yana yazarsak hangi sözcük oluşur?
+            </div>
+        </div>
+
+        <div id="scene2" class="scene">
+            <div class="magnet-scene">
+                <div class="magnet-wrapper m1-pos">
+                    <div class="string"></div>
+                    <div class="magnet">
+                        <div class="pole n">N</div>
+                        <div class="pole unknown">?</div>
+                    </div>
+                    <div style="font-size:12px; margin-top:5px; color:#7f8c8d;">1. Mıknatıs</div>
+                </div>
+                <div class="magnet-wrapper m2-pos">
+                    <div class="string"></div>
+                    <div class="magnet">
+                        <div class="pole unknown">?</div>
+                        <div class="pole unknown">?</div>
+                    </div>
+                    <div style="font-size:12px; margin-top:5px; color:#7f8c8d;">2. Mıknatıs</div>
+                </div>
+                <div class="magnet-wrapper m3-pos">
+                    <div class="string"></div>
+                    <div class="magnet">
+                        <div class="pole unknown">?</div>
+                        <div class="pole unknown">?</div>
+                    </div>
+                    <div style="font-size:12px; margin-top:5px; color:#7f8c8d;">3. Mıknatıs</div>
+                </div>
+            </div>
+
+            <div class="question-text">
+                Yukarıda iplerle tavana asılmış 3 mıknatısın hareketleri verilmiştir.<br>
+                Sadece 1. Mıknatısın sol ucu (N) verilmiştir.<br><br>
+                <strong>SORU:</strong> Mıknatısların konumlarına dikkat ederek soru işareti (?) ile gösterilen <b>5 kutbu</b> aşağıya sırasıyla yazınız.
+            </div>
+        </div>
+
+        <div id="scene3" class="scene">
+            <div class="sack-container">
+                <div style="text-align:center;">
+                    <div class="sack">50<br>kg</div>
+                    <div class="sack-label">Büyük</div>
+                </div>
+                <div style="text-align:center;">
+                    <div class="sack" style="width:70px; height:90px; background:radial-gradient(circle at 30% 30%, #fff, #ecf0f1); border-color:#95a5a6;">25<br>kg</div>
+                    <div class="sack-label">Küçük</div>
+                </div>
+            </div>
+
+            <div class="question-text">
+                Değirmenci Hasan Amca, ürettiği unları 50 kilogramlık veya 25 kilogramlık çuvallara koymaktadır.<br><br>
+                • Bir günde ürettiği unların <u>tamamı</u> 50 kg'lık çuvallara konulduğunda toplam <b>60 çuval</b> gerekmektedir.<br>
+                • Hasan Amca aynı gün, unların bir kısmını 50 kg'lık <b>40 çuvala</b> koymuştur.<br>
+                • Geriye kalan unları ise 25 kg'lık çuvallara doldurmuştur.<br><br>
+                <strong>SORU:</strong> Buna göre, Hasan Amca o gün toplamda en az kaç çuval (Büyük + Küçük) kullanmıştır?
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="userAns" placeholder="Cevabınızı buraya yazın...">
+            
+            <div id="magnetInputs">
+                <div class="mag-group">
+                    <span style="font-size:12px; font-weight:bold;">1. Mık.</span>
+                    <input type="text" class="pole-input" id="m1_right" maxlength="1" placeholder="?">
+                </div>
+                <div class="mag-group">
+                    <span style="font-size:12px; font-weight:bold;">2. Mık.</span>
+                    <div class="mag-row">
+                        <input type="text" class="pole-input" id="m2_left" maxlength="1" placeholder="?">
+                        <input type="text" class="pole-input" id="m2_right" maxlength="1" placeholder="?">
+                    </div>
+                </div>
+                <div class="mag-group">
+                    <span style="font-size:12px; font-weight:bold;">3. Mık.</span>
+                    <div class="mag-row">
+                        <input type="text" class="pole-input" id="m3_left" maxlength="1" placeholder="?">
+                        <input type="text" class="pole-input" id="m3_right" maxlength="1" placeholder="?">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-check" onclick="checkAnswer()">KONTROL ET</button>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+
+        <button id="finishBtn" class="btn-finish" onclick="submitResults()">📤 CEVAPLARI GÖNDER</button>
+
+    </div>
+
+<script>
+    // -------------------------------------------------------------
+    // GOOGLE SCRIPT URL'NİZİ BURAYA YAPIŞTIRIN
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwHhBnsCgUkwqq6TqiEAjPeIRmZgqlcbNjcK7FLS1vjnitl5_Oubd3mPTZHi6N7BLNLFA/exec"; 
+    // -------------------------------------------------------------
+
+    let studentName = "";
+    let studentClass = "";
+    let studentResults = [];
+    let currentQIdx = 0;
+
+    const questions = [
+        {
+            id: 1, type: 'logic', title: "Sözel Mantık",
+            validAnswers: ["boraarın", "bora arın", "bora,arın", "bora - arın"],
+            solution: "Bora Arın",
+            desc: "Sıralama: 1.Arın, 2.Yekta, 3.Naz (Ortada), 4.Deniz, 5.Bora.<br>En son ve En baş: <b>Bora Arın</b>."
+        },
+        {
+            id: 2, type: 'magnet', title: "Fen Bilimleri",
+            // İSTENEN YANITLAR: M1[S] - M2[S, N] - M3[S, N]
+            // Input sırası: m1_right, m2_left, m2_right, m3_left, m3_right
+            // Birleşik Cevap: S S N S N
+            validAnswers: ["ssnsn"], 
+            solution: "S, S, N, S, N",
+            desc: "1. Mıknatıs Sağ: <b>S</b>.<br>2. Mıknatıs: <b>S - N</b>.<br>3. Mıknatıs: <b>S - N</b>."
+        },
+        {
+            id: 3, type: 'math', title: "Matematik Problemi",
+            validAnswers: ["80", "80 çuval"],
+            solution: "80",
+            desc: "Toplam un: 3000kg. Kullanılan: 2000kg. Kalan: 1000kg.<br>Küçük çuval: 1000/25=40 tane.<br>Toplam: 40+40=<b>80</b>."
+        }
+    ];
+
+    function startGame() {
+        try {
+            studentName = document.getElementById('studentName').value.trim();
+            studentClass = document.getElementById('studentClass').value;
+
+            if(!studentClass) { alert("Lütfen sınıfını seç."); return; }
+            if(!studentName) { alert("Lütfen adını yaz."); return; }
+
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            
+            loadQuestion(0);
+        } catch(e) {
+            console.error(e);
+            alert("Bir hata oluştu, sayfa yenileniyor.");
+            location.reload();
+        }
+    }
+
+    function loadQuestion(idx) {
+        currentQIdx = idx;
+        const q = questions[idx];
+
+        document.getElementById('qNum').innerText = idx + 1;
+        document.getElementById('qTitle').innerText = q.title;
+        document.getElementById('feedback').style.display = 'none';
+
+        document.querySelectorAll('.scene').forEach(el => el.style.display = 'none');
+        document.getElementById('scene' + (idx+1)).style.display = 'block';
+
+        // Input Yönetimi
+        const generalInput = document.getElementById('userAns');
+        const magnetInputs = document.getElementById('magnetInputs');
+
+        if (q.type === 'magnet') {
+            generalInput.style.display = 'none';
+            magnetInputs.style.display = 'flex';
+            document.querySelectorAll('.pole-input').forEach(i => i.value = '');
+        } else {
+            generalInput.style.display = 'block';
+            magnetInputs.style.display = 'none';
+            generalInput.value = '';
+        }
+
+        const existing = studentResults.find(r => r.id === q.id);
+        if(existing && existing.correct) {
+            document.getElementById('feedback').style.display = 'block';
+            document.getElementById('feedback').className = 'feedback correct';
+            document.getElementById('feedback').innerHTML = "✅ Bu soruyu zaten doğru yaptın.";
+        }
+
+        if(idx === questions.length - 1) {
+            document.getElementById('finishBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('finishBtn').style.display = 'none';
+        }
+    }
+
+    function checkAnswer() {
+        const q = questions[currentQIdx];
+        let val = "";
+
+        if (q.type === 'magnet') {
+            const i1 = document.getElementById('m1_right').value.trim();
+            const i2 = document.getElementById('m2_left').value.trim();
+            const i3 = document.getElementById('m2_right').value.trim();
+            const i4 = document.getElementById('m3_left').value.trim();
+            const i5 = document.getElementById('m3_right').value.trim();
+            
+            if (!i1 || !i2 || !i3 || !i4 || !i5) {
+                alert("Lütfen tüm kutucukları doldurun."); return;
+            }
+            val = (i1 + i2 + i3 + i4 + i5).toLowerCase();
+        } else {
+            val = document.getElementById('userAns').value.trim().toLowerCase();
+            if(!val) { alert("Lütfen bir cevap yazın."); return; }
+        }
+
+        const existing = studentResults.find(r => r.id === q.id);
+        if(existing && existing.correct) return;
+
+        const isCorrect = q.validAnswers.includes(val);
+        const fb = document.getElementById('feedback');
+        fb.style.display = 'block';
+
+        let record = studentResults.find(r => r.id === q.id);
+        if(!record) {
+            record = { id: q.id, answer: val, correct: isCorrect, attempts: 1 };
+            studentResults.push(record);
+        } else {
+            record.answer = val;
+            record.correct = isCorrect;
+            record.attempts++;
+        }
+
+        if(isCorrect) {
+            fb.className = 'feedback correct';
+            fb.innerHTML = `🎉 <strong>Tebrikler! Doğru.</strong><br>${q.desc}`;
+        } else {
+            if(record.attempts >= 3) {
+                fb.className = 'feedback info';
+                fb.innerHTML = `😔 <strong>3 Hakkın Doldu.</strong><br>Doğru Cevap: ${q.solution}<br>Çözüm: ${q.desc}`;
+            } else {
+                fb.className = 'feedback wrong';
+                fb.innerHTML = `⚠️ <strong>Yanlış Cevap.</strong> Tekrar dene. (Deneme: ${record.attempts}/3)`;
+            }
+        }
+    }
+
+    function nextQ() {
+        if(currentQIdx < questions.length - 1) loadQuestion(currentQIdx + 1);
+        else alert("Tüm sorular bitti. Cevapları göndermeyi unutma!");
+    }
+
+    function prevQ() {
+        if(currentQIdx > 0) loadQuestion(currentQIdx - 1);
+    }
+
+    function submitResults() {
+        if(GOOGLE_SCRIPT_URL.includes("BURAYA")) {
+            alert("⚠️ Öğretmenim, Google Linkini eklemeyi unuttunuz!");
+            return;
+        }
+
+        if(confirm("Cevaplarını öğretmene göndermek istiyor musun?")) {
+            let details = studentResults.map(r => 
+                `Soru ${r.id}: ${r.correct ? '✅' : '❌'} (Cevap: ${r.answer})`
+            ).join('\n');
+
+            const data = {
+                branch: studentClass,
+                name: studentName,
+                results: details || "Boş gönderim."
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                alert("✅ Harika! Cevapların başarıyla gönderildi.");
+                window.location.href = "https://bilgihazinesi.github.io/Kelimeler/";
+            })
+            .catch(() => {
+                alert("❌ Bir hata oluştu. İnternetini kontrol et.");
+            });
+        }
+    }
+
+</script>
+
+</body>
+</html>
