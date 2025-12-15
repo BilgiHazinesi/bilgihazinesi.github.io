@@ -2,491 +2,435 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>4. Sınıf Akıllı Asistan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gelişmiş Değerlendirme ve Tasarım Aracı</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f6f9;
+        }
 
-        /* --- GENEL AYARLAR --- */
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f6f8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 0;
-            color: #333;
-            -webkit-tap-highlight-color: transparent;
-            padding-bottom: 120px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 15px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #e1e4e8;
-        }
-
-        /* Arama Kutusu */
-        input[type="text"] {
-            width: 100%;
-            padding: 14px;
-            font-size: 16px;
-            border: 2px solid #3498db;
-            border-radius: 8px;
-            background: white;
-            color: #333;
-            font-weight: bold;
-            box-sizing: border-box;
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #2980b9;
-        }
-
-        h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 18px; }
-
-        /* --- HIZLI BUTONLAR --- */
-        .quick-actions {
             display: flex;
-            justify-content: space-between;
+            height: 100vh;
+            background-color: var(--bg-color);
+            overflow: hidden;
+        }
+
+        /* --- SOL ARAÇ ÇUBUĞU (Toolbar) --- */
+        #toolbar {
+            width: 60px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            background: #f1f2f6;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 12px;
+            padding-top: 20px;
+            gap: 15px;
+            z-index: 100;
         }
 
-        .btn-quick {
-            background: #2c3e50;
-            color: white;
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: bold;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            position: relative;
+        }
+        
+        .tool-btn:hover { background: var(--accent-color); }
+        .tool-btn::after { /* Tooltip */
+            content: attr(title);
+            position: absolute;
+            left: 50px;
+            background: #333;
+            color: #fff;
+            padding: 5px;
+            font-size: 12px;
+            border-radius: 3px;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .tool-btn:hover::after { opacity: 1; }
+
+        /* --- ORTA ALAN (Kağıt/Sayfa) --- */
+        #workspace {
+            flex: 1;
+            background-color: #bdc3c7;
+            display: flex;
+            justify-content: center;
+            overflow: auto;
+            padding: 40px;
+            position: relative;
         }
 
-        /* --- RUBRİK --- */
-        .rubric-item {
+        .page {
+            width: 210mm;
+            min-height: 297mm; /* A4 */
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            position: relative;
+            padding: 20mm;
+            box-sizing: border-box;
+            transition: transform 0.3s;
+        }
+
+        /* Elemanlar için basit stil (Görsel/Metin kutusu temsili) */
+        .draggable-item {
+            position: absolute;
+            border: 1px dashed #ccc;
+            cursor: move;
+            min-width: 50px;
+            min-height: 20px;
+        }
+        
+        .draggable-item:hover { border-color: var(--accent-color); }
+
+        /* --- SAĞ PANEL (Liste Görünümü) --- */
+        #right-panel {
+            width: 280px;
+            background: white;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        
+        #right-panel h3 { font-size: 16px; margin-bottom: 10px; border-bottom: 2px solid var(--accent-color); padding-bottom: 5px;}
+
+        /* Görseller - Liste Görünümü (Grid DEĞİL) */
+        .asset-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .asset-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
             border-bottom: 1px solid #eee;
-            padding: 12px 0;
+            cursor: pointer;
         }
-        .rubric-text {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            line-height: 1.3;
+        
+        .asset-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            margin-right: 10px;
+            border-radius: 4px;
+        }
+        
+        .asset-info { font-size: 13px; }
+
+        /* --- RUBRİK (DEĞERLENDİRME) BÖLÜMÜ --- */
+        #rubric-section {
+            margin-top: 20px;
+            border-top: 2px solid #333;
+            padding-top: 10px;
         }
 
-        .score-grid {
+        .rubric-controls {
             display: flex;
             gap: 5px;
-        }
-        .score-btn {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            border: 1px solid #dcdcdc;
-            border-radius: 8px;
-            background: #fff;
-            font-size: 14px;
-            font-weight: bold;
-            color: #7f8c8d;
-            transition: background 0.2s;
-        }
-        
-        .active-2 { background-color: #27ae60; color: white; border-color: #27ae60; }
-        .active-1 { background-color: #f1c40f; color: white; border-color: #f39c12; }
-        .active-0 { background-color: #e74c3c; color: white; border-color: #c0392b; }
-
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-family: inherit;
-            box-sizing: border-box;
-            font-size: 15px;
-        }
-
-        /* --- MESAJ ALANI --- */
-        #messagePreviewArea {
-            display: none;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px dashed #ddd;
-        }
-        #generatedMessage {
-            width: 100%;
-            height: 180px;
-            font-size: 13px;
-            padding: 10px;
-            background: #fdfdfd;
-            border: 1px solid #999;
-            border-radius: 6px;
-            color: #2c3e50;
-        }
-
-        /* --- ALT BAR --- */
-        .bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: white;
-            padding: 10px;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            z-index: 1000;
-            box-sizing: border-box;
-            display: flex;
+            margin-bottom: 10px;
             flex-wrap: wrap;
-            gap: 8px;
         }
-        
-        .btn-action {
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
+
+        .rubric-btn {
+            font-size: 11px;
+            padding: 5px 8px;
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .rubric-btn:hover { background: #d5dbdb; }
+
+        /* Rubrik Tablosu - TAM HİZALAMA İÇİN */
+        .rubric-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .rubric-table th, .rubric-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .rubric-table th {
+            background-color: #f8f9fa;
             font-weight: bold;
-            border: none;
-            color: white;
-            flex-grow: 1;
+        }
+
+        .rubric-table td:nth-child(2) { /* Ölçüt Sütunu */
+            text-align: left;
+            width: 50%;
+        }
+
+        .score-radio {
+            transform: scale(1.2);
             cursor: pointer;
         }
 
-        .btn-print { background-color: #e67e22; flex-grow: 2; }
-        .btn-whatsapp { background-color: #25D366; flex-grow: 2; }
-        .btn-reset { background-color: #7f8c8d; max-width: 60px; }
-
-        /* --- BASKI AYARLARI --- */
-        #print-container { display: none; }
-        @page { size: A4; margin: 10mm; }
-
-        @media print {
-            body, html { margin: 0; padding: 0; background: white; }
-            .container, .bottom-bar { display: none !important; }
-            #print-container { display: block !important; }
-            @page { margin-top: 0; margin-bottom: 0; }
-
-            .page-break {
-                page-break-after: always;
-                page-break-inside: avoid;
-                width: 100%;
-                min-height: 280mm;
-                box-sizing: border-box;
-                padding-top: 10mm;
-                position: relative;
-            }
-            .page-break:last-child { page-break-after: auto; }
-
-            .print-header { text-align: center; border-bottom: 2px solid #333; margin-bottom: 10px; padding-bottom: 5px; }
-            .print-header h1 { font-size: 18px; margin: 0; }
-            .student-meta { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; margin-bottom: 10px; }
-            .print-section-title { background-color: #eee; font-weight: bold; padding: 4px; font-size: 12px; border-left: 4px solid #333; margin-top: 8px; margin-bottom: 4px; -webkit-print-color-adjust: exact; }
-            table { width: 100%; border-collapse: collapse; font-size: 11px; }
-            th, td { border: 1px solid #888; padding: 3px; vertical-align: middle; }
-            th { background-color: #f9f9f9; text-align: center; }
-            .col-mark { width: 30px; text-align: center; font-weight: bold; }
-            .filled { background-color: #333; color: white; -webkit-print-color-adjust: exact; }
-            .teacher-comment-print { border: 1px solid #333; padding: 5px; min-height: 30px; font-size: 11px; margin-top: 5px; }
-            .signature { margin-top: 15px; text-align: right; font-size: 12px; }
+        /* --- JSON YEDEKLEME ALANI --- */
+        #backup-controls {
+            margin-top: auto; /* En alta it */
+            padding-top: 15px;
+            border-top: 1px solid #eee;
         }
+        
+        .action-btn {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .action-btn.secondary { background: #95a5a6; }
+
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="card" style="position: sticky; top: 10px; z-index: 90; border-top: 5px solid #3498db; padding: 10px;">
-            <label style="font-size:12px; font-weight:bold; color:#666; margin-bottom:5px; display:block;">Öğrenci Ara:</label>
-            <input type="text" id="studentSearchInput" list="studentsList" placeholder="İsim yazmaya başla..." oninput="checkStudentSelection()">
-            <datalist id="studentsList"></datalist>
-            <div id="selectionStatus" style="font-size:12px; color:#27ae60; margin-top:5px; height:15px; font-weight:bold;"></div>
-        </div>
+    <div id="toolbar">
+        <button class="tool-btn" title="Metin Ekle">T</button>
+        <button class="tool-btn" title="Görsel Ekle">IMG</button>
+        <button class="tool-btn" title="Sayfayı Çevir (Yatay/Dikey)" onclick="rotatePage()">⟳</button>
+        <button class="tool-btn" title="Yeni Sayfa Ekle">+</button>
+    </div>
 
-        <div id="evaluationArea" style="display:none;">
-            <div class="card">
-                <div class="quick-actions">
-                    <h3 style="color:#d35400; margin:0;">TÜRKÇE</h3>
-                    <button class="btn-quick" onclick="fillAll('turkish', 2)">Hepsini Tam Yap</button>
-                </div>
-                <div id="turkish-container"></div>
-            </div>
-
-            <div class="card">
-                <div class="quick-actions">
-                    <h3 style="color:#2980b9; margin:0;">MATEMATİK</h3>
-                    <button class="btn-quick" onclick="fillAll('math', 2)">Hepsini Tam Yap</button>
-                </div>
-                <div id="math-container"></div>
-            </div>
-
-            <div class="card">
-                <h3>Öğretmen Görüşü (Rapor İçin)</h3>
-                <textarea id="teacherComment" rows="2" placeholder="Raporda görünecek kısa not..." oninput="saveComment()"></textarea>
-                
-                <div style="margin-top:20px; text-align:center;">
-                    <button class="btn-quick" style="width:100%; background:#2c3e50; font-size:14px; padding:12px;" onclick="previewMessage()">💬 VELİ MESAJINI OLUŞTUR / GÖR</button>
-                </div>
-
-                <div id="messagePreviewArea">
-                    <label style="font-weight:bold; font-size:12px; display:block; margin-bottom:5px;">Veliye Gönderilecek Mesaj:</label>
-                    <textarea id="generatedMessage"></textarea>
-                    <button class="btn-whatsapp" style="width:100%; margin-top:10px; padding:10px; border:none; border-radius:6px; color:white; font-weight:bold;" onclick="copyToClipboard()">📋 KOPYALA</button>
-                </div>
-            </div>
+    <div id="workspace">
+        <div id="active-page" class="page">
+            <h3>4. Sınıf Fen Bilimleri Değerlendirme</h3>
+            <p>Örnek içerik alanı. Buraya sürüklenen nesneler gelecek.</p>
         </div>
     </div>
 
-    <div class="bottom-bar">
-        <button class="btn-action btn-reset" onclick="resetAllData()">🗑️</button>
-        <button class="btn-action btn-print" onclick="printAll()">🖨️ PDF İNDİR</button>
-    </div>
+    <div id="right-panel">
+        
+        <div id="backup-controls">
+            <h3>Yedekleme</h3>
+            <button class="action-btn" onclick="saveWork()">💾 Çalışmayı Yedekle (İndir)</button>
+            <input type="file" id="loadInput" style="display: none;" onchange="loadWork(this)">
+            <button class="action-btn secondary" onclick="document.getElementById('loadInput').click()">📂 Yedekten Yükle</button>
+        </div>
 
-    <div id="print-container"></div>
+        <div id="rubric-section">
+            <h3>Puanlama Anahtarı (Rubrik)</h3>
+            
+            <div class="rubric-controls">
+                <button class="rubric-btn" onclick="bulkScore(2)">Hepsini Tam Yap</button>
+                <button class="rubric-btn" onclick="bulkScore(1)">Hepsini Kısmen Yap</button>
+                <button class="rubric-btn" onclick="bulkScore(0)">Hepsini Yapmadı</button>
+                <button class="rubric-btn" onclick="clearRubric()" style="color:red;">Temizle</button>
+            </div>
+
+            <table class="rubric-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30px;">No</th>
+                        <th>Ölçüt / Soru</th>
+                        <th>Tam (2p)</th>
+                        <th>Kısmen (1p)</th>
+                        <th>Yok (0p)</th>
+                    </tr>
+                </thead>
+                <tbody id="rubric-body">
+                    </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" style="text-align: right; font-weight: bold;">Toplam Puan:</td>
+                        <td colspan="3" id="total-score" style="font-weight: bold; color: var(--accent-color);">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h3>Görsel Kütüphanesi</h3>
+            <ul class="asset-list">
+                <li class="asset-item">
+                    <img src="https://via.placeholder.com/40" alt="Harita">
+                    <div class="asset-info">
+                        <strong>Harita.png</strong><br>
+                        <span>Görseli sürükle</span>
+                    </div>
+                </li>
+                <li class="asset-item">
+                    <img src="https://via.placeholder.com/40" alt="Atatürk">
+                    <div class="asset-info">
+                        <strong>Ataturk.jpg</strong><br>
+                        <span>Görseli sürükle</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+    </div>
 
     <script>
-        // --- VERİLER ---
-        const studentList = [
-            "HAKAN AKDENİZ", "HÜSEYİN ÇAĞAN GÜRGAH", "AHMET ARIN AĞTÜRK", "DENİZ GÜNEY",
-            "İDİL DEMİRCİ", "DURU AYKANAT", "DENİZ KİMYON", "KADİR BERKTAŞ", "DOĞA BORA",
-            "AHMET CEVDET KORKMAZ", "GÜLNİHAL KARAKAŞ", "NİL TİRYAKİ", "MASAL DEFNE TEL",
-            "EYLÜL AFAT", "ELİF ADA KEKEÇ", "EYLÜL MUTAF", "İPEK MİMAROĞLU",
-            "YEKTA URAS DEMİRER", "HAMZA KAAN ÇEVEN", "BEYZA DAĞDELEN", "NAZ KARABAĞLI",
-            "AYNUR BUDAK", "DURU BÜKÜN", "WAFA MAKANSSI"
-        ];
-
-        // Konu isimlerini cümle içinde kullanmak için biraz kısalttım/düzenledim
-        const rubric = {
-            turkish: [
-                { id: 't1', text: 'Şiir analizi ve ana duygu', full: 'Şiir analizi, ana duygu ve Milli Mücadele kronolojisi' },
-                { id: 't2', text: 'neden-sonuç cümleleri', full: 'Neden - Sonuç cümlelerini belirleme ve kurma' },
-                { id: 't3', text: 'soru cümleleri', full: 'Soru cümlesi oluşturma ve ayırt etme' },
-                { id: 't4', text: 'karşılaştırma cümleleri', full: 'Karşılaştırma cümlelerini belirleme ve analiz etme' },
-                { id: 't5', text: 'metin türü', full: 'Metin türünü ayırt etme (Hikaye Edici Metin)' },
-                { id: 't6', text: 'eş sesli kelimeler', full: 'Eş sesli kelimeleri aynı cümlede farklı anlamlarıyla kullanma' },
-                { id: 't7', text: 'eş ve zıt anlamlı kelimeler', full: 'Eş anlamlı ve zıt anlamlı kelime çiftleri arasında ilişki kurma' }
+        // --- VERİ MODELİ ---
+        // Sayfa durumu ve Rubrik verilerini burada tutacağız.
+        let appState = {
+            pageOrientation: 'portrait', // portrait veya landscape
+            rubricData: [
+                { id: 'q1', no: '1', text: 'Mıknatısın kutuplarını doğru isimlendirir.', score: null, max: 2 },
+                { id: 'q2', no: '2', text: 'Kuvvetin etkilerine örnekler verir.', score: null, max: 2 },
+                { id: 'q3a', no: '3-a', text: 'Fosil oluşum sırasını yazar.', score: null, max: 2 },
+                { id: 'q3b', no: '3-b', text: 'Fosillerin önemini açıklar.', score: null, max: 2 },
+                { id: 'q4', no: '4', text: 'Besin içeriklerini sınıflandırır.', score: null, max: 2 }
             ],
-            math: [
-                { id: 'm1', text: 'onluğa ve yüzlüğe yuvarlama', full: 'Doğal sayıları en yakın onluğa/yüzlüğe yuvarlama' },
-                { id: 'm2', text: 'sıralama', full: 'Doğal sayıları sembol kullanarak sıralama (<, >)' },
-                { id: 'm3', text: 'örüntü', full: 'Sıralamaya uygun değer verme ve örüntü oluşturma' },
-                { id: 'm4', text: 'toplama işlemi problemleri', full: 'Çok adımlı toplama işlemi problemlerini çözme' },
-                { id: 'm5', text: 'dört işlem becerisi', full: 'Dört işlem becerisi (Toplama, Çıkarma, Çarpma)' },
-                { id: 'm6', text: 'doğal sayıları yazma', full: 'Verilen yönergelere göre doğal sayıları oluşturma' },
-                { id: 'm7', text: 'çıkarma işlemi problemleri', full: 'Çıkarma işlemi gerektiren problem çözme' },
-                { id: 'm8', text: 'basamak kavramı ve toplama', full: 'Yüzer ritmik sayma ve basamak bölük ilişkisi ile toplama' }
-            ]
+            canvasContent: [] // Sayfadaki nesnelerin koordinatları vb. (şimdilik boş)
         };
 
-        let classData = {};
-        let currentStudent = null;
+        const rubricBody = document.getElementById('rubric-body');
+        const totalScoreDisplay = document.getElementById('total-score');
 
-        window.onload = function() {
-            loadFromStorage();
-            populateDataList();
-            renderRubricHTML();
-        };
+        // --- RUBRİK OLUŞTURUCU (Hizalı Tablo Yapısı) ---
+        function renderRubric() {
+            rubricBody.innerHTML = '';
+            let total = 0;
 
-        function loadFromStorage() {
-            const savedData = localStorage.getItem('okul_verisi_v3');
-            if (savedData) {
-                classData = JSON.parse(savedData);
+            appState.rubricData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                
+                // Puan durumuna göre 'checked' ekle
+                const checked2 = item.score === 2 ? 'checked' : '';
+                const checked1 = item.score === 1 ? 'checked' : '';
+                const checked0 = item.score === 0 ? 'checked' : '';
+
+                tr.innerHTML = `
+                    <td><strong>${item.no}</strong></td>
+                    <td>${item.text}</td>
+                    <td><input type="radio" name="q_${item.id}" value="2" class="score-radio" onchange="updateScore('${item.id}', 2)" ${checked2}></td>
+                    <td><input type="radio" name="q_${item.id}" value="1" class="score-radio" onchange="updateScore('${item.id}', 1)" ${checked1}></td>
+                    <td><input type="radio" name="q_${item.id}" value="0" class="score-radio" onchange="updateScore('${item.id}', 0)" ${checked0}></td>
+                `;
+                rubricBody.appendChild(tr);
+
+                if(item.score !== null) total += item.score;
+            });
+
+            totalScoreDisplay.innerText = total;
+        }
+
+        // --- PUAN GÜNCELLEME ---
+        function updateScore(id, val) {
+            const item = appState.rubricData.find(x => x.id === id);
+            if (item) {
+                item.score = val;
+                renderRubric(); // Toplamı ve görünümü yenile
+            }
+        }
+
+        // --- TOPLU İŞLEMLER ---
+        function bulkScore(val) {
+            appState.rubricData.forEach(item => {
+                item.score = val;
+            });
+            renderRubric();
+        }
+
+        function clearRubric() {
+            appState.rubricData.forEach(item => {
+                item.score = null;
+            });
+            renderRubric();
+        }
+
+        // --- SAYFA YÖNÜ (İstediğiniz özellik) ---
+        function rotatePage() {
+            const page = document.getElementById('active-page');
+            if (appState.pageOrientation === 'portrait') {
+                page.style.width = '297mm';
+                page.style.minHeight = '210mm';
+                appState.pageOrientation = 'landscape';
             } else {
-                studentList.forEach(name => {
-                    classData[name] = { scores: {}, comment: "" };
-                });
+                page.style.width = '210mm';
+                page.style.minHeight = '297mm';
+                appState.pageOrientation = 'portrait';
             }
         }
 
-        function saveToStorage() {
-            localStorage.setItem('okul_verisi_v3', JSON.stringify(classData));
-        }
+        // --- JSON YEDEKLEME SİSTEMİ (Yeni İstek) ---
+        
+        // 1. İndirme (Download)
+        function saveWork() {
+            // Şu anki tarihi dosya adına ekleyelim
+            const date = new Date().toISOString().slice(0,10);
+            const fileName = `degerlendirme_yedek_${date}.json`;
 
-        function resetAllData() {
-            if(confirm("Tüm kayıtlar silinecek. Emin misin?")) {
-                localStorage.removeItem('okul_verisi_v3');
-                location.reload();
-            }
-        }
-
-        function populateDataList() {
-            const dl = document.getElementById('studentsList');
-            studentList.forEach(name => {
-                let opt = document.createElement('option');
-                opt.value = name;
-                dl.appendChild(opt);
-            });
-        }
-
-        function renderRubricHTML() {
-            const createRows = (items, type) => items.map(item => `
-                <div class="rubric-item">
-                    <span class="rubric-text">${item.full}</span>
-                    <div class="score-grid">
-                        <div class="score-btn" id="btn-${item.id}-2" onclick="setScore('${item.id}', 2)">Tam</div>
-                        <div class="score-btn" id="btn-${item.id}-1" onclick="setScore('${item.id}', 1)">Kısmen</div>
-                        <div class="score-btn" id="btn-${item.id}-0" onclick="setScore('${item.id}', 0)">Yapmadı</div>
-                    </div>
-                </div>
-            `).join('');
+            // Veriyi string'e çevir
+            const jsonStr = JSON.stringify(appState, null, 2);
             
-            document.getElementById('turkish-container').innerHTML = createRows(rubric.turkish, 'turkish');
-            document.getElementById('math-container').innerHTML = createRows(rubric.math, 'math');
+            // İndirme linki oluştur
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
-        function checkStudentSelection() {
-            const val = document.getElementById('studentSearchInput').value.trim();
-            if (classData[val]) {
-                currentStudent = val;
-                document.getElementById('selectionStatus').innerText = "✓ " + val;
-                document.getElementById('evaluationArea').style.display = 'block';
-                document.getElementById('teacherComment').value = classData[val].comment || "";
-                document.getElementById('messagePreviewArea').style.display = 'none'; // Yeni öğrenci seçince mesajı gizle
-                refreshUI();
-            } else {
-                currentStudent = null;
-                document.getElementById('selectionStatus').innerText = "";
-                document.getElementById('evaluationArea').style.display = 'none';
-            }
-        }
+        // 2. Yükleme (Upload)
+        function loadWork(input) {
+            const file = input.files[0];
+            if (!file) return;
 
-        function setScore(id, val) {
-            if(!currentStudent) return;
-            classData[currentStudent].scores[id] = val;
-            refreshUI();
-            saveToStorage();
-        }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const loadedState = JSON.parse(e.target.result);
+                    
+                    // Mevcut durumu güncelle
+                    appState = loadedState;
+                    
+                    // Arayüzü yenile
+                    renderRubric();
+                    
+                    // Sayfa yönünü geri yükle
+                    const page = document.getElementById('active-page');
+                    if (appState.pageOrientation === 'landscape') {
+                         page.style.width = '297mm';
+                         page.style.minHeight = '210mm';
+                    } else {
+                         page.style.width = '210mm';
+                         page.style.minHeight = '297mm';
+                    }
 
-        function fillAll(subject, val) {
-            if(!currentStudent) return;
-            rubric[subject].forEach(item => {
-                classData[currentStudent].scores[item.id] = val;
-            });
-            refreshUI();
-            saveToStorage();
-        }
+                    alert("Yedek başarıyla yüklendi!");
 
-        function saveComment() {
-            if(currentStudent) {
-                classData[currentStudent].comment = document.getElementById('teacherComment').value;
-                saveToStorage();
-            }
-        }
-
-        function refreshUI() {
-            document.querySelectorAll('.score-btn').forEach(b => b.className = 'score-btn');
-            const scores = classData[currentStudent].scores;
-            for (const [id, val] of Object.entries(scores)) {
-                const btn = document.getElementById(`btn-${id}-${val}`);
-                if(btn) btn.classList.add(`active-${val}`);
-            }
-        }
-
-        // --- AKILLI MESAJ OLUŞTURUCU ---
-        function previewMessage() {
-            if (!currentStudent) return;
-            
-            const data = classData[currentStudent];
-            let turkishGaps = [];
-            let mathGaps = [];
-
-            // Eksikleri bul (0 veya 1 alanlar)
-            rubric.turkish.forEach(r => {
-                if (data.scores[r.id] === 0 || data.scores[r.id] === 1) turkishGaps.push(r.text);
-            });
-            rubric.math.forEach(r => {
-                if (data.scores[r.id] === 0 || data.scores[r.id] === 1) mathGaps.push(r.text);
-            });
-
-            let message = "";
-
-            // BAŞARILI ÖĞRENCİ ŞABLONU (Hiç eksik yoksa veya toplam eksik sayısı 2'den azsa)
-            if (turkishGaps.length === 0 && mathGaps.length === 0) {
-                message = `Sayın Velim,\n8 Aralık Pazartesi günü yapılan 2. değerlendirme sonuçlarına göre öğrencimin, Türkçe ve Matematik dersinde gayet başarılı bir performans sergilemiş olup, konularla ilgili sorular çözmesi gelişimine daha da katkı sağlayacaktır.\n\nÖğrencim, konu tekrarları ve konularla ilgili dikkatli ve anlayarak sorular çözmesi, zihnini canlı tutmasına ve sınav sonucuna yansımasına olanak sağlamıştır. Bu konuda verdiğiniz desteklerden dolayı teşekkür ediyorum.\nSaygılarımla`;
-            } 
-            // GELİŞTİRİLMELİ ŞABLONU (Eksikler varsa)
-            else {
-                message = `Sayın Velim,\n8 Aralık Pazartesi günü yapılan 2. değerlendirme sonuçlarına göre öğrencimin,\n`;
-                
-                if (turkishGaps.length > 0) {
-                    message += `Türkçe dersinde ${turkishGaps.join(", ")} konularında tekrar çalışmaları yaparak kendini geliştirebilir. `;
-                } else {
-                    message += `Türkçe dersinde gayet başarılı olup, `;
+                } catch (err) {
+                    alert("Dosya bozuk veya hatalı formatta.");
+                    console.error(err);
                 }
-
-                if (mathGaps.length > 0) {
-                    message += `Matematik dersinden ${mathGaps.join(", ")} konularında tekrar çalışması ve sorular çözerek ilerleyebilir.\n\n`;
-                } else {
-                    message += `Matematik dersinde gayet başarılıdır.\n\n`;
-                }
-
-                message += `Öğrencim, konu tekrarları ve konularla ilgili dikkatli ve anlayarak sorular çözerek başarı grafiğini yükseltebilir. Bu konuda sizlerden de destek bekliyorum.\nSaygılarımla`;
-            }
-
-            document.getElementById('generatedMessage').value = message;
-            document.getElementById('messagePreviewArea').style.display = 'block';
-            
-            // Ekrana kaydır
-            document.getElementById('messagePreviewArea').scrollIntoView({ behavior: 'smooth' });
+            };
+            reader.readAsText(file);
+            // Input'u sıfırla ki aynı dosyayı tekrar seçebilelim
+            input.value = '';
         }
 
-        function copyToClipboard() {
-            const text = document.getElementById('generatedMessage').value;
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Mesaj kopyalandı!");
-            });
-        }
+        // Başlangıçta rubriği çiz
+        renderRubric();
 
-        // --- PDF BASKI ---
-        function printAll() {
-            const container = document.getElementById('print-container');
-            container.innerHTML = '';
-            const date = new Date().toLocaleDateString('tr-TR');
-
-            studentList.forEach(name => {
-                const data = classData[name];
-                
-                let html = `
-                <div class="page-break">
-                    <div class="print-header">
-                        <h1>NESİBE AYDIN OKULLARI</h1>
-                        <h2 style="font-size:14px; font-weight:normal; margin:5px 0;">4. Sınıflar Gelişim İzleme Raporu</h2>
-                    </div>
-                    <div class="student-meta"><span>Öğrenci: ${name}</span><span>Tarih: ${date}</span></div>
-
-                    <div class="print-section-title">TÜRKÇE DEĞERLENDİRMESİ</div>
-                    <table><tr><th>Kazanım</th><th class="col-mark">Tam</th><th class="col-mark">Kıs</th><th class="col-mark">Yok</th></tr>`;
-                
-                rubric.turkish.forEach(item => {
-                    const s = data.scores[item.id];
-                    html += `<tr><td>${item.full}</td><td class="col-mark ${s===2?'filled':''}">${s===2?'X':''}</td><td class="col-mark ${s===1?'filled':''}">${s===1?'X':''}</td><td class="col-mark ${s===0?'filled':''}">${s===0?'X':''}</td></tr>`;
-                });
-                html += `</table>`;
-
-                html += `<div class="print-section-title">MATEMATİK DEĞERLENDİRMESİ</div>
-                    <table><tr><th>Kazanım</th><th class="col-mark">Tam</th><th class="col-mark">Kıs</th><th class="col-mark">Yok</th></tr>`;
-
-                rubric.math.forEach(item => {
-                    const s = data.scores[item.id];
-                    html += `<tr><td>${item.full}</td><td class="col-mark ${s===2?'filled':''}">${s===2?'X':''}</td><td class="col-mark ${s===1?'filled':''}">${s===1?'X':''}</td><td class="col-mark ${s===0?'filled':''}">${s===0?'X':''}</td></tr>`;
-                });
-                html += `</table>`;
-
-                if(data.comment) html += `<div style="margin-top:10px;"><strong>Öğretmen Görüşü:</strong><div class="teacher-comment-print">${data.comment}</div></div>`;
-                html += `<div class="signature">Sınıf Öğretmeni<br>İmza</div></div>`;
-                container.innerHTML += html;
-            });
-            window.print();
-        }
     </script>
 </body>
 </html>
