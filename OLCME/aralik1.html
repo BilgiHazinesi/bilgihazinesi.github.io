@@ -3,383 +3,449 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mobil Uyumlu Değerlendirme</title>
+    <title>4. Sınıf Akıllı Değerlendirme</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-        /* --- GENEL MOBİL AYARLARI --- */
+        /* --- GENEL AYARLAR --- */
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f4f6f8;
             margin: 0;
             padding: 0;
             color: #333;
-            -webkit-tap-highlight-color: transparent; /* Mobilde tıklama efektini düzeltir */
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: 90px;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 10px;
-            padding-bottom: 80px; /* Alt buton için boşluk */
+            padding: 15px;
         }
 
-        /* --- KART YAPISI --- */
+        /* --- ARAMA KUTUSU VE KARTLAR --- */
         .card {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
             padding: 15px;
             margin-bottom: 15px;
+            border: 1px solid #e1e4e8;
         }
 
-        h2, h3 { margin: 0 0 10px 0; color: #2c3e50; }
-        
-        /* --- GİRİŞ ALANLARI --- */
-        input[type="text"], textarea {
+        /* Arama Kutusu Stili */
+        input[type="text"] {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
+            padding: 14px;
+            font-size: 16px;
+            border: 2px solid #3498db;
             border-radius: 8px;
-            font-size: 16px; /* 16px mobilde zoom yapmayı engeller */
-            box-sizing: border-box;
-            font-family: inherit;
-        }
-
-        input[type="text"]:focus { border-color: #3498db; outline: none; }
-
-        /* --- BUTONLAR --- */
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
+            background: white;
+            color: #333;
             font-weight: bold;
-            font-size: 15px;
-            cursor: pointer;
-            margin-top: 5px;
-            color: white;
-            transition: transform 0.1s;
+            box-sizing: border-box; /* Taşmayı önler */
         }
-        .btn:active { transform: scale(0.98); }
-        .btn-blue { background-color: #3498db; }
-        .btn-green { background-color: #27ae60; }
-        .btn-orange { background-color: #e67e22; }
-        
-        /* Hızlı Doldur Butonları */
-        .quick-fill-bar {
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2980b9;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 18px; }
+
+        /* --- HIZLI İŞLEM BUTONLARI --- */
+        .quick-actions {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
-            background: #eef2f3;
-            padding: 8px;
-            border-radius: 8px;
             align-items: center;
+            background: #f1f2f6;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
         }
+
         .btn-quick {
             background: #2c3e50;
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 6px;
             font-size: 13px;
+            font-weight: bold;
         }
 
-        /* --- SORU SATIRLARI (MOBİL DOSTU) --- */
-        .question-row {
+        /* --- SORU SATIRLARI --- */
+        .rubric-item {
             border-bottom: 1px solid #eee;
-            padding: 12px 0;
+            padding: 14px 0;
         }
-        .question-text {
-            font-size: 14px;
-            margin-bottom: 8px;
-            font-weight: 500;
+        .rubric-text {
             display: block;
+            margin-bottom: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            line-height: 1.4;
         }
-        .options-grid {
+
+        /* --- PUANLAMA KUTUCUKLARI --- */
+        .score-grid {
             display: flex;
-            gap: 5px;
+            gap: 8px;
         }
-        
-        /* Büyük Dokunmatik Seçenekler */
-        .option-btn {
+        .score-btn {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             text-align: center;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            border: 1px solid #dcdcdc;
+            border-radius: 8px;
+            background: #fff;
             font-size: 14px;
             font-weight: bold;
             color: #7f8c8d;
-            background: white;
-            transition: all 0.2s;
+            transition: all 0.15s;
+        }
+        
+        /* Renkler */
+        .active-2 { background-color: #27ae60; color: white; border-color: #27ae60; } /* Tam */
+        .active-1 { background-color: #f1c40f; color: white; border-color: #f39c12; } /* Kısmen */
+        .active-0 { background-color: #e74c3c; color: white; border-color: #c0392b; } /* Yapmadı */
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-family: inherit;
+            box-sizing: border-box;
+            font-size: 15px;
         }
 
-        /* Seçili Durumlar */
-        .selected-2 { background-color: #27ae60; color: white; border-color: #27ae60; } /* Tam */
-        .selected-1 { background-color: #f1c40f; color: white; border-color: #f1c40f; text-shadow: 0 1px 1px rgba(0,0,0,0.2); } /* Kısmen */
-        .selected-0 { background-color: #e74c3c; color: white; border-color: #e74c3c; } /* Yok */
-
-        /* --- ALT SABİT MENÜ (PDF BUTONU) --- */
+        /* --- SABİT ALT BUTON --- */
         .bottom-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
             background: white;
-            padding: 10px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            gap: 10px;
-            z-index: 100;
+            padding: 15px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            z-index: 1000;
             box-sizing: border-box;
         }
+        .btn-print {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(230, 126, 34, 0.3);
+        }
 
-        /* --- GİZLİ BASKI ALANI --- */
-        #print-area { display: none; }
+        /* --- BASKI (PDF) AYARLARI --- */
+        #print-container { display: none; }
 
         @media print {
-            body * { visibility: hidden; }
-            .container, .bottom-bar { display: none; }
-            #print-area, #print-area * { 
-                visibility: visible; 
-                display: block;
-            }
-            #print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            
-            .print-page {
+            body, html { margin: 0; padding: 0; background: white; }
+            .container, .bottom-bar { display: none !important; }
+            #print-container { display: block !important; }
+
+            .page-break {
                 page-break-after: always;
-                padding: 30px 40px;
-                font-family: 'Times New Roman', serif;
+                width: 100%;
+                height: 100vh;
+                box-sizing: border-box;
+                padding: 10mm;
             }
-            .print-header { text-align: center; border-bottom: 2px solid black; margin-bottom: 20px; }
-            .print-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12pt; }
-            .print-table th, .print-table td { border: 1px solid #333; padding: 6px; }
-            .print-check { font-size: 18px; text-align: center; font-weight: bold; }
+
+            .print-header {
+                text-align: center;
+                border-bottom: 2px solid #333;
+                margin-bottom: 10px;
+                padding-bottom: 5px;
+            }
+            .print-header h1 { font-size: 18px; margin: 0; }
+            
+            .student-meta {
+                display: flex;
+                justify-content: space-between;
+                font-weight: bold;
+                font-size: 14px;
+                border-bottom: 1px dashed #ccc;
+                padding-bottom: 5px;
+                margin-bottom: 10px;
+            }
+
+            .print-section-title {
+                background-color: #eee;
+                font-weight: bold;
+                padding: 4px;
+                font-size: 12px;
+                border-left: 4px solid #333;
+                margin-top: 10px;
+                margin-bottom: 5px;
+                -webkit-print-color-adjust: exact;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 11px;
+            }
+            th, td {
+                border: 1px solid #888;
+                padding: 4px;
+                vertical-align: middle;
+            }
+            th { background-color: #f9f9f9; text-align: center; }
+            .col-mark { width: 35px; text-align: center; font-weight: bold; }
+            .filled { background-color: #333; color: white; -webkit-print-color-adjust: exact; }
+            
+            .teacher-comment-print {
+                border: 1px solid #333;
+                padding: 5px;
+                min-height: 40px;
+                font-size: 11px;
+                margin-top: 5px;
+            }
+            .signature { margin-top: 20px; text-align: right; font-size: 12px; }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="card" id="setupCard">
-            <h3>📂 Sınıf Listesi</h3>
-            <textarea id="rawList" rows="3" placeholder="Listeyi buraya yapıştır..."></textarea>
-            <button class="btn btn-blue" onclick="loadList()">Listeyi Yükle ve Başla</button>
+        <div class="card" style="position: sticky; top: 10px; z-index: 90; border-top: 5px solid #3498db; padding: 10px;">
+            <label style="font-size:12px; font-weight:bold; color:#666; margin-bottom:5px; display:block;">Öğrenci Ara:</label>
+            
+            <input type="text" id="studentSearchInput" list="studentsList" placeholder="İsim yazmaya başla..." oninput="checkStudentSelection()">
+            
+            <datalist id="studentsList">
+                </datalist>
+
+            <div id="selectionStatus" style="font-size:12px; color:#27ae60; margin-top:5px; height:15px; font-weight:bold;"></div>
         </div>
 
-        <div class="card sticky-top" style="position:sticky; top:10px; z-index:90;">
-            <label style="font-size:12px; color:#666;">Öğrenci Ara:</label>
-            <input list="students-dl" id="studentSearch" type="text" placeholder="İsim yaz..." oninput="selectStudent(this.value)">
-            <datalist id="students-dl"></datalist>
-            <div id="status" style="font-size:13px; margin-top:5px; color:#27ae60; font-weight:bold; height:18px;"></div>
-        </div>
-
-        <div id="rubricArea" style="display:none;">
+        <div id="evaluationArea" style="display:none;">
             
             <div class="card">
-                <div class="quick-fill-bar">
-                    <h3 style="margin:0; color:#d35400;">Türkçe</h3>
-                    <button class="btn-quick" onclick="quickFill('t', 2)">Tümünü Tam Yap</button>
+                <div class="quick-actions">
+                    <h3 style="color:#d35400; margin:0;">TÜRKÇE</h3>
+                    <button class="btn-quick" onclick="fillAll('turkish', 2)">Hepsini Tam Yap</button>
                 </div>
-                <div id="turkish-questions"></div>
+                <div id="turkish-container"></div>
             </div>
 
             <div class="card">
-                <div class="quick-fill-bar">
-                    <h3 style="margin:0; color:#2980b9;">Matematik</h3>
-                    <button class="btn-quick" onclick="quickFill('m', 2)">Tümünü Tam Yap</button>
+                <div class="quick-actions">
+                    <h3 style="color:#2980b9; margin:0;">MATEMATİK</h3>
+                    <button class="btn-quick" onclick="fillAll('math', 2)">Hepsini Tam Yap</button>
                 </div>
-                <div id="math-questions"></div>
+                <div id="math-container"></div>
             </div>
 
             <div class="card">
-                <h3>📝 Öğretmen Görüşü</h3>
-                <textarea id="commentBox" rows="3" oninput="saveComment()" placeholder="Eksikler veya ödev önerisi..."></textarea>
+                <h3>Öğretmen Görüşü</h3>
+                <textarea id="teacherComment" rows="3" placeholder="Öğrenci için notlar..." oninput="saveComment()"></textarea>
             </div>
         </div>
     </div>
 
     <div class="bottom-bar">
-        <button class="btn btn-orange" onclick="generatePDF()">🖨️ PDF İNDİR</button>
+        <button class="btn-print" onclick="printAll()">🖨️ RAPORU İNDİR (PDF)</button>
     </div>
 
-    <div id="print-area"></div>
+    <div id="print-container"></div>
 
     <script>
-        // --- VERİLER ---
-        const turkishQ = [
-            { id: 't1', code: '1. Soru', text: 'Şiir analizi, ana duygu ve kronoloji' },
-            { id: 't2', code: '2. Soru', text: 'Neden-sonuç, soru ve karşılaştırma cümleleri' },
-            { id: 't3', code: '3. Soru', text: 'Metin türü (Hikaye edici)' },
-            { id: 't4', code: '4. Soru', text: 'Eş sesli kelimeler' },
-            { id: 't5', code: '5. Soru', text: 'Eş anlam ve Zıt anlam' }
+        // --- LİSTE ---
+        const studentList = [
+            "HAKAN AKDENİZ", "HÜSEYİN ÇAĞAN GÜRGAH", "AHMET ARIN AĞTÜRK", "DENİZ GÜNEY",
+            "İDİL DEMİRCİ", "DURU AYKANAT", "DENİZ KİMYON", "KADİR BERKTAŞ", "DOĞA BORA",
+            "AHMET CEVDET KORKMAZ", "GÜLNİHAL KARAKAŞ", "NİL TİRYAKİ", "MASAL DEFNE TEL",
+            "EYLÜL AFAT", "ELİF ADA KEKEÇ", "EYLÜL MUTAF", "İPEK MİMAROĞLU",
+            "YEKTA URAS DEMİRER", "HAMZA KAAN ÇEVEN", "BEYZA DAĞDELEN", "NAZ KARABAĞLI",
+            "AYNUR BUDAK", "DURU BÜKÜN", "WAFA MAKANSSI"
         ];
 
-        const mathQ = [
-            { id: 'm1', code: '1. Soru', text: 'Yuvarlama ve sıralama (<, >)' },
-            { id: 'm2', code: '2. Soru', text: 'Sıralama ve örüntü' },
-            { id: 'm3', code: '3. Soru', text: 'Toplama problemleri' },
-            { id: 'm4', code: '4. Soru', text: 'Dört işlem becerisi' },
-            { id: 'm5', code: '5. Soru', text: 'Basamak analizi' },
-            { id: 'm6', code: '6. Soru', text: 'Sayı örüntüsü kuralı' },
-            { id: 'm7', code: '7. Soru', text: 'Çıkarma problemleri' },
-            { id: 'm8', code: '8. Soru', text: 'Mantık muhakeme' }
-        ];
+        // --- RUBRİK ---
+        const rubric = {
+            turkish: [
+                { id: 't1', text: 'Şiir analizi, ana duygu ve Milli Mücadele kronolojisi' },
+                { id: 't2', text: 'Neden - Sonuç cümlelerini belirleme ve kurma' },
+                { id: 't3', text: 'Soru cümlesi oluşturma ve ayırt etme' },
+                { id: 't4', text: 'Karşılaştırma cümlelerini belirleme ve analiz etme' },
+                { id: 't5', text: 'Metin türünü ayırt etme (Hikaye Edici Metin)' },
+                { id: 't6', text: 'Eş sesli kelimeleri aynı cümlede farklı anlamlarıyla kullanma' },
+                { id: 't7', text: 'Eş anlamlı ve zıt anlamlı kelime çiftleri arasında ilişki kurma' }
+            ],
+            math: [
+                { id: 'm1', text: 'Doğal sayıları en yakın onluğa/yüzlüğe yuvarlama' },
+                { id: 'm2', text: 'Doğal sayıları sembol kullanarak sıralama (<, >)' },
+                { id: 'm3', text: 'Sıralamaya uygun değer verme ve örüntü oluşturma' },
+                { id: 'm4', text: 'Çok adımlı toplama işlemi problemlerini çözme' },
+                { id: 'm5', text: 'Dört işlem becerisi (Toplama, Çıkarma, Çarpma)' },
+                { id: 'm6', text: 'Verilen yönergelere göre doğal sayıları oluşturma' },
+                { id: 'm7', text: 'Çıkarma işlemi gerektiren problem çözme' },
+                { id: 'm8', text: 'Yüzer ritmik sayma ve basamak bölük ilişkisi ile toplama' }
+            ]
+        };
 
-        let studentsData = {};
+        let classData = {};
         let currentStudent = null;
 
-        // --- SAYFA YÜKLENİNCE SORULARI OLUŞTUR ---
-        function renderQuestions() {
-            const createHTML = (q) => `
-                <div class="question-row" id="row-${q.id}">
-                    <span class="question-text"><b>${q.code}:</b> ${q.text}</span>
-                    <div class="options-grid">
-                        <div class="option-btn" onclick="mark('${q.id}', 2)" id="btn-${q.id}-2">Tam</div>
-                        <div class="option-btn" onclick="mark('${q.id}', 1)" id="btn-${q.id}-1">Kısmen</div>
-                        <div class="option-btn" onclick="mark('${q.id}', 0)" id="btn-${q.id}-0">Eksik</div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('turkish-questions').innerHTML = turkishQ.map(createHTML).join('');
-            document.getElementById('math-questions').innerHTML = mathQ.map(createHTML).join('');
-        }
-        renderQuestions();
-
-        // --- LİSTE YÖNETİMİ ---
-        function loadList() {
-            const raw = document.getElementById('rawList').value;
-            const names = raw.split('\n').filter(n => n.trim().length > 1);
+        // --- BAŞLANGIÇ ---
+        window.onload = function() {
+            const dataList = document.getElementById('studentsList');
             
-            const dl = document.getElementById('students-dl');
-            dl.innerHTML = '';
-            studentsData = {};
-
-            names.forEach(name => {
-                studentsData[name.trim()] = { scores: {}, comment: '' };
-                const opt = document.createElement('option');
-                opt.value = name.trim();
-                dl.appendChild(opt);
+            studentList.forEach(name => {
+                // Veri Hazırlığı
+                classData[name] = { scores: {}, comment: "" };
+                
+                // Listeyi Doldur
+                let opt = document.createElement('option');
+                opt.value = name;
+                dataList.appendChild(opt);
             });
 
-            document.getElementById('setupCard').style.display = 'none'; // Alan kazanmak için gizle
-            alert(names.length + " Öğrenci Yüklendi. Aramaya başlayın.");
+            renderRubricHTML();
+        };
+
+        // --- HTML OLUŞTURMA ---
+        function renderRubricHTML() {
+            const createRows = (items, type) => {
+                return items.map(item => `
+                    <div class="rubric-item">
+                        <span class="rubric-text">${item.text}</span>
+                        <div class="score-grid">
+                            <div class="score-btn" id="btn-${item.id}-2" onclick="setScore('${item.id}', 2)">Tam</div>
+                            <div class="score-btn" id="btn-${item.id}-1" onclick="setScore('${item.id}', 1)">Kısmen</div>
+                            <div class="score-btn" id="btn-${item.id}-0" onclick="setScore('${item.id}', 0)">Yapmadı</div>
+                        </div>
+                    </div>
+                `).join('');
+            };
+            document.getElementById('turkish-container').innerHTML = createRows(rubric.turkish, 'turkish');
+            document.getElementById('math-container').innerHTML = createRows(rubric.math, 'math');
         }
 
-        // --- ÖĞRENCİ SEÇİMİ ---
-        function selectStudent(name) {
-            if (studentsData[name]) {
-                currentStudent = name;
-                document.getElementById('rubricArea').style.display = 'block';
-                document.getElementById('status').innerText = "Seçili: " + name;
+        // --- ARAMA VE SEÇİM ---
+        function checkStudentSelection() {
+            const val = document.getElementById('studentSearchInput').value;
+            const statusDiv = document.getElementById('selectionStatus');
+            const area = document.getElementById('evaluationArea');
+
+            // Listede tam eşleşme var mı?
+            if (studentList.includes(val)) {
+                currentStudent = val;
+                statusDiv.innerText = "✓ " + val + " seçildi.";
+                area.style.display = 'block';
                 
-                // Formu doldur
-                const data = studentsData[name];
-                document.getElementById('commentBox').value = data.comment;
-                
-                // Görseli yenile
-                updateUI(data.scores);
+                // Verileri Yükle
+                document.getElementById('teacherComment').value = classData[val].comment;
+                refreshUI();
+            } else {
+                currentStudent = null;
+                statusDiv.innerText = "";
+                area.style.display = 'none';
             }
         }
 
-        // --- PUANLAMA MANTIĞI ---
-        function mark(qId, val) {
-            if (!currentStudent) return;
-            studentsData[currentStudent].scores[qId] = val;
-            updateUI(studentsData[currentStudent].scores);
+        // --- PUANLAMA ---
+        function setScore(id, val) {
+            if(!currentStudent) return;
+            classData[currentStudent].scores[id] = val;
+            refreshUI();
         }
 
-        function quickFill(prefix, val) {
-            if (!currentStudent) return;
-            const questions = prefix === 't' ? turkishQ : mathQ;
-            questions.forEach(q => {
-                studentsData[currentStudent].scores[q.id] = val;
+        function fillAll(subject, val) {
+            if(!currentStudent) return;
+            rubric[subject].forEach(item => {
+                classData[currentStudent].scores[item.id] = val;
             });
-            updateUI(studentsData[currentStudent].scores);
+            refreshUI();
         }
 
-        function updateUI(scores) {
-            // Tüm butonları sıfırla
-            document.querySelectorAll('.option-btn').forEach(b => {
-                b.classList.remove('selected-2', 'selected-1', 'selected-0');
-            });
-
-            // Seçilileri boya
-            for (const [qId, val] of Object.entries(scores)) {
-                const btn = document.getElementById(`btn-${qId}-${val}`);
-                if (btn) btn.classList.add(`selected-${val}`);
+        function refreshUI() {
+            // Temizle
+            document.querySelectorAll('.score-btn').forEach(b => b.className = 'score-btn');
+            
+            // İşaretle
+            const scores = classData[currentStudent].scores;
+            for (const [id, val] of Object.entries(scores)) {
+                const btn = document.getElementById(`btn-${id}-${val}`);
+                if(btn) btn.classList.add(`active-${val}`);
             }
         }
 
         function saveComment() {
             if(currentStudent) {
-                studentsData[currentStudent].comment = document.getElementById('commentBox').value;
+                classData[currentStudent].comment = document.getElementById('teacherComment').value;
             }
         }
 
-        // --- PDF OLUŞTURMA ---
-        function generatePDF() {
-            const printDiv = document.getElementById('print-area');
-            printDiv.innerHTML = '';
+        // --- PDF BASKI ---
+        function printAll() {
+            const container = document.getElementById('print-container');
+            container.innerHTML = ''; 
+            const date = new Date().toLocaleDateString('tr-TR');
 
-            const students = Object.keys(studentsData);
-            if(students.length === 0) { alert("Liste boş!"); return; }
-
-            const today = new Date().toLocaleDateString('tr-TR');
-
-            students.forEach(name => {
-                const data = studentsData[name];
-                // Eğer hiç puan girilmediyse (veya boşsa) bu kişiyi atla veya boş bas (Tercih senin)
-                // Şimdilik hepsini basıyoruz.
-
+            studentList.forEach(name => {
+                const data = classData[name];
+                
                 let html = `
-                <div class="print-page">
+                <div class="page-break">
                     <div class="print-header">
-                        <h2>NESİBE AYDIN OKULLARI</h2>
-                        <h4>4. Sınıflar Genel Değerlendirme Raporu</h4>
+                        <h1>NESİBE AYDIN OKULLARI</h1>
+                        <h2 style="font-size:14px; font-weight:normal; margin:5px 0;">4. Sınıflar Türkçe - Matematik Değerlendirme Raporu</h2>
                     </div>
-                    <p><strong>Öğrenci:</strong> ${name} <span style="float:right"><strong>Tarih:</strong> ${today}</span></p>
                     
-                    <h4 style="background:#eee; padding:5px;">TÜRKÇE</h4>
-                    <table class="print-table">
-                        <tr><th style="text-align:left">Konu</th><th width="40">Tam</th><th width="40">Kıs</th><th width="40">Yok</th></tr>
-                        ${turkishQ.map(q => {
-                            const s = data.scores[q.id];
-                            return `<tr>
-                                <td>${q.code} - ${q.text}</td>
-                                <td class="print-check">${s===2 ? 'X' : ''}</td>
-                                <td class="print-check">${s===1 ? 'X' : ''}</td>
-                                <td class="print-check">${s===0 ? 'X' : ''}</td>
-                            </tr>`;
-                        }).join('')}
-                    </table>
+                    <div class="student-meta">
+                        <span>Öğrenci: ${name}</span>
+                        <span>Tarih: ${date}</span>
+                    </div>
 
-                    <h4 style="background:#eee; padding:5px;">MATEMATİK</h4>
-                    <table class="print-table">
-                        <tr><th style="text-align:left">Konu</th><th width="40">Tam</th><th width="40">Kıs</th><th width="40">Yok</th></tr>
-                        ${mathQ.map(q => {
-                            const s = data.scores[q.id];
-                            return `<tr>
-                                <td>${q.code} - ${q.text}</td>
-                                <td class="print-check">${s===2 ? 'X' : ''}</td>
-                                <td class="print-check">${s===1 ? 'X' : ''}</td>
-                                <td class="print-check">${s===0 ? 'X' : ''}</td>
-                            </tr>`;
-                        }).join('')}
-                    </table>
+                    <div class="print-section-title">TÜRKÇE DEĞERLENDİRMESİ</div>
+                    <table>
+                        <tr><th>Kazanım</th><th class="col-mark">Tam</th><th class="col-mark">Kıs</th><th class="col-mark">Yok</th></tr>`;
+                
+                rubric.turkish.forEach(item => {
+                    const s = data.scores[item.id];
+                    html += `<tr>
+                        <td>${item.text}</td>
+                        <td class="col-mark ${s===2 ? 'filled' : ''}">${s===2 ? 'X' : ''}</td>
+                        <td class="col-mark ${s===1 ? 'filled' : ''}">${s===1 ? 'X' : ''}</td>
+                        <td class="col-mark ${s===0 ? 'filled' : ''}">${s===0 ? 'X' : ''}</td>
+                    </tr>`;
+                });
+                html += `</table>`;
 
-                    ${data.comment ? `<div style="margin-top:20px; border:1px solid #333; padding:10px;"><strong>Öğretmen Görüşü:</strong><br>${data.comment}</div>` : ''}
-                    
-                    <div style="margin-top:40px; text-align:right;">Sınıf Öğretmeni<br>İmza</div>
-                </div>
-                `;
-                printDiv.innerHTML += html;
+                html += `<div class="print-section-title">MATEMATİK DEĞERLENDİRMESİ</div>
+                    <table>
+                        <tr><th>Kazanım</th><th class="col-mark">Tam</th><th class="col-mark">Kıs</th><th class="col-mark">Yok</th></tr>`;
+
+                rubric.math.forEach(item => {
+                    const s = data.scores[item.id];
+                    html += `<tr>
+                        <td>${item.text}</td>
+                        <td class="col-mark ${s===2 ? 'filled' : ''}">${s===2 ? 'X' : ''}</td>
+                        <td class="col-mark ${s===1 ? 'filled' : ''}">${s===1 ? 'X' : ''}</td>
+                        <td class="col-mark ${s===0 ? 'filled' : ''}">${s===0 ? 'X' : ''}</td>
+                    </tr>`;
+                });
+                html += `</table>`;
+
+                if(data.comment && data.comment.trim() !== "") {
+                    html += `<div style="margin-top:10px;"><strong>Öğretmen Görüşü:</strong><div class="teacher-comment-print">${data.comment}</div></div>`;
+                }
+
+                html += `<div class="signature">Sınıf Öğretmeni<br>İmza</div></div>`;
+                container.innerHTML += html;
             });
 
             window.print();
