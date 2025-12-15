@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobil Uyumlu Değerlendirme</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        /* --- GENEL MOBİL AYARLARI --- */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            -webkit-tap-highlight-color: transparent; /* Mobilde tıklama efektini düzeltir */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px;
+            padding-bottom: 80px; /* Alt buton için boşluk */
+        }
+
+        /* --- KART YAPISI --- */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        h2, h3 { margin: 0 0 10px 0; color: #2c3e50; }
+        
+        /* --- GİRİŞ ALANLARI --- */
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px; /* 16px mobilde zoom yapmayı engeller */
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus { border-color: #3498db; outline: none; }
+
+        /* --- BUTONLAR --- */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 5px;
+            color: white;
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-blue { background-color: #3498db; }
+        .btn-green { background-color: #27ae60; }
+        .btn-orange { background-color: #e67e22; }
+        
+        /* Hızlı Doldur Butonları */
+        .quick-fill-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            background: #eef2f3;
+            padding: 8px;
+            border-radius: 8px;
+            align-items: center;
+        }
+        .btn-quick {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        /* --- SORU SATIRLARI (MOBİL DOSTU) --- */
+        .question-row {
+            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+        }
+        .question-text {
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            display: block;
+        }
+        .options-grid {
+            display: flex;
+            gap: 5px;
+        }
+        
+        /* Büyük Dokunmatik Seçenekler */
+        .option-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #7f8c8d;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        /* Seçili Durumlar */
+        .selected-2 { background-color: #27ae60; color: white; border-color: #27ae60; } /* Tam */
+        .selected-1 { background-color: #f1c40f; color: white; border-color: #f1c40f; text-shadow: 0 1px 1px rgba(0,0,0,0.2); } /* Kısmen */
+        .selected-0 { background-color: #e74c3c; color: white; border-color: #e74c3c; } /* Yok */
+
+        /* --- ALT SABİT MENÜ (PDF BUTONU) --- */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            padding: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            box-sizing: border-box;
+        }
+
+        /* --- GİZLİ BASKI ALANI --- */
+        #print-area { display: none; }
+
+        @media print {
+            body * { visibility: hidden; }
+            .container, .bottom-bar { display: none; }
+            #print-area, #print-area * { 
+                visibility: visible; 
+                display: block;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            
+            .print-page {
+                page-break-after: always;
+                padding: 30px 40px;
+                font-family: 'Times New Roman', serif;
+            }
+            .print-header { text-align: center; border-bottom: 2px solid black; margin-bottom: 20px; }
+            .print-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12pt; }
+            .print-table th, .print-table td { border: 1px solid #333; padding: 6px; }
+            .print-check { font-size: 18px; text-align: center; font-weight: bold; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card" id="setupCard">
+            <h3>📂 Sınıf Listesi</h3>
+            <textarea id="rawList" rows="3" placeholder="Listeyi buraya yapıştır..."></textarea>
+            <button class="btn btn-blue" onclick="loadList()">Listeyi Yükle ve Başla</button>
+        </div>
+
+        <div class="card sticky-top" style="position:sticky; top:10px; z-index:90;">
+            <label style="font-size:12px; color:#666;">Öğrenci Ara:</label>
+            <input list="students-dl" id="studentSearch" type="text" placeholder="İsim yaz..." oninput="selectStudent(this.value)">
+            <datalist id="students-dl"></datalist>
+            <div id="status" style="font-size:13px; margin-top:5px; color:#27ae60; font-weight:bold; height:18px;"></div>
+        </div>
+
+        <div id="rubricArea" style="display:none;">
+            
+            <div class="card">
+                <div class="quick-fill-bar">
+                    <h3 style="margin:0; color:#d35400;">Türkçe</h3>
+                    <button class="btn-quick" onclick="quickFill('t', 2)">Tümünü Tam Yap</button>
+                </div>
+                <div id="turkish-questions"></div>
+            </div>
+
+            <div class="card">
+                <div class="quick-fill-bar">
+                    <h3 style="margin:0; color:#2980b9;">Matematik</h3>
+                    <button class="btn-quick" onclick="quickFill('m', 2)">Tümünü Tam Yap</button>
+                </div>
+                <div id="math-questions"></div>
+            </div>
+
+            <div class="card">
+                <h3>📝 Öğretmen Görüşü</h3>
+                <textarea id="commentBox" rows="3" oninput="saveComment()" placeholder="Eksikler veya ödev önerisi..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-bar">
+        <button class="btn btn-orange" onclick="generatePDF()">🖨️ PDF İNDİR</button>
+    </div>
+
+    <div id="print-area"></div>
+
+    <script>
+        // --- VERİLER ---
+        const turkishQ = [
+            { id: 't1', code: '1. Soru', text: 'Şiir analizi, ana duygu ve kronoloji' },
+            { id: 't2', code: '2. Soru', text: 'Neden-sonuç, soru ve karşılaştırma cümleleri' },
+            { id: 't3', code: '3. Soru', text: 'Metin türü (Hikaye edici)' },
+            { id: 't4', code: '4. Soru', text: 'Eş sesli kelimeler' },
+            { id: 't5', code: '5. Soru', text: 'Eş anlam ve Zıt anlam' }
+        ];
+
+        const mathQ = [
+            { id: 'm1', code: '1. Soru', text: 'Yuvarlama ve sıralama (<, >)' },
+            { id: 'm2', code: '2. Soru', text: 'Sıralama ve örüntü' },
+            { id: 'm3', code: '3. Soru', text: 'Toplama problemleri' },
+            { id: 'm4', code: '4. Soru', text: 'Dört işlem becerisi' },
+            { id: 'm5', code: '5. Soru', text: 'Basamak analizi' },
+            { id: 'm6', code: '6. Soru', text: 'Sayı örüntüsü kuralı' },
+            { id: 'm7', code: '7. Soru', text: 'Çıkarma problemleri' },
+            { id: 'm8', code: '8. Soru', text: 'Mantık muhakeme' }
+        ];
+
+        let studentsData = {};
+        let currentStudent = null;
+
+        // --- SAYFA YÜKLENİNCE SORULARI OLUŞTUR ---
+        function renderQuestions() {
+            const createHTML = (q) => `
+                <div class="question-row" id="row-${q.id}">
+                    <span class="question-text"><b>${q.code}:</b> ${q.text}</span>
+                    <div class="options-grid">
+                        <div class="option-btn" onclick="mark('${q.id}', 2)" id="btn-${q.id}-2">Tam</div>
+                        <div class="option-btn" onclick="mark('${q.id}', 1)" id="btn-${q.id}-1">Kısmen</div>
+                        <div class="option-btn" onclick="mark('${q.id}', 0)" id="btn-${q.id}-0">Eksik</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('turkish-questions').innerHTML = turkishQ.map(createHTML).join('');
+            document.getElementById('math-questions').innerHTML = mathQ.map(createHTML).join('');
+        }
+        renderQuestions();
+
+        // --- LİSTE YÖNETİMİ ---
+        function loadList() {
+            const raw = document.getElementById('rawList').value;
+            const names = raw.split('\n').filter(n => n.trim().length > 1);
+            
+            const dl = document.getElementById('students-dl');
+            dl.innerHTML = '';
+            studentsData = {};
+
+            names.forEach(name => {
+                studentsData[name.trim()] = { scores: {}, comment: '' };
+                const opt = document.createElement('option');
+                opt.value = name.trim();
+                dl.appendChild(opt);
+            });
+
+            document.getElementById('setupCard').style.display = 'none'; // Alan kazanmak için gizle
+            alert(names.length + " Öğrenci Yüklendi. Aramaya başlayın.");
+        }
+
+        // --- ÖĞRENCİ SEÇİMİ ---
+        function selectStudent(name) {
+            if (studentsData[name]) {
+                currentStudent = name;
+                document.getElementById('rubricArea').style.display = 'block';
+                document.getElementById('status').innerText = "Seçili: " + name;
+                
+                // Formu doldur
+                const data = studentsData[name];
+                document.getElementById('commentBox').value = data.comment;
+                
+                // Görseli yenile
+                updateUI(data.scores);
+            }
+        }
+
+        // --- PUANLAMA MANTIĞI ---
+        function mark(qId, val) {
+            if (!currentStudent) return;
+            studentsData[currentStudent].scores[qId] = val;
+            updateUI(studentsData[currentStudent].scores);
+        }
+
+        function quickFill(prefix, val) {
+            if (!currentStudent) return;
+            const questions = prefix === 't' ? turkishQ : mathQ;
+            questions.forEach(q => {
+                studentsData[currentStudent].scores[q.id] = val;
+            });
+            updateUI(studentsData[currentStudent].scores);
+        }
+
+        function updateUI(scores) {
+            // Tüm butonları sıfırla
+            document.querySelectorAll('.option-btn').forEach(b => {
+                b.classList.remove('selected-2', 'selected-1', 'selected-0');
+            });
+
+            // Seçilileri boya
+            for (const [qId, val] of Object.entries(scores)) {
+                const btn = document.getElementById(`btn-${qId}-${val}`);
+                if (btn) btn.classList.add(`selected-${val}`);
+            }
+        }
+
+        function saveComment() {
+            if(currentStudent) {
+                studentsData[currentStudent].comment = document.getElementById('commentBox').value;
+            }
+        }
+
+        // --- PDF OLUŞTURMA ---
+        function generatePDF() {
+            const printDiv = document.getElementById('print-area');
+            printDiv.innerHTML = '';
+
+            const students = Object.keys(studentsData);
+            if(students.length === 0) { alert("Liste boş!"); return; }
+
+            const today = new Date().toLocaleDateString('tr-TR');
+
+            students.forEach(name => {
+                const data = studentsData[name];
+                // Eğer hiç puan girilmediyse (veya boşsa) bu kişiyi atla veya boş bas (Tercih senin)
+                // Şimdilik hepsini basıyoruz.
+
+                let html = `
+                <div class="print-page">
+                    <div class="print-header">
+                        <h2>NESİBE AYDIN OKULLARI</h2>
+                        <h4>4. Sınıflar Genel Değerlendirme Raporu</h4>
+                    </div>
+                    <p><strong>Öğrenci:</strong> ${name} <span style="float:right"><strong>Tarih:</strong> ${today}</span></p>
+                    
+                    <h4 style="background:#eee; padding:5px;">TÜRKÇE</h4>
+                    <table class="print-table">
+                        <tr><th style="text-align:left">Konu</th><th width="40">Tam</th><th width="40">Kıs</th><th width="40">Yok</th></tr>
+                        ${turkishQ.map(q => {
+                            const s = data.scores[q.id];
+                            return `<tr>
+                                <td>${q.code} - ${q.text}</td>
+                                <td class="print-check">${s===2 ? 'X' : ''}</td>
+                                <td class="print-check">${s===1 ? 'X' : ''}</td>
+                                <td class="print-check">${s===0 ? 'X' : ''}</td>
+                            </tr>`;
+                        }).join('')}
+                    </table>
+
+                    <h4 style="background:#eee; padding:5px;">MATEMATİK</h4>
+                    <table class="print-table">
+                        <tr><th style="text-align:left">Konu</th><th width="40">Tam</th><th width="40">Kıs</th><th width="40">Yok</th></tr>
+                        ${mathQ.map(q => {
+                            const s = data.scores[q.id];
+                            return `<tr>
+                                <td>${q.code} - ${q.text}</td>
+                                <td class="print-check">${s===2 ? 'X' : ''}</td>
+                                <td class="print-check">${s===1 ? 'X' : ''}</td>
+                                <td class="print-check">${s===0 ? 'X' : ''}</td>
+                            </tr>`;
+                        }).join('')}
+                    </table>
+
+                    ${data.comment ? `<div style="margin-top:20px; border:1px solid #333; padding:10px;"><strong>Öğretmen Görüşü:</strong><br>${data.comment}</div>` : ''}
+                    
+                    <div style="margin-top:40px; text-align:right;">Sınıf Öğretmeni<br>İmza</div>
+                </div>
+                `;
+                printDiv.innerHTML += html;
+            });
+
+            window.print();
+        }
+    </script>
+</body>
+</html>
