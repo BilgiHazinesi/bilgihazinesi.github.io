@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>4. Sınıf Akıllı Kayıt Sistemi</title>
+    <title>4. Sınıf Akıllı Asistan</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
@@ -15,7 +15,7 @@
             padding: 0;
             color: #333;
             -webkit-tap-highlight-color: transparent;
-            padding-bottom: 100px;
+            padding-bottom: 120px;
         }
 
         .container {
@@ -24,7 +24,6 @@
             padding: 15px;
         }
 
-        /* --- KARTLAR --- */
         .card {
             background: white;
             border-radius: 12px;
@@ -49,7 +48,6 @@
         input[type="text"]:focus {
             outline: none;
             border-color: #2980b9;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
         }
 
         h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 18px; }
@@ -119,6 +117,24 @@
             font-size: 15px;
         }
 
+        /* --- MESAJ ALANI --- */
+        #messagePreviewArea {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #ddd;
+        }
+        #generatedMessage {
+            width: 100%;
+            height: 180px;
+            font-size: 13px;
+            padding: 10px;
+            background: #fdfdfd;
+            border: 1px solid #999;
+            border-radius: 6px;
+            color: #2c3e50;
+        }
+
         /* --- ALT BAR --- */
         .bottom-bar {
             position: fixed;
@@ -126,127 +142,62 @@
             left: 0;
             width: 100%;
             background: white;
-            padding: 15px;
+            padding: 10px;
             box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
             text-align: center;
             z-index: 1000;
             box-sizing: border-box;
             display: flex;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         
-        .btn-print {
-            background-color: #e67e22;
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            flex: 2;
-        }
-        
-        .btn-reset {
-            background-color: #c0392b;
-            color: white;
-            border: none;
-            padding: 14px;
+        .btn-action {
+            padding: 12px;
             border-radius: 8px;
             font-size: 14px;
             font-weight: bold;
-            flex: 1;
+            border: none;
+            color: white;
+            flex-grow: 1;
+            cursor: pointer;
         }
 
-        /* --- BASKI AYARLARI (KRİTİK BÖLÜM) --- */
+        .btn-print { background-color: #e67e22; flex-grow: 2; }
+        .btn-whatsapp { background-color: #25D366; flex-grow: 2; }
+        .btn-reset { background-color: #7f8c8d; max-width: 60px; }
+
+        /* --- BASKI AYARLARI --- */
         #print-container { display: none; }
-
-        @page {
-            size: A4;
-            margin: 10mm; /* Kenar boşluklarını sabitledik */
-        }
+        @page { size: A4; margin: 10mm; }
 
         @media print {
-            body, html { 
-                margin: 0; 
-                padding: 0; 
-                background: white; 
-                height: auto;
-            }
+            body, html { margin: 0; padding: 0; background: white; }
             .container, .bottom-bar { display: none !important; }
             #print-container { display: block !important; }
-
-            /* URL ve Tarih Gizleme */
-            @page {
-                margin-top: 0;
-                margin-bottom: 0;
-            }
+            @page { margin-top: 0; margin-bottom: 0; }
 
             .page-break {
                 page-break-after: always;
                 page-break-inside: avoid;
                 width: 100%;
-                min-height: 280mm; /* A4 boyuna yakın ama taşmayacak yükseklik */
+                min-height: 280mm;
                 box-sizing: border-box;
                 padding-top: 10mm;
-                padding-bottom: 5mm;
                 position: relative;
             }
+            .page-break:last-child { page-break-after: auto; }
 
-            /* Son sayfadan sonra boş sayfa çıkmasını engellemek için */
-            .page-break:last-child {
-                page-break-after: auto;
-            }
-
-            .print-header {
-                text-align: center;
-                border-bottom: 2px solid #333;
-                margin-bottom: 10px;
-                padding-bottom: 5px;
-            }
+            .print-header { text-align: center; border-bottom: 2px solid #333; margin-bottom: 10px; padding-bottom: 5px; }
             .print-header h1 { font-size: 18px; margin: 0; }
-            
-            .student-meta {
-                display: flex;
-                justify-content: space-between;
-                font-weight: bold;
-                font-size: 14px;
-                border-bottom: 1px dashed #ccc;
-                padding-bottom: 5px;
-                margin-bottom: 10px;
-            }
-
-            .print-section-title {
-                background-color: #eee;
-                font-weight: bold;
-                padding: 4px;
-                font-size: 12px;
-                border-left: 4px solid #333;
-                margin-top: 8px;
-                margin-bottom: 4px;
-                -webkit-print-color-adjust: exact;
-            }
-
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 11px;
-            }
-            th, td {
-                border: 1px solid #888;
-                padding: 3px; /* Padding küçültüldü */
-                vertical-align: middle;
-            }
+            .student-meta { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; margin-bottom: 10px; }
+            .print-section-title { background-color: #eee; font-weight: bold; padding: 4px; font-size: 12px; border-left: 4px solid #333; margin-top: 8px; margin-bottom: 4px; -webkit-print-color-adjust: exact; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            th, td { border: 1px solid #888; padding: 3px; vertical-align: middle; }
             th { background-color: #f9f9f9; text-align: center; }
             .col-mark { width: 30px; text-align: center; font-weight: bold; }
             .filled { background-color: #333; color: white; -webkit-print-color-adjust: exact; }
-            
-            .teacher-comment-print {
-                border: 1px solid #333;
-                padding: 5px;
-                min-height: 30px;
-                font-size: 11px;
-                margin-top: 5px;
-            }
+            .teacher-comment-print { border: 1px solid #333; padding: 5px; min-height: 30px; font-size: 11px; margin-top: 5px; }
             .signature { margin-top: 15px; text-align: right; font-size: 12px; }
         }
     </style>
@@ -262,7 +213,6 @@
         </div>
 
         <div id="evaluationArea" style="display:none;">
-            
             <div class="card">
                 <div class="quick-actions">
                     <h3 style="color:#d35400; margin:0;">TÜRKÇE</h3>
@@ -280,15 +230,25 @@
             </div>
 
             <div class="card">
-                <h3>Öğretmen Görüşü</h3>
-                <textarea id="teacherComment" rows="3" placeholder="Öğrenci için notlar..." oninput="saveComment()"></textarea>
+                <h3>Öğretmen Görüşü (Rapor İçin)</h3>
+                <textarea id="teacherComment" rows="2" placeholder="Raporda görünecek kısa not..." oninput="saveComment()"></textarea>
+                
+                <div style="margin-top:20px; text-align:center;">
+                    <button class="btn-quick" style="width:100%; background:#2c3e50; font-size:14px; padding:12px;" onclick="previewMessage()">💬 VELİ MESAJINI OLUŞTUR / GÖR</button>
+                </div>
+
+                <div id="messagePreviewArea">
+                    <label style="font-weight:bold; font-size:12px; display:block; margin-bottom:5px;">Veliye Gönderilecek Mesaj:</label>
+                    <textarea id="generatedMessage"></textarea>
+                    <button class="btn-whatsapp" style="width:100%; margin-top:10px; padding:10px; border:none; border-radius:6px; color:white; font-weight:bold;" onclick="copyToClipboard()">📋 KOPYALA</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="bottom-bar">
-        <button class="btn-reset" onclick="resetAllData()">🗑️ SIFIRLA</button>
-        <button class="btn-print" onclick="printAll()">🖨️ PDF İNDİR</button>
+        <button class="btn-action btn-reset" onclick="resetAllData()">🗑️</button>
+        <button class="btn-action btn-print" onclick="printAll()">🖨️ PDF İNDİR</button>
     </div>
 
     <div id="print-container"></div>
@@ -304,45 +264,43 @@
             "AYNUR BUDAK", "DURU BÜKÜN", "WAFA MAKANSSI"
         ];
 
+        // Konu isimlerini cümle içinde kullanmak için biraz kısalttım/düzenledim
         const rubric = {
             turkish: [
-                { id: 't1', text: 'Şiir analizi, ana duygu ve Milli Mücadele kronolojisi' },
-                { id: 't2', text: 'Neden - Sonuç cümlelerini belirleme ve kurma' },
-                { id: 't3', text: 'Soru cümlesi oluşturma ve ayırt etme' },
-                { id: 't4', text: 'Karşılaştırma cümlelerini belirleme ve analiz etme' },
-                { id: 't5', text: 'Metin türünü ayırt etme (Hikaye Edici Metin)' },
-                { id: 't6', text: 'Eş sesli kelimeleri aynı cümlede farklı anlamlarıyla kullanma' },
-                { id: 't7', text: 'Eş anlamlı ve zıt anlamlı kelime çiftleri arasında ilişki kurma' }
+                { id: 't1', text: 'Şiir analizi ve ana duygu', full: 'Şiir analizi, ana duygu ve Milli Mücadele kronolojisi' },
+                { id: 't2', text: 'neden-sonuç cümleleri', full: 'Neden - Sonuç cümlelerini belirleme ve kurma' },
+                { id: 't3', text: 'soru cümleleri', full: 'Soru cümlesi oluşturma ve ayırt etme' },
+                { id: 't4', text: 'karşılaştırma cümleleri', full: 'Karşılaştırma cümlelerini belirleme ve analiz etme' },
+                { id: 't5', text: 'metin türü', full: 'Metin türünü ayırt etme (Hikaye Edici Metin)' },
+                { id: 't6', text: 'eş sesli kelimeler', full: 'Eş sesli kelimeleri aynı cümlede farklı anlamlarıyla kullanma' },
+                { id: 't7', text: 'eş ve zıt anlamlı kelimeler', full: 'Eş anlamlı ve zıt anlamlı kelime çiftleri arasında ilişki kurma' }
             ],
             math: [
-                { id: 'm1', text: 'Doğal sayıları en yakın onluğa/yüzlüğe yuvarlama' },
-                { id: 'm2', text: 'Doğal sayıları sembol kullanarak sıralama (<, >)' },
-                { id: 'm3', text: 'Sıralamaya uygun değer verme ve örüntü oluşturma' },
-                { id: 'm4', text: 'Çok adımlı toplama işlemi problemlerini çözme' },
-                { id: 'm5', text: 'Dört işlem becerisi (Toplama, Çıkarma, Çarpma)' },
-                { id: 'm6', text: 'Verilen yönergelere göre doğal sayıları oluşturma' },
-                { id: 'm7', text: 'Çıkarma işlemi gerektiren problem çözme' },
-                { id: 'm8', text: 'Yüzer ritmik sayma ve basamak bölük ilişkisi ile toplama' }
+                { id: 'm1', text: 'onluğa ve yüzlüğe yuvarlama', full: 'Doğal sayıları en yakın onluğa/yüzlüğe yuvarlama' },
+                { id: 'm2', text: 'sıralama', full: 'Doğal sayıları sembol kullanarak sıralama (<, >)' },
+                { id: 'm3', text: 'örüntü', full: 'Sıralamaya uygun değer verme ve örüntü oluşturma' },
+                { id: 'm4', text: 'toplama işlemi problemleri', full: 'Çok adımlı toplama işlemi problemlerini çözme' },
+                { id: 'm5', text: 'dört işlem becerisi', full: 'Dört işlem becerisi (Toplama, Çıkarma, Çarpma)' },
+                { id: 'm6', text: 'doğal sayıları yazma', full: 'Verilen yönergelere göre doğal sayıları oluşturma' },
+                { id: 'm7', text: 'çıkarma işlemi problemleri', full: 'Çıkarma işlemi gerektiren problem çözme' },
+                { id: 'm8', text: 'basamak kavramı ve toplama', full: 'Yüzer ritmik sayma ve basamak bölük ilişkisi ile toplama' }
             ]
         };
 
         let classData = {};
         let currentStudent = null;
 
-        // --- BAŞLANGIÇ ---
         window.onload = function() {
-            loadFromStorage(); // Önce hafızadaki veriyi çek
+            loadFromStorage();
             populateDataList();
             renderRubricHTML();
         };
 
-        // --- HAFIZA (LOCAL STORAGE) ---
         function loadFromStorage() {
-            const savedData = localStorage.getItem('okul_verisi_v1');
+            const savedData = localStorage.getItem('okul_verisi_v3');
             if (savedData) {
                 classData = JSON.parse(savedData);
             } else {
-                // Hafızada yoksa boş başlat
                 studentList.forEach(name => {
                     classData[name] = { scores: {}, comment: "" };
                 });
@@ -350,17 +308,16 @@
         }
 
         function saveToStorage() {
-            localStorage.setItem('okul_verisi_v1', JSON.stringify(classData));
+            localStorage.setItem('okul_verisi_v3', JSON.stringify(classData));
         }
 
         function resetAllData() {
-            if(confirm("DİKKAT! Tüm öğrenci notları ve yorumları silinecek. Emin misiniz?")) {
-                localStorage.removeItem('okul_verisi_v1');
+            if(confirm("Tüm kayıtlar silinecek. Emin misin?")) {
+                localStorage.removeItem('okul_verisi_v3');
                 location.reload();
             }
         }
 
-        // --- ARAYÜZ ---
         function populateDataList() {
             const dl = document.getElementById('studentsList');
             studentList.forEach(name => {
@@ -373,7 +330,7 @@
         function renderRubricHTML() {
             const createRows = (items, type) => items.map(item => `
                 <div class="rubric-item">
-                    <span class="rubric-text">${item.text}</span>
+                    <span class="rubric-text">${item.full}</span>
                     <div class="score-grid">
                         <div class="score-btn" id="btn-${item.id}-2" onclick="setScore('${item.id}', 2)">Tam</div>
                         <div class="score-btn" id="btn-${item.id}-1" onclick="setScore('${item.id}', 1)">Kısmen</div>
@@ -386,17 +343,14 @@
             document.getElementById('math-container').innerHTML = createRows(rubric.math, 'math');
         }
 
-        // --- İŞLEMLER ---
         function checkStudentSelection() {
-            const val = document.getElementById('studentSearchInput').value.trim(); // .toUpperCase() eklenebilir gerekirse
-            // Tam eşleşme kontrolü (Büyük/küçük harf duyarlı olabilir, listeden seçilmesi garanti)
+            const val = document.getElementById('studentSearchInput').value.trim();
             if (classData[val]) {
                 currentStudent = val;
-                document.getElementById('selectionStatus').innerText = "✓ " + val + " (Kayıtlı)";
+                document.getElementById('selectionStatus').innerText = "✓ " + val;
                 document.getElementById('evaluationArea').style.display = 'block';
-                
-                // Verileri forma yükle
                 document.getElementById('teacherComment').value = classData[val].comment || "";
+                document.getElementById('messagePreviewArea').style.display = 'none'; // Yeni öğrenci seçince mesajı gizle
                 refreshUI();
             } else {
                 currentStudent = null;
@@ -409,7 +363,7 @@
             if(!currentStudent) return;
             classData[currentStudent].scores[id] = val;
             refreshUI();
-            saveToStorage(); // HER TIKLAMADA KAYDET
+            saveToStorage();
         }
 
         function fillAll(subject, val) {
@@ -418,13 +372,13 @@
                 classData[currentStudent].scores[item.id] = val;
             });
             refreshUI();
-            saveToStorage(); // HER TIKLAMADA KAYDET
+            saveToStorage();
         }
 
         function saveComment() {
             if(currentStudent) {
                 classData[currentStudent].comment = document.getElementById('teacherComment').value;
-                saveToStorage(); // YAZARKEN KAYDET
+                saveToStorage();
             }
         }
 
@@ -437,6 +391,61 @@
             }
         }
 
+        // --- AKILLI MESAJ OLUŞTURUCU ---
+        function previewMessage() {
+            if (!currentStudent) return;
+            
+            const data = classData[currentStudent];
+            let turkishGaps = [];
+            let mathGaps = [];
+
+            // Eksikleri bul (0 veya 1 alanlar)
+            rubric.turkish.forEach(r => {
+                if (data.scores[r.id] === 0 || data.scores[r.id] === 1) turkishGaps.push(r.text);
+            });
+            rubric.math.forEach(r => {
+                if (data.scores[r.id] === 0 || data.scores[r.id] === 1) mathGaps.push(r.text);
+            });
+
+            let message = "";
+
+            // BAŞARILI ÖĞRENCİ ŞABLONU (Hiç eksik yoksa veya toplam eksik sayısı 2'den azsa)
+            if (turkishGaps.length === 0 && mathGaps.length === 0) {
+                message = `Sayın Velim,\n8 Aralık Pazartesi günü yapılan 2. değerlendirme sonuçlarına göre öğrencimin, Türkçe ve Matematik dersinde gayet başarılı bir performans sergilemiş olup, konularla ilgili sorular çözmesi gelişimine daha da katkı sağlayacaktır.\n\nÖğrencim, konu tekrarları ve konularla ilgili dikkatli ve anlayarak sorular çözmesi, zihnini canlı tutmasına ve sınav sonucuna yansımasına olanak sağlamıştır. Bu konuda verdiğiniz desteklerden dolayı teşekkür ediyorum.\nSaygılarımla`;
+            } 
+            // GELİŞTİRİLMELİ ŞABLONU (Eksikler varsa)
+            else {
+                message = `Sayın Velim,\n8 Aralık Pazartesi günü yapılan 2. değerlendirme sonuçlarına göre öğrencimin,\n`;
+                
+                if (turkishGaps.length > 0) {
+                    message += `Türkçe dersinde ${turkishGaps.join(", ")} konularında tekrar çalışmaları yaparak kendini geliştirebilir. `;
+                } else {
+                    message += `Türkçe dersinde gayet başarılı olup, `;
+                }
+
+                if (mathGaps.length > 0) {
+                    message += `Matematik dersinden ${mathGaps.join(", ")} konularında tekrar çalışması ve sorular çözerek ilerleyebilir.\n\n`;
+                } else {
+                    message += `Matematik dersinde gayet başarılıdır.\n\n`;
+                }
+
+                message += `Öğrencim, konu tekrarları ve konularla ilgili dikkatli ve anlayarak sorular çözerek başarı grafiğini yükseltebilir. Bu konuda sizlerden de destek bekliyorum.\nSaygılarımla`;
+            }
+
+            document.getElementById('generatedMessage').value = message;
+            document.getElementById('messagePreviewArea').style.display = 'block';
+            
+            // Ekrana kaydır
+            document.getElementById('messagePreviewArea').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('generatedMessage').value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Mesaj kopyalandı!");
+            });
+        }
+
         // --- PDF BASKI ---
         function printAll() {
             const container = document.getElementById('print-container');
@@ -446,57 +455,36 @@
             studentList.forEach(name => {
                 const data = classData[name];
                 
-                // HTML Şablonu
                 let html = `
                 <div class="page-break">
                     <div class="print-header">
                         <h1>NESİBE AYDIN OKULLARI</h1>
                         <h2 style="font-size:14px; font-weight:normal; margin:5px 0;">4. Sınıflar Gelişim İzleme Raporu</h2>
                     </div>
-                    
-                    <div class="student-meta">
-                        <span>Öğrenci: ${name}</span>
-                        <span>Tarih: ${date}</span>
-                    </div>
+                    <div class="student-meta"><span>Öğrenci: ${name}</span><span>Tarih: ${date}</span></div>
 
                     <div class="print-section-title">TÜRKÇE DEĞERLENDİRMESİ</div>
-                    <table>
-                        <tr><th>Kazanım</th><th class="col-mark">Tam</th><th class="col-mark">Kıs</th><th class="col-mark">Yok</th></tr>`;
+                    <table><tr><th>Kazanım</th><th class="col-mark">Tam</th><th class="col-mark">Kıs</th><th class="col-mark">Yok</th></tr>`;
                 
                 rubric.turkish.forEach(item => {
                     const s = data.scores[item.id];
-                    html += `<tr>
-                        <td>${item.text}</td>
-                        <td class="col-mark ${s===2 ? 'filled' : ''}">${s===2 ? 'X' : ''}</td>
-                        <td class="col-mark ${s===1 ? 'filled' : ''}">${s===1 ? 'X' : ''}</td>
-                        <td class="col-mark ${s===0 ? 'filled' : ''}">${s===0 ? 'X' : ''}</td>
-                    </tr>`;
+                    html += `<tr><td>${item.full}</td><td class="col-mark ${s===2?'filled':''}">${s===2?'X':''}</td><td class="col-mark ${s===1?'filled':''}">${s===1?'X':''}</td><td class="col-mark ${s===0?'filled':''}">${s===0?'X':''}</td></tr>`;
                 });
                 html += `</table>`;
 
                 html += `<div class="print-section-title">MATEMATİK DEĞERLENDİRMESİ</div>
-                    <table>
-                        <tr><th>Kazanım</th><th class="col-mark">Tam</th><th class="col-mark">Kıs</th><th class="col-mark">Yok</th></tr>`;
+                    <table><tr><th>Kazanım</th><th class="col-mark">Tam</th><th class="col-mark">Kıs</th><th class="col-mark">Yok</th></tr>`;
 
                 rubric.math.forEach(item => {
                     const s = data.scores[item.id];
-                    html += `<tr>
-                        <td>${item.text}</td>
-                        <td class="col-mark ${s===2 ? 'filled' : ''}">${s===2 ? 'X' : ''}</td>
-                        <td class="col-mark ${s===1 ? 'filled' : ''}">${s===1 ? 'X' : ''}</td>
-                        <td class="col-mark ${s===0 ? 'filled' : ''}">${s===0 ? 'X' : ''}</td>
-                    </tr>`;
+                    html += `<tr><td>${item.full}</td><td class="col-mark ${s===2?'filled':''}">${s===2?'X':''}</td><td class="col-mark ${s===1?'filled':''}">${s===1?'X':''}</td><td class="col-mark ${s===0?'filled':''}">${s===0?'X':''}</td></tr>`;
                 });
                 html += `</table>`;
 
-                if(data.comment && data.comment.trim() !== "") {
-                    html += `<div style="margin-top:10px;"><strong>Öğretmen Görüşü:</strong><div class="teacher-comment-print">${data.comment}</div></div>`;
-                }
-
-                html += `<div class="signature">Sınıf Öğretmeni<br>İmza</div></div>`; // Page break kapanış
+                if(data.comment) html += `<div style="margin-top:10px;"><strong>Öğretmen Görüşü:</strong><div class="teacher-comment-print">${data.comment}</div></div>`;
+                html += `<div class="signature">Sınıf Öğretmeni<br>İmza</div></div>`;
                 container.innerHTML += html;
             });
-
             window.print();
         }
     </script>
