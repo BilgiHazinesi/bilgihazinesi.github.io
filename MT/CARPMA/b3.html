@@ -3,351 +3,560 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eğitim Materyali Hazırlama - Öğretmen Modu</title>
+    <title>İnteraktif Bölme İşlemi Defteri</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* GENEL SAYFA DÜZENİ */
+        /* GENEL SAYFA */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* SOL PANEL: ARAÇ ÇUBUĞU VE SAYFA */
-        #workspace {
-            flex: 1;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7f6;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            overflow-y: auto;
+            margin: 0;
         }
 
-        /* Araç Çubuğu (Toolbar) */
-        #toolbar {
-            background-color: #333;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        /* --- KONTROL PANELİ --- */
+        .toolbar {
+            background-color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            border-top: 5px solid #2980b9;
+        }
+
+        .group-box {
             display: flex;
             gap: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            width: fit-content;
+            align-items: flex-end;
+            padding-right: 20px;
+            border-right: 1px solid #eee;
         }
+        .group-box:last-child { border: none; }
 
-        #toolbar button, #toolbar select, #toolbar input[type="color"] {
-            padding: 8px 12px;
-            cursor: pointer;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        #toolbar button:hover {
-            background-color: #555;
-            color: white;
-        }
-
-        /* A4 Kağıt Görünümü */
-        #page-container {
-            width: 794px; /* A4 Genişliği (96 DPI) */
-            min-height: 1123px; /* A4 Yüksekliği */
-            background-color: white;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            position: relative;
-            padding: 40px;
-            box-sizing: border-box;
-            overflow: hidden; /* Taşmaları gizle */
-        }
-
-        /* SAĞ PANEL: GÖRSELLER (LİSTE GÖRÜNÜMÜ) */
-        #sidebar {
-            width: 300px;
-            background-color: #fff;
-            border-left: 1px solid #ddd;
+        .input-group {
             display: flex;
             flex-direction: column;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            gap: 4px;
         }
-
-        #sidebar h3 {
-            padding: 15px;
-            margin: 0;
-            background-color: #eee;
-            border-bottom: 1px solid #ccc;
+        .input-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        .input-group select, .input-group input {
+            padding: 8px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            font-family: 'Courier Prime', monospace;
+            font-weight: bold;
             text-align: center;
+            width: 110px;
         }
 
-        #image-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            display: flex;
-            flex-direction: column; /* LİSTE GÖRÜNÜMÜ (IZGARA DEĞİL) */
-            gap: 15px;
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            height: 38px;
+        }
+        .btn-blue { background-color: #2980b9; }
+        .btn-blue:hover { background-color: #1a5276; }
+        
+        .btn-green { background-color: #27ae60; }
+        .btn-green:hover { background-color: #1e8449; }
+
+        /* --- KART ALANI (3 SÜTUN) --- */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Yan yana 3 tane */
+            gap: 30px;
+            width: 100%;
+            max-width: 1300px;
         }
 
-        .sidebar-item {
+        /* --- SORU KARTI --- */
+        .card {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
-            border: 1px solid #eee;
-            padding: 5px;
-            border-radius: 5px;
-            cursor: grab;
-            background: #f9f9f9;
-        }
-
-        .sidebar-item img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-
-        .sidebar-item span {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        /* SAYFA İÇİ ELEMENTLER */
-        .draggable-text {
-            position: absolute;
-            border: 1px dashed transparent;
-            padding: 5px;
-            cursor: move;
-            min-width: 50px;
-        }
-
-        .draggable-text:hover, .draggable-text:focus {
-            border: 1px dashed #007bff;
-        }
-
-        .draggable-image {
-            position: absolute;
-            cursor: move;
-            resize: both; /* Sağ alt köşeden boyutlandırma */
-            overflow: hidden;
-            border: 1px dashed transparent;
-        }
-
-        .draggable-image:hover {
-            border: 1px dashed #007bff;
+            position: relative;
+            min-height: 400px;
+            border-bottom: 5px solid #bdc3c7; /* Varsayılan gri alt çizgi */
+            transition: border-color 0.3s;
         }
         
-        .draggable-image img {
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Sürükleme çakışmasını önler */
+        /* Çözülünce alt çizgi yeşil olsun efekti için JS ile class eklenebilir */
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            color: #e74c3c;
+            font-size: 20px;
+            padding: 0;
+            width: auto;
+            height: auto;
         }
 
-        /* SORU NUMARALANDIRMA */
-        .question-number {
+        /* --- IZGARA YAPISI (Defter Görünümü) --- */
+        .calc-grid {
+            display: inline-grid;
+            gap: 1px;
+            background-color: #dfe6e9; /* Izgara çizgi rengi */
+            border: 1px solid #dfe6e9;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 32px;
+            height: 32px;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier Prime', monospace;
+            font-size: 18px;
             font-weight: bold;
-            color: #d32f2f;
-            margin-right: 5px;
+            color: #2c3e50;
         }
 
-        /* GİZLEME / GÖSTERME STİLİ (BURASI GÜNCELLENDİ) */
-        .result-box {
-            display: inline-block;
-            padding: 2px 5px;
-            border: 1px solid #ccc;
-            min-width: 20px;
+        /* RENKLER */
+        .bg-div { background-color: #f1c40f !important; color: white !important; } /* Hardal (Bölünen) */
+        .bg-sor { background-color: #3498db !important; color: white !important; } /* Mavi (Bölen) */
+        .bg-res { background-color: #e056fd !important; color: white !important; } /* Pembe (Bölüm) */
+        .bg-rem { background-color: #2ecc71 !important; color: white !important; } /* Yeşil (Kalan) */
+        .bg-sub { color: #c0392b !important; } /* Çıkarma işlemi sayıları (Kırmızı metin) */
+
+        .border-bottom { border-bottom: 2px solid #2c3e50; }
+        
+        /* GİZLİLİK SINIFLARI */
+        .hidden-answer {
+            opacity: 0; 
+            transition: opacity 0.5s ease-in;
+        }
+        .visible-answer {
+            opacity: 1;
+        }
+
+        /* BUTON VE ÖZET TABLO */
+        .reveal-btn {
+            margin-top: auto;
+            width: 100%;
+            background-color: #e67e22;
+        }
+        .reveal-btn:hover { background-color: #d35400; }
+
+        .summary-box {
+            width: 100%;
+            margin-top: 15px;
+            font-size: 14px;
+            border-collapse: collapse;
+        }
+        .summary-box td {
+            border: 1px solid #eee;
+            padding: 6px;
             text-align: center;
-            background-color: transparent;
-            color: black;
-            transition: all 0.3s ease;
+            font-weight: bold;
         }
-
-        /* İSTEDİĞİN ÖZELLİK: GİZLENDİĞİNDE BEYAZ OLUYOR */
-        .hidden-result {
-            background-color: white !important; /* Arka plan beyaz */
-            color: white !important; /* Yazı beyaz */
-            border-color: white !important; /* Kenarlık da beyaz olsun ki hiç görünmesin */
-            user-select: none; /* Seçilemesin */
-        }
+        .lbl { color: white; width: 40%; }
 
     </style>
 </head>
 <body>
 
-    <div id="workspace">
-        <div id="toolbar">
-            <button onclick="addText()">Metin Ekle</button>
-            <button onclick="addQuestion()">Soru Ekle (+No)</button>
-            <button onclick="toggleResults()">Sonuçları Gizle/Göster</button>
-            <div style="width: 1px; background: #666; margin: 0 5px;"></div>
-            <button onclick="formatDoc('bold')"><b>B</b></button>
-            <button onclick="formatDoc('italic')"><i>I</i></button>
-            <button onclick="formatDoc('underline')"><u>U</u></button>
-            <input type="color" onchange="formatDoc('foreColor', this.value)" title="Yazı Rengi">
-            <div style="width: 1px; background: #666; margin: 0 5px;"></div>
-            <button onclick="rotatePage()">Sayfayı Çevir (Yatay/Dikey)</button>
+    <div class="toolbar">
+        <div class="group-box">
+            <div class="input-group">
+                <label>Bölünen Bas.</label>
+                <select id="digitDiv">
+                    <option value="3">3 Basamaklı</option>
+                    <option value="4">4 Basamaklı</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Bölen Bas.</label>
+                <select id="digitSor">
+                    <option value="1">1 Basamaklı</option>
+                    <option value="2">2 Basamaklı</option>
+                </select>
+            </div>
+            <button class="btn-blue" onclick="generateRandomSet()">Rastgele Üret (3 Adet)</button>
         </div>
 
-        <div id="page-container" ondrop="drop(event)" ondragover="allowDrop(event)">
-            <div class="draggable-text" style="top: 50px; left: 50px;" contenteditable="true">
-                Başlık: 4. Sınıf Çalışma Kağıdı
+        <div class="group-box">
+            <div class="input-group">
+                <label>Bölünen</label>
+                <input type="number" id="manDiv" placeholder="4675">
             </div>
-            
-            <div class="draggable-text" style="top: 100px; left: 50px;" contenteditable="true">
-                <span class="question-number">1.</span> <span class="result-box">12</span> x <span class="result-box">5</span> = <span class="result-box">60</span>
+            <div class="input-group">
+                <label>Bölen</label>
+                <input type="number" id="manSor" placeholder="15">
             </div>
+            <button class="btn-green" onclick="addManual()">Bu İşlemi Ekle</button>
         </div>
     </div>
 
-    <div id="sidebar">
-        <h3>Görseller</h3>
-        <div id="image-list">
-            <div class="sidebar-item" draggable="true" ondragstart="drag(event)" data-src="https://via.placeholder.com/150/FF5733/FFFFFF?text=Elma">
-                <img src="https://via.placeholder.com/150/FF5733/FFFFFF?text=Elma" alt="Elma">
-                <span>Elma Görseli</span>
-            </div>
-            <div class="sidebar-item" draggable="true" ondragstart="drag(event)" data-src="https://via.placeholder.com/150/33FF57/FFFFFF?text=Armut">
-                <img src="https://via.placeholder.com/150/33FF57/FFFFFF?text=Armut" alt="Armut">
-                <span>Armut Görseli</span>
-            </div>
-            <div class="sidebar-item" draggable="true" ondragstart="drag(event)" data-src="https://via.placeholder.com/150/3357FF/FFFFFF?text=Kalem">
-                <img src="https://via.placeholder.com/150/3357FF/FFFFFF?text=Kalem" alt="Kalem">
-                <span>Kalem Görseli</span>
-            </div>
+    <div class="grid-layout" id="mainContainer">
         </div>
-    </div>
 
     <script>
-        let questionCount = 1;
-        let resultsHidden = false;
+        // Açılışta rastgele 3 tane üret
+        window.onload = generateRandomSet;
 
-        // Metin Ekleme
-        function addText() {
-            const page = document.getElementById('page-container');
-            const div = document.createElement('div');
-            div.className = 'draggable-text';
-            div.contentEditable = true;
-            div.innerHTML = 'Yeni Metin';
-            div.style.top = '50px';
-            div.style.left = '50px';
-            enableDrag(div);
-            page.appendChild(div);
+        const container = document.getElementById('mainContainer');
+
+        function getRandom(digits) {
+            const min = Math.pow(10, digits - 1);
+            const max = Math.pow(10, digits) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        // Soru Ekleme (Otomatik Numaralı)
-        function addQuestion() {
-            questionCount++;
-            const page = document.getElementById('page-container');
-            const div = document.createElement('div');
-            div.className = 'draggable-text';
-            div.contentEditable = true;
-            div.innerHTML = `<span class="question-number">${questionCount}.</span> Yeni Soru`;
-            div.style.top = (questionCount * 40 + 50) + 'px'; // Alt alta gelsin diye basit hesap
-            div.style.left = '50px';
-            enableDrag(div);
-            page.appendChild(div);
-        }
+        function generateRandomSet() {
+            container.innerHTML = ''; // Eskileri sil
+            const dDig = parseInt(document.getElementById('digitDiv').value);
+            const sDig = parseInt(document.getElementById('digitSor').value);
 
-        // Sonuçları Gizle/Göster
-        function toggleResults() {
-            resultsHidden = !resultsHidden;
-            const boxes = document.querySelectorAll('.result-box');
-            boxes.forEach(box => {
-                if (resultsHidden) {
-                    box.classList.add('hidden-result');
-                } else {
-                    box.classList.remove('hidden-result');
+            for(let i=0; i<3; i++) {
+                let div = getRandom(dDig);
+                let sor = getRandom(sDig);
+                // Bölen bölünenden büyükse veya 0 ise düzelt
+                while(sor >= div || sor === 0) {
+                    div = getRandom(dDig);
+                    sor = getRandom(sDig);
                 }
-            });
+                createCard(div, sor);
+            }
         }
 
-        // Metin Biçimlendirme
-        function formatDoc(cmd, value=null) {
-            document.execCommand(cmd, false, value);
-        }
+        function addManual() {
+            const mDiv = document.getElementById('manDiv').value;
+            const mSor = document.getElementById('manSor').value;
 
-        // Sayfa Döndürme
-        function rotatePage() {
-            const page = document.getElementById('page-container');
-            const currentWidth = page.style.width;
+            if(!mDiv || !mSor) return alert("Sayıları giriniz.");
             
-            if (currentWidth === '1123px') { // Şu an yataysa, dikey yap
-                page.style.width = '794px';
-                page.style.minHeight = '1123px';
-            } else { // Şu an dikeyse, yatay yap
-                page.style.width = '1123px';
-                page.style.minHeight = '794px';
+            const div = parseInt(mDiv);
+            const sor = parseInt(mSor);
+
+            if(sor >= div) return alert("Bölünen bölenden büyük olmalı.");
+            
+            // Eğer 3 kart varsa hepsini temizleyip bunu ekliyoruz (Temiz sayfa isteği)
+            // Veya sadece ekleyelim mi? "Yeni işlemler oluştur diyince eskisi silinip..." dediğiniz için
+            // Manuel eklemede de temizlemek daha düzenli durur.
+            // Ama tek tek eklemek isterseniz aşağıdaki satırı silebilirsiniz.
+            // container.innerHTML = ''; 
+            
+            // Eğer 3'ü geçerse en baştakini silebiliriz veya alta ekleriz. 
+            // Kullanıcı "3 işlem istiyorum" dediği için 3'ü korumak adına:
+            if(container.children.length >= 3) {
+                container.firstElementChild.remove();
             }
+
+            createCard(div, sor);
+            
+            // Inputları temizle
+            document.getElementById('manDiv').value = '';
+            document.getElementById('manSor').value = '';
         }
 
-        // Sürükle Bırak (Drag & Drop) İşlemleri
-        function allowDrop(ev) {
-            ev.preventDefault();
+        // --- MATEMATİK MANTIĞI ---
+        function solveDivision(dividend, divisor) {
+            const dividendStr = dividend.toString();
+            let steps = [];
+            let currentPart = "";
+            let fullQuotient = "";
+
+            for(let i=0; i<dividendStr.length; i++) {
+                currentPart += dividendStr[i];
+                let currentNum = parseInt(currentPart);
+
+                if(currentNum < divisor) {
+                    if(fullQuotient.length > 0) fullQuotient += "0";
+                    continue; 
+                }
+
+                let q = Math.floor(currentNum / divisor);
+                let mult = q * divisor;
+                let rem = currentNum - mult;
+
+                fullQuotient += q;
+
+                steps.push({
+                    val: mult, // Çıkarılan sayı
+                    rem: rem,  // Kalan
+                    idx: i     // Hangi basamaktayız
+                });
+
+                currentPart = rem.toString();
+            }
+            
+            // Eksik sıfırları tamamla (Son basamaklar işlenmediyse)
+            const realQuotient = Math.floor(dividend / divisor);
+            const strRealQ = realQuotient.toString();
+            
+            return {
+                steps: steps,
+                quotient: realQuotient,
+                remainder: dividend % divisor
+            };
         }
 
-        function drag(ev) {
-            ev.dataTransfer.setData("src", ev.target.parentElement.getAttribute('data-src'));
-        }
+        // --- KART OLUŞTURMA (UI) ---
+        function createCard(dividend, divisor) {
+            const data = solveDivision(dividend, divisor);
+            const divStr = dividend.toString();
+            const sorStr = divisor.toString();
 
-        function drop(ev) {
-            ev.preventDefault();
-            const src = ev.dataTransfer.getData("src");
-            if (src) {
-                const page = document.getElementById('page-container');
+            // Grid Kolon Hesabı: Sol (Bölünen Uzunluğu) + 1 (Çizgi) + Sağ (Bölen Uzunluğu)
+            // Ancak sağ taraf bölüm için de kullanılacak. Geniş olsun diye max(sorStr.length, data.quotient.toString().length) diyebiliriz.
+            // Şimdilik standart tutalım.
+            
+            const totalColsLeft = divStr.length;
+            const totalColsRight = Math.max(sorStr.length, data.quotient.toString().length); 
+            
+            let gridHTML = `<div class="calc-grid" style="grid-template-columns: repeat(${totalColsLeft}, 1fr) 5px repeat(${totalColsRight}, 1fr);">`;
+
+            // 1. SATIR: Bölünen ve Bölen (HER ZAMAN GÖRÜNÜR)
+            // Sol
+            for(let char of divStr) gridHTML += `<div class="cell bg-div">${char}</div>`;
+            // Çizgi
+            gridHTML += `<div class="cell" style="background:#2c3e50; width:5px; padding:0;"></div>`;
+            // Sağ
+            for(let i=0; i<totalColsRight; i++) {
+                if(i < sorStr.length) gridHTML += `<div class="cell bg-sor">${sorStr[i]}</div>`;
+                else gridHTML += `<div class="cell"></div>`;
+            }
+
+            // 2. SATIR: BÖLÜM (SAĞDA) - GİZLİ OLACAK
+            // Sol Taraf (İlk işlem basamağı için boşluk veya ilk çıkarma)
+            // Sağ taraf (Bölüm sonucu)
+            
+            // Biz grid'i satır satır işliyoruz.
+            // İlk çıkarma işlemi verisi: data.steps[0]
+            
+            // Satırları dinamik üretelim.
+            // data.steps içindeki her adım bir çıkarma işlemidir.
+            
+            let currentStepIdx = 0;
+            
+            // İlk Adım (İlk Çıkarma) + Bölüm Kısmı
+            // Bölüm sonucunu, ilk çıkarma işleminin olduğu satırda sağ tarafa yazalım.
+            
+            if(data.steps.length > 0) {
+                const step = data.steps[0];
+                const multStr = step.val.toString();
                 
-                // Resim Konteyneri
-                const container = document.createElement('div');
-                container.className = 'draggable-image';
-                container.style.left = (ev.offsetX) + 'px';
-                container.style.top = (ev.offsetY) + 'px';
-                container.style.width = '150px';
-                container.style.height = '150px';
+                // --- İLK ÇIKARMA SATIRI ---
+                // Bu satır GİZLİ olacak (hidden-answer sınıfı)
                 
-                // Resim
-                const img = document.createElement('img');
-                img.src = src;
+                // Sol Taraf (Çıkarılan Sayı)
+                let emptyLeft = step.idx - multStr.length + 1;
                 
-                container.appendChild(img);
-                enableDrag(container);
-                page.appendChild(container);
+                for(let i=0; i<totalColsLeft; i++) {
+                    if(i >= emptyLeft && i <= step.idx) {
+                        let char = multStr[i - emptyLeft];
+                        // Rakamları hücreye koy, sınıfı hidden-answer olsun
+                        gridHTML += `<div class="cell bg-sub hidden-answer">${char}</div>`;
+                    } else {
+                        gridHTML += `<div class="cell"></div>`;
+                    }
+                }
+                
+                // Orta Çizgi
+                gridHTML += `<div class="cell" style="background:#2c3e50; width:5px; padding:0;"></div>`;
+                
+                // Sağ Taraf (BÖLÜM SONUCU - PEMBE)
+                const qStr = data.quotient.toString();
+                for(let i=0; i<totalColsRight; i++) {
+                    let char = i < qStr.length ? qStr[i] : "";
+                    let bgClass = i < qStr.length ? "bg-res" : "";
+                    gridHTML += `<div class="cell ${bgClass} hidden-answer" style="border-top:2px solid #2c3e50;">${char}</div>`;
+                }
+
+                // --- ÇIKARMA ÇİZGİSİ (Altını çizmek yerine border-bottom kullanıyoruz üstteki hücrelerde ama
+                // burada grid yapısında yeni satıra geçmeden border vermek zor. 
+                // Basitlik için devam ediyoruz.
+
+                // --- SONRAKİ ADIMLAR ---
+                for(let k=0; k<data.steps.length; k++) {
+                    // Bu döngüde bir sonraki "İnen sayı + Kalan"ı (CurrentNum) yazacağız.
+                    // Eğer son adımsa Final Kalanı yazacağız.
+                    
+                    let isLast = (k === data.steps.length - 1);
+                    
+                    // Şuan k. adımdayız. Çıkarma işlemini yukarıda yazdık.
+                    // Şimdi sonucunu (tirenin altını) yazacağız.
+                    
+                    // Yazılacak sayı:
+                    // Eğer son adım değilse: bir sonraki adımın işlem göreceği sayı (CurrentNum).
+                    // Ancak bizim step verimizde 'currentNum' yok, 'rem' var.
+                    // Aslında görselde:
+                    // 46
+                    // 45
+                    // --
+                    // 017 (Kalan 1, inen 7) -> Bu bir sonraki adımın 'CurrentNum'u.
+                    // Eğer bu son adımsa, direkt 'rem' yazılır.
+                    
+                    let numberToWrite = "";
+                    let endIndex = 0; // Hangi basamağın altına denk geliyor?
+
+                    if(isLast) {
+                        numberToWrite = data.remainder.toString();
+                        endIndex = totalColsLeft - 1; // En sağa yasla (Bölünenin sonuna)
+                    } else {
+                        // Bir sonraki adımın "val" (çıkan) sayısının basamak hizasından yola çıkalım.
+                        // Mantığı basitleştirelim:
+                        // Bir sonraki adımın verisine ihtiyacımız var ama data yapımızda currentNum'u saklamamıştık.
+                        // Basit hack: steps[k].rem + (bir sonraki inen rakam).
+                        // Bunu hesaplamak yerine görseldeki gibi sadece Çıkan ve Kalan'ı yazalım.
+                        
+                        // Örn: 17 (İnenle birlikte).
+                        // Bunu hesaplamak için tekrar string manipülasyonu yapmayalım.
+                        // Gridde hizalama şaşmasın diye şöyle yapalım:
+                        // Bir sonraki adımın (k+1) "mult" sayısı (çıkan) hizası neyse, o hizada bir sayı var demektir.
+                        // O sayı (steps[k].rem * 10 + nextDigit) şeklindedir.
+                        
+                        // ZEYNAL BEY İÇİN BASİT ÇÖZÜM:
+                        // Sadece Çıkan Sayıları (Kırmızı) ve En Son Kalanı (Yeşil) göstersek yeterli mi?
+                        // Hayır "Tüm basamakları göster" dedi.
+                        
+                        // O zaman 'solveDivision' fonksiyonunda 'currentNum'u da tutmalıydık.
+                        // UI tarafında hesaplayalım:
+                        // steps[k].rem -> Bu kalandır. Yanına bir sonraki basamak iner.
+                        // Ama hangi basamak? divStr[steps[k].idx + 1]
+                        
+                        let rem = data.steps[k].rem;
+                        let nextDigitIdx = data.steps[k].idx + 1;
+                        
+                        // Eğer nextDigitIdx bölünen uzunluğunu geçiyorsa işlem bitmiştir.
+                        // Ama döngüde isLast değilsek demek ki geçmiyor.
+                        
+                        // Bazen birden fazla 0 iner. 
+                        // Logic karmaşasına girmemek için:
+                        // Bir sonraki adımın (k+1) "mult" değerinin hizasına bakalım.
+                        // numberToWrite = (rem + inen basamaklar)
+                        
+                        // Daha güvenli yol: Bir sonraki çıkarma işlemi (steps[k+1]) hangi indexte bitiyorsa
+                        // bizim sayımız da orada biter.
+                        endIndex = data.steps[k+1].idx;
+                        
+                        // Sayının değeri ne? 
+                        // steps[k+1].val'den büyük veya eşit olmalı.
+                        // Tam değeri bulmak zor mu? Hayır.
+                        // Geriye doğru hesap: steps[k+1].val + steps[k+1].rem
+                        numberToWrite = (data.steps[k+1].val + data.steps[k+1].rem).toString();
+                    }
+
+                    // --- SATIR OLUŞTUR (ARA SONUÇ) ---
+                    let emptyL = endIndex - numberToWrite.length + 1;
+                    let isGreen = isLast; 
+                    
+                    // Sol Taraf
+                    for(let i=0; i<totalColsLeft; i++) {
+                        if(i >= emptyL && i <= endIndex) {
+                            let char = numberToWrite[i - emptyL];
+                            let colorClass = isGreen ? "bg-rem" : ""; // Sadece en son kalan yeşil
+                            let borderTop = "border-top:2px solid #2c3e50;"; // İşlem çizgisi
+                            gridHTML += `<div class="cell ${colorClass} hidden-answer" style="${borderTop}">${char}</div>`;
+                        } else {
+                            gridHTML += `<div class="cell"></div>`;
+                        }
+                    }
+                    
+                    // Orta Çizgi + Sağ Taraf (Boş)
+                    gridHTML += `<div class="cell" style="background:#2c3e50; width:5px; padding:0;"></div>`;
+                    for(let r=0; r<totalColsRight; r++) gridHTML += `<div class="cell"></div>`;
+
+                    // --- EĞER BU BİR SONRAKİ ÇIKARMA İŞLEMİYSE ONU DA EKLE ---
+                    if(!isLast) {
+                         const nextStep = data.steps[k+1];
+                         const nMult = nextStep.val.toString();
+                         let nEmpty = nextStep.idx - nMult.length + 1;
+                         
+                         for(let i=0; i<totalColsLeft; i++) {
+                            if(i >= nEmpty && i <= nextStep.idx) {
+                                let char = nMult[i - nEmpty];
+                                gridHTML += `<div class="cell bg-sub hidden-answer">${char}</div>`;
+                            } else {
+                                gridHTML += `<div class="cell"></div>`;
+                            }
+                        }
+                        // Orta ve Sağ Boş
+                        gridHTML += `<div class="cell" style="background:#2c3e50; width:5px; padding:0;"></div>`;
+                        for(let r=0; r<totalColsRight; r++) gridHTML += `<div class="cell"></div>`;
+                    }
+                }
+            } else {
+                // Hiç adım yoksa (örn: 0/5 veya çok küçük bölünen), direkt kalanı yaz
+                 // Basitlik için burayı pas geçiyorum, validasyon yaptık zaten.
+            }
+
+            gridHTML += `</div>`; // Grid Kapanış
+
+            // Özet Tablosu (Gizli)
+            let summaryHTML = `
+                <table class="summary-box hidden-answer">
+                    <tr><td class="lbl bg-div">Bölünen</td><td>${dividend}</td></tr>
+                    <tr><td class="lbl bg-sor">Bölen</td><td>${divisor}</td></tr>
+                    <tr><td class="lbl bg-res">Bölüm</td><td>${data.quotient}</td></tr>
+                    <tr><td class="lbl bg-rem">Kalan</td><td>${data.remainder}</td></tr>
+                </table>
+            `;
+
+            // Kart HTML
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.innerHTML = `
+                <button class="delete-btn" onclick="this.parentElement.remove()">×</button>
+                ${gridHTML}
+                ${summaryHTML}
+                <button class="reveal-btn" onclick="toggleCard(this)">Sonuçları Göster</button>
+            `;
+            
+            container.appendChild(cardDiv);
+        }
+
+        function toggleCard(btn) {
+            const card = btn.parentElement;
+            const hiddenEls = card.querySelectorAll('.hidden-answer');
+            const visibleEls = card.querySelectorAll('.visible-answer');
+
+            if(hiddenEls.length > 0) {
+                // Göster
+                hiddenEls.forEach(el => {
+                    el.classList.remove('hidden-answer');
+                    el.classList.add('visible-answer');
+                });
+                btn.textContent = "Sonuçları Gizle";
+                card.style.borderColor = "#2ecc71"; // Yeşil border (Başarılı)
+            } else {
+                // Gizle
+                visibleEls.forEach(el => {
+                    el.classList.remove('visible-answer');
+                    el.classList.add('hidden-answer');
+                });
+                btn.textContent = "Sonuçları Göster";
+                card.style.borderColor = "#bdc3c7"; // Gri border
             }
         }
 
-        // Sayfa içi öğeleri sürükleme mantığı (Basitleştirilmiş)
-        function enableDrag(elmnt) {
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            elmnt.onmousedown = dragMouseDown;
-
-            function dragMouseDown(e) {
-                // Eğer içerik düzenleniyorsa (contenteditable) sürüklemeyi engelleme ama kenardan tutulursa sürükle
-                if(e.target !== elmnt && e.target.contentEditable === "true") return;
-                
-                e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-            }
-
-            function elementDrag(e) {
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-            }
-
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-            }
-        }
-        
-        // Mevcut öğeleri sürüklenebilir yap
-        document.querySelectorAll('.draggable-text').forEach(enableDrag);
     </script>
 </body>
 </html>
