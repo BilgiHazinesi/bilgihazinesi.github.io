@@ -3,359 +3,351 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İnteraktif Bölme İşlemi - Düzeltilmiş Hizalama</title>
+    <title>Eğitim Materyali Hazırlama - Öğretmen Modu</title>
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --accent-color: #2980b9;
-            --border-color: #bdc3c7;
-        }
-
+        /* GENEL SAYFA DÜZENİ */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f4f4f4;
             margin: 0;
-            padding: 20px;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SOL PANEL: ARAÇ ÇUBUĞU VE SAYFA */
+        #workspace {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 20px;
+            overflow-y: auto;
         }
 
-        /* Ayarlar Paneli */
-        .settings-panel {
-            background: white;
-            padding: 15px;
+        /* Araç Çubuğu (Toolbar) */
+        #toolbar {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 20px;
             display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: fit-content;
         }
 
-        .control-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-size: 0.85em;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-        }
-
-        select, button {
+        #toolbar button, #toolbar select, #toolbar input[type="color"] {
             padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 0.95em;
-        }
-
-        button {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
             cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
         }
 
-        button:hover {
-            background-color: #3498db;
+        #toolbar button:hover {
+            background-color: #555;
+            color: white;
         }
 
-        /* İşlem Alanı */
-        .problems-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            width: 100%;
-            max-width: 1200px;
+        /* A4 Kağıt Görünümü */
+        #page-container {
+            width: 794px; /* A4 Genişliği (96 DPI) */
+            min-height: 1123px; /* A4 Yüksekliği */
+            background-color: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            position: relative;
+            padding: 40px;
+            box-sizing: border-box;
+            overflow: hidden; /* Taşmaları gizle */
         }
 
-        .problem-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        /* SAĞ PANEL: GÖRSELLER (LİSTE GÖRÜNÜMÜ) */
+        #sidebar {
+            width: 300px;
+            background-color: #fff;
+            border-left: 1px solid #ddd;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
-            overflow-x: auto;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
         }
 
-        /* Grid Yapısı */
-        .division-grid {
-            display: grid;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 28px;
-            font-weight: bold;
-            line-height: 1.4;
-            color: #333;
-            margin-bottom: 15px;
-            /* Sütun genişlikleri JS tarafında dinamik ayarlanacak */
+        #sidebar h3 {
+            padding: 15px;
+            margin: 0;
+            background-color: #eee;
+            border-bottom: 1px solid #ccc;
+            text-align: center;
         }
 
-        .cell {
-            height: 38px;
+        #image-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column; /* LİSTE GÖRÜNÜMÜ (IZGARA DEĞİL) */
+            gap: 15px;
+        }
+
+        .sidebar-item {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+            border: 1px solid #eee;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: grab;
+            background: #f9f9f9;
         }
 
-        /* Çizgiler */
-        .border-bottom {
-            border-bottom: 2px solid #333 !important;
+        .sidebar-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .sidebar-item span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* SAYFA İÇİ ELEMENTLER */
+        .draggable-text {
+            position: absolute;
+            border: 1px dashed transparent;
+            padding: 5px;
+            cursor: move;
+            min-width: 50px;
+        }
+
+        .draggable-text:hover, .draggable-text:focus {
+            border: 1px dashed #007bff;
+        }
+
+        .draggable-image {
+            position: absolute;
+            cursor: move;
+            resize: both; /* Sağ alt köşeden boyutlandırma */
+            overflow: hidden;
+            border: 1px dashed transparent;
+        }
+
+        .draggable-image:hover {
+            border: 1px dashed #007bff;
         }
         
-        /* Özel dikey çizgi stili (sadece ilk satıra uygulanacak) */
-        .separator-cell {
-            border-left: 2px solid #333;
-            border-bottom: 2px solid #333;
-        }
-
-        .solution-step {
-            display: none;
-        }
-
-        .toggle-btn {
-            background-color: #e67e22;
-            margin-top: 10px;
-            font-size: 0.9em;
+        .draggable-image img {
             width: 100%;
-            padding: 8px;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
+            height: 100%;
+            pointer-events: none; /* Sürükleme çakışmasını önler */
         }
 
-        /* Renkler */
-        .step-subtraction { color: #c0392b; } /* Çıkan sayı (Kırmızı) */
-        .step-result { color: #27ae60; } /* Kalan sayı (Yeşil) */
-        .quotient-text { color: #2980b9; } /* Bölüm (Mavi) */
+        /* SORU NUMARALANDIRMA */
+        .question-number {
+            font-weight: bold;
+            color: #d32f2f;
+            margin-right: 5px;
+        }
+
+        /* GİZLEME / GÖSTERME STİLİ (BURASI GÜNCELLENDİ) */
+        .result-box {
+            display: inline-block;
+            padding: 2px 5px;
+            border: 1px solid #ccc;
+            min-width: 20px;
+            text-align: center;
+            background-color: transparent;
+            color: black;
+            transition: all 0.3s ease;
+        }
+
+        /* İSTEDİĞİN ÖZELLİK: GİZLENDİĞİNDE BEYAZ OLUYOR */
+        .hidden-result {
+            background-color: white !important; /* Arka plan beyaz */
+            color: white !important; /* Yazı beyaz */
+            border-color: white !important; /* Kenarlık da beyaz olsun ki hiç görünmesin */
+            user-select: none; /* Seçilemesin */
+        }
 
     </style>
 </head>
 <body>
 
-    <div class="settings-panel">
-        <div class="control-group">
-            <label>Bölünen</label>
-            <select id="dividend-digits">
-                <option value="2">2 Basamaklı</option>
-                <option value="3" selected>3 Basamaklı</option>
-                <option value="4">4 Basamaklı</option>
-                <option value="5">5 Basamaklı</option>
-            </select>
+    <div id="workspace">
+        <div id="toolbar">
+            <button onclick="addText()">Metin Ekle</button>
+            <button onclick="addQuestion()">Soru Ekle (+No)</button>
+            <button onclick="toggleResults()">Sonuçları Gizle/Göster</button>
+            <div style="width: 1px; background: #666; margin: 0 5px;"></div>
+            <button onclick="formatDoc('bold')"><b>B</b></button>
+            <button onclick="formatDoc('italic')"><i>I</i></button>
+            <button onclick="formatDoc('underline')"><u>U</u></button>
+            <input type="color" onchange="formatDoc('foreColor', this.value)" title="Yazı Rengi">
+            <div style="width: 1px; background: #666; margin: 0 5px;"></div>
+            <button onclick="rotatePage()">Sayfayı Çevir (Yatay/Dikey)</button>
         </div>
 
-        <div class="control-group">
-            <label>Bölen</label>
-            <select id="divisor-digits">
-                <option value="1">1 Basamaklı</option>
-                <option value="2" selected>2 Basamaklı</option>
-                <option value="3">3 Basamaklı</option>
-            </select>
+        <div id="page-container" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <div class="draggable-text" style="top: 50px; left: 50px;" contenteditable="true">
+                Başlık: 4. Sınıf Çalışma Kağıdı
+            </div>
+            
+            <div class="draggable-text" style="top: 100px; left: 50px;" contenteditable="true">
+                <span class="question-number">1.</span> <span class="result-box">12</span> x <span class="result-box">5</span> = <span class="result-box">60</span>
+            </div>
         </div>
-
-        <div class="control-group">
-            <label>İşlem Türü</label>
-            <select id="remainder-type">
-                <option value="mixed" selected>Karışık</option>
-                <option value="no">Kalansız (Tam)</option>
-                <option value="yes">Kalanlı</option>
-            </select>
-        </div>
-
-        <button onclick="generateAll()">Yeni Sorular Üret</button>
     </div>
 
-    <div class="problems-container" id="container"></div>
+    <div id="sidebar">
+        <h3>Görseller</h3>
+        <div id="image-list">
+            <div class="sidebar-item" draggable="true" ondragstart="drag(event)" data-src="https://via.placeholder.com/150/FF5733/FFFFFF?text=Elma">
+                <img src="https://via.placeholder.com/150/FF5733/FFFFFF?text=Elma" alt="Elma">
+                <span>Elma Görseli</span>
+            </div>
+            <div class="sidebar-item" draggable="true" ondragstart="drag(event)" data-src="https://via.placeholder.com/150/33FF57/FFFFFF?text=Armut">
+                <img src="https://via.placeholder.com/150/33FF57/FFFFFF?text=Armut" alt="Armut">
+                <span>Armut Görseli</span>
+            </div>
+            <div class="sidebar-item" draggable="true" ondragstart="drag(event)" data-src="https://via.placeholder.com/150/3357FF/FFFFFF?text=Kalem">
+                <img src="https://via.placeholder.com/150/3357FF/FFFFFF?text=Kalem" alt="Kalem">
+                <span>Kalem Görseli</span>
+            </div>
+        </div>
+    </div>
 
-<script>
-    function getRandomNumber(digits) {
-        const min = Math.pow(10, digits - 1);
-        const max = Math.pow(10, digits) - 1;
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+    <script>
+        let questionCount = 1;
+        let resultsHidden = false;
 
-    function generateAll() {
-        const container = document.getElementById('container');
-        container.innerHTML = '';
-        
-        const dividendDigits = parseInt(document.getElementById('dividend-digits').value);
-        const divisorDigits = parseInt(document.getElementById('divisor-digits').value);
-        const remainderType = document.getElementById('remainder-type').value;
-
-        for(let i=0; i<4; i++) {
-            createProblemCard(dividendDigits, divisorDigits, remainderType);
-        }
-    }
-
-    function createProblemCard(divDigits, divrDigits, remType) {
-        let dividend, divisor, remainder;
-        let attempts = 0;
-        
-        do {
-            dividend = getRandomNumber(divDigits);
-            divisor = getRandomNumber(divrDigits);
-            remainder = dividend % divisor;
-            attempts++;
-            if(attempts > 500) break; 
-            if(dividend < divisor) continue;
-            if(remType === 'no' && remainder !== 0) continue; 
-            if(remType === 'yes' && remainder === 0) continue; 
-            break;
-        } while (true);
-
-        const card = document.createElement('div');
-        card.className = 'problem-card';
-
-        const steps = calculateLongDivision(dividend, divisor);
-        const gridHtml = generateGridCells(dividend.toString(), divisor.toString(), steps);
-        
-        const btn = document.createElement('button');
-        btn.className = 'toggle-btn';
-        btn.innerText = 'Cevabı Göster';
-        btn.onclick = function() {
-            const solutions = card.querySelectorAll('.solution-step');
-            const isHidden = solutions[0].style.display === 'none' || solutions[0].style.display === '';
-            solutions.forEach(el => el.style.display = isHidden ? 'flex' : 'none');
-            btn.innerText = isHidden ? 'Cevabı Gizle' : 'Cevabı Göster';
-        };
-
-        card.innerHTML = gridHtml;
-        card.appendChild(btn);
-        document.getElementById('container').appendChild(card);
-    }
-
-    function calculateLongDivision(dividend, divisor) {
-        let divStr = dividend.toString();
-        let steps = [];
-        let currentPart = "";
-        let quotient = "";
-        
-        for (let i = 0; i < divStr.length; i++) {
-            currentPart += divStr[i];
-            let partNum = parseInt(currentPart);
-            
-            if (partNum >= divisor) {
-                let qBit = Math.floor(partNum / divisor);
-                let mult = qBit * divisor;
-                let remainder = partNum - mult;
-                
-                steps.push({
-                    type: 'subtraction',
-                    upper: partNum,
-                    subtract: mult,
-                    result: remainder,
-                    digitIndex: i
-                });
-
-                currentPart = remainder.toString();
-                if(currentPart === "0") currentPart = ""; 
-                quotient += qBit;
-            } else {
-                if (quotient.length > 0) quotient += "0";
-            }
-        }
-        if(quotient === "") quotient = "0";
-        return { quotient: Math.floor(dividend/divisor), steps: steps };
-    }
-
-    function generateGridCells(dividend, divisor, logic) {
-        let colCount = dividend.length + 1 + divisor.length; 
-        // ORTADAKİ AYIRAÇ SÜTUNUNU DARALTIYORUZ (10px)
-        // Sol taraf: Sayı kadar 30px, Ortada 10px, Sağ taraf: Sayı kadar 30px
-        let gridTemplate = `repeat(${dividend.length}, 30px) 10px repeat(${divisor.length}, 30px)`;
-        
-        let gridHtml = `<div class="division-grid" style="grid-template-columns: ${gridTemplate};">`;
-
-        // --- 1. SATIR (Bölünen | Bölen) ---
-        
-        // Bölünen Rakamları
-        for (let c of dividend) {
-            gridHtml += `<div class="cell">${c}</div>`; 
-        }
-        
-        // Dikey Ayraç (Sadece burası çizilecek, özel class)
-        gridHtml += `<div class="cell separator-cell"></div>`; 
-        
-        // Bölen Rakamları
-        for (let c of divisor) {
-            gridHtml += `<div class="cell border-bottom">${c}</div>`;
+        // Metin Ekleme
+        function addText() {
+            const page = document.getElementById('page-container');
+            const div = document.createElement('div');
+            div.className = 'draggable-text';
+            div.contentEditable = true;
+            div.innerHTML = 'Yeni Metin';
+            div.style.top = '50px';
+            div.style.left = '50px';
+            enableDrag(div);
+            page.appendChild(div);
         }
 
-        // --- ÇÖZÜM ADIMLARI ---
-        logic.steps.forEach((step, idx) => {
-            let subtractStr = step.subtract.toString();
-            // Hizalama hesabı
-            let startCol = (step.digitIndex + 1) - subtractStr.length;
-            
-            // Satır A: Çıkarma İşlemi (Kırmızı)
-            for(let i=0; i<colCount; i++) {
-                // Bölüm Sonucu (Sadece ilk adımda sağ tarafa yaz)
-                if(idx === 0 && i === dividend.length + 1) { 
-                    let qStr = logic.quotient.toString();
-                    gridHtml += `<div class="cell solution-step quotient-text" style="grid-column: span ${qStr.length}; justify-content: flex-start; padding-left:5px;">${qStr}</div>`;
-                    i += qStr.length; // yer kapladığı için indexi ilerlet
-                    continue; 
-                }
-                
-                // Normal Hücreler
-                if(i >= startCol && i <= step.digitIndex) {
-                    let char = subtractStr[i - startCol];
-                    // Çıkarma çizgisi (border-bottom)
-                    gridHtml += `<div class="cell solution-step border-bottom step-subtraction">${char}</div>`;
-                } else if (i === dividend.length) {
-                    // ARA BOŞLUK (Dikey çizgi BURADA YOK, sadece boşluk)
-                     gridHtml += `<div class="cell solution-step"></div>`;
+        // Soru Ekleme (Otomatik Numaralı)
+        function addQuestion() {
+            questionCount++;
+            const page = document.getElementById('page-container');
+            const div = document.createElement('div');
+            div.className = 'draggable-text';
+            div.contentEditable = true;
+            div.innerHTML = `<span class="question-number">${questionCount}.</span> Yeni Soru`;
+            div.style.top = (questionCount * 40 + 50) + 'px'; // Alt alta gelsin diye basit hesap
+            div.style.left = '50px';
+            enableDrag(div);
+            page.appendChild(div);
+        }
+
+        // Sonuçları Gizle/Göster
+        function toggleResults() {
+            resultsHidden = !resultsHidden;
+            const boxes = document.querySelectorAll('.result-box');
+            boxes.forEach(box => {
+                if (resultsHidden) {
+                    box.classList.add('hidden-result');
                 } else {
-                    gridHtml += `<div class="cell solution-step"></div>`;
+                    box.classList.remove('hidden-result');
                 }
-            }
+            });
+        }
 
-            // Satır B: Kalan + İndirilen Sayı
-            let nextNumStr = "";
-            let nextIndex = step.digitIndex;
+        // Metin Biçimlendirme
+        function formatDoc(cmd, value=null) {
+            document.execCommand(cmd, false, value);
+        }
+
+        // Sayfa Döndürme
+        function rotatePage() {
+            const page = document.getElementById('page-container');
+            const currentWidth = page.style.width;
             
-            if (idx < logic.steps.length - 1) {
-                // Bir sonraki adımın sayısı (kalan + yukarıdan inen)
-                nextNumStr = logic.steps[idx+1].upper.toString();
-                nextIndex = logic.steps[idx+1].digitIndex;
-            } else {
-                // Son Kalan
-                nextNumStr = step.result.toString();
+            if (currentWidth === '1123px') { // Şu an yataysa, dikey yap
+                page.style.width = '794px';
+                page.style.minHeight = '1123px';
+            } else { // Şu an dikeyse, yatay yap
+                page.style.width = '1123px';
+                page.style.minHeight = '794px';
+            }
+        }
+
+        // Sürükle Bırak (Drag & Drop) İşlemleri
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("src", ev.target.parentElement.getAttribute('data-src'));
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const src = ev.dataTransfer.getData("src");
+            if (src) {
+                const page = document.getElementById('page-container');
+                
+                // Resim Konteyneri
+                const container = document.createElement('div');
+                container.className = 'draggable-image';
+                container.style.left = (ev.offsetX) + 'px';
+                container.style.top = (ev.offsetY) + 'px';
+                container.style.width = '150px';
+                container.style.height = '150px';
+                
+                // Resim
+                const img = document.createElement('img');
+                img.src = src;
+                
+                container.appendChild(img);
+                enableDrag(container);
+                page.appendChild(container);
+            }
+        }
+
+        // Sayfa içi öğeleri sürükleme mantığı (Basitleştirilmiş)
+        function enableDrag(elmnt) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            elmnt.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                // Eğer içerik düzenleniyorsa (contenteditable) sürüklemeyi engelleme ama kenardan tutulursa sürükle
+                if(e.target !== elmnt && e.target.contentEditable === "true") return;
+                
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
             }
 
-            let nextStartCol = (nextIndex + 1) - nextNumStr.length;
-
-            for(let i=0; i<colCount; i++) {
-                 if(i >= nextStartCol && i <= nextIndex) {
-                    let char = nextNumStr[i - nextStartCol];
-                    let colorStyle = (idx === logic.steps.length - 1) ? "color:#27ae60;" : "color:#333;";
-                    gridHtml += `<div class="cell solution-step" style="${colorStyle}">${char}</div>`;
-                } else if (i === dividend.length) {
-                     // ARA BOŞLUK (Temiz)
-                     gridHtml += `<div class="cell solution-step"></div>`;
-                } else {
-                    gridHtml += `<div class="cell solution-step"></div>`;
-                }
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
             }
-        });
 
-        gridHtml += `</div>`;
-        return gridHtml;
-    }
-
-    // İlk açılışta üret
-    generateAll();
-</script>
-
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+        
+        // Mevcut öğeleri sürüklenebilir yap
+        document.querySelectorAll('.draggable-text').forEach(enableDrag);
+    </script>
 </body>
 </html>
