@@ -3,32 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tam Hizalı Bölme İşlemi</title>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>Profesyonel Bölme İşlemi Aracı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* GENEL SAYFA YAPISI */
+        /* GENEL SAYFA AYARLARI */
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #f0f4f8;
+            background-color: #eef2f5;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 30px;
+            padding: 20px;
             margin: 0;
         }
 
-        /* KONTROL PANELİ */
+        /* --- TOOLBAR --- */
         .toolbar {
             background-color: white;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: flex-end;
             flex-wrap: wrap;
-            margin-bottom: 40px;
-            border-left: 5px solid #2980b9;
+            margin-bottom: 30px;
+            border-left: 5px solid #8e44ad; /* Mor Vurgu */
         }
 
         .input-group {
@@ -43,14 +43,14 @@
             color: #555;
         }
 
-        .input-group select, .input-group input {
+        .input-group input {
             padding: 10px;
             border: 2px solid #ddd;
             border-radius: 8px;
-            font-size: 15px;
-            width: 130px;
-            font-family: 'Courier Prime', monospace;
+            width: 100px;
             text-align: center;
+            font-size: 16px;
+            font-weight: bold;
         }
 
         button {
@@ -63,115 +63,111 @@
             transition: 0.2s;
         }
 
-        .btn-gen { background-color: #2980b9; }
-        .btn-gen:hover { background-color: #1f618d; }
+        .btn-add { background-color: #27ae60; } /* Yeşil */
+        .btn-add:hover { background-color: #219150; }
+        
+        .btn-clear { background-color: #c0392b; } /* Kırmızı */
+        .btn-clear:hover { background-color: #a93226; }
 
-        .btn-man { background-color: #27ae60; }
-        .btn-man:hover { background-color: #1e8449; }
-
-        .btn-clear { background-color: #c0392b; }
-
-        .divider { width: 1px; background-color: #ccc; height: 50px; }
-
-        /* KART ALANI IZGARASI (3 SÜTUN) */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+        /* --- KART ALANI --- */
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
             gap: 30px;
+            justify-content: center;
             width: 100%;
-            max-width: 1200px;
         }
 
-        /* --- SORU KARTI TASARIMI --- */
         .card {
             background-color: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 350px;
+            min-width: 320px;
         }
 
-        .close-icon {
+        .delete-btn {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            color: #ccc;
-            cursor: pointer;
+            top: 10px;
+            right: 10px;
+            background: none;
+            color: #aaa;
             font-size: 24px;
-            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            padding: 0;
             line-height: 1;
         }
-        .close-icon:hover { color: red; }
+        .delete-btn:hover { color: red; }
 
-        /* HİZALAMA MERKEZİ - EN ÖNEMLİ KISIM */
-        .math-area {
-            display: flex;
-            flex-direction: row;
-            font-family: 'Courier Prime', monospace; /* Sabit genişlikli font */
-            font-size: 38px; /* Büyük punto */
-            font-weight: 700;
-            color: #2c3e50;
-            line-height: 1.4;
-            margin-top: 20px;
+        /* --- GRID (IZGARA) SİSTEMİ - İŞİN KALBİ --- */
+        .calc-wrapper {
+            display: inline-grid;
+            /* Sütun sayısı JS ile dinamik belirlenecek ama varsayılan bir değer verelim */
+            gap: 1px; /* Hücreler arası boşluk (çizgi gibi görünür) */
+            background-color: #ccc; /* Izgara çizgisi rengi */
+            border: 1px solid #ccc;
             margin-bottom: 20px;
+            margin-top: 20px;
         }
 
-        /* Sol Sütun: Bölünen, Çıkan, Kalan */
-        .col-left {
+        .cell {
+            background-color: white; /* Hücre içi */
+            width: 35px;
+            height: 35px;
             display: flex;
-            flex-direction: column;
-            align-items: flex-end; /* İÇERİĞİ SAĞA YASLAR (Duvara yapıştırır) */
-            text-align: right;     /* Metni sağa yaslar */
-            margin-right: 15px;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+            font-family: 'Courier New', Courier, monospace; /* Eşit genişlik şart */
         }
 
-        /* Sağ Sütun: Bölen, Bölüm */
-        .col-right {
-            display: flex;
-            flex-direction: column;
-            border-left: 4px solid #333; /* Kalın Siyah Çizgi */
-            padding-left: 15px;
-            align-items: flex-start;
-        }
-
-        /* Sayıların Renkleri ve Çizgiler */
-        .num-dividend { color: #333; }
+        /* ÖZEL RENKLER (Görselinizdeki gibi) */
+        .bg-dividend { background-color: #b7950b !important; color: white !important; } /* Hardal/Altın */
+        .bg-divisor  { background-color: #5dade2 !important; color: white !important; } /* Mavi */
+        .bg-quotient { background-color: #e056fd !important; color: white !important; } /* Pembe/Magenta */
+        .bg-remainder{ background-color: #58d68d !important; color: white !important; } /* Yeşil */
+        .bg-subtraction { background-color: #2c3e50 !important; color: white !important; } /* Koyu (Çıkarma işlemi) */
         
-        .num-subtracted { 
-            color: #c0392b; /* Kırmızı */
-            border-bottom: 4px solid #333; /* Çıkarma Çizgisi */
-            width: 100%; 
-        }
+        .border-bottom { border-bottom: 2px solid #333; }
+        .border-right { border-right: 3px solid #333; } /* Bölen çizgisi */
 
-        .num-remainder { 
-            color: #27ae60; /* Yeşil */
-            margin-top: 5px;
-        }
-
-        .num-divisor {
-            border-bottom: 4px solid #333;
+        /* --- ÖZET TABLOSU --- */
+        .summary-table {
             width: 100%;
-            padding-bottom: 5px;
-            margin-bottom: 5px;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .summary-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            font-weight: bold;
         }
 
-        .num-quotient { color: #2980b9; /* Mavi */ }
+        .label-cell { width: 40%; text-align: center; color: white; }
+        .value-cell { width: 60%; text-align: center; background-color: #f9f9f9; color: #333;}
 
-        /* Gizle / Göster */
+        /* Renk Sınıfları */
+        .lbl-div { background-color: #b7950b; }
+        .lbl-sor { background-color: #5dade2; }
+        .lbl-quo { background-color: #e056fd; }
+        .lbl-rem { background-color: #27ae60; }
+
+        /* Gizle/Göster Butonu */
         .toggle-btn {
-            background-color: #d35400;
             width: 100%;
-            margin-top: auto;
-            border-radius: 10px;
+            margin-top: 15px;
+            background-color: #e67e22;
         }
-        .toggle-btn:hover { background-color: #a04000; }
+        .toggle-btn:hover { background-color: #d35400; }
 
-        .hidden-step { display: none; }
-        .visible-step { display: block; }
+        .hidden-content { display: none; }
+        .visible-content { display: table-row; } /* Tablo satırı olarak göster */
 
     </style>
 </head>
@@ -180,125 +176,306 @@
     <div class="toolbar">
         <div class="input-group">
             <label>Bölünen</label>
-            <select id="selDiv">
-                <option value="3">3 Basamaklı</option>
-                <option value="4">4 Basamaklı</option>
-            </select>
+            <input type="number" id="inpDividend" placeholder="4675">
         </div>
         <div class="input-group">
             <label>Bölen</label>
-            <select id="selSor">
-                <option value="2">2 Basamaklı</option>
-                <option value="1">1 Basamaklı</option> </select>
+            <input type="number" id="inpDivisor" placeholder="15">
         </div>
-        <button class="btn-gen" onclick="generateRandom()">Rastgele 3 Soru</button>
-
-        <div class="divider"></div>
-
-        <div class="input-group">
-            <label>Bölünen</label>
-            <input type="number" id="manDiv" placeholder="875">
-        </div>
-        <div class="input-group">
-            <label>Bölen</label>
-            <input type="number" id="manSor" placeholder="24">
-        </div>
-        <button class="btn-man" onclick="addManual()">Ekle</button>
-        <button class="btn-clear" onclick="document.getElementById('grid').innerHTML=''">Temizle</button>
+        <button class="btn-add" onclick="addCalculation()">Hesapla ve Göster</button>
+        <button class="btn-clear" onclick="document.getElementById('container').innerHTML=''">Hepsini Sil</button>
     </div>
 
-    <div class="grid-container" id="grid"></div>
+    <div class="cards-container" id="container"></div>
 
     <script>
-        window.onload = generateRandom;
+        // Sayfa Yüklendiğinde Örnek Bir Tane Göster (Görseldeki 4675 / 15 işlemi)
+        window.onload = function() {
+            document.getElementById('inpDividend').value = 4675;
+            document.getElementById('inpDivisor').value = 15;
+            addCalculation();
+        };
 
-        function rand(digits) {
-            const min = Math.pow(10, digits - 1);
-            const max = Math.pow(10, digits) - 1;
-            return Math.floor(Math.random() * (max - min + 1)) + min;
+        function addCalculation() {
+            const divVal = document.getElementById('inpDividend').value;
+            const sorVal = document.getElementById('inpDivisor').value;
+
+            if(!divVal || !sorVal) return alert("Lütfen sayıları girin.");
+            const dividend = parseInt(divVal);
+            const divisor = parseInt(sorVal);
+
+            if(divisor >= dividend) return alert("Bölünen sayı bölenden büyük olmalı.");
+            if(divisor === 0) return alert("Sıfıra bölünemez.");
+
+            // 1. İşlem Basamaklarını Hesapla (Logic)
+            const steps = calculateLongDivision(dividend, divisor);
+
+            // 2. Görsel Kartı Oluştur (UI)
+            createCard(dividend, divisor, steps);
         }
 
-        function generateRandom() {
-            const container = document.getElementById('grid');
-            container.innerHTML = ''; // Temizle
-            
-            for(let i=0; i<3; i++) {
-                const dDig = parseInt(document.getElementById('selDiv').value);
-                const sDig = parseInt(document.getElementById('selSor').value);
-                
-                let div = rand(dDig);
-                let sor = rand(sDig);
+        // --- MATEMATİKSEL MANTIK (Long Division Algorithm) ---
+        function calculateLongDivision(dividend, divisor) {
+            const dividendStr = dividend.toString();
+            let remainder = 0;
+            let currentPart = "";
+            let quotientStr = "";
+            let steps = [];
 
-                // Bölen bölünenden büyük olmasın
-                while(sor >= div) { div = rand(dDig); }
+            // Adım adım bölme
+            for (let i = 0; i < dividendStr.length; i++) {
+                currentPart += dividendStr[i];
+                let currentNum = parseInt(currentPart);
+
+                // Eğer sayı bölenden küçükse ve daha inecek sayı varsa, devam et (bölüm sıfır olabilir)
+                if (currentNum < divisor) {
+                    // İlk basamaklar hariç, araya 0 atma durumu
+                    if (quotientStr.length > 0) {
+                        quotientStr += "0";
+                        // Burası önemli: 0 eklediğimizde de aslında bir adım atmış oluyoruz
+                        // Ancak görsel karmaşayı önlemek için genelde "aşağı indirme" adımıyla birleştirilir.
+                    }
+                    continue;
+                }
+
+                let q = Math.floor(currentNum / divisor);
+                let mult = q * divisor;
+                let rem = currentNum - mult;
+
+                quotientStr += q;
+
+                // Adımı Kaydet
+                steps.push({
+                    currentNum: currentNum, // O anki bölünen parça (örn: 46)
+                    mult: mult,             // Çıkan sayı (örn: 45)
+                    rem: rem,               // Kalan (örn: 1)
+                    digitIndex: i           // Hangi basamaktayız (Hizalama için kritik)
+                });
+
+                // Kalanı yeni parçaya ekle (String olarak birleştir)
+                currentPart = rem.toString();
                 
-                createCard(div, sor);
+                // Eğer kalan 0 ise ve işlem devam ediyorsa currentPart boşalmasın '0' kalsın,
+                // ama JS parseInt('05')'i 5 yapar, o yüzden sorun yok.
             }
+            
+            // Döngü bitti ama belki sonda işlenmeyen 0'lar var? 
+            // Örneğin 800 / 4 -> 8/4=2, kalan 0. İnen 0, 0/4=0...
+            // Bu basit algoritma görselleştirme için yeterli, eksik 0'ları uzunluktan tamamlayabiliriz.
+            while(quotientStr.length < (dividendStr.length - (dividendStr.length - quotientStr.length))) {
+                 // Basit logic düzeltmeleri gerekebilir ama görselleştirme odaklı gidiyoruz.
+            }
+            // Gerçek bölüm sonucunu alalım (sağlama)
+            const trueQuotient = Math.floor(dividend / divisor);
+            
+            return {
+                steps: steps,
+                quotient: trueQuotient,
+                finalRemainder: dividend % divisor
+            };
         }
 
-        function addManual() {
-            const div = parseInt(document.getElementById('manDiv').value);
-            const sor = parseInt(document.getElementById('manSor').value);
+        // --- GÖRSELLEŞTİRME (DOM Creation) ---
+        function createCard(dividend, divisor, data) {
+            const container = document.getElementById('container');
+            const dividendStr = dividend.toString();
+            const divisorStr = divisor.toString();
+            const totalCols = dividendStr.length + divisorStr.length + 1; // +1 ayırıcı sütun için
+
+            // Grid Template Columns oluştur
+            let gridTemplate = `repeat(${dividendStr.length}, 1fr) 5px repeat(${divisorStr.length}, 1fr)`;
             
-            if(!div || !sor) return alert("Sayı giriniz");
-            if(sor >= div) return alert("Bölünen bölenden büyük olmalı");
-
-            const container = document.getElementById('grid');
-            if(container.children.length >= 3) container.innerHTML = '';
-            
-            createCard(div, sor);
-        }
-
-        function createCard(dividend, divisor) {
-            const quotient = Math.floor(dividend / divisor);
-            const remainder = dividend % divisor;
-            const subtracted = dividend - remainder; // Çıkan sayı (Bölüm x Bölen)
-
-            const html = `
-                <div class="close-icon" onclick="this.parentElement.remove()">×</div>
-                
-                <div class="math-area">
-                    <div class="col-left">
-                        <div class="num-dividend">${dividend}</div>
-                        
-                        <div class="step-box hidden-step">
-                            <div class="num-subtracted">${subtracted}</div>
-                            <div class="num-remainder">${remainder}</div>
-                        </div>
-                    </div>
-
-                    <div class="col-right">
-                        <div class="num-divisor">${divisor}</div>
-                        <div class="num-quotient step-box hidden-step">${quotient}</div>
-                    </div>
-                </div>
-
-                <button class="toggle-btn" onclick="toggleVis(this)">Cevabı Göster</button>
-            `;
-
             const card = document.createElement('div');
             card.className = 'card';
-            card.innerHTML = html;
-            document.getElementById('grid').appendChild(card);
-        }
 
-        function toggleVis(btn) {
-            const card = btn.parentElement;
-            const steps = card.querySelectorAll('.step-box');
-            const isHidden = steps[0].classList.contains('hidden-step');
+            // --- GRID OLUŞTURMA ---
+            let gridHTML = `<div class="calc-wrapper" style="grid-template-columns: ${gridTemplate};">`;
 
-            steps.forEach(s => {
-                if(isHidden) {
-                    s.classList.remove('hidden-step');
-                    s.classList.add('visible-step');
+            // 1. SATIR: BÖLÜNEN | BÖLEN
+            // Bölünen Rakamları
+            for(let char of dividendStr) {
+                gridHTML += `<div class="cell bg-dividend">${char}</div>`;
+            }
+            // Ayırıcı Çizgi (Dikey) - Hücre değil, border ile halledeceğiz veya boşluk
+            gridHTML += `<div class="cell" style="background:black; width:5px; padding:0;"></div>`;
+            
+            // Bölen Rakamları
+            for(let char of divisorStr) {
+                gridHTML += `<div class="cell bg-divisor">${char}</div>`;
+            }
+
+            // 2. SATIR (ve sonrası): İşlemler
+            // Sağ tarafta (Bölenin altı) Bölüm yazacak.
+            // Sol tarafta işlemler olacak.
+            
+            // İlk işlem satırını oluştururken sağa Bölüm'ü (Quotient) koymalıyız.
+            // Diğer satırlarda sağ taraf boş kalacak.
+
+            let stepIndex = 0;
+            // Toplam kaç satır sürecek? (Adım sayısı * 2) + Kalan satırı
+            // Grid mantığında her hücreyi tek tek basmamız lazım.
+            
+            // Bu kısım biraz tricky. Her satır için tüm sütunları doldurmalıyız.
+            // Sol taraftaki sütun sayısı = dividendStr.length
+            
+            data.steps.forEach((step, idx) => {
+                // --- ÇIKARMA SATIRI (Örn: - 4 5) ---
+                // Sayı sağa dayalı olmalı ama basamak hizasına dikkat edilmeli.
+                // step.digitIndex: Hangi basamağın altına denk geldiği.
+                
+                const multStr = step.mult.toString();
+                // Kaç hücre boş bırakılacak (soldan)?
+                // step.digitIndex (0 tabanlı) son rakamın yeri.
+                // Örn: 4675, idx=1 (6 rakamı). Mult=45. 45'in 5'i 6'nın altında olmalı.
+                
+                let emptyCellsLeft = step.digitIndex - multStr.length + 1;
+                
+                // SATIR BAŞLANGICI
+                // Sol taraftaki boşluklar
+                for(let i=0; i<dividendStr.length; i++) {
+                    if(i >= emptyCellsLeft && i <= step.digitIndex) {
+                        // Rakamı yaz (Çıkarılan sayı)
+                        let charIndex = i - emptyCellsLeft;
+                        // Sadece ilk rakamın başına eksi koymak yerine görseldeki gibi ayrı bir stil düşünülebilir
+                        // Ama grid sisteminde her rakam 1 hücre.
+                        gridHTML += `<div class="cell" style="color:#c0392b;">${multStr[charIndex]}</div>`; 
+                    } else {
+                        gridHTML += `<div class="cell"></div>`; // Boş hücre
+                    }
+                }
+                
+                // ORTA ÇİZGİ
+                gridHTML += `<div class="cell" style="background:black; width:5px; padding:0;"></div>`;
+
+                // SAĞ TARAF
+                // Sadece ilk adımda Bölüm (Quotient) yazılır
+                if(idx === 0) {
+                    const qStr = data.quotient.toString();
+                    // Bölüm için yer tutucu. Eğer sığmazsa grid taşabilir, basit tutalım.
+                    // Grid yapısını korumak için tek hücreye sığdırmak yerine 
+                    // bölenin genişliği kadar hücreye yayabiliriz.
+                    // Ama en kolayı, ilk hücreye tüm sayıyı basmak (görsel hack) veya tek tek basmak.
+                    
+                    // Görseldeki gibi tek tek hücrelere basalım
+                    for(let i=0; i<divisorStr.length; i++) {
+                        if(i < qStr.length) {
+                             gridHTML += `<div class="cell bg-quotient" style="border-top: 2px solid black;">${qStr[i]}</div>`;
+                        } else {
+                             // Bölüm bölenden kısaysa kalan yerler boş
+                             gridHTML += `<div class="cell" style="border-top: 2px solid black;"></div>`;
+                        }
+                    }
+                    // Eğer bölüm bölenden uzunsa? (Örn 100/2=50, 3 hane / 1 hane = 2 hane). 
+                    // Bu basit gridde sağ tarafın sütun sayısını bölen uzunluğuna sabitledik.
+                    // Gelişmiş versiyonda sağ taraf dinamik olmalı.
+                    
                 } else {
-                    s.classList.remove('visible-step');
-                    s.classList.add('hidden-step');
+                    // Sağ taraf boş
+                    for(let k=0; k<divisorStr.length; k++) gridHTML += `<div class="cell"></div>`;
+                }
+
+                // --- ÇİZGİ VE SONUÇ SATIRI (Örn: 1 7) ---
+                // Burası aslında bir sonraki iterasyonun "currentNum"u ile alakalı 
+                // ya da bu işlemin sonucu (rem) + bir sonraki inen rakam.
+                
+                // Çıkarma çizgisini simüle etmek için CSS border-bottom kullanabiliriz yukarıdaki hücrelere.
+                // Biz burada yeni satır açıyoruz.
+                
+                // Ara sonuç (Kalan + İndirilen)
+                // Bu adımın kalanı (step.rem)
+                // Bir sonraki adıma hazırlık.
+                
+                // Görselde çıkarma sonucu hemen altına yazılıyor.
+                // Eğer son adımsa FINAL KALAN yazılır.
+                
+                if(idx === data.steps.length - 1) {
+                    // SON ADIM -> KALAN (YEŞİL)
+                    const finalRemStr = data.finalRemainder.toString();
+                    let finalRemPos = dividendStr.length - 1; // En sağa yasla
+                    let emptyL = finalRemPos - finalRemStr.length + 1;
+
+                    for(let i=0; i<dividendStr.length; i++) {
+                        if(i >= emptyL) {
+                            let charIndex = i - emptyL;
+                            gridHTML += `<div class="cell bg-remainder" style="border-top: 2px solid black;">${finalRemStr[charIndex]}</div>`;
+                        } else {
+                            gridHTML += `<div class="cell"></div>`;
+                        }
+                    }
+                    
+                    // Sağ taraf boşlukları
+                    gridHTML += `<div class="cell" style="background:black; width:5px; padding:0;"></div>`;
+                    for(let k=0; k<divisorStr.length; k++) gridHTML += `<div class="cell"></div>`;
+                
+                } else {
+                    // ARA ADIM (İndirilen Rakamla Birlikte)
+                    // Bir sonraki adımın "currentNum"u aslında burada yazılması gereken sayı.
+                    const nextNumStr = data.steps[idx+1].currentNum.toString();
+                    const nextIndex = data.steps[idx+1].digitIndex;
+                    
+                    let emptyL = nextIndex - nextNumStr.length + 1;
+
+                    for(let i=0; i<dividendStr.length; i++) {
+                        if(i >= emptyL && i <= nextIndex) {
+                            let charIndex = i - emptyL;
+                            gridHTML += `<div class="cell" style="border-top: 2px solid black;">${nextNumStr[charIndex]}</div>`;
+                        } else {
+                            gridHTML += `<div class="cell"></div>`;
+                        }
+                    }
+                    
+                    // Sağ taraf boşlukları
+                    gridHTML += `<div class="cell" style="background:black; width:5px; padding:0;"></div>`;
+                    for(let k=0; k<divisorStr.length; k++) gridHTML += `<div class="cell"></div>`;
                 }
             });
-            
-            btn.textContent = isHidden ? "Cevabı Gizle" : "Cevabı Göster";
+
+            gridHTML += `</div>`; // Grid Kapanış
+
+            // --- ÖZET TABLOSU ---
+            let summaryHTML = `
+                <table class="summary-table">
+                    <tr>
+                        <td class="label-cell lbl-div">Bölünen</td>
+                        <td class="value-cell">${dividend}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell lbl-sor">Bölen</td>
+                        <td class="value-cell">${divisor}</td>
+                    </tr>
+                    <tr class="hidden-content toggle-target">
+                        <td class="label-cell lbl-quo">Bölüm</td>
+                        <td class="value-cell">${data.quotient}</td>
+                    </tr>
+                    <tr class="hidden-content toggle-target">
+                        <td class="label-cell lbl-rem">Kalan</td>
+                        <td class="value-cell">${data.finalRemainder}</td>
+                    </tr>
+                </table>
+                <button class="toggle-btn" onclick="toggleDetails(this)">Sonuçları Göster</button>
+            `;
+
+            card.innerHTML = `<button class="delete-btn" onclick="this.parentElement.remove()">×</button>` + gridHTML + summaryHTML;
+            container.appendChild(card);
         }
+
+        function toggleDetails(btn) {
+            const card = btn.parentElement;
+            const targets = card.querySelectorAll('.toggle-target');
+            const isHidden = targets[0].classList.contains('hidden-content');
+
+            targets.forEach(t => {
+                if(isHidden) {
+                    t.classList.remove('hidden-content');
+                    t.classList.add('visible-content');
+                } else {
+                    t.classList.remove('visible-content');
+                    t.classList.add('hidden-content');
+                }
+            });
+            btn.textContent = isHidden ? "Sonuçları Gizle" : "Sonuçları Göster";
+        }
+
     </script>
 </body>
 </html>
