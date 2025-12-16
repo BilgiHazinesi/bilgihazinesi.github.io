@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. Sınıf Akıllı Değerlendirme Aracı (TR Destekli)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .btn-option { transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-option:active { transform: scale(0.95); }
+        .btn-option.selected { transform: scale(1.1); font-weight: bold; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border: 2px solid white; }
+        .sticky-header { position: sticky; top: 0; z-index: 50; background-color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        
+        #searchResults { max-height: 300px; overflow-y: auto; }
+        .search-item:hover { background-color: #eff6ff; color: #2563eb; }
+
+        @media (max-width: 640px) {
+            .question-text { font-size: 0.9rem; }
+            .btn-option { width: 2.8rem; height: 2.8rem; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body class="pb-24" onclick="closeSearchOutside(event)">
+
+    <div class="sticky-header p-3 border-b border-gray-200">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row gap-3 items-center justify-between">
+            
+            <div class="w-full md:w-1/2 relative">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="searchInput" 
+                        class="w-full pl-10 p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-800 font-bold placeholder-gray-400 outline-none transition-colors" 
+                        placeholder="Öğrenci adı yazın..." 
+                        oninput="filterStudents()" 
+                        onfocus="filterStudents()"
+                        autocomplete="off">
+                    
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" onclick="clearSearch()">
+                        <i class="fas fa-times text-gray-400 hover:text-gray-600"></i>
+                    </div>
+                </div>
+
+                <div id="dropdownContainer" class="hidden absolute w-full bg-white mt-1 rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                    <ul id="searchResults" class="divide-y divide-gray-100"></ul>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 w-full md:w-auto overflow-x-auto justify-end pt-2 md:pt-0">
+                <button onclick="downloadPDF()" id="btnPdf" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                    <i class="fas fa-file-pdf"></i> <span class="hidden sm:inline">Rapor (TR)</span>
+                </button>
+                <button onclick="exportData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                    <i class="fas fa-download"></i> <span class="hidden sm:inline">Yedekle</span>
+                </button>
+                <button onclick="document.getElementById('fileInput').click()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                    <i class="fas fa-upload"></i> <span class="hidden sm:inline">Yükle</span>
+                </button>
+                <input type="file" id="fileInput" class="hidden" onchange="importData(this)">
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto p-4" id="mainContent" style="display:none;">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 gap-4">
+            <div class="text-center sm:text-left">
+                <h2 id="studentNameDisplay" class="text-2xl font-bold text-gray-800 tracking-tight"></h2>
+                <span class="text-sm text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">8 Aralık Değerlendirme Etkinliği</span>
+            </div>
+            <button onclick="markAllFull()" class="w-full sm:w-auto bg-indigo-600 text-white px-5 py-2.5 rounded-xl shadow hover:bg-indigo-700 transition flex items-center justify-center font-medium">
+                <i class="fas fa-check-double mr-2"></i> Hepsini Tam Yap
+            </button>
+        </div>
+
+        <div id="questionsContainer" class="space-y-4"></div>
+
+        <div class="mt-8 bg-white rounded-2xl shadow-lg border-l-4 border-green-500 overflow-hidden">
+            <div class="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fab fa-whatsapp text-green-500 text-xl"></i> Hazır Veli Mesajı
+                </h3>
+                <button onclick="copyFeedback()" class="text-green-600 hover:text-green-800 font-semibold text-sm flex items-center gap-1 bg-white px-3 py-1 rounded border border-green-200 transition">
+                    <i class="far fa-copy"></i> Kopyala
+                </button>
+            </div>
+            <div class="p-4">
+                <textarea id="feedbackText" rows="12" class="w-full p-4 border-0 bg-gray-50 rounded-xl text-gray-700 focus:ring-0 text-sm leading-relaxed resize-none" readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div id="startMessage" class="flex flex-col items-center justify-center min-h-[60vh] text-gray-400">
+        <div class="bg-white p-8 rounded-full shadow-sm mb-4 animate-bounce">
+            <i class="fas fa-search text-6xl text-blue-200"></i>
+        </div>
+        <p class="text-xl font-medium text-gray-600">Öğrenci bulmak için yukarıya ismini yazın.</p>
+    </div>
+
+    <script>
+        const studentList = [
+            "HAKAN AKDENİZ", "HÜSEYİN ÇAĞAN GÜRGAH", "AHMET ARIN AĞTÜRK", "DENİZ GÜNEY",
+            "İDİL DEMİRCİ", "DURU AYKANAT", "DENİZ KİMYON", "KADİR BERKTAŞ", "DOĞA BORA",
+            "AHMET CEVDET KORKMAZ", "GÜLNİHAL KARAKAŞ", "NİL TİRYAKİ", "MASAL DEFNE TEL",
+            "EYLÜL AFAT", "ELİF ADA KEKEÇ", "EYLÜL MUTAF", "İPEK MİMAROĞLU", "YEKTA URAS DEMİRER",
+            "HAMZA KAAN ÇEVEN", "BEYZA DAĞDELEN", "NAZ KARABAĞLI", "AYNUR BUDAK", "DURU BÜKÜN", "WAFA MAKANSSI"
+        ];
+
+        const questions = [
+            { id: "T1a", lesson: "TÜRKÇE", q: "1.a. Atatürk, yurdu düşman sarınca hangi kararı almıştır? Halka neyi anlatacak olabilir?", gain: "metni okuma anlama, metin ile ilgili sorulara net cevaplar verme" },
+            { id: "T1b", lesson: "TÜRKÇE", q: "1.b. Atatürk, Milli Mücadele'yi başlatmak için sırasıyla hangi şehirlere gitmiştir?", gain: "metin ile ilgili sorulara net cevaplar verme" },
+            { id: "T1c", lesson: "TÜRKÇE", q: "1.c. 'Yükseldi halkın gür sesi' dizesiyle ne anlatılmak istenmiştir?", gain: "metni yorumlama" },
+            { id: "T1d", lesson: "TÜRKÇE", q: "1.d. Atatürk, Millî Mücadele'den sonra neler yapmıştır?", gain: "metni okuma anlama" },
+            { id: "T1e", lesson: "TÜRKÇE", q: "1.e. Şiirin son kıtasında anlatılmak istenen nedir?", gain: "metni yorumlama" },
+            { id: "T2a", lesson: "TÜRKÇE", q: "2.a. Metinde geçen 'Neden Sonuç Cümlesi'ne örnek yazınız.", gain: "neden sonuç cümleleri" },
+            { id: "T2b", lesson: "TÜRKÇE", q: "2.b. Metinde geçen 'Soru Cümlesi'ne örnek yazınız.", gain: "soru cümleleri" },
+            { id: "T2c", lesson: "TÜRKÇE", q: "2.c. Metinde geçen 'Karşılaştırma Cümlesi'ne örnek yazınız.", gain: "karşılaştırma cümleleri" },
+            { id: "T3",  lesson: "TÜRKÇE", q: "3. Okuduğunuz metnin türü nedir?", gain: "metnin türü" },
+            { id: "T4",  lesson: "TÜRKÇE", q: "4. İki tane eş sesli kelime belirleyip farklı anlamlarıyla cümle içinde kullanınız.", gain: "eş sesli kelimeler" },
+            { id: "T5",  lesson: "TÜRKÇE", q: "5. Kelime çiftleri arasındaki anlam ilişkisi (Eş/Zıt anlam tablosu).", gain: "eş ve zıt anlamlı kelimeler" },
+
+            { id: "M1",  lesson: "MATEMATİK", q: "1. Mont ve Ayakkabı Fiyatları: Yuvarlama (Onluk/Yüzlük) ve Sıralama Problemi.", gain: "onluğa ve yüzlüğe yuvarlama, sıralama" },
+            { id: "M2a", lesson: "MATEMATİK", q: "2.a. Sıralamaya göre (A < 1230, B < 3479) A+B en fazla kaç olabilir?", gain: "toplama işlemi" },
+            { id: "M2b", lesson: "MATEMATİK", q: "2.b. A'nın en büyük, B'nin en küçük değeri ile örüntü oluşturma (5. terim).", gain: "örüntü" },
+            { id: "M3",  lesson: "MATEMATİK", q: "3. Quizizz Puanları: Üç günün toplam puanını hesaplama problemi.", gain: "toplama işlemi problemleri" },
+            { id: "M4",  lesson: "MATEMATİK", q: "4. Verilen işlemleri yapınız (Toplama, Çıkarma, Çarpma).", gain: "toplama, çıkarma ve çarpma işlemi" },
+            { id: "M5",  lesson: "MATEMATİK", q: "5. Tablo Doldurma: Sayıları rakamla yazma (Basamak analizi soruları).", gain: "doğal sayıları yazma" },
+            { id: "M6",  lesson: "MATEMATİK", q: "6. Örüntü kuralı ve '?' yerine gelmesi gereken sayı.", gain: "örüntü" },
+            { id: "M7a", lesson: "MATEMATİK", q: "7.a. Dürbün lensi: Görüş mesafesi farkını bulma.", gain: "çıkarma işlemi problemleri" },
+            { id: "M7b", lesson: "MATEMATİK", q: "7.b. İkinci lens problemi (Görüş mesafesi hesaplama).", gain: "çıkarma işlemi problemleri" },
+            { id: "M8",  lesson: "MATEMATİK", q: "8. Basamak Tablosu (Üst +200, Alt -100): Mavi ve sarı kutu basamak değerleri toplamı.", gain: "doğal sayıları yazma" }
+        ];
+
+        let db = JSON.parse(localStorage.getItem('db_8aralik_final')) || {};
+        let currentStudent = "";
+
+        window.onload = function() {
+            renderQuestions();
+            studentList.sort((a, b) => a.localeCompare(b, 'tr'));
+        };
+
+        // --- ARAMA ---
+        function filterStudents() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLocaleUpperCase('tr');
+            const dropdown = document.getElementById('dropdownContainer');
+            const list = document.getElementById('searchResults');
+            
+            list.innerHTML = "";
+            if (filter.length === 0) { dropdown.classList.add('hidden'); return; }
+
+            const matches = studentList.filter(s => s.toLocaleUpperCase('tr').includes(filter));
+
+            if (matches.length > 0) {
+                dropdown.classList.remove('hidden');
+                matches.forEach(student => {
+                    const li = document.createElement('li');
+                    li.className = "search-item px-4 py-3 cursor-pointer text-gray-700 font-medium transition-colors border-b border-gray-50 last:border-0";
+                    li.textContent = student;
+                    li.onclick = () => selectStudent(student);
+                    list.appendChild(li);
+                });
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function selectStudent(name) {
+            currentStudent = name;
+            document.getElementById('searchInput').value = name;
+            document.getElementById('dropdownContainer').classList.add('hidden');
+            loadStudentUI();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = "";
+            currentStudent = "";
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('startMessage').style.display = 'flex';
+            document.getElementById('dropdownContainer').classList.add('hidden');
+        }
+
+        function closeSearchOutside(event) {
+            const dropdown = document.getElementById('dropdownContainer');
+            const input = document.getElementById('searchInput');
+            if (!dropdown.contains(event.target) && event.target !== input) {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        // --- UI & LOJİK ---
+        function loadStudentUI() {
+            if(!currentStudent) return;
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('startMessage').style.display = 'none';
+            document.getElementById('studentNameDisplay').textContent = currentStudent;
+            document.querySelectorAll('.btn-option').forEach(btn => resetBtn(btn));
+
+            if(db[currentStudent]) {
+                for(let [qid, score] of Object.entries(db[currentStudent])) {
+                    const btns = document.querySelectorAll(`button[onclick^="setScore('${qid}'"]`);
+                    btns.forEach(b => {
+                        if(b.getAttribute('data-val') == score) activateBtn(b, score);
+                    });
+                }
+            }
+            generateFeedback();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = "";
+            let lastLesson = "";
+
+            questions.forEach(q => {
+                if(q.lesson !== lastLesson) {
+                    lastLesson = q.lesson;
+                    const h = document.createElement('div');
+                    h.className = `p-3 rounded-lg font-bold text-white text-center mt-6 shadow-sm tracking-wide ${q.lesson === 'TÜRKÇE' ? 'bg-red-500' : 'bg-blue-600'}`;
+                    h.innerHTML = `<i class="fas fa-book-open mr-2"></i> ${q.lesson}`;
+                    container.appendChild(h);
+                }
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-start justify-between gap-4";
+                card.innerHTML = `
+                    <div class="flex-1">
+                        <span class="inline-block px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-500 mb-2">${q.id}</span>
+                        <p class="question-text text-gray-800 font-medium leading-relaxed">${q.q}</p>
+                    </div>
+                    <div class="flex gap-3 justify-center sm:justify-end shrink-0 pt-2 sm:pt-0">
+                        <button onclick="setScore('${q.id}', 3, this)" class="btn-option w-12 h-12 rounded-full border-2 border-green-100 bg-green-50 text-green-600 flex items-center justify-center text-lg font-bold" data-val="3">T</button>
+                        <button onclick="setScore('${q.id}', 2, this)" class="btn-option w-12 h-12 rounded-full border-2 border-yellow-100 bg-yellow-50 text-yellow-600 flex items-center justify-center text-lg font-bold" data-val="2">K</button>
+                        <button onclick="setScore('${q.id}', 1, this)" class="btn-option w-12 h-12 rounded-full border-2 border-red-100 bg-red-50 text-red-600 flex items-center justify-center text-lg font-bold" data-val="1">Y</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function setScore(qid, score, btn) {
+            if(!currentStudent) return;
+            if(!db[currentStudent]) db[currentStudent] = {};
+            db[currentStudent][qid] = score;
+            localStorage.setItem('db_8aralik_final', JSON.stringify(db));
+
+            const parent = btn.parentElement;
+            Array.from(parent.children).forEach(c => resetBtn(c));
+            activateBtn(btn, score);
+            generateFeedback();
+        }
+
+        function markAllFull() {
+            if(!currentStudent) return;
+            if(!db[currentStudent]) db[currentStudent] = {};
+            questions.forEach(q => db[currentStudent][q.id] = 3);
+            localStorage.setItem('db_8aralik_final', JSON.stringify(db));
+            loadStudentUI();
+        }
+
+        function resetBtn(btn) {
+            btn.className = btn.className.replace('selected bg-green-500 bg-yellow-400 bg-red-500 text-white border-transparent', '');
+            const val = btn.getAttribute('data-val');
+            if(val==3) btn.classList.add('bg-green-50', 'text-green-600', 'border-green-100');
+            if(val==2) btn.classList.add('bg-yellow-50', 'text-yellow-600', 'border-yellow-100');
+            if(val==1) btn.classList.add('bg-red-50', 'text-red-600', 'border-red-100');
+        }
+
+        function activateBtn(btn, score) {
+            btn.classList.remove('bg-green-50', 'text-green-600', 'bg-yellow-50', 'text-yellow-600', 'bg-red-50', 'text-red-600', 'border-green-100', 'border-yellow-100', 'border-red-100');
+            btn.classList.add('selected', 'text-white', 'border-transparent');
+            if(score==3) btn.classList.add('bg-green-500');
+            if(score==2) btn.classList.add('bg-yellow-400');
+            if(score==1) btn.classList.add('bg-red-500');
+        }
+
+        function generateFeedback() {
+            if(!currentStudent || !db[currentStudent]) {
+                document.getElementById('feedbackText').value = "";
+                return;
+            }
+
+            let trMiss = new Set();
+            let matMiss = new Set();
+            let isPerfect = true;
+
+            questions.forEach(q => {
+                const s = db[currentStudent][q.id];
+                if(s === 1 || s === 2) {
+                    isPerfect = false;
+                    if(q.lesson === "TÜRKÇE") trMiss.add(q.gain);
+                    if(q.lesson === "MATEMATİK") matMiss.add(q.gain);
+                }
+            });
+
+            let text = "";
+            const trStr = Array.from(trMiss).join(", ");
+            const matStr = Array.from(matMiss).join(", ");
+
+            if(isPerfect) {
+                text = `Sayın Velim,\n8 Aralık Pazartesi günü yapılan 2. değerlendirme sonuçlarına göre öğrencimin, Türkçe, Matematik dersinde gayet başarılı bir performans sergilemiş olup, konularla ilgili sorular çözmesi gelişimine daha da katkı sağlayacaktır.\n\nÖğrencim, konu tekrarları ve konularla ilgili dikkatli ve anlayarak sorular çözmesi, zihnini canlı tutmasına ve sınav sonucuna yansımasına olanak sağlamıştır. Bu konuda verdiğiniz desteklerden dolayı teşekkür ediyorum.\n\nSaygılarımla,\nZeynal ABİDİN\nSınıf Öğretmeni`;
+            } else {
+                text = `Sayın Velim,\n8 Aralık Pazartesi günü yapılan 2. değerlendirme sonuçlarına göre öğrencimin, `;
+                if(trMiss.size > 0) text += `Türkçe dersinde ${trStr} konusunda tekrar çalışmaları yaparak kendini geliştirebilir. `;
+                if(matMiss.size > 0) text += `Matematik dersinden ${matStr} konularında tekrar çalışması ve sorular çözerek ilerleyebilir. `;
+                text += `\n\nÖğrencim, konu tekrarları ve konularla ilgili dikkatli ve anlayarak sorular çözerek başarı grafiğini yükseltebilir. Bu konuda sizlerden de destek bekliyorum.\n\nSaygılarımla,\nZeynal ABİDİN\nSınıf Öğretmeni`;
+            }
+            document.getElementById('feedbackText').value = text;
+        }
+
+        function copyFeedback() {
+            document.getElementById("feedbackText").select();
+            document.execCommand("copy");
+            alert("Veli mesajı kopyalandı!");
+        }
+
+        // --- PDF İŞLEMİ (ASYNC - TÜRKÇE FONT YÜKLEMELİ) ---
+        async function downloadPDF() {
+            const btn = document.getElementById('btnPdf');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Hazırlanıyor...';
+            btn.disabled = true;
+
+            try {
+                // Türkçe Fontu İnternetten Çekiyoruz (Roboto Regular)
+                const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
+                const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+                
+                // Base64'e çevir
+                const base64String = btoa(new Uint8Array(fontBytes).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+                
+                // Fontu PDF'e ekle
+                doc.addFileToVFS("Roboto-Regular.ttf", base64String);
+                doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+                doc.setFont("Roboto"); // Aktif font yap
+
+                // Başlık
+                doc.setFontSize(14);
+                doc.text("8 Aralık Değerlendirme Sonuçları", 14, 15);
+                doc.setFontSize(10);
+                doc.text("Öğretmen: Zeynal ABİDİN", 14, 20);
+
+                // Tablo 1
+                const head = [['Öğrenci', ...questions.map(q => q.id)]];
+                const body = studentList.map(s => {
+                    const row = [s];
+                    questions.forEach(q => {
+                        const sc = db[s] ? db[s][q.id] : null;
+                        row.push(sc == 3 ? "T" : sc == 2 ? "K" : sc == 1 ? "Y" : "-");
+                    });
+                    return row;
+                });
+
+                doc.autoTable({
+                    head: head,
+                    body: body,
+                    startY: 25,
+                    styles: { 
+                        font: "Roboto", // Türkçe fontu tabloda kullan
+                        fontSize: 7, 
+                        halign: 'center', 
+                        lineWidth: 0.1 
+                    },
+                    columnStyles: { 0: { halign: 'left', fontStyle: 'bold', cellWidth: 40 } },
+                    headStyles: { fillColor: [60, 60, 60] },
+                    theme: 'grid'
+                });
+
+                // Tablo 2
+                doc.addPage();
+                doc.setFontSize(12);
+                doc.setFont("Roboto");
+                doc.text("Soru ve Kazanım Referans Tablosu", 14, 15);
+                
+                const qBody = questions.map(q => [q.id, q.lesson, q.q]);
+                
+                doc.autoTable({
+                    head: [['Kod', 'Ders', 'Soru İçeriği']],
+                    body: qBody,
+                    startY: 20,
+                    styles: { 
+                        font: "Roboto", // Türkçe font
+                        fontSize: 9 
+                    },
+                    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 15 }, 1: { cellWidth: 25 } },
+                    headStyles: { fillColor: [220, 53, 69] },
+                    theme: 'striped'
+                });
+
+                doc.save("8_Aralik_Sinif_Raporu_TR.pdf");
+
+            } catch (error) {
+                alert("Hata: PDF oluşturulurken font yüklenemedi. İnternet bağlantınızı kontrol edin.\n\n" + error);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+            const a = document.createElement('a');
+            a.href = dataStr;
+            a.download = "8_aralik_yedek.json";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                db = JSON.parse(e.target.result);
+                localStorage.setItem('db_8aralik_final', JSON.stringify(db));
+                alert("Yedek yüklendi!");
+                document.getElementById('searchInput').value = "";
+                currentStudent = "";
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('startMessage').style.display = 'flex';
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
