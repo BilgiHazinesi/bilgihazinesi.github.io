@@ -4,40 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tam Hizalı Bölme İşlemi</title>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* GENEL SAYFA AYARLARI */
+        /* GENEL SAYFA YAPISI */
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #f0f4f8; /* Hafif gri-mavi arka plan */
+            background-color: #f0f4f8;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px;
+            padding: 30px;
             margin: 0;
         }
 
-        /* ÜST PANEL (TOOLBAR) */
+        /* KONTROL PANELİ */
         .toolbar {
             background-color: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             display: flex;
-            gap: 25px;
+            gap: 20px;
             align-items: flex-end;
-            margin-bottom: 40px;
             flex-wrap: wrap;
-            border-left: 6px solid #e67e22; /* Turuncu vurgu */
-        }
-
-        .section-title {
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: bold;
+            margin-bottom: 40px;
+            border-left: 5px solid #2980b9;
         }
 
         .input-group {
@@ -47,339 +38,267 @@
         }
 
         .input-group label {
-            font-size: 14px;
-            font-weight: 700;
-            color: #2c3e50;
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
         }
 
-        .input-group input, .input-group select {
+        .input-group select, .input-group input {
             padding: 10px;
-            border: 2px solid #e1e1e1;
+            border: 2px solid #ddd;
             border-radius: 8px;
-            font-size: 16px;
-            width: 120px;
-            outline: none;
+            font-size: 15px;
+            width: 130px;
             font-family: 'Courier Prime', monospace;
             text-align: center;
-            transition: border-color 0.3s;
-        }
-        
-        .input-group input:focus, .input-group select:focus {
-            border-color: #e67e22;
         }
 
-        /* BUTONLAR */
         button {
-            border: none;
             padding: 12px 20px;
+            border: none;
             border-radius: 8px;
-            cursor: pointer;
+            color: white;
             font-weight: bold;
-            font-size: 14px;
-            transition: transform 0.1s, box-shadow 0.2s;
+            cursor: pointer;
+            transition: 0.2s;
         }
-        
-        button:active { transform: scale(0.98); }
 
-        .btn-random { background-color: #2980b9; color: white; }
-        .btn-random:hover { background-color: #1a5276; box-shadow: 0 4px 8px rgba(41, 128, 185, 0.3); }
+        .btn-gen { background-color: #2980b9; }
+        .btn-gen:hover { background-color: #1f618d; }
 
-        .btn-manual { background-color: #27ae60; color: white; }
-        .btn-manual:hover { background-color: #1e8449; box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3); }
-        
-        .btn-clear { background-color: #e74c3c; color: white; }
-        .btn-clear:hover { background-color: #c0392b; }
+        .btn-man { background-color: #27ae60; }
+        .btn-man:hover { background-color: #1e8449; }
 
-        .divider { width: 1px; background-color: #ddd; height: 50px; margin: 0 10px; }
+        .btn-clear { background-color: #c0392b; }
 
-        /* KART ALANI (3 Sütun) */
-        .questions-container {
+        .divider { width: 1px; background-color: #ccc; height: 50px; }
+
+        /* KART ALANI IZGARASI (3 SÜTUN) */
+        .grid-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 40px; /* Kartlar arası boşluk */
+            gap: 30px;
             width: 100%;
             max-width: 1200px;
         }
 
-        /* KART TASARIMI */
+        /* --- SORU KARTI TASARIMI --- */
         .card {
             background-color: white;
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
             min-height: 350px;
         }
 
-        /* SİLME BUTONU (X) */
-        .close-btn {
+        .close-icon {
             position: absolute;
             top: 15px;
             right: 15px;
-            background: none;
-            border: none;
-            color: #bbb;
-            font-size: 24px;
+            color: #ccc;
             cursor: pointer;
-            padding: 0;
+            font-size: 24px;
+            font-weight: bold;
             line-height: 1;
         }
-        .close-btn:hover { color: #e74c3c; }
+        .close-icon:hover { color: red; }
 
-        /* --- MATEMATİKSEL İŞLEM ALANI (HİZALAMA KALBİ) --- */
-        .math-operation {
-            font-family: 'Courier Prime', monospace; /* Eşit aralıklı font */
-            font-size: 36px; /* İri puntolar */
-            font-weight: 700;
-            color: #333;
+        /* HİZALAMA MERKEZİ - EN ÖNEMLİ KISIM */
+        .math-area {
             display: flex;
             flex-direction: row;
+            font-family: 'Courier Prime', monospace; /* Sabit genişlikli font */
+            font-size: 38px; /* Büyük punto */
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1.4;
             margin-top: 20px;
-            margin-bottom: 30px;
-            line-height: 1.3;
+            margin-bottom: 20px;
         }
 
-        /* SOL TARAFLAR (Bölünen, Çıkan, Kalan) */
-        .dividend-col {
+        /* Sol Sütun: Bölünen, Çıkan, Kalan */
+        .col-left {
             display: flex;
             flex-direction: column;
-            /* İŞTE SİHİRLİ KOD BURASI: align-items: flex-end */
-            align-items: flex-end; /* Her şeyi sağ duvara yaslar */
+            align-items: flex-end; /* İÇERİĞİ SAĞA YASLAR (Duvara yapıştırır) */
+            text-align: right;     /* Metni sağa yaslar */
             margin-right: 15px;
         }
 
-        /* SAĞ TARAFLAR (Bölen, Bölüm) */
-        .divisor-col {
+        /* Sağ Sütun: Bölen, Bölüm */
+        .col-right {
             display: flex;
             flex-direction: column;
-            border-left: 3px solid #333; /* Dikey çizgi */
+            border-left: 4px solid #333; /* Kalın Siyah Çizgi */
             padding-left: 15px;
-            align-items: flex-start; /* Burası sola yaslı başlar (çizgiye yakın) */
+            align-items: flex-start;
         }
 
-        .divisor-val {
-            border-bottom: 3px solid #333; /* Yatay çizgi */
-            padding-bottom: 5px;
-            margin-bottom: 5px;
-            color: #2c3e50;
-            width: 100%; /* Çizgiyi uzatır */
-        }
-
-        .quotient-val {
-            color: #2980b9; /* Mavi Sonuç */
-        }
-
-        /* RENKLENDİRME VE ÇİZGİLER */
-        .val-dividend { color: #333; }
+        /* Sayıların Renkleri ve Çizgiler */
+        .num-dividend { color: #333; }
         
-        .val-subtract { 
-            color: #c0392b; /* Kırmızı Çıkan */
-            border-bottom: 3px solid #333; /* Çıkarma Çizgisi */
+        .num-subtracted { 
+            color: #c0392b; /* Kırmızı */
+            border-bottom: 4px solid #333; /* Çıkarma Çizgisi */
             width: 100%; 
-            text-align: right; /* Sayıyı sağa yaslar */
         }
 
-        .val-remainder { 
-            color: #27ae60; /* Yeşil Kalan */
+        .num-remainder { 
+            color: #27ae60; /* Yeşil */
             margin-top: 5px;
         }
 
-        /* GİZLE / GÖSTER EFEKTLERİ */
-        .toggle-btn {
+        .num-divisor {
+            border-bottom: 4px solid #333;
             width: 100%;
-            padding: 15px;
-            background-color: #d35400; /* Koyu turuncu */
-            color: white;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .num-quotient { color: #2980b9; /* Mavi */ }
+
+        /* Gizle / Göster */
+        .toggle-btn {
+            background-color: #d35400;
+            width: 100%;
+            margin-top: auto;
             border-radius: 10px;
-            margin-top: auto; /* En alta iter */
-            font-size: 16px;
         }
         .toggle-btn:hover { background-color: #a04000; }
 
-        .hidden-content {
-            opacity: 0;
-            visibility: hidden;
-            height: 0; /* Yer kaplamasın */
-            overflow: hidden;
-        }
-        
-        .visible-content {
-            opacity: 1;
-            visibility: visible;
-            height: auto;
-            transition: opacity 0.3s ease-in;
-        }
+        .hidden-step { display: none; }
+        .visible-step { display: block; }
 
     </style>
 </head>
 <body>
 
     <div class="toolbar">
-        <div>
-            <div class="section-title">Otomatik Oluştur</div>
-            <div style="display: flex; gap: 10px; align-items: flex-end;">
-                <div class="input-group">
-                    <label>Bölünen</label>
-                    <select id="digitDiv">
-                        <option value="3">3 Basamaklı</option>
-                        <option value="4">4 Basamaklı</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>Bölen</label>
-                    <select id="digitSor">
-                        <option value="2">2 Basamaklı</option>
-                    </select>
-                </div>
-                <button class="btn-random" onclick="createRandomSet()">3 Soru Üret</button>
-            </div>
+        <div class="input-group">
+            <label>Bölünen</label>
+            <select id="selDiv">
+                <option value="3">3 Basamaklı</option>
+                <option value="4">4 Basamaklı</option>
+            </select>
         </div>
+        <div class="input-group">
+            <label>Bölen</label>
+            <select id="selSor">
+                <option value="2">2 Basamaklı</option>
+                <option value="1">1 Basamaklı</option> </select>
+        </div>
+        <button class="btn-gen" onclick="generateRandom()">Rastgele 3 Soru</button>
 
         <div class="divider"></div>
 
-        <div>
-            <div class="section-title">Kendin Yaz</div>
-            <div style="display: flex; gap: 10px; align-items: flex-end;">
-                <div class="input-group">
-                    <label>Bölünen</label>
-                    <input type="number" id="manDiv" placeholder="875">
-                </div>
-                <div class="input-group">
-                    <label>Bölen</label>
-                    <input type="number" id="manSor" placeholder="24">
-                </div>
-                <button class="btn-manual" onclick="addManual()">Ekle</button>
-            </div>
+        <div class="input-group">
+            <label>Bölünen</label>
+            <input type="number" id="manDiv" placeholder="875">
         </div>
-        
-        <div class="divider"></div>
-        <button class="btn-clear" onclick="clearContainer()">Temizle</button>
+        <div class="input-group">
+            <label>Bölen</label>
+            <input type="number" id="manSor" placeholder="24">
+        </div>
+        <button class="btn-man" onclick="addManual()">Ekle</button>
+        <button class="btn-clear" onclick="document.getElementById('grid').innerHTML=''">Temizle</button>
     </div>
 
-    <div class="questions-container" id="cardContainer">
-        </div>
+    <div class="grid-container" id="grid"></div>
 
     <script>
-        // Sayfa açılınca otomatik 3 soru getir
-        window.onload = createRandomSet;
+        window.onload = generateRandom;
 
-        const container = document.getElementById('cardContainer');
-
-        function getRandom(digits) {
+        function rand(digits) {
             const min = Math.pow(10, digits - 1);
             const max = Math.pow(10, digits) - 1;
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        function clearContainer() {
-            container.innerHTML = '';
-        }
-
-        // 3 Tane Rastgele
-        function createRandomSet() {
-            clearContainer();
+        function generateRandom() {
+            const container = document.getElementById('grid');
+            container.innerHTML = ''; // Temizle
+            
             for(let i=0; i<3; i++) {
-                const dDigits = parseInt(document.getElementById('digitDiv').value);
-                const sDigits = parseInt(document.getElementById('digitSor').value);
+                const dDig = parseInt(document.getElementById('selDiv').value);
+                const sDig = parseInt(document.getElementById('selSor').value);
                 
-                let div = getRandom(dDigits);
-                let sor = getRandom(sDigits);
+                let div = rand(dDig);
+                let sor = rand(sDig);
 
-                while(sor >= div) { // Hata önleyici
-                    div = getRandom(dDigits);
-                }
+                // Bölen bölünenden büyük olmasın
+                while(sor >= div) { div = rand(dDig); }
                 
-                renderCard(div, sor);
+                createCard(div, sor);
             }
         }
 
-        // Manuel Ekleme
         function addManual() {
-            const mDiv = document.getElementById('manDiv').value;
-            const mSor = document.getElementById('manSor').value;
+            const div = parseInt(document.getElementById('manDiv').value);
+            const sor = parseInt(document.getElementById('manSor').value);
+            
+            if(!div || !sor) return alert("Sayı giriniz");
+            if(sor >= div) return alert("Bölünen bölenden büyük olmalı");
 
-            if(!mDiv || !mSor) {
-                alert("Lütfen sayıları giriniz.");
-                return;
-            }
-
-            const div = parseInt(mDiv);
-            const sor = parseInt(mSor);
-
-            if(sor >= div) {
-                alert("Bölünen sayı bölenden büyük olmalıdır.");
-                return;
-            }
-
-            // Eğer 3 kart varsa hepsini silip bunu ekle (veya sona ekle tercihe bağlı)
-            // Temiz bir sayfa için siliyorum:
+            const container = document.getElementById('grid');
             if(container.children.length >= 3) container.innerHTML = '';
-
-            renderCard(div, sor);
-
-            // Kutucukları temizle
-            document.getElementById('manDiv').value = '';
-            document.getElementById('manSor').value = '';
+            
+            createCard(div, sor);
         }
 
-        // KART OLUŞTURUCU (Görseldeki tasarımı basan yer)
-        function renderCard(dividend, divisor) {
+        function createCard(dividend, divisor) {
             const quotient = Math.floor(dividend / divisor);
             const remainder = dividend % divisor;
-            const subtractVal = dividend - remainder; // Bölüm x Bölen
+            const subtracted = dividend - remainder; // Çıkan sayı (Bölüm x Bölen)
 
-            const cardHTML = document.createElement('div');
-            cardHTML.className = 'card';
-
-            cardHTML.innerHTML = `
-                <button class="close-btn" onclick="this.parentElement.remove()">×</button>
+            const html = `
+                <div class="close-icon" onclick="this.parentElement.remove()">×</div>
                 
-                <div class="math-operation">
-                    <div class="dividend-col">
-                        <div class="val-dividend">${dividend}</div>
+                <div class="math-area">
+                    <div class="col-left">
+                        <div class="num-dividend">${dividend}</div>
                         
-                        <div class="answer-block hidden-content">
-                            <div class="val-subtract">${subtractVal}</div>
-                            <div class="val-remainder">${remainder}</div>
+                        <div class="step-box hidden-step">
+                            <div class="num-subtracted">${subtracted}</div>
+                            <div class="num-remainder">${remainder}</div>
                         </div>
                     </div>
 
-                    <div class="divisor-col">
-                        <div class="divisor-val">${divisor}</div>
-                        <div class="quotient-val answer-block hidden-content">${quotient}</div>
+                    <div class="col-right">
+                        <div class="num-divisor">${divisor}</div>
+                        <div class="num-quotient step-box hidden-step">${quotient}</div>
                     </div>
                 </div>
 
-                <button class="toggle-btn" onclick="toggleAns(this)">Cevabı Göster</button>
+                <button class="toggle-btn" onclick="toggleVis(this)">Cevabı Göster</button>
             `;
 
-            container.appendChild(cardHTML);
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = html;
+            document.getElementById('grid').appendChild(card);
         }
 
-        // Gizle / Göster Fonksiyonu
-        function toggleAns(btn) {
+        function toggleVis(btn) {
             const card = btn.parentElement;
-            const blocks = card.querySelectorAll('.answer-block');
-            const isHidden = blocks[0].classList.contains('hidden-content');
+            const steps = card.querySelectorAll('.step-box');
+            const isHidden = steps[0].classList.contains('hidden-step');
 
-            blocks.forEach(block => {
+            steps.forEach(s => {
                 if(isHidden) {
-                    block.classList.remove('hidden-content');
-                    block.classList.add('visible-content');
+                    s.classList.remove('hidden-step');
+                    s.classList.add('visible-step');
                 } else {
-                    block.classList.remove('visible-content');
-                    block.classList.add('hidden-content');
+                    s.classList.remove('visible-step');
+                    s.classList.add('hidden-step');
                 }
             });
-
+            
             btn.textContent = isHidden ? "Cevabı Gizle" : "Cevabı Göster";
-            // Buton rengini de değiştirelim (Görseldeki gibi)
-            btn.style.backgroundColor = isHidden ? "#c0392b" : "#d35400";
         }
-
     </script>
 </body>
 </html>
