@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İnteraktif Bölme İşlemi Defteri</title>
+    <title>İnteraktif Bölme İşlemi Oluşturucu</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
     <style>
         /* GENEL SAYFA */
@@ -30,6 +30,106 @@
             flex-wrap: wrap;
             border-top: 5px solid #2980b9;
         }
+
+        /* YAZDIRMA AYARLARI */
+        @media print {
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+            body, html {
+                height: 100%;
+                width: 100%;
+                background-color: white;
+                margin: 0;
+                padding: 0;
+            }
+            .toolbar, .reveal-btn, .delete-btn, .card-header button {
+                display: none !important;
+            }
+            
+            .grid-layout {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                grid-template-rows: repeat(3, 1fr) !important;
+                width: 100% !important;
+                height: 98vh !important;
+                gap: 20px !important;
+                page-break-after: always;
+            }
+
+            .card {
+                box-shadow: none !important;
+                border: 1px dashed #ccc !important;
+                border-radius: 8px !important;
+                padding: 10px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+                height: 100% !important;
+                box-sizing: border-box;
+            }
+
+            .card-header { display: none !important; }
+
+            .page-break {
+                page-break-before: always;
+                display: block;
+                height: 1px;
+            }
+            
+            .print-header {
+                display: block !important;
+                text-align: center;
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 5px;
+                width: 100%;
+                grid-column: span 3;
+            }
+
+            /* Renklerin Çıkması İçin */
+            .bg-div, .bg-sor, .bg-res, .bg-rem, .bg-sub {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .cell {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 14px !important;
+                border: 1px solid transparent;
+            }
+
+            /* Siyah çizgiler (Yazıcıda garanti çıkması için) */
+            .bg-sor {
+                border-bottom: 3px solid #000 !important;
+            }
+            
+            .vertical-line-cell {
+                border-right: 4px solid #000 !important;
+                background-color: transparent !important;
+                width: 0 !important;
+            }
+            
+            /* --- KESİN ÇÖZÜM: YAZI BOYUTUNU SIFIRLAMAK --- */
+            .hidden-answer {
+                background-color: white !important; 
+                color: white !important; 
+                
+                /* Yazı boyutunu 0 yaparak ekrandan tamamen siliyoruz */
+                font-size: 0px !important; 
+                line-height: 0px !important;
+                
+                text-shadow: none !important;
+                box-shadow: none !important;
+                border-color: white !important;
+                opacity: 1 !important; 
+            }
+        }
+
+        .print-header { display: none; }
 
         .group-box {
             display: flex;
@@ -73,20 +173,20 @@
         }
         .btn-blue { background-color: #2980b9; }
         .btn-blue:hover { background-color: #1a5276; }
-        
         .btn-green { background-color: #27ae60; }
         .btn-green:hover { background-color: #1e8449; }
+        .btn-purple { background-color: #8e44ad; }
+        .btn-purple:hover { background-color: #732d91; }
 
-        /* --- KART ALANI (3 SÜTUN) --- */
+        /* --- EKRAN KART ALANI --- */
         .grid-layout {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* Yan yana 3 tane */
+            grid-template-columns: repeat(3, 1fr);
             gap: 30px;
             width: 100%;
-            max-width: 1300px;
+            max-width: 1200px;
         }
 
-        /* --- SORU KARTI --- */
         .card {
             background-color: white;
             border-radius: 15px;
@@ -96,87 +196,105 @@
             flex-direction: column;
             align-items: center;
             position: relative;
-            min-height: 400px;
-            border-bottom: 5px solid #bdc3c7; /* Varsayılan gri alt çizgi */
+            min-height: 300px;
+            border-bottom: 5px solid #bdc3c7;
             transition: border-color 0.3s;
         }
-        
-        /* Çözülünce alt çizgi yeşil olsun efekti için JS ile class eklenebilir */
 
+        .card-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
         .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
             background: none;
             color: #e74c3c;
-            font-size: 20px;
-            padding: 0;
+            font-size: 24px;
+            padding: 0 10px;
             width: auto;
             height: auto;
+            cursor: pointer;
+        }
+        .reveal-btn {
+            background-color: #e67e22;
+            font-size: 13px;
+            padding: 5px 15px;
+            height: 30px;
         }
 
-        /* --- IZGARA YAPISI (Defter Görünümü) --- */
+        /* --- IZGARA YAPISI --- */
         .calc-grid {
             display: inline-grid;
             gap: 1px;
-            background-color: #dfe6e9; /* Izgara çizgi rengi */
+            background-color: #dfe6e9; /* Izgara çizgileri gri */
             border: 1px solid #dfe6e9;
-            margin-top: 20px;
+            margin-top: 10px;
             margin-bottom: 20px;
         }
 
         .cell {
-            width: 32px;
+            width: 32px; 
             height: 32px;
             background-color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Courier Prime', monospace;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            color: #2c3e50;
+            color: #000000; /* Yazılar SİYAH (Ekranda görünürken) */
         }
-
-        /* RENKLER */
-        .bg-div { background-color: #f1c40f !important; color: white !important; } /* Hardal (Bölünen) */
-        .bg-sor { background-color: #3498db !important; color: white !important; } /* Mavi (Bölen) */
-        .bg-res { background-color: #e056fd !important; color: white !important; } /* Pembe (Bölüm) */
-        .bg-rem { background-color: #2ecc71 !important; color: white !important; } /* Yeşil (Kalan) */
-        .bg-sub { color: #c0392b !important; } /* Çıkarma işlemi sayıları (Kırmızı metin) */
-
-        .border-bottom { border-bottom: 2px solid #2c3e50; }
         
-        /* GİZLİLİK SINIFLARI */
-        .hidden-answer {
-            opacity: 0; 
-            transition: opacity 0.5s ease-in;
-        }
-        .visible-answer {
-            opacity: 1;
+        .vertical-line-cell {
+            width: 0px !important;
+            padding: 0;
+            border-right: 4px solid #000000;
+            background: transparent;
         }
 
-        /* BUTON VE ÖZET TABLO */
-        .reveal-btn {
-            margin-top: auto;
-            width: 100%;
-            background-color: #e67e22;
+        /* RENKLER - Kutu Renkleri */
+        .bg-div { background-color: #ffeaa7 !important; color: black !important; } 
+        
+        .bg-sor { 
+            background-color: #74b9ff !important; 
+            color: black !important;
+            border-bottom: 3px solid #000000 !important; 
+            box-sizing: border-box; 
         }
-        .reveal-btn:hover { background-color: #d35400; }
+        
+        .bg-res { background-color: #fab1a0 !important; color: black !important; } 
+        .bg-rem { background-color: #55efc4 !important; color: black !important; } 
+        .bg-sub { color: #d63031 !important; } 
+
+        /* GİZLİLİK SINIFLARI (Ekranda) */
+        .hidden-answer {
+            background-color: white !important; 
+            color: white !important; /* Ekranda beyaz yazı */
+            box-shadow: none !important;
+            border-color: white !important;
+            user-select: none;
+        }
 
         .summary-box {
             width: 100%;
-            margin-top: 15px;
-            font-size: 14px;
+            margin-top: auto;
+            font-size: 12px;
             border-collapse: collapse;
         }
+        @media print { .summary-box { display: none !important; } } 
+
         .summary-box td {
             border: 1px solid #eee;
-            padding: 6px;
+            padding: 4px;
             text-align: center;
             font-weight: bold;
         }
-        .lbl { color: white; width: 40%; }
+        .lbl { color: black; width: 40%; }
 
     </style>
 </head>
@@ -185,43 +303,62 @@
     <div class="toolbar">
         <div class="group-box">
             <div class="input-group">
-                <label>Bölünen Bas.</label>
+                <label>Bölünen</label>
                 <select id="digitDiv">
-                    <option value="3">3 Basamaklı</option>
+                    <option value="2">2 Basamaklı</option>
+                    <option value="3" selected>3 Basamaklı</option>
                     <option value="4">4 Basamaklı</option>
                 </select>
             </div>
             <div class="input-group">
-                <label>Bölen Bas.</label>
+                <label>Bölen</label>
                 <select id="digitSor">
                     <option value="1">1 Basamaklı</option>
                     <option value="2">2 Basamaklı</option>
                 </select>
             </div>
-            <button class="btn-blue" onclick="generateRandomSet()">Rastgele Üret (3 Adet)</button>
+            <div class="input-group">
+                <label>İşlem Türü</label>
+                <select id="remainderMode" style="width: 120px;">
+                    <option value="all">Karışık</option>
+                    <option value="exact">Kalansız (Tam)</option>
+                    <option value="remainder">Kalanlı</option>
+                </select>
+            </div>
+            
+            <button class="btn-blue" onclick="generateRandomSet(3)">Rastgele Üret</button>
         </div>
 
         <div class="group-box">
             <div class="input-group">
                 <label>Bölünen</label>
-                <input type="number" id="manDiv" placeholder="4675">
+                <input type="number" id="manDiv" placeholder="Örn: 125">
             </div>
             <div class="input-group">
                 <label>Bölen</label>
-                <input type="number" id="manSor" placeholder="15">
+                <input type="number" id="manSor" placeholder="Örn: 5">
             </div>
-            <button class="btn-green" onclick="addManual()">Bu İşlemi Ekle</button>
+            <button class="btn-green" onclick="addManual()">Ekle</button>
+        </div>
+
+        <div class="group-box">
+             <button class="btn-purple" onclick="generateA4Worksheet()">A4 Kağıdı Hazırla (9'lu)</button>
+             <button class="btn-green" onclick="window.print()" style="margin-left:10px;">Yazdır</button>
         </div>
     </div>
 
-    <div class="grid-layout" id="mainContainer">
-        </div>
+    <div id="questionPageContainer" class="grid-layout"></div>
+    
+    <div class="page-break"></div>
+
+    <div id="answerPageContainer" class="grid-layout" style="display:none;"></div>
 
     <script>
-        // Açılışta rastgele 3 tane üret
-        window.onload = generateRandomSet;
+        window.onload = function() { generateRandomSet(3); };
 
-        const container = document.getElementById('mainContainer');
+        const questionContainer = document.getElementById('questionPageContainer');
+        const answerContainer = document.getElementById('answerPageContainer');
+        const remainderMode = document.getElementById('remainderMode');
 
         function getRandom(digits) {
             const min = Math.pow(10, digits - 1);
@@ -229,20 +366,44 @@
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        function generateRandomSet() {
-            container.innerHTML = ''; // Eskileri sil
+        // --- RASTGELE SAYI ÜRETME VE FİLTRELEME ---
+        function getValidNumbers(dDig, sDig) {
+            let div, sor, isValid = false;
+            let attempts = 0;
+            const mode = remainderMode.value;
+
+            while (!isValid && attempts < 2000) { 
+                div = getRandom(dDig);
+                sor = getRandom(sDig);
+                attempts++;
+
+                if (sor >= div || sor === 0) continue;
+
+                let remainder = div % sor;
+
+                if (mode === 'exact' && remainder !== 0) continue; 
+                if (mode === 'remainder' && remainder === 0) continue; 
+
+                isValid = true;
+            }
+            return {div, sor};
+        }
+
+        // Normal Ekrana 3 tane üretir
+        function generateRandomSet(count) {
+            questionContainer.innerHTML = '';
+            answerContainer.innerHTML = '';
+            answerContainer.style.display = 'none';
+            
+            questionContainer.style.height = 'auto';
+            questionContainer.style.gridTemplateRows = 'none';
+
             const dDig = parseInt(document.getElementById('digitDiv').value);
             const sDig = parseInt(document.getElementById('digitSor').value);
 
-            for(let i=0; i<3; i++) {
-                let div = getRandom(dDig);
-                let sor = getRandom(sDig);
-                // Bölen bölünenden büyükse veya 0 ise düzelt
-                while(sor >= div || sor === 0) {
-                    div = getRandom(dDig);
-                    sor = getRandom(sDig);
-                }
-                createCard(div, sor);
+            for(let i=0; i<count; i++) {
+                let nums = getValidNumbers(dDig, sDig);
+                createCard(nums.div, nums.sor, questionContainer, true); 
             }
         }
 
@@ -250,30 +411,35 @@
             const mDiv = document.getElementById('manDiv').value;
             const mSor = document.getElementById('manSor').value;
 
-            if(!mDiv || !mSor) return alert("Sayıları giriniz.");
+            if(!mDiv || !mSor) return alert("Lütfen sayıları giriniz.");
             
-            const div = parseInt(mDiv);
-            const sor = parseInt(mSor);
+            let div = parseInt(mDiv);
+            let sor = parseInt(mSor);
 
-            if(sor >= div) return alert("Bölünen bölenden büyük olmalı.");
-            
-            // Eğer 3 kart varsa hepsini temizleyip bunu ekliyoruz (Temiz sayfa isteği)
-            // Veya sadece ekleyelim mi? "Yeni işlemler oluştur diyince eskisi silinip..." dediğiniz için
-            // Manuel eklemede de temizlemek daha düzenli durur.
-            // Ama tek tek eklemek isterseniz aşağıdaki satırı silebilirsiniz.
-            // container.innerHTML = ''; 
-            
-            // Eğer 3'ü geçerse en baştakini silebiliriz veya alta ekleriz. 
-            // Kullanıcı "3 işlem istiyorum" dediği için 3'ü korumak adına:
-            if(container.children.length >= 3) {
-                container.firstElementChild.remove();
-            }
+            if(sor >= div) return alert("Bölünen sayı bölenden büyük olmalı.");
+            if(sor === 0) return alert("Sıfıra bölünemez.");
 
-            createCard(div, sor);
-            
-            // Inputları temizle
+            createCard(div, sor, questionContainer, true);
+
             document.getElementById('manDiv').value = '';
             document.getElementById('manSor').value = '';
+        }
+
+        function generateA4Worksheet() {
+            questionContainer.innerHTML = '<div class="print-header">Bölme İşlemi Alıştırmaları - İsim: _________________</div>';
+            answerContainer.innerHTML = '<div class="print-header">Cevap Anahtarı</div>';
+            answerContainer.style.display = 'grid';
+
+            const dDig = parseInt(document.getElementById('digitDiv').value);
+            const sDig = parseInt(document.getElementById('digitSor').value);
+
+            for(let i=0; i<9; i++) {
+                let nums = getValidNumbers(dDig, sDig);
+                createCard(nums.div, nums.sor, questionContainer, true);
+                createCard(nums.div, nums.sor, answerContainer, false);
+            }
+            
+            alert("Çalışma kağıdı hazırlandı! 'Yazdır' butonuna basarak PDF alabilirsiniz.");
         }
 
         // --- MATEMATİK MANTIĞI ---
@@ -299,17 +465,15 @@
                 fullQuotient += q;
 
                 steps.push({
-                    val: mult, // Çıkarılan sayı
-                    rem: rem,  // Kalan
-                    idx: i     // Hangi basamaktayız
+                    val: mult, 
+                    rem: rem,  
+                    idx: i      
                 });
 
                 currentPart = rem.toString();
             }
             
-            // Eksik sıfırları tamamla (Son basamaklar işlenmediyse)
             const realQuotient = Math.floor(dividend / divisor);
-            const strRealQ = realQuotient.toString();
             
             return {
                 steps: steps,
@@ -318,173 +482,87 @@
             };
         }
 
-        // --- KART OLUŞTURMA (UI) ---
-        function createCard(dividend, divisor) {
+        // --- KART OLUŞTURMA ---
+        function createCard(dividend, divisor, targetContainer, startHidden) {
             const data = solveDivision(dividend, divisor);
             const divStr = dividend.toString();
             const sorStr = divisor.toString();
 
-            // Grid Kolon Hesabı: Sol (Bölünen Uzunluğu) + 1 (Çizgi) + Sağ (Bölen Uzunluğu)
-            // Ancak sağ taraf bölüm için de kullanılacak. Geniş olsun diye max(sorStr.length, data.quotient.toString().length) diyebiliriz.
-            // Şimdilik standart tutalım.
-            
             const totalColsLeft = divStr.length;
             const totalColsRight = Math.max(sorStr.length, data.quotient.toString().length); 
             
+            const hiddenClass = startHidden ? "hidden-answer" : "visible-answer";
+
+            const verticalLineHTML = `<div class="cell vertical-line-cell"></div>`;
+
             let gridHTML = `<div class="calc-grid" style="grid-template-columns: repeat(${totalColsLeft}, 1fr) 5px repeat(${totalColsRight}, 1fr);">`;
 
-            // 1. SATIR: Bölünen ve Bölen (HER ZAMAN GÖRÜNÜR)
-            // Sol
+            // 1. SATIR
             for(let char of divStr) gridHTML += `<div class="cell bg-div">${char}</div>`;
-            // Çizgi
-            gridHTML += `<div class="cell" style="background:#2c3e50; width:5px; padding:0;"></div>`;
-            // Sağ
+            
+            gridHTML += verticalLineHTML; 
+
             for(let i=0; i<totalColsRight; i++) {
                 if(i < sorStr.length) gridHTML += `<div class="cell bg-sor">${sorStr[i]}</div>`;
                 else gridHTML += `<div class="cell"></div>`;
             }
 
-            // 2. SATIR: BÖLÜM (SAĞDA) - GİZLİ OLACAK
-            // Sol Taraf (İlk işlem basamağı için boşluk veya ilk çıkarma)
-            // Sağ taraf (Bölüm sonucu)
-            
-            // Biz grid'i satır satır işliyoruz.
-            // İlk çıkarma işlemi verisi: data.steps[0]
-            
-            // Satırları dinamik üretelim.
-            // data.steps içindeki her adım bir çıkarma işlemidir.
-            
-            let currentStepIdx = 0;
-            
-            // İlk Adım (İlk Çıkarma) + Bölüm Kısmı
-            // Bölüm sonucunu, ilk çıkarma işleminin olduğu satırda sağ tarafa yazalım.
-            
             if(data.steps.length > 0) {
                 const step = data.steps[0];
                 const multStr = step.val.toString();
                 
-                // --- İLK ÇIKARMA SATIRI ---
-                // Bu satır GİZLİ olacak (hidden-answer sınıfı)
-                
-                // Sol Taraf (Çıkarılan Sayı)
+                // İLK ÇIKARMA
                 let emptyLeft = step.idx - multStr.length + 1;
-                
                 for(let i=0; i<totalColsLeft; i++) {
                     if(i >= emptyLeft && i <= step.idx) {
                         let char = multStr[i - emptyLeft];
-                        // Rakamları hücreye koy, sınıfı hidden-answer olsun
-                        gridHTML += `<div class="cell bg-sub hidden-answer">${char}</div>`;
+                        gridHTML += `<div class="cell bg-sub ${hiddenClass}">${char}</div>`;
                     } else {
                         gridHTML += `<div class="cell"></div>`;
                     }
                 }
                 
-                // Orta Çizgi
-                gridHTML += `<div class="cell" style="background:#2c3e50; width:5px; padding:0;"></div>`;
+                gridHTML += verticalLineHTML; 
                 
-                // Sağ Taraf (BÖLÜM SONUCU - PEMBE)
+                // BÖLÜM SONUCU
                 const qStr = data.quotient.toString();
                 for(let i=0; i<totalColsRight; i++) {
                     let char = i < qStr.length ? qStr[i] : "";
                     let bgClass = i < qStr.length ? "bg-res" : "";
-                    gridHTML += `<div class="cell ${bgClass} hidden-answer" style="border-top:2px solid #2c3e50;">${char}</div>`;
+                    gridHTML += `<div class="cell ${bgClass} ${hiddenClass}">${char}</div>`;
                 }
 
-                // --- ÇIKARMA ÇİZGİSİ (Altını çizmek yerine border-bottom kullanıyoruz üstteki hücrelerde ama
-                // burada grid yapısında yeni satıra geçmeden border vermek zor. 
-                // Basitlik için devam ediyoruz.
-
-                // --- SONRAKİ ADIMLAR ---
+                // SONRAKİ ADIMLAR
                 for(let k=0; k<data.steps.length; k++) {
-                    // Bu döngüde bir sonraki "İnen sayı + Kalan"ı (CurrentNum) yazacağız.
-                    // Eğer son adımsa Final Kalanı yazacağız.
-                    
                     let isLast = (k === data.steps.length - 1);
-                    
-                    // Şuan k. adımdayız. Çıkarma işlemini yukarıda yazdık.
-                    // Şimdi sonucunu (tirenin altını) yazacağız.
-                    
-                    // Yazılacak sayı:
-                    // Eğer son adım değilse: bir sonraki adımın işlem göreceği sayı (CurrentNum).
-                    // Ancak bizim step verimizde 'currentNum' yok, 'rem' var.
-                    // Aslında görselde:
-                    // 46
-                    // 45
-                    // --
-                    // 017 (Kalan 1, inen 7) -> Bu bir sonraki adımın 'CurrentNum'u.
-                    // Eğer bu son adımsa, direkt 'rem' yazılır.
-                    
                     let numberToWrite = "";
-                    let endIndex = 0; // Hangi basamağın altına denk geliyor?
+                    let endIndex = 0; 
 
                     if(isLast) {
                         numberToWrite = data.remainder.toString();
-                        endIndex = totalColsLeft - 1; // En sağa yasla (Bölünenin sonuna)
+                        endIndex = totalColsLeft - 1; 
                     } else {
-                        // Bir sonraki adımın "val" (çıkan) sayısının basamak hizasından yola çıkalım.
-                        // Mantığı basitleştirelim:
-                        // Bir sonraki adımın verisine ihtiyacımız var ama data yapımızda currentNum'u saklamamıştık.
-                        // Basit hack: steps[k].rem + (bir sonraki inen rakam).
-                        // Bunu hesaplamak yerine görseldeki gibi sadece Çıkan ve Kalan'ı yazalım.
-                        
-                        // Örn: 17 (İnenle birlikte).
-                        // Bunu hesaplamak için tekrar string manipülasyonu yapmayalım.
-                        // Gridde hizalama şaşmasın diye şöyle yapalım:
-                        // Bir sonraki adımın (k+1) "mult" sayısı (çıkan) hizası neyse, o hizada bir sayı var demektir.
-                        // O sayı (steps[k].rem * 10 + nextDigit) şeklindedir.
-                        
-                        // ZEYNAL BEY İÇİN BASİT ÇÖZÜM:
-                        // Sadece Çıkan Sayıları (Kırmızı) ve En Son Kalanı (Yeşil) göstersek yeterli mi?
-                        // Hayır "Tüm basamakları göster" dedi.
-                        
-                        // O zaman 'solveDivision' fonksiyonunda 'currentNum'u da tutmalıydık.
-                        // UI tarafında hesaplayalım:
-                        // steps[k].rem -> Bu kalandır. Yanına bir sonraki basamak iner.
-                        // Ama hangi basamak? divStr[steps[k].idx + 1]
-                        
-                        let rem = data.steps[k].rem;
-                        let nextDigitIdx = data.steps[k].idx + 1;
-                        
-                        // Eğer nextDigitIdx bölünen uzunluğunu geçiyorsa işlem bitmiştir.
-                        // Ama döngüde isLast değilsek demek ki geçmiyor.
-                        
-                        // Bazen birden fazla 0 iner. 
-                        // Logic karmaşasına girmemek için:
-                        // Bir sonraki adımın (k+1) "mult" değerinin hizasına bakalım.
-                        // numberToWrite = (rem + inen basamaklar)
-                        
-                        // Daha güvenli yol: Bir sonraki çıkarma işlemi (steps[k+1]) hangi indexte bitiyorsa
-                        // bizim sayımız da orada biter.
                         endIndex = data.steps[k+1].idx;
-                        
-                        // Sayının değeri ne? 
-                        // steps[k+1].val'den büyük veya eşit olmalı.
-                        // Tam değeri bulmak zor mu? Hayır.
-                        // Geriye doğru hesap: steps[k+1].val + steps[k+1].rem
                         numberToWrite = (data.steps[k+1].val + data.steps[k+1].rem).toString();
                     }
 
-                    // --- SATIR OLUŞTUR (ARA SONUÇ) ---
                     let emptyL = endIndex - numberToWrite.length + 1;
                     let isGreen = isLast; 
                     
-                    // Sol Taraf
                     for(let i=0; i<totalColsLeft; i++) {
                         if(i >= emptyL && i <= endIndex) {
                             let char = numberToWrite[i - emptyL];
-                            let colorClass = isGreen ? "bg-rem" : ""; // Sadece en son kalan yeşil
-                            let borderTop = "border-top:2px solid #2c3e50;"; // İşlem çizgisi
-                            gridHTML += `<div class="cell ${colorClass} hidden-answer" style="${borderTop}">${char}</div>`;
+                            let colorClass = isGreen ? "bg-rem" : ""; 
+                            let borderTop = "border-top:2px solid #2c3e50;"; 
+                            gridHTML += `<div class="cell ${colorClass} ${hiddenClass}" style="${borderTop}">${char}</div>`;
                         } else {
                             gridHTML += `<div class="cell"></div>`;
                         }
                     }
                     
-                    // Orta Çizgi + Sağ Taraf (Boş)
-                    gridHTML += `<div class="cell" style="background:#2c3e50; width:5px; padding:0;"></div>`;
+                    gridHTML += verticalLineHTML; 
                     for(let r=0; r<totalColsRight; r++) gridHTML += `<div class="cell"></div>`;
 
-                    // --- EĞER BU BİR SONRAKİ ÇIKARMA İŞLEMİYSE ONU DA EKLE ---
                     if(!isLast) {
                          const nextStep = data.steps[k+1];
                          const nMult = nextStep.val.toString();
@@ -493,70 +571,64 @@
                          for(let i=0; i<totalColsLeft; i++) {
                             if(i >= nEmpty && i <= nextStep.idx) {
                                 let char = nMult[i - nEmpty];
-                                gridHTML += `<div class="cell bg-sub hidden-answer">${char}</div>`;
+                                gridHTML += `<div class="cell bg-sub ${hiddenClass}">${char}</div>`;
                             } else {
                                 gridHTML += `<div class="cell"></div>`;
                             }
                         }
-                        // Orta ve Sağ Boş
-                        gridHTML += `<div class="cell" style="background:#2c3e50; width:5px; padding:0;"></div>`;
+                        gridHTML += verticalLineHTML; 
                         for(let r=0; r<totalColsRight; r++) gridHTML += `<div class="cell"></div>`;
                     }
                 }
-            } else {
-                // Hiç adım yoksa (örn: 0/5 veya çok küçük bölünen), direkt kalanı yaz
-                 // Basitlik için burayı pas geçiyorum, validasyon yaptık zaten.
             }
 
-            gridHTML += `</div>`; // Grid Kapanış
+            gridHTML += `</div>`; 
 
-            // Özet Tablosu (Gizli)
-            let summaryHTML = `
-                <table class="summary-box hidden-answer">
+            let btnText = startHidden ? "Sonuçları Göster" : "Sonuçları Gizle";
+            let borderColor = startHidden ? "#bdc3c7" : "#2ecc71";
+
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.style.borderColor = borderColor;
+            
+            cardDiv.innerHTML = `
+                <div class="card-header">
+                     <button class="reveal-btn" onclick="toggleCard(this)">${btnText}</button>
+                     <button class="delete-btn" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+                ${gridHTML}
+                <table class="summary-box ${hiddenClass}">
                     <tr><td class="lbl bg-div">Bölünen</td><td>${dividend}</td></tr>
                     <tr><td class="lbl bg-sor">Bölen</td><td>${divisor}</td></tr>
                     <tr><td class="lbl bg-res">Bölüm</td><td>${data.quotient}</td></tr>
                     <tr><td class="lbl bg-rem">Kalan</td><td>${data.remainder}</td></tr>
                 </table>
             `;
-
-            // Kart HTML
-            const cardDiv = document.createElement('div');
-            cardDiv.className = 'card';
-            cardDiv.innerHTML = `
-                <button class="delete-btn" onclick="this.parentElement.remove()">×</button>
-                ${gridHTML}
-                ${summaryHTML}
-                <button class="reveal-btn" onclick="toggleCard(this)">Sonuçları Göster</button>
-            `;
             
-            container.appendChild(cardDiv);
+            targetContainer.appendChild(cardDiv);
         }
 
         function toggleCard(btn) {
-            const card = btn.parentElement;
+            const card = btn.parentElement.parentElement;
             const hiddenEls = card.querySelectorAll('.hidden-answer');
             const visibleEls = card.querySelectorAll('.visible-answer');
 
             if(hiddenEls.length > 0) {
-                // Göster
                 hiddenEls.forEach(el => {
                     el.classList.remove('hidden-answer');
                     el.classList.add('visible-answer');
                 });
                 btn.textContent = "Sonuçları Gizle";
-                card.style.borderColor = "#2ecc71"; // Yeşil border (Başarılı)
+                card.style.borderColor = "#2ecc71"; 
             } else {
-                // Gizle
                 visibleEls.forEach(el => {
                     el.classList.remove('visible-answer');
                     el.classList.add('hidden-answer');
                 });
                 btn.textContent = "Sonuçları Göster";
-                card.style.borderColor = "#bdc3c7"; // Gri border
+                card.style.borderColor = "#bdc3c7"; 
             }
         }
-
     </script>
 </body>
 </html>
