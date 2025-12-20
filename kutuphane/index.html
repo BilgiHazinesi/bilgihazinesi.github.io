@@ -3,269 +3,331 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>4/D Güvenli Kütüphane (V23)</title>
+    <title>Zeynal Öğretmen Kütüphane (V28)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* --- TEMA AYARLARI --- */
         :root {
-            --bg-gradient: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-            --glass-bg: rgba(255, 255, 255, 0.65);
-            --glass-border: rgba(255, 255, 255, 0.6);
-            --text-main: #1e293b;
-            --text-light: #475569;
-            --input-bg: rgba(255, 255, 255, 0.6);
+            /* AYDINLIK MOD */
+            --bg-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            
+            /* --- CLEAR GLASS (NET CAM) AYARLARI --- */
+            /* Bulanıklık yok, sadece şeffaflık ve kalın kenar hissi */
+            --glass-bg: rgba(255, 255, 255, 0.15); 
+            --nav-bg: rgba(255, 255, 255, 0.25); 
+            --glass-border: 1px solid rgba(255, 255, 255, 0.4);
+            --glass-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            /* Kalınlık hissi veren iç gölge */
+            --glass-inset: inset 0 0 0 1px rgba(255, 255, 255, 0.1); 
+            
+            --text-main: #1d1d1f;
+            --text-sub: #4b5563;
             --primary: #2563eb;
-            --nav-bg: rgba(255, 255, 255, 0.8);
-            --success-color: #059669;
-            --danger-color: #dc2626;
+            --input-bg: rgba(255, 255, 255, 0.5);
         }
 
+        /* KARANLIK MOD */
         body.dark-mode {
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            --glass-bg: rgba(30, 41, 59, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-main: #f1f5f9;
-            --text-light: #94a3b8;
-            --input-bg: rgba(15, 23, 42, 0.6);
+            --bg-image: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(0, 0, 0, 0.2);
+            --nav-bg: rgba(0, 0, 0, 0.3);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.15);
+            --glass-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --glass-inset: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
             --primary: #60a5fa;
-            --nav-bg: rgba(15, 23, 42, 0.9);
-            --success-color: #34d399;
-            --danger-color: #f87171;
+            --input-bg: rgba(255, 255, 255, 0.05);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg-gradient);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-image: var(--bg-image);
             background-attachment: fixed;
+            background-size: cover;
             color: var(--text-main);
-            margin: 0; padding: 0; padding-bottom: 90px;
+            margin: 0; padding: 0; padding-bottom: 100px;
             min-height: 100vh;
-            transition: color 0.3s, background 0.3s;
+            transition: background 0.3s, color 0.3s;
         }
 
-        /* --- LOGİN EKRANI --- */
-        #loginOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-gradient); z-index: 10000;
-            display: flex; justify-content: center; align-items: center; flex-direction: column;
-            padding: 20px;
+        /* --- NET CAM PANEL --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 20px;
+            padding: 20px; margin-bottom: 20px;
+            /* Blur'u kaldırdık veya çok aza indirdik */
+            backdrop-filter: blur(2px); 
+            -webkit-backdrop-filter: blur(2px);
         }
-        .login-box {
-            background: var(--glass-bg); backdrop-filter: blur(20px);
-            padding: 30px; border-radius: 20px; border: 1px solid var(--glass-border);
-            width: 100%; max-width: 400px; text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        .login-box h2 { margin-top: 0; color: var(--primary); }
-        .error-msg { color: var(--danger-color); font-weight: bold; margin-top: 10px; display: none; }
 
-        /* --- GENEL STİLLER --- */
+        /* --- HEADER (Clear Glass) --- */
         .app-header {
             padding: 15px 20px; position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
-            background: var(--glass-bg); backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--glass-border);
-            border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
+            background: var(--nav-bg);
+            border-bottom: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            backdrop-filter: blur(2px); 
         }
-        .app-title { font-size: 1.3rem; font-weight: 800; margin: 0; }
-        .theme-toggle { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-main); }
+        .app-title { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
+        
+        .theme-btn {
+            background: rgba(255,255,255,0.1); border: var(--glass-border);
+            font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 50%;
+            transition: 0.3s;
+        }
 
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; display: none; /* Başlangıçta gizli */ }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; display: none; }
         .section { display: none; animation: fadeIn 0.3s; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
 
-        .card {
-            background: var(--glass-bg); backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; margin-bottom: 20px;
-        }
-        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; color: var(--primary); }
-
+        /* --- FORM --- */
         input {
-            width: 100%; padding: 16px; font-size: 1rem;
-            border: 1px solid var(--glass-border); border-radius: 16px;
-            background: var(--input-bg); color: var(--text-main); margin-bottom: 15px;
+            width: 100%; padding: 14px; font-size: 1rem;
+            background: var(--input-bg);
+            border: var(--glass-border);
+            border-radius: 12px; color: var(--text-main);
+            margin-bottom: 12px; transition: 0.3s;
         }
-        input:focus { border-color: var(--primary); outline: none; }
+        input:focus { border-color: var(--primary); background: rgba(255,255,255,0.2); }
 
+        /* --- BUTONLAR --- */
         .btn {
-            width: 100%; padding: 16px; border: none; border-radius: 16px;
+            width: 100%; padding: 14px; border: none; border-radius: 12px;
             font-size: 1rem; font-weight: 700; cursor: pointer;
-            transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            transition: 0.2s;
         }
-        .btn:active { transform: scale(0.96); }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success-color); color: white; }
-        .btn-whatsapp { background: #25D366; color: white; }
-        .btn-delete { background: rgba(239, 68, 68, 0.2); color: var(--danger-color); border: 1px solid var(--danger-color); padding: 5px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; }
-
-        /* Liste ve Kartlar */
-        .book-card { border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #fafafa; transition: 0.3s; }
-        .book-card.status-out { border-left: 6px solid #e74c3c; background: #fffbfb; }
-        .book-card.status-in { border-left: 6px solid #27ae60; background: #f0fdf4; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; }
         
-        .list-item { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-        .dot-red { background: var(--danger-color); }
-        .dot-green { background: var(--success-color); }
-
-        /* Filtre Butonları */
-        .chips { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
-        .chip { padding: 10px 20px; background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text-light); border-radius: 25px; font-weight: 600; white-space: nowrap; cursor: pointer; }
-        .chip.active { background: var(--primary); color: white; }
-
-        /* Alt Nav */
-        .bottom-nav {
-            position: fixed; bottom: 15px; left: 15px; right: 15px; height: 70px;
-            background: var(--nav-bg); backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border); border-radius: 25px;
-            display: flex; justify-content: space-around; align-items: center;
-            z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        /* Turuncu İade Butonu */
+        .btn-return { 
+            background: #f97316; /* Turuncu */
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer;
+            font-size: 0.85rem;
+            min-width: 80px; /* Hepsi aynı genişlikte olsun */
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(249, 115, 22, 0.4);
         }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-light); background: none; border: none; font-size: 0.7rem; opacity: 0.7; }
-        .nav-item i { font-size: 1.5rem; margin-bottom: 4px; }
+
+        .btn-delete { background: rgba(220, 38, 38, 0.1); color: #ef4444; border: 1px solid #ef4444; padding: 4px 10px; font-size: 0.75rem; border-radius: 8px; margin-left: auto; cursor:pointer;}
+
+        /* --- LİSTE --- */
+        .list-item {
+            display: flex; 
+            align-items: center; /* Dikey ortala */
+            justify-content: space-between; /* Sağa ve Sola yasla */
+            padding: 12px 0; 
+            border-bottom: 1px solid rgba(150,150,150,0.2);
+        }
+        .list-item:last-child { border-bottom: none; }
+        
+        .item-content { flex: 1; margin-right: 10px; } /* Yazı alanı genişlesin */
+        .item-content h4 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-main); }
+        .item-content p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-sub); }
+        
+        /* Stat Badge */
+        .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 8px; font-weight: 700; }
+        .bg-red { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .bg-green { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+
+        /* --- ALT MENÜ (CLEAR GLASS) --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 85px;
+            background: var(--nav-bg);
+            border-top: var(--glass-border);
+            /* Blur yok veya çok az */
+            backdrop-filter: blur(3px); 
+            display: flex; justify-content: space-around; align-items: flex-start;
+            padding-top: 15px; z-index: 1000;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            background: none; border: none; color: var(--text-sub);
+            font-size: 0.7rem; transition: 0.3s; opacity: 0.7;
+        }
+        .nav-item i { font-size: 1.5rem; margin-bottom: 5px; }
         .nav-item.active { color: var(--primary); opacity: 1; transform: translateY(-3px); }
 
-        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--glass-bg); backdrop-filter: blur(20px); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Sort Button */
+        .sort-btn {
+            background: none; border: 1px solid var(--text-sub); color: var(--text-sub);
+            border-radius: 12px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer;
+        }
+
+        #loader { display: none; margin-top: 15px; font-weight: 600; color: var(--primary); }
+        
+        /* Filtre Butonları */
+        .filter-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .filter-chip {
+            flex: 1; padding: 10px; text-align: center;
+            background: var(--input-bg); border: var(--glass-border);
+            border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-sub); cursor: pointer; transition: 0.3s;
+        }
+        .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h2>🔒 Güvenli Giriş</h2>
-        <p>Lütfen öğretmen şifresini giriniz.</p>
-        <input type="password" id="appPassword" placeholder="Şifre" onkeypress="handleEnter(event)">
+<div id="loginOverlay" style="position:fixed; inset:0; z-index:9999; background:var(--bg-image); display:flex; justify-content:center; align-items:center;">
+    <div class="glass-panel" style="width:90%; max-width:350px; text-align:center;">
+        <h2 style="margin: 0 0 10px 0; color: var(--text-main);">Öğretmen Girişi</h2>
+        <p style="color: var(--text-sub); margin-bottom: 20px;">Zeynal Öğretmen Kitap Takibi</p>
+        <input type="password" id="appPassword" placeholder="••••••" style="text-align:center; letter-spacing: 5px;">
         <button class="btn btn-primary" onclick="login()">Giriş Yap</button>
-        <p class="error-msg" id="loginError">Hatalı Şifre!</p>
+        <div id="loader">Veriler Yükleniyor...</div>
     </div>
-</div>
-
-<div id="loader">
-    <div class="spinner"></div>
-    <p style="margin-top:20px; font-weight:600;">Veriler Alınıyor...</p>
 </div>
 
 <div id="appContainer">
     <div class="app-header">
-        <div class="app-title">📚 4/D Cep Kütüphane</div>
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        <div class="app-title">Zeynal Öğretmen Kütüphane</div>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">🌙</button>
     </div>
 
     <div class="container" style="display:block;">
         
         <div id="tab-lend" class="section active">
-            <div class="card">
-                <div class="card-title"><i class="fas fa-magic"></i> Hızlı İşlem</div>
-                <input type="text" list="studentList" id="studentInput" placeholder="Öğrenci Seçin..." oninput="renderHistory()">
+            <div class="glass-panel">
+                <h3 style="margin:0 0 15px 0; color:var(--primary);">Hızlı İşlem</h3>
+                <input type="text" list="studentList" id="studentInput" placeholder="Öğrenci Seçiniz..." oninput="renderHistory()">
                 <datalist id="studentList"></datalist>
-                <input type="text" list="bookList" id="bookInput" placeholder="Kitap Seçin...">
+                <input type="text" list="bookList" id="bookInput" placeholder="Kitap Seçiniz...">
                 <datalist id="bookList"></datalist>
                 <button class="btn btn-primary" onclick="lendBook()">Kitabı Teslim Et</button>
             </div>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <h4 style="margin:0;">📋 Son Hareketler</h4>
-                    <button onclick="clearInputs()" style="background:none; border:none; color:var(--primary);">Temizle</button>
+            
+            <div class="glass-panel">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <h4 style="margin:0; color:var(--text-main);">Son Hareketler</h4>
+                    <span id="syncStatus" style="font-size:0.75rem; color:var(--text-sub); opacity:0.7;">Senkronize</span>
                 </div>
                 <div id="historyList"></div>
             </div>
         </div>
 
         <div id="tab-books" class="section">
-            <div class="chips">
-                <div class="chip active" onclick="filterBooks('all', this)" id="chip-all">Tümü (0)</div>
-                <div class="chip" onclick="filterBooks('out', this)" id="chip-out">🔴 Dışarıda</div>
-                <div class="chip" onclick="filterBooks('in', this)" id="chip-in">🟢 Rafta</div>
+            <div class="glass-panel">
+                <div class="filter-group">
+                    <div class="filter-chip active" onclick="filterBooks('all', this)">Tümü (<span id="cnt-all">0</span>)</div>
+                    <div class="filter-chip" onclick="filterBooks('out', this)">Dışarıda (<span id="cnt-out">0</span>)</div>
+                    <div class="filter-chip" onclick="filterBooks('in', this)">Rafta (<span id="cnt-in">0</span>)</div>
+                </div>
+                <input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="renderBookManager()">
+                <div id="bookManagerList"></div>
             </div>
-            <input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="renderBookManager()">
-            <div id="bookManagerList"></div>
-            <div class="card">
-                <div class="card-title"><i class="fas fa-plus"></i> Yeni Kitap</div>
-                <input type="text" id="newBookInput" placeholder="Kitap adı...">
-                <button class="btn btn-success" onclick="addNewBook()">Ekle</button>
+            
+            <div class="glass-panel">
+                <h4 style="margin:0 0 10px 0; color:var(--text-main);">Yeni Kitap Ekle</h4>
+                <input type="text" id="newBookInput" placeholder="Kitap Adı...">
+                <button class="btn btn-primary" onclick="addNewBook()">Ekle</button>
             </div>
         </div>
 
         <div id="tab-report" class="section">
-            <div class="card">
-                <div class="card-title"><i class="fab fa-whatsapp"></i> Tam Rapor</div>
-                <input type="text" list="studentList" id="reportStudentInput" placeholder="Öğrenci Seçin...">
-                <button class="btn btn-primary" onclick="generateReport()">Raporu Hazırla</button>
-                <div id="reportOutput" style="background:var(--input-bg); padding:15px; border-radius:16px; margin:15px 0; white-space:pre-wrap;">...</div>
-                <button class="btn btn-whatsapp" onclick="copyReport()">Kopyala</button>
+            <div class="glass-panel">
+                <h3 style="margin:0 0 15px 0; color:var(--primary);">Tam Karne Raporu</h3>
+                <input type="text" list="studentList" id="reportStudentInput" placeholder="Öğrenci Seçiniz...">
+                <button class="btn btn-primary" onclick="generateReport()">Rapor Oluştur</button>
+                <div id="reportOutput" style="background:var(--input-bg); padding:15px; border-radius:12px; margin:15px 0; white-space:pre-wrap; font-size:0.9rem; color:var(--text-main); border:var(--glass-border);">...</div>
+                <button class="btn btn-primary" onclick="copyReport()"><i class="far fa-copy"></i> Kopyala</button>
             </div>
         </div>
 
         <div id="tab-stats" class="section">
-            <div class="card">
-                <div class="card-title"><i class="fas fa-crown"></i> Kitap Kurdu Sıralaması</div>
+            <div class="glass-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0; color:var(--primary);">🏆 Okuma Sıralaması</h3>
+                    <button class="sort-btn" onclick="toggleStatsSort()" id="sortBtnIcon">Çoktan Aza ⬇</button>
+                </div>
                 <div id="rankingList"></div>
             </div>
         </div>
+
     </div>
 
     <div class="bottom-nav">
-        <button class="nav-item active" onclick="switchTab('lend', this)"><i class="fas fa-home"></i><span>Anasayfa</span></button>
+        <button class="nav-item active" onclick="switchTab('lend', this)"><i class="fas fa-home"></i><span>Giriş</span></button>
         <button class="nav-item" onclick="switchTab('books', this)"><i class="fas fa-book"></i><span>Kitaplar</span></button>
-        <button class="nav-item" onclick="switchTab('report', this)"><i class="fas fa-file-alt"></i><span>Rapor</span></button>
+        <button class="nav-item" onclick="switchTab('report', this)"><i class="fas fa-file-invoice"></i><span>Rapor</span></button>
         <button class="nav-item" onclick="switchTab('stats', this)"><i class="fas fa-chart-pie"></i><span>İstatistik</span></button>
     </div>
 </div>
 
 <script>
-    // --- API LINK ---
+    // --- BURAYA KENDİ LİNKİNİZİ YAPIŞTIRIN ---
     const API_URL = "https://script.google.com/macros/s/AKfycbx3IoRsVhIzuAJzr4UzBCq6qLay0HFMOueJtm1JCmGINEanpX2ccPIdMePGYPhdFyp3/exec"; 
 
     let students = [];
     let books = [];
     let records = [];
+    let userPassword = "";
     let activeBooksMap = {};
     let lastHistoryMap = {};
     let currentFilter = 'all';
-    let userPassword = ""; // Şifreyi hafızada tutacağız
+    let statsSortOrder = 'desc'; // 'desc' (çoktan aza) veya 'asc' (azdan çoğa)
 
+    // Tema Kontrolü
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
         let isDark = document.body.classList.contains('dark-mode');
-        document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+        document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
     }
 
+    // Başlangıç
     window.onload = function() {
         if(localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
-            document.getElementById('themeBtn').innerText = '☀️';
+            document.getElementById('themeIcon').innerText = '☀️';
+        }
+
+        if(API_URL.includes("BURAYA")) {
+            alert("Lütfen API Linkini düzenleyin.");
+            return;
+        }
+        
+        // Önbellek Kontrolü
+        const cached = localStorage.getItem('libraryData');
+        if (cached) {
+            try {
+                const data = JSON.parse(cached);
+                processData(data); 
+            } catch(e) {}
         }
     };
-
-    function handleEnter(e) { if(e.key === 'Enter') login(); }
 
     function login() {
         let pass = document.getElementById('appPassword').value;
         if(!pass) return;
+        document.getElementById('loader').style.display = 'block';
         
-        document.getElementById('loginError').style.display = 'none';
-        document.getElementById('loader').style.display = 'flex';
-
-        // Şifreyi URL parametresi olarak gönderip kontrol ediyoruz
         fetch(API_URL + "?password=" + encodeURIComponent(pass))
         .then(res => res.json())
         .then(data => {
             if(data.error) {
+                alert("Hatalı Şifre!");
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('loginError').innerText = "Hatalı Şifre!";
-                document.getElementById('loginError').style.display = 'block';
             } else {
-                // Giriş Başarılı
-                userPassword = pass; // Şifreyi kaydet (kayıt işlemi için lazım)
+                userPassword = pass;
+                localStorage.setItem('libraryData', JSON.stringify(data));
                 processData(data);
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
-                document.getElementById('loader').style.display = 'none';
             }
         })
         .catch(err => {
@@ -282,12 +344,13 @@
     }
 
     function syncData() {
-        // Kayıt yaparken şifreyi de gönderiyoruz
-        const payload = JSON.stringify({ 
-            students, books, records, 
-            auth_password: userPassword 
+        document.getElementById('syncStatus').innerText = "Kaydediliyor...";
+        const payload = JSON.stringify({ students, books, records, auth_password: userPassword });
+        fetch(API_URL, { method: 'POST', body: payload })
+        .then(res => {
+            document.getElementById('syncStatus').innerText = "Senkronize";
+            localStorage.setItem('libraryData', JSON.stringify({ students, books, records }));
         });
-        fetch(API_URL, { method: 'POST', body: payload });
     }
 
     function updateUI() {
@@ -318,42 +381,39 @@
             }
         });
         
-        document.getElementById('chip-all').innerText = `Tümü (${books.length})`;
-        document.getElementById('chip-out').innerText = `🔴 Dışarıda (${totalOut})`;
+        document.getElementById('cnt-all').innerText = books.length;
+        document.getElementById('cnt-out').innerText = totalOut;
         let inCount = books.length - Object.keys(activeBooksMap).length;
-        document.getElementById('chip-in').innerText = `🟢 Rafta (${inCount < 0 ? 0 : inCount})`;
+        document.getElementById('cnt-in').innerText = inCount < 0 ? 0 : inCount;
     }
 
     function switchTab(id, btn) {
         document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
         document.getElementById('tab-' + id).classList.add('active');
-        if(btn) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            btn.classList.add('active');
-        }
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
     }
 
     function renderHistory() {
         const sVal = document.getElementById('studentInput').value.trim().toUpperCase();
         const div = document.getElementById('historyList');
         div.innerHTML = "";
+        
         let list = sVal ? records.filter(r => r.student === sVal) : records.filter(r => r.status === "Okuyor");
-
-        if(list.length === 0) { div.innerHTML = `<p style="text-align:center; opacity:0.5;">Kayıt yok.</p>`; return; }
+        
+        if(list.length === 0) div.innerHTML = "<p style='text-align:center; color:var(--text-sub); opacity:0.7;'>Kayıt yok.</p>";
 
         list.forEach(r => {
             let isReading = r.status === "Okuyor";
-            let color = isReading ? "var(--danger-color)" : "var(--success-color)";
             let btnHtml = isReading 
-                ? `<button style="background:#fbbf24; border:none; padding:8px; border-radius:8px; cursor:pointer;" onclick="returnBook(${r.id}, '${r.student}')">İade Al</button>`
-                : `<span style="font-size:0.8rem; opacity:0.7;">${r.returnDate}</span>`;
+                ? `<button class="btn-return" onclick="returnBook(${r.id})">İade Al</button>`
+                : `<span style="color:var(--text-sub); font-size:0.8rem;">${r.returnDate}</span>`;
 
             div.innerHTML += `
             <div class="list-item">
-                <div style="flex:1;">
-                    <h4 style="color:${color}">${r.book}</h4>
-                    <p>👤 ${r.student}</p>
-                    <p style="font-size:0.75rem; opacity:0.7;">${r.date}</p>
+                <div class="item-content">
+                    <h4>${r.book}</h4>
+                    <p>${r.student} • ${r.date}</p>
                 </div>
                 ${btnHtml}
             </div>`;
@@ -364,33 +424,29 @@
         const s = document.getElementById('studentInput').value.trim().toUpperCase();
         const b = document.getElementById('bookInput').value.trim();
         if(!s || !b) { alert("Eksik bilgi!"); return; }
+        
         if(!students.includes(s)) students.push(s);
         if(!books.includes(b)) books.push(b);
+
         records.unshift({ id: Date.now(), date: new Date().toLocaleDateString('tr-TR'), student: s, book: b, status: "Okuyor", returnDate: "-" });
-        records.sort((a,b) => Number(b.id) - Number(a.id));
+        records.sort((a,b) => b.id - a.id);
+        
         document.getElementById('bookInput').value = "";
         updateUI(); syncData();
     }
 
-    function returnBook(id, sName) {
+    function returnBook(id) {
         let rec = records.find(r => r.id === id);
         if(rec) {
             rec.status = "İade Etti";
             rec.returnDate = new Date().toLocaleDateString('tr-TR');
             updateUI(); syncData();
-            if(confirm("Yeni kitap verelim mi?")) {
-                document.getElementById('studentInput').value = sName;
-                renderHistory();
-                document.getElementById('bookInput').focus();
-            }
         }
     }
 
-    function clearInputs() { document.getElementById('studentInput').value = ""; renderHistory(); }
-
     function filterBooks(type, el) {
         currentFilter = type;
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         renderBookManager();
     }
@@ -419,32 +475,32 @@
 
         displayList.forEach(item => {
             let details = "";
-            let borderColor = "";
+            let badge = "";
 
             if(item.status === 'out') {
-                borderColor = "var(--danger-color)";
+                badge = `<span class="status-badge bg-red">Dışarıda</span>`;
                 item.activeList.forEach(r => {
-                    details += `<div style="font-size:0.9rem; color:var(--danger-color); margin-top:5px;">🔴 <strong>${r.student}</strong> (${r.date}) <button class="btn-delete" onclick="deleteRecord(${r.id})">Sil</button></div>`;
+                    details += `<div style="font-size:0.85rem; color:#ef4444; margin-top:5px; display:flex; justify-content:space-between;"><span>👤 ${r.student} (${r.date})</span> <button class="btn-delete" onclick="deleteRecord(${r.id})">Sil</button></div>`;
                 });
             } else {
-                borderColor = "var(--success-color)";
-                if(item.lastReader) details = `<span style="font-size:0.8rem; color:var(--success-color);">🟢 Son: ${item.lastReader.student} (${item.lastReader.date})</span>`;
-                else details = `<span style="font-size:0.8rem; opacity:0.6;">🟢 Rafta (Hiç Okunmadı)</span>`;
+                badge = `<span class="status-badge bg-green">Rafta</span>`;
+                if(item.lastReader) details = `<span style="font-size:0.8rem; color:var(--text-sub);">Son: ${item.lastReader.student} (${item.lastReader.date})</span>`;
+                else details = `<span style="font-size:0.8rem; color:var(--text-sub); opacity:0.7;">Hiç okunmadı</span>`;
             }
 
             div.innerHTML += `
-            <div style="background:var(--glass-bg); padding:15px; border-radius:16px; margin-bottom:10px; border-left:5px solid ${borderColor}; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                <div style="display:flex; justify-content:space-between;">
-                    <h4 style="margin:0; font-size:1rem;">📘 ${item.name}</h4>
-                    <i class="fas fa-edit" style="opacity:0.5;" onclick="renameBook('${item.name}')"></i>
+            <div class="glass-panel" style="padding:15px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${item.name}</h4>
+                    ${badge}
                 </div>
-                <div>${details}</div>
+                <div style="margin-top:5px;">${details}</div>
             </div>`;
         });
     }
 
     function deleteRecord(id) {
-        if(confirm("Silmek istiyor musunuz?")) {
+        if(confirm("Bu kaydı silmek istediğine emin misin?")) {
             records = records.filter(r => r.id !== id);
             updateUI(); syncData();
         }
@@ -454,38 +510,71 @@
         const val = document.getElementById('newBookInput').value.trim();
         if(val && !books.includes(val)) { books.push(val); books.sort(); document.getElementById('newBookInput').value = ""; updateUI(); syncData(); }
     }
-    
-    function renameBook(oldName) {
-        let newName = prompt("Yeni ad:", oldName);
-        if(newName && newName !== oldName) {
-            books[books.indexOf(oldName)] = newName;
-            records.forEach(r => { if(r.book === oldName) r.book = newName; });
-            updateUI(); syncData();
-        }
-    }
 
+    // --- RAPOR (TARİHSİZ GEÇMİŞ) ---
     function generateReport() {
         const s = document.getElementById('reportStudentInput').value.trim().toUpperCase();
         if(!s) return;
-        let myRecs = records.filter(r => r.student === s);
-        myRecs.sort((a,b) => a.id - b.id);
-        let txt = `Sayın Velimiz,\nÖğrencimiz *${s}* toplam *${myRecs.length}* kitap okumuştur.\n\n📖 *Liste:*\n`;
-        myRecs.forEach((r,i) => {
-            let icon = r.status === "Şuan okuyor" ? "🔴" : "✅";
-            txt += `${i+1}. ${r.book} (${icon})\n`;
-        });
-        document.getElementById('reportOutput').innerText = txt + "\nZeynal Öğretmen";
+        
+        let myRecs = records.filter(r => r.student === s).sort((a,b) => a.id - b.id);
+        
+        let currentlyReading = myRecs.filter(r => r.status === "Okuyor");
+        let history = myRecs.filter(r => r.status === "İade Etti");
+
+        let txt = `Sayın Velimiz,\n`;
+        txt += `Öğrencimiz *${s}* bu dönem kütüphanemizden toplam *${myRecs.length}* kitap almıştır.\n\n`;
+
+        if (currentlyReading.length > 0) {
+            txt += `🔴 *Şu An Okuduğu:* \n`;
+            currentlyReading.forEach(r => {
+                txt += `- ${r.book} (${r.date})\n`;
+            });
+            txt += `\n`;
+        }
+
+        if (history.length > 0) {
+            txt += `📚 *Okuyup Teslim Ettikleri:* \n`;
+            history.forEach((r, i) => {
+                // Sadece "Okudu" yazısı, tarih yok
+                txt += `${i+1}. ${r.book} (✅ Okudu)\n`;
+            });
+        }
+
+        txt += `\nZeynal Öğretmen`;
+        document.getElementById('reportOutput').innerText = txt;
     }
 
     function copyReport() { navigator.clipboard.writeText(document.getElementById('reportOutput').innerText); alert("Kopyalandı!"); }
 
+    // --- İSTATİSTİK (SIRALAMA VE SAĞA YASLI) ---
+    function toggleStatsSort() {
+        statsSortOrder = (statsSortOrder === 'desc') ? 'asc' : 'desc';
+        document.getElementById('sortBtnIcon').innerText = (statsSortOrder === 'desc') ? 'Çoktan Aza ⬇' : 'Azdan Çoğa ⬆';
+        renderRanking();
+    }
+
     function renderRanking() {
         let counts = {};
         records.forEach(r => { if(r.status === "İade Etti") counts[r.student] = (counts[r.student]||0)+1; });
-        let sorted = Object.keys(counts).map(k => ({n:k, c:counts[k]})).sort((a,b)=>b.c - a.c);
+        let sorted = Object.keys(counts).map(k => ({n:k, c:counts[k]}));
+        
+        // Sıralama Mantığı
+        if(statsSortOrder === 'desc') {
+            sorted.sort((a,b) => b.c - a.c);
+        } else {
+            sorted.sort((a,b) => a.c - b.c);
+        }
+
         let html = "";
         sorted.forEach((s,i) => {
-            html += `<div class="list-item" style="padding:10px;"><span style="font-weight:bold;">${i+1}. ${s.n}</span><span style="color:var(--primary); font-weight:bold;">${s.c}</span></div>`;
+            html += `
+            <div class="list-item">
+                <div class="item-content">
+                    <span style="font-weight:bold; color:var(--text-sub); margin-right:10px;">${i+1}.</span>
+                    <span style="font-weight:600;">${s.n}</span>
+                </div>
+                <span style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c}</span>
+            </div>`;
         });
         document.getElementById('rankingList').innerHTML = html;
     }
