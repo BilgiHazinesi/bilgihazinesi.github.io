@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zeynal Öğretmen Kütüphane (V28)</title>
+    <title>Zeynal Öğretmen Kütüphane (V30)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* --- TEMA AYARLARI --- */
@@ -11,14 +11,11 @@
             /* AYDINLIK MOD */
             --bg-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             
-            /* --- CLEAR GLASS (NET CAM) AYARLARI --- */
-            /* Bulanıklık yok, sadece şeffaflık ve kalın kenar hissi */
+            /* NET CAM AYARLARI */
             --glass-bg: rgba(255, 255, 255, 0.15); 
             --nav-bg: rgba(255, 255, 255, 0.25); 
             --glass-border: 1px solid rgba(255, 255, 255, 0.4);
             --glass-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            /* Kalınlık hissi veren iç gölge */
-            --glass-inset: inset 0 0 0 1px rgba(255, 255, 255, 0.1); 
             
             --text-main: #1d1d1f;
             --text-sub: #4b5563;
@@ -33,7 +30,6 @@
             --nav-bg: rgba(0, 0, 0, 0.3);
             --glass-border: 1px solid rgba(255, 255, 255, 0.15);
             --glass-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            --glass-inset: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
             --primary: #60a5fa;
@@ -60,12 +56,11 @@
             box-shadow: var(--glass-shadow);
             border-radius: 20px;
             padding: 20px; margin-bottom: 20px;
-            /* Blur'u kaldırdık veya çok aza indirdik */
             backdrop-filter: blur(2px); 
             -webkit-backdrop-filter: blur(2px);
         }
 
-        /* --- HEADER (Clear Glass) --- */
+        /* --- HEADER --- */
         .app-header {
             padding: 15px 20px; position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
@@ -88,15 +83,27 @@
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
 
-        /* --- FORM --- */
+        /* --- FORM & INPUT WRAPPER (YENİ) --- */
+        .input-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
+        
         input {
-            width: 100%; padding: 14px; font-size: 1rem;
+            width: 100%; padding: 14px; padding-right: 40px; /* X ikonu için yer */
+            font-size: 1rem;
             background: var(--input-bg);
             border: var(--glass-border);
             border-radius: 12px; color: var(--text-main);
-            margin-bottom: 12px; transition: 0.3s;
+            transition: 0.3s;
         }
         input:focus { border-color: var(--primary); background: rgba(255,255,255,0.2); }
+        
+        /* X İKONU */
+        .clear-btn {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            color: var(--text-sub); cursor: pointer; font-size: 1.1rem;
+            display: none; /* Başlangıçta gizli */
+            z-index: 2; padding: 5px;
+        }
+        .clear-btn:hover { color: var(--primary); }
 
         /* --- BUTONLAR --- */
         .btn {
@@ -110,16 +117,9 @@
         
         /* Turuncu İade Butonu */
         .btn-return { 
-            background: #f97316; /* Turuncu */
-            color: white; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            cursor: pointer;
-            font-size: 0.85rem;
-            min-width: 80px; /* Hepsi aynı genişlikte olsun */
-            text-align: center;
+            background: #f97316; color: white; border: none; 
+            padding: 8px 16px; border-radius: 8px; font-weight: 600; 
+            cursor: pointer; font-size: 0.85rem; min-width: 80px; text-align: center;
             box-shadow: 0 2px 5px rgba(249, 115, 22, 0.4);
         }
 
@@ -127,29 +127,24 @@
 
         /* --- LİSTE --- */
         .list-item {
-            display: flex; 
-            align-items: center; /* Dikey ortala */
-            justify-content: space-between; /* Sağa ve Sola yasla */
-            padding: 12px 0; 
-            border-bottom: 1px solid rgba(150,150,150,0.2);
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 12px 0; border-bottom: 1px solid rgba(150,150,150,0.2);
         }
         .list-item:last-child { border-bottom: none; }
         
-        .item-content { flex: 1; margin-right: 10px; } /* Yazı alanı genişlesin */
+        .item-content { flex: 1; margin-right: 10px; } 
         .item-content h4 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-main); }
         .item-content p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-sub); }
         
-        /* Stat Badge */
         .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 8px; font-weight: 700; }
         .bg-red { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
         .bg-green { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
 
-        /* --- ALT MENÜ (CLEAR GLASS) --- */
+        /* --- ALT MENÜ --- */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; height: 85px;
             background: var(--nav-bg);
             border-top: var(--glass-border);
-            /* Blur yok veya çok az */
             backdrop-filter: blur(3px); 
             display: flex; justify-content: space-around; align-items: flex-start;
             padding-top: 15px; z-index: 1000;
@@ -187,9 +182,11 @@
     <div class="glass-panel" style="width:90%; max-width:350px; text-align:center;">
         <h2 style="margin: 0 0 10px 0; color: var(--text-main);">Öğretmen Girişi</h2>
         <p style="color: var(--text-sub); margin-bottom: 20px;">Zeynal Öğretmen Kitap Takibi</p>
-        <input type="password" id="appPassword" placeholder="••••••" style="text-align:center; letter-spacing: 5px;">
+        <div class="input-wrapper">
+            <input type="password" id="appPassword" placeholder="••••••" style="text-align:center; letter-spacing: 5px; padding-right:14px;">
+        </div>
         <button class="btn btn-primary" onclick="login()">Giriş Yap</button>
-        <div id="loader">Veriler Yükleniyor...</div>
+        <div id="loader">Hızlı Giriş Yapılıyor...</div>
     </div>
 </div>
 
@@ -204,10 +201,19 @@
         <div id="tab-lend" class="section active">
             <div class="glass-panel">
                 <h3 style="margin:0 0 15px 0; color:var(--primary);">Hızlı İşlem</h3>
-                <input type="text" list="studentList" id="studentInput" placeholder="Öğrenci Seçiniz..." oninput="renderHistory()">
-                <datalist id="studentList"></datalist>
-                <input type="text" list="bookList" id="bookInput" placeholder="Kitap Seçiniz...">
-                <datalist id="bookList"></datalist>
+                
+                <div class="input-wrapper">
+                    <input type="text" list="studentList" id="studentInput" placeholder="Öğrenci Seçiniz..." oninput="handleInput(this); renderHistory()">
+                    <i class="fas fa-times-circle clear-btn" onclick="clearField('studentInput', renderHistory)"></i>
+                    <datalist id="studentList"></datalist>
+                </div>
+
+                <div class="input-wrapper">
+                    <input type="text" list="bookList" id="bookInput" placeholder="Kitap Seçiniz..." oninput="handleInput(this)">
+                    <i class="fas fa-times-circle clear-btn" onclick="clearField('bookInput')"></i>
+                    <datalist id="bookList"></datalist>
+                </div>
+
                 <button class="btn btn-primary" onclick="lendBook()">Kitabı Teslim Et</button>
             </div>
             
@@ -227,21 +233,32 @@
                     <div class="filter-chip" onclick="filterBooks('out', this)">Dışarıda (<span id="cnt-out">0</span>)</div>
                     <div class="filter-chip" onclick="filterBooks('in', this)">Rafta (<span id="cnt-in">0</span>)</div>
                 </div>
-                <input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="renderBookManager()">
+                
+                <div class="input-wrapper">
+                    <input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="handleInput(this); renderBookManager()">
+                    <i class="fas fa-times-circle clear-btn" onclick="clearField('bookSearch', renderBookManager)"></i>
+                </div>
+
                 <div id="bookManagerList"></div>
             </div>
             
             <div class="glass-panel">
                 <h4 style="margin:0 0 10px 0; color:var(--text-main);">Yeni Kitap Ekle</h4>
-                <input type="text" id="newBookInput" placeholder="Kitap Adı...">
+                <div class="input-wrapper">
+                    <input type="text" id="newBookInput" placeholder="Kitap Adı..." oninput="handleInput(this)">
+                    <i class="fas fa-times-circle clear-btn" onclick="clearField('newBookInput')"></i>
+                </div>
                 <button class="btn btn-primary" onclick="addNewBook()">Ekle</button>
             </div>
         </div>
 
         <div id="tab-report" class="section">
             <div class="glass-panel">
-                <h3 style="margin:0 0 15px 0; color:var(--primary);">Tam Karne Raporu</h3>
-                <input type="text" list="studentList" id="reportStudentInput" placeholder="Öğrenci Seçiniz...">
+                <h3 style="margin:0 0 15px 0; color:var(--primary);">Motivasyon Raporu</h3>
+                <div class="input-wrapper">
+                    <input type="text" list="studentList" id="reportStudentInput" placeholder="Öğrenci Seçiniz..." oninput="handleInput(this)">
+                    <i class="fas fa-times-circle clear-btn" onclick="clearField('reportStudentInput')"></i>
+                </div>
                 <button class="btn btn-primary" onclick="generateReport()">Rapor Oluştur</button>
                 <div id="reportOutput" style="background:var(--input-bg); padding:15px; border-radius:12px; margin:15px 0; white-space:pre-wrap; font-size:0.9rem; color:var(--text-main); border:var(--glass-border);">...</div>
                 <button class="btn btn-primary" onclick="copyReport()"><i class="far fa-copy"></i> Kopyala</button>
@@ -279,7 +296,22 @@
     let activeBooksMap = {};
     let lastHistoryMap = {};
     let currentFilter = 'all';
-    let statsSortOrder = 'desc'; // 'desc' (çoktan aza) veya 'asc' (azdan çoğa)
+    let statsSortOrder = 'desc'; 
+
+    // --- SİLME BUTONU MANTIĞI ---
+    function handleInput(input) {
+        let btn = input.nextElementSibling;
+        if(btn && btn.classList.contains('clear-btn')) {
+            btn.style.display = input.value.length > 0 ? 'block' : 'none';
+        }
+    }
+
+    function clearField(id, callback) {
+        let input = document.getElementById(id);
+        input.value = "";
+        handleInput(input);
+        if (callback) callback();
+    }
 
     // Tema Kontrolü
     function toggleTheme() {
@@ -294,6 +326,8 @@
         if(localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
             document.getElementById('themeIcon').innerText = '☀️';
+        } else {
+            document.getElementById('themeIcon').innerText = '🌙';
         }
 
         if(API_URL.includes("BURAYA")) {
@@ -301,7 +335,7 @@
             return;
         }
         
-        // Önbellek Kontrolü
+        // Önbellek Kontrolü (HIZ İÇİN)
         const cached = localStorage.getItem('libraryData');
         if (cached) {
             try {
@@ -432,6 +466,7 @@
         records.sort((a,b) => b.id - a.id);
         
         document.getElementById('bookInput').value = "";
+        handleInput(document.getElementById('bookInput')); // X butonunu gizle
         updateUI(); syncData();
     }
 
@@ -511,7 +546,7 @@
         if(val && !books.includes(val)) { books.push(val); books.sort(); document.getElementById('newBookInput').value = ""; updateUI(); syncData(); }
     }
 
-    // --- RAPOR (TARİHSİZ GEÇMİŞ) ---
+    // --- RAPOR (PEDAGOJİK VE MOTİVASYONEL) ---
     function generateReport() {
         const s = document.getElementById('reportStudentInput').value.trim().toUpperCase();
         if(!s) return;
@@ -521,8 +556,9 @@
         let currentlyReading = myRecs.filter(r => r.status === "Okuyor");
         let history = myRecs.filter(r => r.status === "İade Etti");
 
-        let txt = `Sayın Velimiz,\n`;
-        txt += `Öğrencimiz *${s}* bu dönem kütüphanemizden toplam *${myRecs.length}* kitap almıştır.\n\n`;
+        let txt = `Sayın Velimiz,\n\n`;
+        txt += `✨ "Her kitap keşfedilmeyi bekleyen ayrı bir dünyadır."\n\n`;
+        txt += `Öğrencimiz *${s}*, bu dönem kütüphanemizden toplam *${myRecs.length}* kitap okuyarak okuma yolculuğunu zenginleştirmiştir.\n\n`;
 
         if (currentlyReading.length > 0) {
             txt += `🔴 *Şu An Okuduğu:* \n`;
@@ -533,14 +569,14 @@
         }
 
         if (history.length > 0) {
-            txt += `📚 *Okuyup Teslim Ettikleri:* \n`;
+            txt += `📚 *Keşfettiği Dünyalar (Okunanlar):* \n`;
             history.forEach((r, i) => {
                 // Sadece "Okudu" yazısı, tarih yok
                 txt += `${i+1}. ${r.book} (✅ Okudu)\n`;
             });
         }
 
-        txt += `\nZeynal Öğretmen`;
+        txt += `\nİlginiz ve desteğiniz için teşekkür ederiz.\nZeynal Öğretmen`;
         document.getElementById('reportOutput').innerText = txt;
     }
 
@@ -573,7 +609,7 @@
                     <span style="font-weight:bold; color:var(--text-sub); margin-right:10px;">${i+1}.</span>
                     <span style="font-weight:600;">${s.n}</span>
                 </div>
-                <span style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c}</span>
+                <span style="font-weight:800; color:var(--primary); font-size:1.1rem; text-align:right;">${s.c}</span>
             </div>`;
         });
         document.getElementById('rankingList').innerHTML = html;
