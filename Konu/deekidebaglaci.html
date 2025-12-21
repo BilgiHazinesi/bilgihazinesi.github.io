@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. Sınıf -de/-da Etkinliği</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #fdfdfd; 
+            padding: 20px; 
+            color: #333; 
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        /* --- KONTROL PANELİ --- */
+        .control-panel {
+            position: sticky; top: 0; z-index: 9999;
+            background: #2c3e50; padding: 15px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            margin-bottom: 25px;
+        }
+        
+        .main-btn {
+            background-color: #f1c40f; color: #2c3e50; 
+            border: none; padding: 15px 40px;
+            font-size: 1.5em; font-weight: 800; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 5px 0 #d35400; transition: all 0.2s;
+        }
+        .main-btn:active { transform: translateY(4px); box-shadow: none; }
+        .main-btn:hover { background-color: #f39c12; }
+        
+        .toggle-notes-btn { 
+            background: transparent; border: 2px solid white; color: white; 
+            padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.1em;
+        }
+
+        /* --- DEFTER NOTU (Senin Metnin) --- */
+        #lecture-notes {
+            background: #fff; border: 4px solid #34495e; border-radius: 15px;
+            margin-bottom: 30px; padding: 25px; display: block;
+        }
+        .note-header {
+            text-align: center; font-size: 2em; font-weight: bold; color: #c0392b;
+            text-decoration: underline; margin-bottom: 20px;
+        }
+        .comparison-table {
+            display: flex; gap: 30px;
+        }
+        .note-column {
+            flex: 1; padding: 25px; border-radius: 10px;
+            font-size: 1.3em; line-height: 1.6;
+        }
+        .note-title {
+            font-size: 1.5em; font-weight: 800; display: block; 
+            margin-bottom: 15px; border-bottom: 3px solid #555; padding-bottom: 5px;
+        }
+        
+        /* 1. Bağlaç Bölümü Tasarımı */
+        .bg-orange { background-color: #fff8e1; border: 2px solid #ffb300; }
+        .text-orange { color: #e65100; }
+        
+        /* 2. Ek Bölümü Tasarımı */
+        .bg-blue { background-color: #e3f2fd; border: 2px solid #2196f3; }
+        .text-blue { color: #0d47a1; }
+
+        .highlight-box {
+            background: rgba(255,255,255,0.6);
+            padding: 5px 10px; border-radius: 5px; font-weight: bold;
+        }
+
+        /* --- OYUN ALANI --- */
+        #game-area { display: flex; flex-direction: column; gap: 20px; }
+
+        .sentence-card { 
+            background: #fff; border-radius: 15px; padding: 25px; 
+            border: 4px solid #bdc3c7;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            animation: slideDown 0.5s ease-out;
+            border-top: 10px solid #27ae60;
+        }
+        
+        @keyframes slideDown { 
+            from { opacity: 0; transform: translateY(-50px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* DEVASA CÜMLE PUNROSU */
+        .sentence-text { 
+            font-size: 40px; 
+            font-weight: 500;
+            margin-bottom: 25px; line-height: 1.5; color: #000; 
+            background: #ecf0f1; padding: 20px; border-radius: 10px; text-align: center;
+        }
+
+        .target-word { 
+            font-weight: 900; color: #e74c3c; 
+            border-bottom: 4px solid #e74c3c;
+            cursor: pointer;
+        }
+        .hidden-suffix { 
+            background-color: #7f8c8d; color: transparent !important; 
+            border-bottom: none; border-radius: 5px; user-select: none; 
+        }
+
+        .btn-group { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .action-btn { 
+            padding: 15px 30px; border: none; border-radius: 12px; 
+            font-size: 1.3em; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; 
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+        .action-btn:active { transform: translateY(4px); box-shadow: none; }
+        
+        .btn-eye { background-color: #8e44ad; }
+        .btn-true { background-color: #27ae60; }
+        .btn-false { background-color: #c0392b; }
+
+        .feedback { 
+            margin-top: 20px; padding: 15px; border-radius: 10px; 
+            font-weight: bold; font-size: 1.5em; text-align: center; display: none; 
+        }
+        .feedback.correct { background-color: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
+        .feedback.wrong { background-color: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; }
+        
+        @media (max-width: 768px) {
+            .comparison-table { flex-direction: column; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="control-panel">
+        <div style="color: white; font-size: 1.2em;">
+            <strong>Zeynal Öğretmen</strong>
+            <div id="counter-text" style="font-size: 0.8em; color: #bdc3c7;">0 / 89</div>
+        </div>
+        <button class="main-btn" id="next-btn">Sıradaki Cümle ⬆️</button>
+        <button class="toggle-notes-btn" onclick="toggleNotes()">Notları Aç/Kapat</button>
+    </div>
+
+    <div id="lecture-notes">
+        <div class="note-header">DEFTER NOTU</div>
+        <div class="comparison-table">
+            
+            <div class="note-column bg-orange">
+                <span class="note-title text-orange">1. Bağlaç Olan "de / da" (Ayrı Yazılır)</span>
+                <ul>
+                    <li>Kendisinden önceki kelimeden <strong>her zaman ayrı</strong> yazılır.</li>
+                    <li>Cümleye <em>"dahi, bile, o da yaptı"</em> anlamı katar.</li>
+                    <li class="highlight-box">İpucu: Cümleden çıkardığımızda anlam <strong>BOZULMAZ</strong>.</li>
+                    <li><em>Örnek:</em> Ali <strong>de</strong> geldi. (Ali geldi → Anlam bozulmadı)</li>
+                </ul>
+            </div>
+
+            <div class="note-column bg-blue">
+                <span class="note-title text-blue">2. Ek Olan "-de / -da" (Bitişik Yazılır)</span>
+                <ul>
+                    <li>Kelimeye <strong>bitişik</strong> yazılır.</li>
+                    <li>Sert sessizle biten kelimelerde <strong>"-te / -ta"</strong> olabilir.</li>
+                    <li>Bir yerde bulunmayı bildirir.</li>
+                    <li class="highlight-box">İpucu: Cümleden çıkardığımızda anlam <strong>BOZULUR</strong>.</li>
+                    <li><em>Örnek:</em> Kalemim ev<strong>de</strong> kaldı. (Kalemim ev kaldı → Saçma oldu!)</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="game-area"></div>
+
+</div>
+
+<script>
+    // 89 Cümlelik Veri Seti
+    const sentences = [
+        { t: "Ya alacak ya <span class='target'>da</span> almayacak.", correct: true },
+        { t: "Ali'<span class='target'>de</span> kırmızı bir araba var mı?", correct: true },
+        { t: "Amcası <span class='target'>da</span> halası <span class='target'>da</span> düğüne geldi.", correct: true },
+        { t: "Antalya'<span class='target'>da</span> raylı sistem çalışması var.", correct: true },
+        { t: "Arabayı satıp <span class='target'>da</span> arsa mı alsak?", correct: true },
+        { t: "Arkadaşım<span class='target'>da</span> <span class='target'>da</span> bundan var.", correct: true },
+        { t: "Ay<span class='target'>da</span> yıl<span class='target'>da</span> bir uğrar oldu.", correct: true },
+        { t: "Bahar<span class='target'>da</span> rengarenk çiçekler açar.", correct: true },
+        { t: "Bakkaldan <span class='target'>da</span> alışveriş yaparız.", correct: true },
+        { t: "Bayrağımız<span class='target'>da</span>, yurdumuz<span class='target'>da</span> kutsaldır.", correct: false, c: "Bayrağımız da, yurdumuz da" },
+        { t: "Bazen yanlış yapmak<span class='target'>ta</span> faydalı oluyor.", correct: false, c: "yapmak da" },
+        { t: "Ben ağlamayayım <span class='target'>da</span> kimler ağlasın?", correct: true },
+        { t: "Ben<span class='target'>de</span> okula gitmek istiyorum.", correct: false, c: "Ben de" },
+        { t: "Berke kanepe<span class='target'>de</span> uyuyor.", correct: true },
+        { t: "Biz <span class='target'>de</span> Kozaklıya gideceğiz.", correct: true },
+        { t: "Bize Ahmet'<span class='target'>de</span> gelecek.", correct: false, c: "Ahmet de" },
+        { t: "Bizim Ahmet <span class='target'>de</span> gelsin.", correct: true },
+        { t: "Bu golü sen <span class='target'>de</span> olsan yerdin.", correct: true },
+        { t: "Bu testi <span class='target'>de</span> hemen çözdüm.", correct: true },
+        { t: "Bunun<span class='target'>da</span> bir nedeni olması gerekir", correct: false, c: "Bunun da" },
+        { t: "Büyüyecek <span class='target'>de</span> bana bakacak.", correct: true },
+        { t: "Canan<span class='target'>da</span> akşam biz<span class='target'>de</span> yatacakmış.", correct: false, c: "Canan da... bizde" },
+        { t: "Ceketimi kardeşim<span class='target'>de</span> kullanıyor.", correct: false, c: "kardeşim de" },
+        { t: "Çalış <span class='target'>da</span> çalış...", correct: true },
+        { t: "Çalışıp <span class='target'>da</span> kazanacaksın.", correct: true },
+        { t: "Çamaşırları el<span class='target'>de</span> yıkıyormuş.", correct: true },
+        { t: "Çocuklar okusun <span class='target'>da</span> ne okursa okusun", correct: true },
+        { t: "Çoraplarımı<span class='target'>da</span> yıkadım.", correct: false, c: "Çoraplarımı da" },
+        { t: "Dayım<span class='target'>da</span> buraya gelecek.", correct: false, c: "Dayım da" },
+        { t: "Deniz <span class='target'>de</span> kum, on <span class='target'>da</span> para.", correct: false, c: "Denizde... onda" },
+        { t: "Duvar<span class='target'>da</span> tablo asılıydı.", correct: true },
+        { t: "Dün gece <span class='target'>de</span> eve geç gelmiş.", correct: true },
+        { t: "El<span class='target'>de</span> avuç<span class='target'>ta</span> ne varsa bitti.", correct: true },
+        { t: "Eldivenlerim siz <span class='target'>de</span> kalmış.", correct: false, c: "sizde" },
+        { t: "Eski İstanbul'<span class='target'>da</span> ne güzel günler yaşanmış.", correct: true },
+        { t: "Ev <span class='target'>de</span> misafirler var.", correct: false, c: "Evde" },
+        { t: "Ev<span class='target'>de</span> arkadaşlarıyla test çözüyordu.", correct: true },
+        { t: "Gel Osmanim, otur <span class='target'>da</span> yemek ye.", correct: true },
+        { t: "Gülperi <span class='target'>de</span> grip olmuş.", correct: true },
+        { t: "Haberi evine <span class='target'>de</span> bildirmişler.", correct: true },
+        { t: "Hasan, Özkan'ı<span class='target'>da</span> simamaya götürmüş.", correct: false, c: "Özkan'ı da" },
+        { t: "Hazal <span class='target'>da</span> münazara<span class='target'>da</span> güzel anlattı.", correct: true },
+        { t: "Haziran<span class='target'>da</span> okullar kapanacak..", correct: true },
+        { t: "Her şey yerli yerin<span class='target'>de</span>.", correct: true },
+        { t: "İsmail akşam siz <span class='target'>de</span> kalmış.", correct: false, c: "sizde" },
+        { t: "İzmir'<span class='target'>de</span> deprem olmuş.", correct: true },
+        { t: "Kaan'ın <span class='target'>da</span> ayakkabısı var.", correct: true },
+        { t: "Kalemim Didem'<span class='target'>de</span> kalmış.", correct: true },
+        { t: "Kalemlerini<span class='target'>de</span> yanında götürmeyi unutma.", correct: false, c: "Kalemlerini de" },
+        { t: "Kapı<span class='target'>da</span> bekliyor.", correct: true },
+        { t: "Kardeşim okul <span class='target'>da</span> çok yaramazlık yapıyor.", correct: false, c: "okulda" },
+        { t: "Kedimin<span class='target'>de</span> tüyleri dökülmesini istemiyorum.", correct: false, c: "Kedimin de" },
+        { t: "Kerem'<span class='target'>de</span> para kalmamış.", correct: true },
+        { t: "Kitabım Emre <span class='target'>de</span> kaldı.", correct: false, c: "Emre'de" },
+        { t: "Kitabımı Ali <span class='target'>de</span> okumak istedi.", correct: true },
+        { t: "Kitap<span class='target'>ta</span> güzel resimler var", correct: true },
+        { t: "Komşu<span class='target'>da</span> yangın çıkmış.", correct: true },
+        { t: "Kültür sarayın<span class='target'>da</span> tiyatro izledik.", correct: true },
+        { t: "Marketler <span class='target'>de</span> indirim vardı.", correct: false, c: "Marketlerde" },
+        { t: "Nisan sonun<span class='target'>da</span> çiçekler açar.", correct: true },
+        { t: "Nişanlın amma <span class='target'>da</span> cimriymiş.", correct: true },
+        { t: "Okul<span class='target'>da</span> kitaplar var.", correct: true },
+        { t: "Onunla konuşsam <span class='target'>da</span> beni dinlemez", correct: true },
+        { t: "Osman yangın<span class='target'>da</span> çok korktu.", correct: true },
+        { t: "Ödevlerimi bilgisayar <span class='target'>da</span> yaptım.", correct: false, c: "bilgisayarda" },
+        { t: "Öğretmen bana <span class='target'>da</span> teşekkür etti.", correct: true },
+        { t: "Ömer benim <span class='target'>de</span> arkadaşımdır.", correct: true },
+        { t: "Piyango sana<span class='target'>da</span> mı çıkmadı.", correct: false, c: "sana da" },
+        { t: "Radyo<span class='target'>da</span> dinlediğim şarkıyı ezberledim.", correct: true },
+        { t: "Saat yedi<span class='target'>de</span> mi gelecekmiş?", correct: true },
+        { t: "Salon <span class='target'>da</span> gösteri yapacağız.", correct: false, c: "Salonda" },
+        { t: "Samet <span class='target'>de</span> odun kırmış.", correct: true },
+        { t: "Sana kazak <span class='target'>da</span> alacağım", correct: true },
+        { t: "Sana ne yaptı<span class='target'>da</span> onu bu kadar kızdırdın.", correct: false, c: "yaptı da" },
+        { t: "Selma <span class='target'>da</span> sınıf<span class='target'>ta</span> kaldı.", correct: true },
+        { t: "Sen <span class='target'>de</span> bu işe ortak mısın?", correct: true },
+        { t: "Sen <span class='target'>de</span> mi böyle düşünüyorsun.", correct: true },
+        { t: "Sen onlar<span class='target'>da</span> mı kalacaksın.", correct: true },
+        { t: "Sena <span class='target'>da</span> baloya gitti.", correct: true },
+        { t: "Sen<span class='target'>de</span> bir şeylerim kaldı", correct: true },
+        { t: "Sen<span class='target'>de</span> bizimle gel.", correct: false, c: "Sen de" },
+        { t: "Sen<span class='target'>de</span> para var mı?", correct: true },
+        { t: "Sen<span class='target'>de</span> mi yalan söyledin.", correct: false, c: "Sen de" },
+        { t: "Seni gördüm <span class='target'>de</span> içim rahat etti.", correct: true },
+        { t: "Sınıfları <span class='target'>da</span> havalandıralım.", correct: true },
+        { t: "Sinan<span class='target'>da</span> bizimle gelecekmiş.", correct: false, c: "Sinan da" },
+        { t: "Siz ayak<span class='target'>ta</span> kaldınız.", correct: true },
+        { t: "Size hangi konu <span class='target'>da</span> yardımcı olabilirim?", correct: false, c: "konuda" },
+        { t: "Sorsan <span class='target'>da</span> söylemem.", correct: true }
+    ];
+
+    let currentIndex = 0;
+    const gameArea = document.getElementById("game-area");
+    const nextBtn = document.getElementById("next-btn");
+
+    // Butona tıklama olayı
+    nextBtn.addEventListener("click", function() {
+        if (currentIndex >= sentences.length) {
+            nextBtn.innerText = "Tüm Cümleler Bitti! 🎉";
+            nextBtn.disabled = true;
+            nextBtn.style.backgroundColor = "#95a5a6";
+            return;
+        }
+
+        const data = sentences[currentIndex];
+        const uniqueId = currentIndex;
+
+        // Kartı oluştur
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "sentence-card";
+        cardDiv.id = "card-" + uniqueId;
+        
+        cardDiv.innerHTML = `
+            <div class="sentence-text" id="text-${uniqueId}">${data.t}</div>
+            <div class="btn-group">
+                <button class="action-btn btn-eye" onclick="toggleVis(${uniqueId})">👁️ Eki Gizle</button>
+                <button class="action-btn btn-true" onclick="checkAnswer(${uniqueId}, true)">✅ Doğru</button>
+                <button class="action-btn btn-false" onclick="checkAnswer(${uniqueId}, false)">❌ Yanlış</button>
+            </div>
+            <div id="feedback-${uniqueId}" class="feedback"></div>
+        `;
+
+        // EN ÜSTE EKLE (prepend)
+        gameArea.prepend(cardDiv);
+
+        currentIndex++;
+        document.getElementById("counter-text").innerText = `${currentIndex} / ${sentences.length}`;
+    });
+
+    // Global fonksiyonlar
+    window.toggleVis = function(id) {
+        const textDiv = document.getElementById(`text-${id}`);
+        const targets = textDiv.querySelectorAll(".target");
+        targets.forEach(el => {
+            el.classList.toggle("hidden-suffix");
+        });
+    }
+
+    window.checkAnswer = function(id, userAns) {
+        const data = sentences[id];
+        const fbDiv = document.getElementById(`feedback-${id}`);
+        
+        fbDiv.className = "feedback"; // Reset classes
+        
+        if (userAns === data.correct) {
+            fbDiv.classList.add("correct");
+            fbDiv.innerText = "Harika! Cevabın DOĞRU. 👏";
+        } else {
+            fbDiv.classList.add("wrong");
+            if (data.correct) {
+                fbDiv.innerText = "Hata! Bu cümle aslında DOĞRU yazılmıştı.";
+            } else {
+                fbDiv.innerText = `Yanlış! Doğrusu: "${data.c}" olmalıydı.`;
+            }
+        }
+        fbDiv.style.display = "block";
+    }
+
+    window.toggleNotes = function() {
+        const notes = document.getElementById("lecture-notes");
+        if(notes.style.display === "none") {
+            notes.style.display = "block";
+        } else {
+            notes.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>
