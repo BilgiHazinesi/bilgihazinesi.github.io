@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilgi Hazinesi - Eğitimin Keşif Dünyası</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="stiller/stil.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        /* GÜNCELLEME 2: Yeni Fontları Uygulama */
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .header h1 {
+            font-family: 'Dancing Script', cursive;
+            font-weight: 700;
+            font-size: 3.5rem; 
+        }
+
+        h2, h3, h4, h5, h6 {
+             font-family: 'Poppins', sans-serif;
+             font-weight: 600;
+        }
+
+        .desktop-nav {
+            display: none !important;
+        }
+        .mobile-nav-toggle {
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="https://bilgihazinesi.github.io/" class="home-button" title="Anasayfa'ya Dön"><i class="bi bi-house-heart-fill"></i></a>
+    <div id="menu-container"></div>
+    <div id="float-menu-placeholder"></div>
+    
+    <div class="page-wrapper">
+        <header class="header">
+            <h1>Bilgi Hazinesi</h1>
+            <p>Öğrenmenin Keşif Dolu Dünyasına Hoş Geldiniz!</p>
+        </header>
+        
+        <main class="container">
+            <p class="intro">
+                <strong>Bilgi Hazinesi ekibi olarak,</strong> sizler için hazırladığımız birbirinden keyifli ders içeriklerine aşağıdaki kartlara tıklayarak ulaşabilirsiniz. İyi eğlenceler!
+            </p>
+            <div class="card-container" id="card-container">
+                <p style="text-align:center; width:100%;">İçerikler yükleniyor...</p>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Bilgi Hazinesi Ekibi - Tüm Hakları Saklıdır.</p>
+        </footer>
+    </div>
+    
+    <script src="bilesenler/menu.js"></script>
+    <script src="bilesenler/float-menu.js"></script>
+
+    <script>
+        // --- AYARLAR ---
+        // BURAYA 1. ADIMDA ALDIĞINIZ CSV LINKINI YAPIŞTIRIN:
+        const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJvWf_kbTptKP-WW2Rx_6cBYqfbuFEN9Wg84VdtU0Ggm6shkKU8ZmAirymh6lhBIWSlzvNGE8_qqSb/pub?gid=0&single=true&output=csv'; 
+
+        // Kategori Tanımları (İkonlar ve Açıklamalar burada sabit, içerik tablodan gelecek)
+        const categoryConfig = {
+            "MT": { 
+                isim: "MATEMATİK", 
+                ikon: "bi-calculator", 
+                aciklama: "Sayılarla oynayın, problemleri çözün ve matematiğin eğlenceli dünyasını keşfedin!" 
+            },
+            "TR": { 
+                isim: "TÜRKÇE", 
+                ikon: "bi-book", 
+                aciklama: "Kelimelerin sihirli dünyasına dalın ve dil becerilerinizi keyifle geliştirin!" 
+            },
+            "FB": { 
+                isim: "FEN BİLİMLERİ", 
+                ikon: "bi-stars", 
+                aciklama: "Doğanın sırlarını ve evrenin harikalarını deneyler ve etkinliklerle öğrenin!" 
+            },
+            "SB": { 
+                isim: "SOSYAL BİLGİLER", 
+                ikon: "bi-globe-americas", 
+                aciklama: "Geçmişe yolculuk yapın, kültürleri tanıyın ve yaşadığınız dünyayı keşfedin!" 
+            },
+            "OYUN": { 
+                isim: "OYUNLAR", 
+                ikon: "bi-joystick", 
+                aciklama: "Eğlenerek öğrenmek için harika oyunlar sizi bekliyor!" 
+            },
+            "BeceriT": { 
+                isim: "BECERİ TEMELLİ", 
+                ikon: "bi-puzzle", 
+                aciklama: "Mantık ve muhakeme becerilerinizi geliştirecek özel sorular." 
+            },
+            "Konu": { 
+                isim: "KONU ANLATIM", 
+                ikon: "bi-easel", 
+                aciklama: "Dersleri pekiştirmek için konu anlatım içerikleri." 
+            },
+            "Kelimeler": { 
+                isim: "KELİME OYUNU", 
+                ikon: "bi-alphabet", 
+                aciklama: "Sözcük dağarcığınızı geliştirecek keyifli aktiviteler." 
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch(GOOGLE_SHEET_URL)
+                .then(response => response.text())
+                .then(csvText => {
+                    const data = parseCSV(csvText);
+                    const groupedData = groupByCategory(data);
+                    buildHomepageContent(groupedData);
+                })
+                .catch(error => {
+                    console.error('Veri yüklenirken hata oluştu:', error);
+                    document.getElementById('card-container').innerHTML = '<p style="color:red; text-align:center;">Veriler yüklenemedi. Lütfen bağlantınızı kontrol edin.</p>';
+                });
+        });
+
+        // CSV Verisini JSON formatına çeviren fonksiyon
+        function parseCSV(csvText) {
+            const rows = csvText.split('\n').map(row => row.trim()).filter(row => row);
+            // Başlık satırını atlıyoruz (Sayfa Adı, URL, Kategori)
+            const data = [];
+            
+            // 1. satırdan (index 1) başlıyoruz çünkü 0. satır başlıktır
+            for (let i = 1; i < rows.length; i++) {
+                // Virgül ile ayırıyoruz. Eğer hücre içinde virgül varsa daha gelişmiş regex gerekir ama basit linkler için bu yeterli.
+                const cols = rows[i].split(',');
+                
+                // Tablo yapına göre:
+                // Sütun 0 (A): Sayfa Adı
+                // Sütun 1 (B): URL Linki
+                // Sütun 2 (C): Kategori Kodu (MT, TR vb.)
+                
+                if (cols.length >= 3) {
+                    data.push({
+                        isim: cols[0].trim(),
+                        url: cols[1].trim(),
+                        kategori: cols[2].trim()
+                    });
+                }
+            }
+            return data;
+        }
+
+        // Verileri kategorilere göre gruplayan fonksiyon
+        function groupByCategory(flatData) {
+            // Önce configdeki sıraya göre boş bir yapı oluşturalım
+            let grouped = {};
+            
+            // Gelen veriyi tarayıp ilgili kategori dizisine atıyoruz
+            flatData.forEach(item => {
+                const kod = item.kategori;
+                // Eğer config'de bu kategori tanımlıysa
+                if (categoryConfig[kod]) {
+                    if (!grouped[kod]) {
+                        grouped[kod] = {
+                            ...categoryConfig[kod], // İsim, ikon, açıklama al
+                            sayfalar: []
+                        };
+                    }
+                    grouped[kod].sayfalar.push({
+                        isim: item.isim,
+                        url: item.url
+                    });
+                }
+            });
+
+            // Nesneyi diziye çeviriyoruz (görüntüleme sırası configdeki sıraya uysun istiyorsan)
+            const resultList = [];
+            Object.keys(categoryConfig).forEach(key => {
+                if (grouped[key]) {
+                    resultList.push(grouped[key]);
+                }
+            });
+            
+            return resultList;
+        }
+
+        function buildHomepageContent(data) {
+            const cardContainer = document.getElementById('card-container');
+            if(!cardContainer) return;
+
+            cardContainer.innerHTML = ""; // "Yükleniyor" yazısını temizle
+
+            data.forEach(kategori => {
+                let cardHtml = `
+                    <div class="card">
+                        <div class="icon"><i class="bi ${kategori.ikon}"></i></div>
+                        <h2>${kategori.isim}</h2>
+                        <p>${kategori.aciklama}</p>
+                        <ul class="card-sub-links">
+                `;
+                kategori.sayfalar.forEach(sayfa => {
+                    cardHtml += `<li><a href="${sayfa.url}">${sayfa.isim}</a></li>`;
+                });
+                cardHtml += '</ul></div>';
+                cardContainer.innerHTML += cardHtml;
+            });
+            
+            setupCardClickEvents();
+        }
+
+        function setupCardClickEvents() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('click', function(event) {
+                    if (event.target.tagName === 'A') { return; }
+                    const subLinks = this.querySelector('.card-sub-links');
+                    if (!subLinks) return;
+                    
+                    const isOpen = subLinks.style.maxHeight && subLinks.style.maxHeight !== "0px";
+                    
+                    document.querySelectorAll('.card-sub-links').forEach(menu => {
+                        menu.style.maxHeight = null;
+                    });
+                    
+                    if (!isOpen) {
+                        subLinks.style.maxHeight = subLinks.scrollHeight + "px";
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
