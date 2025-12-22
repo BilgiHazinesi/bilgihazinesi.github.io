@@ -5,27 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bilgi Hazinesi - Eğitimin Keşif Dünyası</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="stiller/stil.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
-        .desktop-nav {
-            display: none !important;
+        /* GENEL AYARLAR */
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            overflow-x: hidden; 
         }
-        .mobile-nav-toggle {
-            display: block !important;
+
+        .header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700; 
+            font-size: 3.5rem;
+            color: #5d4037;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 300;
+            font-size: 1.2rem;
+            color: #795548;
+        }
+
+        h2, h3, h4, h5, h6 {
+             font-family: 'Poppins', sans-serif;
+             font-weight: 600;
+        }
+
+        /* --- MENÜ (SIDENAV) --- */
+        .sidenav {
+            height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; right: 0;
+            background-color: #fdf6e3; box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            overflow-x: hidden; transition: 0.4s; padding-top: 60px;
+            border-left: 5px solid #8d6e63;
+        }
+        .sidenav .closebtn { position: absolute; top: 10px; right: 20px; font-size: 40px; color: #5d4037; text-decoration: none; cursor: pointer; }
+        
+        /* Akordeon */
+        .accordion {
+            background-color: transparent; color: #5d4037; cursor: pointer; padding: 15px 20px;
+            width: 100%; border: none; text-align: left; outline: none; font-size: 17px;
+            font-weight: 600; font-family: 'Poppins', sans-serif; transition: 0.3s;
+            border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;
+        }
+        .accordion:hover, .active-accordion { background-color: #efebe0; color: #d84315; }
+        .panel { padding: 0; background-color: white; max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; }
+        .panel a { padding: 10px 30px; text-decoration: none; font-size: 15px; color: #666; display: block; transition: 0.2s; border-bottom: 1px dashed #eee; }
+        .panel a:hover { background-color: #f9f9f9; color: #d84315; padding-left: 35px; }
+
+        .menu-open-btn { position: fixed; top: 20px; right: 20px; font-size: 30px; cursor: pointer; color: #5d4037; background: #fff; padding: 5px 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 999; }
+        .menu-open-btn:hover { color: #d84315; }
+
+        @media screen and (max-height: 450px) { .sidenav {padding-top: 15px;} .sidenav a {font-size: 18px;} }
+        
+        @media screen and (max-width: 600px) {
+            .header h1 { font-size: 2.5rem; }
         }
     </style>
 </head>
 <body>
 
-    <a href="https://bilgihazinesi.github.io/" class="home-button" title="Anasayfa'ya Dön"><i class="bi bi-house-heart-fill"></i></a>
-    <div id="menu-container"></div>
-    <div id="float-menu-placeholder"></div>
+    <a href="https://bilgihazinesi.github.io/" class="home-button" title="Anasayfa" style="position:fixed; top:20px; left:20px; z-index:999; font-size:24px; color:#5d4037; background:#fff; padding:5px 10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.2);"><i class="bi bi-house-heart-fill"></i></a>
+
+    <div class="menu-open-btn" onclick="openNav()"><i class="bi bi-list"></i></div>
+
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <div id="dynamic-menu-content"></div>
+    </div>
     
-    <div class="page-wrapper">
+    <div class="page-wrapper" id="main-content">
         <header class="header">
             <h1>Bilgi Hazinesi</h1>
             <p>Öğrenmenin Keşif Dolu Dünyasına Hoş Geldiniz!</p>
@@ -35,51 +90,172 @@
             <p class="intro">
                 <strong>Bilgi Hazinesi ekibi olarak,</strong> sizler için hazırladığımız birbirinden keyifli ders içeriklerine aşağıdaki kartlara tıklayarak ulaşabilirsiniz. İyi eğlenceler!
             </p>
-            <div class="card-container" id="card-container"></div>
+            <div class="card-container" id="card-container">
+                <p style="text-align:center; width:100%;">İçerikler yükleniyor...</p>
+            </div>
         </main>
 
         <footer class="footer">
             <p>&copy; 2025 Bilgi Hazinesi Ekibi - Tüm Hakları Saklıdır.</p>
         </footer>
     </div>
-    
-    <script src="bilesenler/menu.js"></script>
-    <script src="bilesenler/float-menu.js"></script>
 
     <script>
+        // --- AYARLAR ---
+        const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJvWf_kbTptKP-WW2Rx_6cBYqfbuFEN9Wg84VdtU0Ggm6shkKU8ZmAirymh6lhBIWSlzvNGE8_qqSb/pub?gid=0&single=true&output=csv'; 
+
+        // --- GÜVENLİK AYARLARI ---
+        const OZEL_KATEGORI_ADI = "Öğretmen Özel"; // CSV'deki isimle birebir aynı olmalı
+        const GIRIS_SIFRESI = "1453"; // Şifreniz
+
         document.addEventListener('DOMContentLoaded', () => {
-            fetch('sayfalar.json')
-                .then(response => response.json())
-                .then(data => {
-                    buildHomepageContent(data);
+            fetch(GOOGLE_SHEET_URL)
+                .then(response => response.text())
+                .then(csvText => {
+                    const data = parseCSV(csvText);
+                    const groupedData = groupAndAutoConfigure(data); 
+                    
+                    buildHomepageContent(groupedData);
+                    buildSidebarMenu(groupedData);
                 })
                 .catch(error => {
-                    console.error('Anasayfa içeriği yüklenirken hata oluştu:', error);
+                    console.error('Hata:', error);
+                    document.getElementById('card-container').innerHTML = '<p>Veri yüklenemedi.</p>';
                 });
         });
 
+        // --- YENİ EKLENEN ŞİFRE FONKSİYONU ---
+        function checkPassword(event, targetUrl) {
+            event.preventDefault(); // Sayfanın hemen açılmasını engelle
+            
+            var girilen = prompt("🔒 Bu içerik öğretmenlere özeldir.\nLütfen giriş şifresini yazınız:");
+            
+            if (girilen === GIRIS_SIFRESI) {
+                // Şifre doğruysa adrese git
+                window.location.href = targetUrl;
+            } else {
+                // Şifre yanlışsa veya boşsa
+                if (girilen !== null) { 
+                    alert("⛔ Hatalı şifre! Giriş yapılamadı.");
+                }
+            }
+        }
+
+        function parseCSV(csvText) {
+            const rows = csvText.split('\n').map(row => row.trim()).filter(row => row);
+            const data = [];
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].split(',');
+                if (cols.length >= 3) {
+                    data.push({
+                        isim: cols[0].trim(),
+                        url: cols[1].trim(),
+                        kategoriAdi: cols[2].trim() 
+                    });
+                }
+            }
+            return data;
+        }
+
+        function groupAndAutoConfigure(flatData) {
+            let grouped = {};
+            flatData.forEach(item => {
+                const katAdi = item.kategoriAdi; 
+                if (!grouped[katAdi]) {
+                    grouped[katAdi] = {
+                        isim: katAdi,
+                        ikon: getSmartIcon(katAdi), 
+                        aciklama: getSmartDescription(katAdi), 
+                        sayfalar: []
+                    };
+                }
+                grouped[katAdi].sayfalar.push({ isim: item.isim, url: item.url });
+            });
+            return Object.values(grouped);
+        }
+
+        function getSmartIcon(name) {
+            const n = name.toLowerCase();
+            if (n.includes("matematik") || n.includes("işlem")) return "bi-calculator";
+            if (n.includes("türkçe") || n.includes("dil") || n.includes("kelime")) return "bi-book";
+            if (n.includes("fen") || n.includes("bilim")) return "bi-stars";
+            if (n.includes("sosyal") || n.includes("hayat")) return "bi-globe-americas";
+            if (n.includes("oyun")) return "bi-joystick";
+            if (n.includes("beceri") || n.includes("zeka")) return "bi-puzzle";
+            if (n.includes("konu")) return "bi-easel";
+            return "bi-folder-fill"; 
+        }
+
+        function getSmartDescription(name) {
+            const n = name.toLowerCase();
+            if (n.includes("matematik")) return "Sayıların dünyasını keşfet!";
+            if (n.includes("türkçe")) return "Dil becerilerini geliştir.";
+            if (n.includes("fen")) return "Doğayı ve evreni tanı.";
+            if (n.includes("sosyal")) return "Yaşadığımız dünyayı öğren.";
+            if (n.includes("oyun")) return "Eğlenerek öğrenmeye ne dersin?";
+            if (n.includes("beceri")) return "Düşünme becerilerini geliştir.";
+            return `${name} ile ilgili içerikler burada.`; 
+        }
+
+        // --- GÜNCELLENEN KART OLUŞTURMA FONKSİYONU ---
         function buildHomepageContent(data) {
             const cardContainer = document.getElementById('card-container');
             if(!cardContainer) return;
+            cardContainer.innerHTML = ""; 
 
-            // Masaüstü menüsü kaldırıldığı için bu kodlara artık gerek yok.
-            // Sadece kartları oluşturuyoruz.
             data.forEach(kategori => {
                 let cardHtml = `
                     <div class="card">
                         <div class="icon"><i class="bi ${kategori.ikon}"></i></div>
-                        <h2>${kategori.isim}</h2>
+                        <h2>${kategori.isim}</h2> 
                         <p>${kategori.aciklama}</p>
                         <ul class="card-sub-links">
                 `;
+                
                 kategori.sayfalar.forEach(sayfa => {
-                    cardHtml += `<li><a href="${sayfa.url}">${sayfa.isim}</a></li>`;
+                    // KONTROL: Eğer kategori "Öğretmen Özel" ise şifre fonksiyonunu ekle
+                    if (kategori.isim === OZEL_KATEGORI_ADI) {
+                         cardHtml += `<li><a href="#" onclick="checkPassword(event, '${sayfa.url}')">🔒 ${sayfa.isim}</a></li>`;
+                    } else {
+                         // Değilse normal link ver
+                         cardHtml += `<li><a href="${sayfa.url}">${sayfa.isim}</a></li>`;
+                    }
                 });
+
                 cardHtml += '</ul></div>';
                 cardContainer.innerHTML += cardHtml;
             });
-            
             setupCardClickEvents();
+        }
+
+        // --- GÜNCELLENEN MENÜ OLUŞTURMA FONKSİYONU ---
+        function buildSidebarMenu(data) {
+            const menuContainer = document.getElementById('dynamic-menu-content');
+            menuContainer.innerHTML = ""; 
+            menuContainer.innerHTML += `<a href="index.html" style="padding:15px 20px; font-weight:bold; color:#d84315; border-bottom:1px solid #e0e0e0;">ANASAYFA</a>`;
+
+            data.forEach(kategori => {
+                let menuHtml = `
+                    <button class="accordion">
+                        <span><i class="bi ${kategori.ikon}" style="margin-right:10px;"></i> ${kategori.isim}</span> 
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="panel">
+                `;
+                
+                kategori.sayfalar.forEach(sayfa => {
+                    // KONTROL: Yan menüde de aynısını yapıyoruz
+                    if (kategori.isim === OZEL_KATEGORI_ADI) {
+                        menuHtml += `<a href="#" onclick="checkPassword(event, '${sayfa.url}')"><i class="bi bi-lock-fill"></i> ${sayfa.isim}</a>`;
+                    } else {
+                        menuHtml += `<a href="${sayfa.url}"><i class="bi bi-caret-right-fill"></i> ${sayfa.isim}</a>`;
+                    }
+                });
+
+                menuHtml += `</div>`;
+                menuContainer.innerHTML += menuHtml;
+            });
+            setupAccordionEvents();
         }
 
         function setupCardClickEvents() {
@@ -88,19 +264,35 @@
                     if (event.target.tagName === 'A') { return; }
                     const subLinks = this.querySelector('.card-sub-links');
                     if (!subLinks) return;
-                    
                     const isOpen = subLinks.style.maxHeight && subLinks.style.maxHeight !== "0px";
-                    
-                    document.querySelectorAll('.card-sub-links').forEach(menu => {
-                        menu.style.maxHeight = null;
-                    });
-                    
-                    if (!isOpen) {
-                        subLinks.style.maxHeight = subLinks.scrollHeight + "px";
-                    }
+                    document.querySelectorAll('.card-sub-links').forEach(menu => { menu.style.maxHeight = null; });
+                    if (!isOpen) { subLinks.style.maxHeight = subLinks.scrollHeight + "px"; }
                 });
             });
         }
+
+        function setupAccordionEvents() {
+            var acc = document.getElementsByClassName("accordion");
+            for (var i = 0; i < acc.length; i++) {
+                acc[i].addEventListener("click", function() {
+                    this.classList.toggle("active-accordion");
+                    var panel = this.nextElementSibling;
+                    var icon = this.querySelector(".bi-chevron-down");
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                        if(icon) icon.style.transform = "rotate(0deg)";
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + "px";
+                        if(icon) icon.style.transform = "rotate(180deg)";
+                    } 
+                });
+            }
+        }
+        function openNav() {
+            if (window.innerWidth < 600) { document.getElementById("mySidenav").style.width = "100%"; } 
+            else { document.getElementById("mySidenav").style.width = "320px"; }
+        }
+        function closeNav() { document.getElementById("mySidenav").style.width = "0"; }
     </script>
 </body>
 </html>
