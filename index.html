@@ -17,17 +17,15 @@
             overflow-x: hidden; 
         }
 
-        /* --- SADECE BURASI DEĞİŞTİ --- */
         .header h1 {
-            font-family: 'Poppins', sans-serif; /* Artık el yazısı değil, diğer başlıklarla aynı */
+            font-family: 'Poppins', sans-serif;
             font-weight: 700; 
             font-size: 3.5rem;
             color: #5d4037;
             margin-bottom: 10px;
-            letter-spacing: -1px; /* Modern ve tok durması için */
+            letter-spacing: -1px;
         }
 
-        /* Alt slogan */
         .header p {
             font-family: 'Poppins', sans-serif;
             font-weight: 300;
@@ -35,7 +33,6 @@
             color: #795548;
         }
 
-        /* DİĞER BAŞLIKLARA DOKUNULMADI (H2, H3...) */
         h2, h3, h4, h5, h6 {
              font-family: 'Poppins', sans-serif;
              font-weight: 600;
@@ -105,8 +102,11 @@
 
     <script>
         // --- AYARLAR ---
-        // CSV LINKINI BURAYA YAPIŞTIRMAYI UNUTMA
         const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJvWf_kbTptKP-WW2Rx_6cBYqfbuFEN9Wg84VdtU0Ggm6shkKU8ZmAirymh6lhBIWSlzvNGE8_qqSb/pub?gid=0&single=true&output=csv'; 
+
+        // --- GÜVENLİK AYARLARI ---
+        const OZEL_KATEGORI_ADI = "Öğretmen Özel"; // CSV'deki isimle birebir aynı olmalı
+        const GIRIS_SIFRESI = "1453"; // Şifreniz
 
         document.addEventListener('DOMContentLoaded', () => {
             fetch(GOOGLE_SHEET_URL)
@@ -123,6 +123,23 @@
                     document.getElementById('card-container').innerHTML = '<p>Veri yüklenemedi.</p>';
                 });
         });
+
+        // --- YENİ EKLENEN ŞİFRE FONKSİYONU ---
+        function checkPassword(event, targetUrl) {
+            event.preventDefault(); // Sayfanın hemen açılmasını engelle
+            
+            var girilen = prompt("🔒 Bu içerik öğretmenlere özeldir.\nLütfen giriş şifresini yazınız:");
+            
+            if (girilen === GIRIS_SIFRESI) {
+                // Şifre doğruysa adrese git
+                window.location.href = targetUrl;
+            } else {
+                // Şifre yanlışsa veya boşsa
+                if (girilen !== null) { 
+                    alert("⛔ Hatalı şifre! Giriş yapılamadı.");
+                }
+            }
+        }
 
         function parseCSV(csvText) {
             const rows = csvText.split('\n').map(row => row.trim()).filter(row => row);
@@ -180,6 +197,7 @@
             return `${name} ile ilgili içerikler burada.`; 
         }
 
+        // --- GÜNCELLENEN KART OLUŞTURMA FONKSİYONU ---
         function buildHomepageContent(data) {
             const cardContainer = document.getElementById('card-container');
             if(!cardContainer) return;
@@ -193,15 +211,24 @@
                         <p>${kategori.aciklama}</p>
                         <ul class="card-sub-links">
                 `;
+                
                 kategori.sayfalar.forEach(sayfa => {
-                    cardHtml += `<li><a href="${sayfa.url}">${sayfa.isim}</a></li>`;
+                    // KONTROL: Eğer kategori "Öğretmen Özel" ise şifre fonksiyonunu ekle
+                    if (kategori.isim === OZEL_KATEGORI_ADI) {
+                         cardHtml += `<li><a href="#" onclick="checkPassword(event, '${sayfa.url}')">🔒 ${sayfa.isim}</a></li>`;
+                    } else {
+                         // Değilse normal link ver
+                         cardHtml += `<li><a href="${sayfa.url}">${sayfa.isim}</a></li>`;
+                    }
                 });
+
                 cardHtml += '</ul></div>';
                 cardContainer.innerHTML += cardHtml;
             });
             setupCardClickEvents();
         }
 
+        // --- GÜNCELLENEN MENÜ OLUŞTURMA FONKSİYONU ---
         function buildSidebarMenu(data) {
             const menuContainer = document.getElementById('dynamic-menu-content');
             menuContainer.innerHTML = ""; 
@@ -215,9 +242,16 @@
                     </button>
                     <div class="panel">
                 `;
+                
                 kategori.sayfalar.forEach(sayfa => {
-                    menuHtml += `<a href="${sayfa.url}"><i class="bi bi-caret-right-fill"></i> ${sayfa.isim}</a>`;
+                    // KONTROL: Yan menüde de aynısını yapıyoruz
+                    if (kategori.isim === OZEL_KATEGORI_ADI) {
+                        menuHtml += `<a href="#" onclick="checkPassword(event, '${sayfa.url}')"><i class="bi bi-lock-fill"></i> ${sayfa.isim}</a>`;
+                    } else {
+                        menuHtml += `<a href="${sayfa.url}"><i class="bi bi-caret-right-fill"></i> ${sayfa.isim}</a>`;
+                    }
                 });
+
                 menuHtml += `</div>`;
                 menuContainer.innerHTML += menuHtml;
             });
