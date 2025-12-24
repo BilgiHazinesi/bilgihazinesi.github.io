@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hafıza Oyunu: Hızlı Oluşturucu</title>
+    <title>Hafıza Oyunu: Otomatik Boyutlandırma</title>
     <style>
         /* --- 1. GENEL AYARLAR --- */
         * { box-sizing: border-box; }
@@ -16,13 +16,13 @@
             display: flex; flex-direction: row; 
         }
 
-        /* --- 2. YAN PANELLER (DARALTILDI) --- */
+        /* --- 2. YAN PANELLER --- */
         .side-panel {
-            flex: 0 0 110px; /* 160px'den 110px'e düşürüldü */
+            flex: 0 0 110px; 
             background-color: #f9f9f9;
             display: flex; flex-direction: column;
             align-items: center; justify-content: flex-start;
-            padding: 10px 5px; /* Boşluklar azaltıldı */
+            padding: 10px 5px;
             border-right: 1px solid #eee; border-left: 1px solid #eee;
             z-index: 10; overflow-y: auto; position: relative;
         }
@@ -55,19 +55,18 @@
         .btn-orange { background-color: #ff9f43; }
         .btn-purple { background-color: #5f27cd; }
         .btn-red { background-color: #ff6b6b; }
-        .btn-teal { background-color: #00cec9; } /* Yeni buton rengi */
+        .btn-teal { background-color: #00cec9; }
 
-        /* --- 3. OYUN ALANI (GENİŞLETİLDİ) --- */
+        /* --- 3. OYUN ALANI --- */
         #main-stage {
             flex: 1; display: flex; align-items: center; justify-content: center;
-            padding: 5px; /* Boşluk azaltıldı */
-            position: relative; background-color: white; overflow: hidden;
+            padding: 5px; position: relative; background-color: white; overflow: hidden;
         }
 
         #game-board { 
             display: grid; gap: 8px; 
             width: 100%; height: 100%;
-            max-width: 100%; max-height: 95vh; /* Ekranı tam kullan */
+            max-width: 100%; max-height: 95vh; 
             align-content: center; justify-content: center;
         }
 
@@ -111,8 +110,8 @@
         }
         #mobile-settings-btn { display: none; } 
 
-        /* AYARLAR MODALI */
-        #settings-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(44, 62, 80, 0.95); color: white; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; z-index: 10000; overflow-y: auto; display: none;}
+        /* MODALLAR */
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(44, 62, 80, 0.95); color: white; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; z-index: 10000; overflow-y: auto; display: none;}
         .setting-section { width: 95%; max-width: 700px; background: rgba(255,255,255,0.1); padding: 15px; margin-bottom: 20px; border-radius: 10px; }
         .setting-row { margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .setting-row label { width: 120px; font-weight: bold; }
@@ -122,6 +121,18 @@
         .input-group { display: flex; flex-direction: column; flex: 1; gap: 2px; }
         .drop-zone { border: 2px dashed #bdc3c7; padding: 5px; text-align: center; cursor: pointer; border-radius: 5px; background: rgba(255,255,255,0.05); font-size: 0.8rem;}
         .preview-img { max-height: 30px; display:none; margin: 2px auto; border:1px solid white; }
+
+        /* WINNER MODAL */
+        #winner-modal { justify-content: center; background-color: rgba(0,0,0,0.85); }
+        .winner-content { text-align: center; animation: popIn 0.5s ease-out; }
+        .trophy-icon { font-size: 8rem; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 20px gold); animation: float 2s infinite ease-in-out;}
+        .winner-title { font-size: 2rem; color: #f1c40f; margin-bottom: 10px; font-family: 'Comic Sans MS', cursive;}
+        .winner-name { font-size: 3rem; font-weight: bold; margin-bottom: 20px; color: white; text-shadow: 2px 2px 0 #000; }
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .confetti { position: absolute; width: 10px; height: 10px; background-color: #f00; animation: fall linear forwards; z-index: 99999; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
     </style>
 </head>
 <body>
@@ -155,15 +166,14 @@
 
     <button id="mobile-settings-btn" onclick="openSettings()">⚙️</button>
 
-    <div id="settings-modal">
-        <h2>Oyun Oluşturucu</h2>
+    <div id="settings-modal" class="modal-overlay">
+        <h2>Oyun Ayarları</h2>
         <div class="setting-section">
-            
             <div style="background: rgba(0, 206, 201, 0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(0, 206, 201, 0.5);">
-                <h3 style="margin:0 0 10px 0; font-size:1rem;">🚀 Hızlı Oluşturucu</h3>
-                <div style="font-size:0.85rem; margin-bottom:5px;">Çoklu resim seçin, kutular otomatik dolsun!</div>
+                <h3 style="margin:0 0 10px 0; font-size:1rem;">🚀 Hızlı Resim Yükle</h3>
+                <div style="font-size:0.8rem; margin-bottom:5px;">Resimleri seçin, satır/sütun sayısını sistem ayarlasın!</div>
                 <label class="btn btn-teal" style="cursor: pointer; text-align:center; display:block;">
-                    📸 Toplu Görsel Seç (Otomatik Dağıt)
+                    📸 Toplu Görsel Seç
                     <input type="file" id="batch-img-input" accept="image/*" multiple style="display: none;" onchange="handleBatchUpload(this)">
                 </label>
             </div>
@@ -203,7 +213,7 @@
             <div style="display: flex; gap: 10px; justify-content: center; flex-wrap:wrap;">
                 <button class="btn btn-blue" style="flex:1;" onclick="saveAndStart()">BAŞLAT</button>
                 <label class="btn btn-green" style="flex:1; cursor: pointer; text-align:center;">
-                    ESKİ OYUNU YÜKLE
+                    DOSYA YÜKLE
                     <input type="file" id="import-file" accept=".html,.json" style="display: none;" onchange="importGame(this)">
                 </label>
             </div>
@@ -213,6 +223,16 @@
             </div>
         </div>
     </div>
+
+    <div id="winner-modal" class="modal-overlay">
+        <div class="winner-content">
+            <span class="trophy-icon" id="winner-icon">🏆</span>
+            <div class="winner-title" id="winner-title">TEBRİKLER!</div>
+            <div class="winner-name" id="winner-text">Grup 1 Kazandı</div>
+            <button class="btn btn-orange" style="font-size: 1.2rem; padding: 15px 30px;" onclick="closeWinnerModal()">Yeni Oyun</button>
+        </div>
+    </div>
+
     <canvas id="compress-canvas" style="display:none;"></canvas>
 
     <script>
@@ -224,50 +244,46 @@
             else { document.getElementById('global-type-select').value = 'text-text'; createDefaultDeck(); initGame(); }
         };
 
-        // --- TOPLU GÖRSEL İŞLEME (SİHİR BURADA) ---
+        // --- TOPLU GÖRSEL YÜKLEME VE OTOMATİK BOYUTLANDIRMA ---
         async function handleBatchUpload(input) {
-            const files = Array.from(input.files);
-            if (files.length === 0) return;
-
-            // 1. Önce yükleniyor mesajı verilebilir (opsiyonel)
-            
-            // 2. Tüm resimleri işle ve base64 al
+            const files = Array.from(input.files); if (files.length === 0) return;
             const processedImages = await Promise.all(files.map(file => processFileToBase64(file)));
             
-            // 3. Mevcut ızgara boyutunu al
-            const r = parseInt(document.getElementById('rows-input').value);
-            const c = parseInt(document.getElementById('cols-input').value);
-            const totalPairs = Math.floor((r * c) / 2);
-
-            // 4. Inputları doldurma mantığı
-            // Resimleri döngüsel olarak kullanacağız
-            const container = document.getElementById('data-inputs');
-            const dataPairs = container.querySelectorAll('.data-pair');
-
-            // Eğer yeterli input yoksa (ki generateInputs çalıştıysa vardır), yeniden oluştur
-            if (dataPairs.length !== totalPairs) { generateInputs(false); }
-
-            const updatedPairs = document.getElementById('data-inputs').querySelectorAll('.data-pair');
+            // Otomatik Boyut Hesaplama
+            const totalCardsNeeded = files.length * 2; 
+            let bestR = 1, bestC = totalCardsNeeded;
+            // Kareye en yakın çarpanları bul
+            for (let r = Math.floor(Math.sqrt(totalCardsNeeded)); r >= 1; r--) {
+                if (totalCardsNeeded % r === 0) {
+                    bestR = r; bestC = totalCardsNeeded / r; break;
+                }
+            }
             
-            // Şablonu Resim-Resim yap
+            // UI Güncelle
+            document.getElementById('rows-input').value = bestR;
+            document.getElementById('cols-input').value = bestC;
+            
+            // Inputları oluştur
+            const container = document.getElementById('data-inputs');
+            generateInputs(false); // Eski veriyi sil ve yeni boyutta aç
+            
+            const updatedPairs = container.querySelectorAll('.data-pair');
+            
             document.getElementById('global-type-select').value = 'img-img-local';
             applyGlobalType('img-img-local');
 
             updatedPairs.forEach((pair, index) => {
-                // Hangi resmi kullanacağız? (Modülo işlemi ile döngüsel)
-                const imgData = processedImages[index % processedImages.length];
-                
-                // Sol ve Sağ inputlara resmi bas
-                // drop-zone içindeki hidden input ve preview img'yi bul
-                const leftGroup = pair.querySelectorAll('.input-group')[0];
-                const rightGroup = pair.querySelectorAll('.input-group')[1];
-
-                updateInputWithImage(leftGroup, imgData);
-                updateInputWithImage(rightGroup, imgData);
+                // Görselleri sırayla dağıt
+                if(index < processedImages.length) {
+                    const imgData = processedImages[index];
+                    const leftGroup = pair.querySelectorAll('.input-group')[0];
+                    const rightGroup = pair.querySelectorAll('.input-group')[1];
+                    updateInputWithImage(leftGroup, imgData);
+                    updateInputWithImage(rightGroup, imgData);
+                }
             });
-
-            alert(`${files.length} resim yüklendi ve ${totalPairs} çift oluşturuldu!`);
-            input.value = ''; // Reset
+            alert(`${files.length} görsel yüklendi. Oyun ${bestR}x${bestC} olarak ayarlandı!`);
+            input.value = '';
         }
 
         function processFileToBase64(file) {
@@ -276,72 +292,78 @@
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        const canvas = document.getElementById('compress-canvas');
-                        const ctx = canvas.getContext('2d');
-                        const max = 300; let w = img.width, h = img.height;
-                        if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
-                        canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                        const canvas = document.getElementById('compress-canvas'); const ctx = canvas.getContext('2d');
+                        const max = 300; let w = img.width, h = img.height; if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
+                        canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(file);
             });
         }
-
         function updateInputWithImage(group, base64Data) {
-            const hidden = group.querySelector('.hidden-data');
-            const preview = group.querySelector('.preview-img');
-            const text = group.querySelector('.drop-text');
-            
-            hidden.value = base64Data;
-            preview.src = base64Data;
-            preview.style.display = 'block';
-            text.textContent = 'Resim Hazır';
+            const hidden = group.querySelector('.hidden-data'); const preview = group.querySelector('.preview-img'); const text = group.querySelector('.drop-text');
+            hidden.value = base64Data; preview.src = base64Data; preview.style.display = 'block'; text.textContent = 'Resim Hazır';
         }
 
-        // --- STANDART FONKSİYONLAR ---
+        // --- KAZANAN VE ANİMASYON ---
+        function showWinner(winnerName, isDraw) {
+            const modal = document.getElementById('winner-modal');
+            const icon = document.getElementById('winner-icon');
+            const title = document.getElementById('winner-title');
+            const text = document.getElementById('winner-text');
+            modal.style.display = 'flex';
+            if (isDraw) { icon.textContent = "🤝"; title.textContent = "DOSTLUK KAZANDI!"; text.textContent = "Berabere!"; } 
+            else { icon.textContent = "🏆"; title.textContent = "TEBRİKLER!"; text.textContent = winnerName + " KAZANDI!"; }
+            startConfetti();
+        }
+        function closeWinnerModal() {
+            document.getElementById('winner-modal').style.display = 'none';
+            document.querySelectorAll('.confetti').forEach(e => e.remove());
+            initGame(); 
+        }
+        function startConfetti() {
+            const colors = ['#e74c3c', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6'];
+            for(let i=0; i<100; i++) {
+                const conf = document.createElement('div'); conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw'; conf.style.top = -10 + 'px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(conf);
+            }
+        }
         function flyCardsToTeam(elements, teamId) {
             const targetBox = document.getElementById(teamId === 1 ? 'team1-box' : 'team2-box');
             if(!targetBox) return;
             const targetRect = targetBox.getBoundingClientRect();
             elements.forEach(el => {
-                const rect = el.getBoundingClientRect();
-                el.classList.add('invisible');
-                const clone = el.cloneNode(true);
-                clone.classList.remove('invisible'); clone.classList.add('flying-card');
-                clone.style.width = rect.width + 'px'; clone.style.height = rect.height + 'px';
-                clone.style.left = rect.left + 'px'; clone.style.top = rect.top + 'px';
+                const rect = el.getBoundingClientRect(); el.classList.add('invisible');
+                const clone = el.cloneNode(true); clone.classList.remove('invisible'); clone.classList.add('flying-card');
+                clone.style.width = rect.width + 'px'; clone.style.height = rect.height + 'px'; clone.style.left = rect.left + 'px'; clone.style.top = rect.top + 'px';
                 document.body.appendChild(clone);
                 requestAnimationFrame(() => {
                     const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
                     const targetY = targetRect.top + (targetRect.height / 2) - (rect.height / 2);
-                    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(0.2) rotate(360deg)`;
-                    clone.style.opacity = '0';
+                    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(0.2) rotate(360deg)`; clone.style.opacity = '0';
                 });
                 setTimeout(() => { if(clone.parentNode) clone.parentNode.removeChild(clone); }, 800);
             });
         }
 
+        // --- STANDART FONKSİYONLAR ---
         function createDefaultDeck() {
             const r = 3, c = 4; let deck = [];
             for(let i=0; i<(r*c)/2; i++) { deck.push({ id: i*2, matchId: i, type: 'text', content: (i+1).toString() }); deck.push({ id: i*2+1, matchId: i, type: 'text', content: (i+1).toString() }); }
             gameState.cards = deck; gameState.rows = r; gameState.cols = c; gameState.teams = 1; gameState.teamNames = {1:"Grup 1", 2:"Grup 2"};
-            document.getElementById('rows-input').value = r; document.getElementById('cols-input').value = c;
-            generateInputs(false);
+            document.getElementById('rows-input').value = r; document.getElementById('cols-input').value = c; generateInputs(false);
         }
-
         function renderResponsiveGrid() {
             if (!gameState.activeDeck || gameState.activeDeck.length === 0) return;
-            const board = document.getElementById('game-board');
-            const totalCards = gameState.activeDeck.length;
-            const containerW = board.clientWidth; const containerH = board.clientHeight;
-            const screenRatio = containerW / containerH;
+            const board = document.getElementById('game-board'); const totalCards = gameState.activeDeck.length;
+            const containerW = board.clientWidth; const containerH = board.clientHeight; const screenRatio = containerW / containerH;
             let bestRows = 1, bestCols = totalCards, minDiff = 9999;
             for (let r = 1; r <= Math.sqrt(totalCards); r++) {
                 if (totalCards % r === 0) {
-                    let c = totalCards / r;
-                    let ratio1 = c / r; if (Math.abs(screenRatio - ratio1) < minDiff) { minDiff = Math.abs(screenRatio - ratio1); bestRows = r; bestCols = c; }
+                    let c = totalCards / r; let ratio1 = c / r; 
+                    if (Math.abs(screenRatio - ratio1) < minDiff) { minDiff = Math.abs(screenRatio - ratio1); bestRows = r; bestCols = c; }
                     let ratio2 = r / c; if (Math.abs(screenRatio - ratio2) < minDiff) { minDiff = Math.abs(screenRatio - ratio2); bestRows = c; bestCols = r; }
                 }
             }
@@ -351,13 +373,11 @@
             const coordSize = containerW < 600 ? "20px" : "30px";
             board.style.gridTemplateColumns = `${coordSize} repeat(${bestCols}, 1fr)`;
             board.style.gridTemplateRows = `${coordSize} repeat(${bestRows}, 1fr)`;
-            board.appendChild(createCoordHeader('')); 
-            for(let j=0; j<bestCols; j++) board.appendChild(createCoordHeader(j+1));
+            board.appendChild(createCoordHeader('')); for(let j=0; j<bestCols; j++) board.appendChild(createCoordHeader(j+1));
             for(let i=0; i<bestRows; i++) {
                 board.appendChild(createCoordHeader(String.fromCharCode(65 + i)));
                 for(let j=0; j<bestCols; j++) {
-                    const cardIndex = (i * bestCols) + j;
-                    const card = gameState.activeDeck[cardIndex];
+                    const cardIndex = (i * bestCols) + j; const card = gameState.activeDeck[cardIndex];
                     if (card) {
                         const el = document.createElement('div'); el.className = 'card';
                         if(card.isMatched) el.classList.add('invisible'); else if(card.isFlipped) el.classList.add('flipped');
@@ -365,8 +385,7 @@
                         if (card.type.includes('image') || (card.content && card.content.startsWith('data:'))) { contentHtml = `<img src="${card.content}" alt="Görsel">`; } 
                         else { let text = card.content || "?"; contentHtml = `<span>${text}</span>`; }
                         el.innerHTML = `<div class="card-inner"><div class="card-front"></div><div class="card-back">${contentHtml}</div></div>`;
-                        el.onclick = () => handleCardClick(cardIndex, el);
-                        board.appendChild(el);
+                        el.onclick = () => handleCardClick(cardIndex, el); board.appendChild(el);
                     }
                 }
             }
@@ -378,12 +397,11 @@
             gameState.scores = {1:0, 2:0}; gameState.isLocked = false; gameState.flippedCards = [];
             let tempDeck = JSON.parse(JSON.stringify(gameState.cards));
             tempDeck.forEach(c => { c.isFlipped = false; c.isMatched = false; });
-            tempDeck.sort(() => 0.5 - Math.random());
-            gameState.activeDeck = tempDeck; renderResponsiveGrid();
+            tempDeck.sort(() => 0.5 - Math.random()); gameState.activeDeck = tempDeck; renderResponsiveGrid();
         }
         function handleCardClick(index, element) {
             const card = gameState.activeDeck[index];
-            if (gameState.teams === 2 && gameState.currentTurn === 0) { alert("Lütfen önce zarı veya takımı seçin!"); return; }
+            if (gameState.teams === 2 && gameState.currentTurn === 0) { alert("Lütfen önce kuraya veya takım kutusuna tıklayın!"); return; }
             if (gameState.isLocked || card.isFlipped || card.isMatched) return;
             card.isFlipped = true; element.classList.add('flipped');
             gameState.flippedCards.push({index: index, el: element, data: card});
@@ -409,7 +427,15 @@
         function resetTurn() {
             gameState.flippedCards = []; gameState.isLocked = false;
             const allMatched = gameState.activeDeck.every(c => c.isMatched);
-            if (allMatched) { const w = gameState.scores[1] > gameState.scores[2] ? gameState.teamNames[1] : (gameState.scores[2] > gameState.scores[1] ? gameState.teamNames[2] : "Dostluk"); setTimeout(() => alert(gameState.teams == 1 ? "Oyun Bitti!" : `Kazanan: ${w}!`), 500); }
+            if (allMatched) {
+                setTimeout(() => {
+                    const s1 = gameState.scores[1]; const s2 = gameState.scores[2];
+                    if(gameState.teams===1) showWinner("ŞAMPİYON", false);
+                    else if(s1 > s2) showWinner(gameState.teamNames[1], false);
+                    else if(s2 > s1) showWinner(gameState.teamNames[2], false);
+                    else showWinner("", true);
+                }, 1500);
+            }
         }
         function updateScoreUI() {
             const box1 = document.getElementById('team1-box'), box2 = document.getElementById('team2-box');
@@ -428,7 +454,6 @@
         function manualSetTurn(id) { if(gameState.teams===2){ gameState.currentTurn=id; updateScoreUI(); }}
         function pickRandomTurn() { if(gameState.teams!=2) return; const b = document.getElementById('turn-randomizer'); b.classList.add('spinning'); setTimeout(()=>{ b.classList.remove('spinning'); gameState.currentTurn = Math.random()<0.5?1:2; updateScoreUI(); }, 600); }
         function toggleTeamNameInputs() { const val = document.getElementById('team-count').value; const row = document.getElementById('team-names-row'); row.style.display = val=="2"?'flex':'none'; }
-        
         function generateInputs(keepData = true) {
             const r = parseInt(document.getElementById('rows-input').value); const c = parseInt(document.getElementById('cols-input').value);
             if(!r || !c || r < 2 || c < 2) return;
@@ -523,7 +548,7 @@
             let json = JSON.stringify({ rows: gameState.rows, cols: gameState.cols, teams: gameState.teams, cards: gameState.cards, teamNames: gameState.teamNames, currentTurn:0, scores:{1:0,2:0}, isLocked:false, flippedCards:[] });
             html = html.replace(/let gameState = \{.*?\};/s, `let gameState = ${json};`);
             const blob = new Blob([html], {type:'text/html'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Hafiza_Oyunu_v21.html'; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Hafiza_Oyunu_v23.html'; a.click();
         }
         function restartGame() { if(confirm("Yeniden?")) initGame(); }
         function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
