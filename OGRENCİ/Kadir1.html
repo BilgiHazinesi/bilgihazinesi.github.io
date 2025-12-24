@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akıllı Bölme Tahmini - Gelişmiş</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #ecf0f1;
+            --accent: #e67e22;
+            --success: #27ae60;
+            --text: #2c3e50;
+            --bg-color: #dff9fb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+            position: relative;
+        }
+
+        .settings {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+
+        select {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+            background: #f8f9fa;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+        }
+        
+        select:focus {
+            border-color: var(--primary);
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            margin-top: 25px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            border: 2px solid #bdc3c7;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+            letter-spacing: 1px;
+            white-space: nowrap; /* Sayılar alt satıra kaymasın */
+        }
+
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        input[type="number"] {
+            padding: 15px;
+            font-size: 1.5rem;
+            width: 160px;
+            border: 3px solid #bdc3c7;
+            border-radius: 12px;
+            text-align: center;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-check {
+            background-color: var(--primary);
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+        .btn-check:hover { background-color: #357abd; }
+
+        .btn-new {
+            background-color: #95a5a6;
+            color: white;
+            flex: 1;
+            min-width: 120px;
+        }
+        .btn-new:hover { background-color: #7f8c8d; }
+
+        /* Sonuç Alanı Stilleri */
+        .result-card {
+            margin-top: 25px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #eee;
+            display: none;
+            animation: slideDown 0.4s ease-out;
+            text-align: left;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            background: var(--secondary);
+            padding: 12px 20px;
+            font-weight: bold;
+            color: var(--text);
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .result-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .row:last-child { border-bottom: none; }
+
+        .row span:first-child { color: #7f8c8d; font-size: 0.95rem; }
+        .row span:last-child { font-weight: bold; font-size: 1.2rem; color: var(--text); }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .hint-text {
+            font-size: 0.8rem;
+            color: #999;
+            font-style: italic;
+            display: block;
+            margin-top: 2px;
+        }
+        
+        /* 4 basamaklı sayılar için font ayarı */
+        @media (max-width: 500px) {
+            .question-box { font-size: 2rem; }
+            h1 { font-size: 1.5rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="settings">
+            <select id="difficultyLevel" onchange="newQuestion()">
+                <option value="1">Seviye 1 (2 Bas. ÷ 1)</option>
+                <option value="2">Seviye 2 (3 Bas. ÷ 1)</option>
+                <option value="3">Seviye 3 (3 Bas. ÷ 2)</option>
+                <option value="4" selected>Seviye 4 (4 Bas. ÷ 2)</option>
+            </select>
+        </div>
+
+        <h1>Bölme Tahmini</h1>
+        <p class="subtitle">İşlemi yapmadan önce sence sonuç kaç?</p>
+
+        <div class="question-box" id="questionDisplay">
+            ...
+        </div>
+
+        <div class="input-area">
+            <input type="number" id="userGuess" placeholder="Tahmin" autocomplete="off">
+            <div class="btn-group">
+                <button class="btn-check" onclick="checkAnswer()" id="btnCheck">KONTROL ET</button>
+                <button class="btn-new" onclick="newQuestion()" id="btnNew">YENİ SORU</button>
+            </div>
+        </div>
+
+        <div class="result-card" id="resultCard">
+            <div class="result-header">Sonuçlar & Karşılaştırma</div>
+            <div class="result-body">
+                
+                <div class="row">
+                    <span>Senin Tahminin</span>
+                    <span id="resUserGuess">-</span>
+                </div>
+
+                <div class="row">
+                    <span>Gerçek Sonuç</span>
+                    <div style="text-align: right;">
+                        <span id="resRealResult">-</span>
+                        <span class="hint-text" id="resRemainder"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <span>Yuvarlayarak Hesap (Sistem)</span>
+                    <div style="text-align: right;">
+                        <span id="resEstResult" style="color: var(--accent);">-</span>
+                        <span class="hint-text">Bölünen en yakın yüzlüğe,<br>bölen en yakın onluğa yuvarlandı</span>
+                    </div>
+                </div>
+
+                <div id="feedbackBox" class="feedback"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dividend, divisor;
+
+        // Onluğa Yuvarlama
+        function roundToTen(num) {
+            return Math.round(num / 10) * 10;
+        }
+        
+        // Yüzlüğe Yuvarlama (Büyük sayılar için)
+        function roundToHundred(num) {
+            return Math.round(num / 100) * 100;
+        }
+
+        function newQuestion() {
+            // UI Temizliği
+            document.getElementById('userGuess').value = '';
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('btnCheck').disabled = false;
+            document.getElementById('userGuess').focus();
+
+            const level = document.getElementById('difficultyLevel').value;
+
+            if (level === "1") {
+                // 2 Basamaklı / 1 Basamaklı (Örn: 85 / 5)
+                dividend = Math.floor(Math.random() * 90) + 10;
+                divisor = Math.floor(Math.random() * 8) + 2; 
+            } else if (level === "2") {
+                // 3 Basamaklı / 1 Basamaklı (Örn: 450 / 6)
+                dividend = Math.floor(Math.random() * 900) + 100;
+                divisor = Math.floor(Math.random() * 8) + 2; 
+            } else if (level === "3") {
+                // 3 Basamaklı / 2 Basamaklı (Örn: 450 / 25)
+                dividend = Math.floor(Math.random() * 900) + 100;
+                divisor = Math.floor(Math.random() * 90) + 10;
+            } else {
+                // 4 Basamaklı / 2 Basamaklı (Örn: 4500 / 25) - YENİ
+                dividend = Math.floor(Math.random() * 9000) + 1000;
+                divisor = Math.floor(Math.random() * 90) + 10;
+            }
+
+            // Görselleştir
+            document.getElementById('questionDisplay').innerHTML = `${dividend} ÷ ${divisor}`;
+        }
+
+        function checkAnswer() {
+            const inputVal = document.getElementById('userGuess').value;
+            
+            if (inputVal === '') {
+                alert("Lütfen bir tahmin gir!");
+                return;
+            }
+
+            const userGuess = parseInt(inputVal);
+            const level = document.getElementById('difficultyLevel').value;
+
+            // 1. Gerçek Hesaplama
+            const realQuotient = Math.floor(dividend / divisor);
+            const remainder = dividend % divisor;
+
+            // 2. Tahmin Hesaplama (Yuvarlama Mantığı)
+            let roundedDividend, roundedDivisor, systemEstimate;
+
+            // Mantık: 4 basamaklılarda bölüneni yüzlüğe, diğerlerinde onluğa yuvarlamak daha kolay tahmin sağlar.
+            if (level === "4") {
+                roundedDividend = roundToHundred(dividend);
+                roundedDivisor = roundToTen(divisor);
+            } else {
+                roundedDividend = roundToTen(dividend);
+                roundedDivisor = divisor >= 10 ? roundToTen(divisor) : divisor;
+            }
+
+            // Sıfıra bölme önlemi
+            if (roundedDivisor === 0) roundedDivisor = 10;
+
+            systemEstimate = Math.round(roundedDividend / roundedDivisor);
+
+            // Ekrana Basma
+            document.getElementById('resUserGuess').textContent = userGuess;
+            document.getElementById('resRealResult').textContent = realQuotient;
+            document.getElementById('resRemainder').textContent = `(Kalan: ${remainder})`;
+            
+            document.getElementById('resEstResult').textContent = `~${systemEstimate}`;
+            
+            // Geri Bildirim
+            const feedbackEl = document.getElementById('feedbackBox');
+            
+            // Hata payı yüzdesi (sayılar büyüdükçe fark artabilir, bu yüzden oran da önemli olabilir ama basit tutalım)
+            const diff = Math.abs(userGuess - realQuotient);
+            let limitExcellent = 3;
+            let limitGood = 10;
+            
+            // Seviye 4 için toleransı biraz artıralım
+            if (level === "4") {
+                limitExcellent = 10; // 4 basamaklıda 10 farka kadar mükemmel say
+                limitGood = 25;
+            }
+
+            if (diff <= limitExcellent) {
+                feedbackEl.textContent = "TEBRİKLER! TAM İSABET! 🌟";
+                feedbackEl.style.backgroundColor = "#27ae60";
+            } else if (diff <= limitGood) {
+                feedbackEl.textContent = "Çok Yaklaştın! Harika. 👍";
+                feedbackEl.style.backgroundColor = "#3498db";
+            } else if (diff <= limitGood * 2) {
+                feedbackEl.textContent = "Fena Değil. Biraz daha dikkat. 🤔";
+                feedbackEl.style.backgroundColor = "#f1c40f";
+                feedbackEl.style.color = "#333";
+            } else {
+                feedbackEl.textContent = "Biraz uzak kaldın. Yuvarlamayı dene. 📉";
+                feedbackEl.style.backgroundColor = "#e74c3c";
+            }
+
+            document.getElementById('resultCard').style.display = 'block';
+            document.getElementById('btnCheck').disabled = true;
+        }
+
+        // Enter tuşu ile kontrol
+        document.getElementById('userGuess').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        // Başlangıç
+        window.onload = newQuestion;
+
+    </script>
+</body>
+</html>
