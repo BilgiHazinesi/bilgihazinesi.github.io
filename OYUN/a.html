@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hafıza Oyunu: Dinamik Metin</title>
+    <title>Hafıza Oyunu: Glitch Fix v25</title>
     <style>
         /* --- 1. GENEL AYARLAR --- */
         * { box-sizing: border-box; }
@@ -68,46 +68,75 @@
             width: 100%; height: 100%;
             max-width: 100%; max-height: 95vh; 
             align-content: center; justify-content: center;
+            /* Donanım hızlandırma için hack */
+            transform: translateZ(0);
         }
 
-        /* --- 4. KART TASARIMI (DİNAMİK METİN GÜNCELLEMESİ) --- */
-        .card { background-color: transparent; perspective: 1000px; cursor: pointer; position: relative; width: 100%; height: 100%; user-select: none; -webkit-tap-highlight-color: transparent; min-width: 0; min-height: 0;}
+        /* --- 4. KART TASARIMI (GÜVENLİK GÜNCELLEMESİ) --- */
+        .card { 
+            background-color: transparent; perspective: 1000px; cursor: pointer; 
+            position: relative; width: 100%; height: 100%; 
+            user-select: none; -webkit-tap-highlight-color: transparent; 
+            min-width: 0; min-height: 0;
+        }
         .card.invisible { visibility: hidden; pointer-events: none; }
-        .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
-        .card.flipped .card-inner { transform: rotateY(180deg); }
-        .card-front, .card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 8px; overflow: hidden; }
+
+        .card-inner { 
+            position: relative; width: 100%; height: 100%; text-align: center; 
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transform-style: preserve-3d; 
+            border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            /* Tarayıcıya bu elementin değişeceğini bildir */
+            will-change: transform;
+        }
         
-        /* Kart Önü Deseni */
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+        
+        /* Safari ve Chrome için Backface Fix */
+        .card-front, .card-back { 
+            position: absolute; width: 100%; height: 100%; 
+            -webkit-backface-visibility: hidden; backface-visibility: hidden; 
+            display: flex; align-items: center; justify-content: center; 
+            border-radius: 8px; overflow: hidden;
+        }
+
         .card-front { 
             background-color: #9c88ff;
             background-image: linear-gradient(135deg, #8c7ae6 25%, transparent 25%), linear-gradient(225deg, #8c7ae6 25%, transparent 25%), linear-gradient(45deg, #8c7ae6 25%, transparent 25%), linear-gradient(315deg, #8c7ae6 25%, transparent 25%);
             background-position: 10px 0, 10px 0, 0 0, 0 0; background-size: 20px 20px; background-repeat: repeat; border: 2px solid #8c7ae6;
+            z-index: 2; /* Ön yüz fiziksel olarak önde olsun */
+            transform: rotateY(0deg) translateZ(1px); /* Z ekseninde 1px öne it */
         }
 
-        /* Kart Arkası (İçerik Alanı) - Kapsayıcı Sorgusu için ayarlandı */
         .card-back { 
-            background-color: white; color: #2c3e50; transform: rotateY(180deg); border: 2px solid #9c88ff; 
-            /* BURASI ÖNEMLİ: Burayı boyut referansı yapıyoruz */
-            container-type: size; 
-            padding: 5px; /* Kenarlara yapışmasın */
-        }
-        
-        /* DİNAMİK METİN AYARI */
-        .card-back span { 
-            /* cqmin: Kapsayıcının eni veya boyundan hangisi küçükse onu baz al.
-               18cqmin: Bu küçük kenarın %18'i büyüklüğünde yazı yaz (Bu oran deneme yanılma ile en iyi sonucu verdi).
-               clamp: En az 1rem olsun, ideali 18cqmin olsun, en fazla 5rem olsun.
-            */
-            font-size: clamp(1rem, 18cqmin, 5rem);
-            
-            display: flex; align-items: center; justify-content: center;
-            width: 100%; height: 100%;
-            line-height: 1.1; 
-            word-break: break-word; overflow-wrap: break-word; text-align: center;
-            font-weight: bold;
+            background-color: white; color: #2c3e50; 
+            transform: rotateY(180deg) translateZ(0); 
+            border: 2px solid #9c88ff; 
+            container-type: size; padding: 5px; 
+            z-index: 1;
         }
 
+        /* --- KOPYA KORUMASI (Anti-Glitch) --- */
+        /* Kart çevrilmemişse (flipped classı yoksa) arkadaki içeriği gizle */
+        .card:not(.flipped) .card-back > * {
+            visibility: hidden;
+            opacity: 0;
+        }
+        /* Kart çevrildiği an görünür yap */
+        .card.flipped .card-back > * {
+            visibility: visible;
+            opacity: 1;
+            transition: opacity 0s 0.1s; /* Çok hafif gecikmeli aç */
+        }
+
+        .card-back span { 
+            font-size: clamp(1rem, 18cqmin, 5rem);
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%; line-height: 1.1; 
+            word-break: break-word; overflow-wrap: break-word; text-align: center; font-weight: bold;
+        }
         .card-back img { max-width: 95%; max-height: 95%; object-fit: contain; }
+        
         .coord-header { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #b2bec3; font-size: 0.9rem; }
         .flying-card { position: fixed; z-index: 9999; transition: all 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); pointer-events: none; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
 
@@ -339,6 +368,11 @@
                 const rect = el.getBoundingClientRect(); el.classList.add('invisible');
                 const clone = el.cloneNode(true); clone.classList.remove('invisible'); clone.classList.add('flying-card');
                 clone.style.width = rect.width + 'px'; clone.style.height = rect.height + 'px'; clone.style.left = rect.left + 'px'; clone.style.top = rect.top + 'px';
+                // Clone içeriği de görünür olmalı
+                const inner = clone.querySelector('.card-back > *');
+                if(inner) inner.style.visibility = 'visible';
+                if(inner) inner.style.opacity = '1';
+
                 document.body.appendChild(clone);
                 requestAnimationFrame(() => {
                     const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
@@ -547,7 +581,7 @@
             let json = JSON.stringify({ rows: gameState.rows, cols: gameState.cols, teams: gameState.teams, cards: gameState.cards, teamNames: gameState.teamNames, currentTurn:0, scores:{1:0,2:0}, isLocked:false, flippedCards:[] });
             html = html.replace(/let gameState = \{.*?\};/s, `let gameState = ${json};`);
             const blob = new Blob([html], {type:'text/html'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Hafiza_Oyunu_v24.html'; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Hafiza_Oyunu_v25.html'; a.click();
         }
         function restartGame() { if(confirm("Yeniden?")) initGame(); }
         function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
