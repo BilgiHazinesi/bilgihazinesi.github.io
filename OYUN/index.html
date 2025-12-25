@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hafıza Oyunu: Final Stable v26</title>
+    <title>Hafıza Oyunu: v27 Final</title>
     <style>
         /* --- 1. GENEL AYARLAR --- */
         * { box-sizing: border-box; }
@@ -29,10 +29,14 @@
         #game-board { display: grid; gap: 8px; width: 100%; height: 100%; max-width: 100%; max-height: 95vh; align-content: center; justify-content: center; transform: translateZ(0); }
 
         /* --- 4. KART TASARIMI --- */
-        .card { background-color: transparent; perspective: 1000px; cursor: pointer; position: relative; width: 100%; height: 100%; user-select: none; -webkit-tap-highlight-color: transparent; min-width: 0; min-height: 0; }
-        .card.invisible { visibility: hidden; pointer-events: none; }
+        .card { background-color: transparent; perspective: 1000px; cursor: pointer; position: relative; width: 100%; height: 100%; user-select: none; -webkit-tap-highlight-color: transparent; min-width: 0; min-height: 0; transition: opacity 0.3s; }
+        
+        /* GİZLEME KODU (Kesin Çözüm) */
+        .card.invisible { opacity: 0 !important; pointer-events: none !important; visibility: hidden !important; }
+
         .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); will-change: transform; }
         .card.flipped .card-inner { transform: rotateY(180deg); }
+        
         .card-front, .card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 8px; overflow: hidden; }
         .card-front { background-color: #9c88ff; background-image: linear-gradient(135deg, #8c7ae6 25%, transparent 25%), linear-gradient(225deg, #8c7ae6 25%, transparent 25%), linear-gradient(45deg, #8c7ae6 25%, transparent 25%), linear-gradient(315deg, #8c7ae6 25%, transparent 25%); background-position: 10px 0, 10px 0, 0 0, 0 0; background-size: 20px 20px; background-repeat: repeat; border: 2px solid #8c7ae6; z-index: 2; transform: rotateY(0deg) translateZ(1px); }
         .card-back { background-color: white; color: #2c3e50; transform: rotateY(180deg) translateZ(0); border: 2px solid #9c88ff; container-type: size; padding: 5px; z-index: 1; }
@@ -44,6 +48,7 @@
         .card-back span { font-size: clamp(1rem, 18cqmin, 5rem); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; line-height: 1.1; word-break: break-word; overflow-wrap: break-word; text-align: center; font-weight: bold; }
         .card-back img { max-width: 95%; max-height: 95%; object-fit: contain; }
         .coord-header { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #b2bec3; font-size: 0.9rem; }
+        
         .flying-card { position: fixed; z-index: 9999; transition: all 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); pointer-events: none; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
 
         #dice-container { margin-bottom: 20px; text-align: center; display: none; }
@@ -213,10 +218,9 @@
             }
         };
 
-        // --- GÖRÜNTÜ İŞLEME VE SIKIŞTIRMA (HATA ÖNLEYİCİ) ---
+        // --- GÖRÜNTÜ İŞLEME VE SIKIŞTIRMA (HATA ÖNLEYİCİ - 150px) ---
         async function handleBatchUpload(input) {
             const files = Array.from(input.files); if (files.length === 0) return;
-            // Promise.all ile hepsinin bitmesini bekle
             const processedImages = await Promise.all(files.map(file => processFileToBase64(file)));
             
             const totalCardsNeeded = files.length * 2; 
@@ -249,14 +253,14 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.getElementById('compress-canvas'); const ctx = canvas.getContext('2d');
-                        // OPTİMİZASYON: Max 200px yeterli, fazlası dosyayı şişirir
-                        const max = 200; let w = img.width, h = img.height; 
+                        // SÜPER OPTİMİZASYON: Max 150px (Mobilde bile net, ama dosya çok küçük)
+                        const max = 150; let w = img.width, h = img.height; 
                         if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
                         canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); 
-                        // Kaliteyi 0.6'ya düşür (Gözle fark edilmez ama dosya boyutu çok düşer)
-                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                        // Kaliteyi 0.5'e düşür
+                        resolve(canvas.toDataURL('image/jpeg', 0.5));
                     }; 
-                    img.onerror = () => resolve(""); // Hata olursa boş dön, oyun çökmesin
+                    img.onerror = () => resolve(""); 
                     img.src = e.target.result;
                 }; reader.readAsDataURL(file);
             });
@@ -264,35 +268,93 @@
 
         // --- İNDİRME FONKSİYONU (GÜVENLİ REPLACE) ---
         function downloadPlayableHtml() {
-            // Aktif state'i kaydet (Sadece gerekli veriler)
             const saveState = {
                 rows: gameState.rows, cols: gameState.cols, teams: gameState.teams,
                 cards: gameState.cards, teamNames: gameState.teamNames,
                 currentTurn:0, scores:{1:0,2:0}, isLocked:false, flippedCards:[],
-                // Aktif deste de kaydedilmeli ki açınca oyun hazır olsun
                 activeDeck: gameState.activeDeck 
             };
             
             let html = document.documentElement.outerHTML;
             const json = JSON.stringify(saveState);
             
-            // GÜVENLİ DEĞİŞTİRME: Placeholder'ı bul ve değiştir
-            // Eğer placeholder yoksa (daha önce indirilmişse), eski state'i bulup değiştir
+            // Placeholder yöntemi ile güvenli değişim
             if (html.includes('// __DATA_PLACEHOLDER__')) {
                 html = html.replace('let gameState = null; // __DATA_PLACEHOLDER__', `let gameState = ${json}; // __DATA_PLACEHOLDER__`);
             } else {
-                // Eski usul regex (Fallback)
                 html = html.replace(/let gameState = \{.*?\};/s, `let gameState = ${json};`);
             }
 
             const blob = new Blob([html], {type:'text/html'});
             const a = document.createElement('a'); 
             a.href = URL.createObjectURL(blob); 
-            a.download = 'Hafiza_Oyunu_v26.html'; 
+            a.download = 'Hafiza_Oyunu_v27_Stable.html'; 
             a.click();
         }
 
-        // --- STANDART FONKSİYONLAR ---
+        // --- OYUN MANTIĞI & ANİMASYON ---
+        function checkMatch() {
+            const [c1, c2] = gameState.flippedCards;
+            if (c1.data.matchId === c2.data.matchId) {
+                c1.data.isMatched = true; c2.data.isMatched = true;
+                c1.el.classList.add('matched'); c2.el.classList.add('matched');
+                
+                // Animasyonu başlat
+                if(gameState.teams === 2) { setTimeout(() => flyCardsToTeam([c1.el, c2.el], gameState.currentTurn), 500); } 
+                else { setTimeout(() => flyCardsToTeam([c1.el, c2.el], 1), 500); }
+
+                setTimeout(() => {
+                    gameState.scores[gameState.currentTurn] += 10; 
+                    updateScoreUI(); 
+                    
+                    // KARTLARI MASADAN SİL (Görünmez yap)
+                    c1.el.classList.add('invisible'); 
+                    c2.el.classList.add('invisible');
+                    
+                    resetTurn();
+                }, 1300);
+            } else {
+                setTimeout(() => {
+                    c1.data.isFlipped = false; c2.data.isFlipped = false;
+                    c1.el.classList.remove('flipped'); c2.el.classList.remove('flipped');
+                    if(gameState.teams==2) gameState.currentTurn = gameState.currentTurn===1?2:1;
+                    updateScoreUI(); resetTurn();
+                }, 1200);
+            }
+        }
+
+        function flyCardsToTeam(elements, teamId) {
+            const targetBox = document.getElementById(teamId === 1 ? 'team1-box' : 'team2-box');
+            if(!targetBox) return;
+            const targetRect = targetBox.getBoundingClientRect();
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect(); 
+                // Orijinali hemen gizleme, kopya uçarken görünsün
+                // el.classList.add('invisible'); <-- Bunu kaldırdık, checkMatch sonunda siliyoruz
+                
+                const clone = el.cloneNode(true); 
+                clone.classList.remove('invisible'); 
+                clone.classList.add('flying-card');
+                
+                // Clone içeriğini görünür yap
+                const inner = clone.querySelector('.card-back > *');
+                if(inner) { inner.style.visibility = 'visible'; inner.style.opacity = '1'; }
+
+                clone.style.width = rect.width + 'px'; clone.style.height = rect.height + 'px'; 
+                clone.style.left = rect.left + 'px'; clone.style.top = rect.top + 'px';
+                
+                document.body.appendChild(clone);
+                requestAnimationFrame(() => {
+                    const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
+                    const targetY = targetRect.top + (targetRect.height / 2) - (rect.height / 2);
+                    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(0.2) rotate(360deg)`; 
+                    clone.style.opacity = '0';
+                });
+                setTimeout(() => { if(clone.parentNode) clone.parentNode.removeChild(clone); }, 800);
+            });
+        }
+
+        // --- DİĞER YARDIMCILAR ---
         function updateInputWithImage(group, base64Data) {
             const hidden = group.querySelector('.hidden-data'); const preview = group.querySelector('.preview-img'); const text = group.querySelector('.drop-text');
             hidden.value = base64Data; preview.src = base64Data; preview.style.display = 'block'; text.textContent = 'Resim Hazır';
@@ -316,26 +378,6 @@
                 conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
                 document.body.appendChild(conf);
             }
-        }
-        function flyCardsToTeam(elements, teamId) {
-            const targetBox = document.getElementById(teamId === 1 ? 'team1-box' : 'team2-box');
-            if(!targetBox) return;
-            const targetRect = targetBox.getBoundingClientRect();
-            elements.forEach(el => {
-                const rect = el.getBoundingClientRect(); el.classList.add('invisible');
-                const clone = el.cloneNode(true); clone.classList.remove('invisible'); clone.classList.add('flying-card');
-                clone.style.width = rect.width + 'px'; clone.style.height = rect.height + 'px'; clone.style.left = rect.left + 'px'; clone.style.top = rect.top + 'px';
-                // Clone içeriği görünür olmalı
-                const inner = clone.querySelector('.card-back > *');
-                if(inner) { inner.style.visibility = 'visible'; inner.style.opacity = '1'; }
-                document.body.appendChild(clone);
-                requestAnimationFrame(() => {
-                    const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
-                    const targetY = targetRect.top + (targetRect.height / 2) - (rect.height / 2);
-                    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(0.2) rotate(360deg)`; clone.style.opacity = '0';
-                });
-                setTimeout(() => { if(clone.parentNode) clone.parentNode.removeChild(clone); }, 800);
-            });
         }
         function createDefaultDeck() {
             const r = 3, c = 4; let deck = [];
@@ -396,23 +438,6 @@
             card.isFlipped = true; element.classList.add('flipped');
             gameState.flippedCards.push({index: index, el: element, data: card});
             if (gameState.flippedCards.length === 2) { gameState.isLocked = true; checkMatch(); }
-        }
-        function checkMatch() {
-            const [c1, c2] = gameState.flippedCards;
-            if (c1.data.matchId === c2.data.matchId) {
-                c1.data.isMatched = true; c2.data.isMatched = true;
-                c1.el.classList.add('matched'); c2.el.classList.add('matched');
-                if(gameState.teams === 2) { setTimeout(() => flyCardsToTeam([c1.el, c2.el], gameState.currentTurn), 500); } 
-                else { setTimeout(() => flyCardsToTeam([c1.el, c2.el], 1), 500); }
-                setTimeout(() => { gameState.scores[gameState.currentTurn] += 10; updateScoreUI(); resetTurn(); c1.el.classList.add('invisible'); c2.el.classList.add('invisible'); }, 1300);
-            } else {
-                setTimeout(() => {
-                    c1.data.isFlipped = false; c2.data.isFlipped = false;
-                    c1.el.classList.remove('flipped'); c2.el.classList.remove('flipped');
-                    if(gameState.teams==2) gameState.currentTurn = gameState.currentTurn===1?2:1;
-                    updateScoreUI(); resetTurn();
-                }, 1200);
-            }
         }
         function resetTurn() {
             gameState.flippedCards = []; gameState.isLocked = false;
@@ -481,9 +506,9 @@
             const reader = new FileReader(); reader.onload = function(e) {
                 const img = new Image(); img.onload = function() {
                     const canvas = document.getElementById('compress-canvas'); const ctx = canvas.getContext('2d');
-                    const max = 200; let w = img.width, h = img.height; if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
+                    const max = 150; let w = img.width, h = img.height; if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
                     canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6); hidden.value = dataUrl; status.textContent = "Hazır"; preview.src = dataUrl; preview.style.display = 'block';
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.5); hidden.value = dataUrl; status.textContent = "Hazır"; preview.src = dataUrl; preview.style.display = 'block';
                 }; img.src = e.target.result;
             }; reader.readAsDataURL(file);
         }
