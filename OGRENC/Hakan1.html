@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Maddenin Plazma Hali</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{--a:#7f00ff;--b:#00c6ff;}
+body{
+margin:0;font-family:Segoe UI,Arial;
+background:radial-gradient(circle at top,#1b1f3b,#0b132b);
+color:#fff;
+}
+header{
+padding:30px;text-align:center;
+background:linear-gradient(135deg,var(--a),var(--b));
+box-shadow:0 0 40px var(--b);
+}
+nav a{
+margin:0 12px;cursor:pointer;font-weight:bold;
+display:inline-block;
+transition:.25s;
+}
+nav a:hover{transform:scale(1.2)}
+section{
+display:none;max-width:1100px;
+margin:auto;padding:40px;
+}
+section.active{display:block}
+
+/* KART */
+.card{
+background:rgba(255,255,255,.12);
+border-radius:18px;
+padding:25px;margin:20px 0;
+box-shadow:0 0 30px rgba(0,198,255,.4);
+transition:.3s;
+}
+.card:hover{transform:scale(1.05)}
+
+/* PLAZMA KÜRESİ */
+.plasma{
+width:220px;height:220px;
+margin:25px auto;
+border-radius:50%;
+background:radial-gradient(circle at 30% 30%, #ffffff, #00c6ff, #7f00ff);
+animation:plasma 4s infinite linear;
+box-shadow:
+0 0 40px #7f00ff,
+0 0 80px #00c6ff,
+inset 0 0 30px #fff;
+transition:.4s;
+}
+@keyframes plasma{
+0%{filter:hue-rotate(0deg)}
+100%{filter:hue-rotate(360deg)}
+}
+
+/* DURUMLAR */
+.gaz{
+opacity:0.2;
+filter:grayscale(1);
+box-shadow:none;
+}
+.iyon{
+opacity:0.6;
+animation:shake .15s infinite alternate;
+}
+@keyframes shake{
+from{transform:translateX(-2px)}
+to{transform:translateX(2px)}
+}
+.plazma-aktif{
+opacity:1;
+filter:none;
+}
+
+/* BUTON */
+button{
+width:100%;padding:12px;margin:8px 0;
+border:none;border-radius:12px;
+font-size:16px;cursor:pointer;
+background:linear-gradient(135deg,var(--a),var(--b));
+color:white;
+transition:.25s;
+}
+button:hover{transform:scale(1.08)}
+.correct{background:green!important}
+.wrong{background:crimson!important}
+
+/* PROGRESS */
+.progress{
+height:10px;background:rgba(255,255,255,.2);
+border-radius:10px;overflow:hidden;
+}
+.progress div{
+height:100%;width:0%;
+background:var(--b);transition:.4s;
+}
+
+.slider{width:100%}
+.big{text-align:center;font-size:26px;margin-top:15px}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>⚡ Maddenin Plazma Hali</h1>
+<nav>
+<a onclick="goster('ana')">Ana</a>
+<a onclick="goster('ozellik')">Özellikler</a>
+<a onclick="goster('ornek')">Örnekler</a>
+<a onclick="goster('sim')">Simülasyon</a>
+<a onclick="goster('quiz')">Quiz</a>
+</nav>
+</header>
+
+<!-- ANA -->
+<section id="ana" class="active">
+<div class="card">
+<h2>Plazma Nedir?</h2>
+<p>Plazma, iyonlaşmış gazlardan oluşan maddenin dördüncü halidir.</p>
+<div class="plasma plazma-aktif"></div>
+</div>
+</section>
+
+<!-- ÖZELLİKLER -->
+<section id="ozellik">
+<div class="card">
+<h2>🔬 Plazmanın Özellikleri</h2>
+<ul>
+<li>Yüklü parçacıklardan oluşur</li>
+<li>Elektrik iletir</li>
+<li>Işık yayar</li>
+<li>Manyetik alandan etkilenir</li>
+<li>Çok yüksek enerjilidir</li>
+</ul>
+</div>
+</section>
+
+<!-- ÖRNEKLER -->
+<section id="ornek">
+<div class="card">
+<h2>🌌 Doğal Plazma</h2>
+<p>☀️ Güneş</p>
+<p>⚡ Şimşek</p>
+<p>🌈 Kutup ışıkları</p>
+</div>
+<div class="card">
+<h2>🏭 Yapay Plazma</h2>
+<p>💡 Neon lambalar</p>
+<p>🧪 Floresan lambalar</p>
+<p>📺 Plazma TV</p>
+</div>
+</section>
+
+<!-- SİMÜLASYON -->
+<section id="sim">
+<div class="card">
+<h2>🔥 Gaz → Plazma Simülasyonu</h2>
+<input type="range" min="0" max="100" value="10" class="slider" oninput="degis(this.value)">
+<div id="durum" class="big">🌫 Gaz</div>
+<div id="simPlasma" class="plasma gaz"></div>
+</div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz">
+<div class="card">
+<h2>🎮 Rastgele 20 Soruluk Quiz</h2>
+<div class="progress"><div id="bar"></div></div>
+<p id="soru"></p>
+<div id="cevaplar"></div>
+<p id="bilgi"></p>
+</div>
+</section>
+
+<script>
+function goster(id){
+document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+/* SİMÜLASYON */
+function degis(v){
+const d=document.getElementById("durum");
+const p=document.getElementById("simPlasma");
+p.className="plasma";
+if(v<40){
+d.innerText="🌫 Gaz";
+p.classList.add("gaz");
+}
+else if(v<70){
+d.innerText="🔥 İyonlaşma";
+p.classList.add("iyon");
+}
+else{
+d.innerText="⚡ PLAZMA!";
+p.classList.add("plazma-aktif");
+}
+}
+
+/* QUIZ HAVUZU */
+const havuz=[
+{s:"Plazma hangi haldir?",c:["Katı","Sıvı","Gaz","Plazma"],d:3},
+{s:"Güneş hangi haldedir?",c:["Gaz","Plazma"],d:1},
+{s:"Şimşek nedir?",c:["Plazma","Sıvı"],d:0},
+{s:"Plazma elektrik iletir mi?",c:["Evet","Hayır"],d:0},
+{s:"Kutup ışıkları nedir?",c:["Gaz","Plazma"],d:1},
+{s:"Neon lambalar ne içerir?",c:["Plazma","Su"],d:0},
+{s:"Plazma manyetik alandan etkilenir mi?",c:["Evet","Hayır"],d:0},
+{s:"Evrenin çoğu hangi haldedir?",c:["Plazma","Katı"],d:0},
+{s:"Plazma iyon içerir mi?",c:["Evet","Hayır"],d:0},
+{s:"Plazma ışık yayar mı?",c:["Evet","Hayır"],d:0},
+{s:"Plazma yüksek enerji taşır mı?",c:["Evet","Hayır"],d:0},
+{s:"Plazma gazdan farkı nedir?",c:["Yüklü","Soğuk"],d:0},
+{s:"Plazma yapay üretilebilir mi?",c:["Evet","Hayır"],d:0},
+{s:"Yıldızlar neden plazmadır?",c:["Soğuk","Çok sıcak"],d:1},
+{s:"Plazma donabilir mi?",c:["Hayır","Evet"],d:0},
+{s:"Plazma teknolojide kullanılır mı?",c:["Evet","Hayır"],d:0},
+{s:"Plazma uzayda bulunur mu?",c:["Evet","Hayır"],d:0},
+{s:"Plazma enerjik midir?",c:["Evet","Hayır"],d:0},
+{s:"Plazma iyonlaşma ile oluşur mu?",c:["Evet","Hayır"],d:0},
+{s:"Plazma mıknatıstan etkilenir mi?",c:["Evet","Hayır"],d:0}
+];
+
+const sorular=havuz.sort(()=>0.5-Math.random()).slice(0,20);
+let i=0,skor=0;
+
+function soruGoster(){
+if(i>=sorular.length){
+soru.innerText="🎉 Bitti! Skor: "+skor+"/20";
+cevaplar.innerHTML="<button onclick='location.reload()'>🔁 Yeniden Başla</button>";
+bilgi.innerText="";
+return;
+}
+bar.style.width=(i/sorular.length*100)+"%";
+const s=sorular[i];
+soru.innerText=(i+1)+". "+s.s;
+cevaplar.innerHTML="";
+bilgi.innerText="";
+s.c.forEach((sec,j)=>{
+const b=document.createElement("button");
+b.innerText=sec;
+b.onclick=()=>{
+if(j===s.d){b.classList.add("correct");bilgi.innerText="✔ Doğru";skor++;}
+else{b.classList.add("wrong");bilgi.innerText="✖ Yanlış";}
+setTimeout(()=>{i++;soruGoster()},600);
+};
+cevaplar.appendChild(b);
+});
+}
+soruGoster();
+</script>
+
+</body>
+</html>
