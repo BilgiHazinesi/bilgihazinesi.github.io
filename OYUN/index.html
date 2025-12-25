@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hafıza Oyunu: v28 Akıcı Animasyon</title>
+    <title>Hafıza Oyunu: v29 Stable</title>
     <style>
         /* --- 1. GENEL AYARLAR --- */
         * { box-sizing: border-box; }
@@ -37,6 +37,7 @@
         .card-front { background-color: #9c88ff; background-image: linear-gradient(135deg, #8c7ae6 25%, transparent 25%), linear-gradient(225deg, #8c7ae6 25%, transparent 25%), linear-gradient(45deg, #8c7ae6 25%, transparent 25%), linear-gradient(315deg, #8c7ae6 25%, transparent 25%); background-position: 10px 0, 10px 0, 0 0, 0 0; background-size: 20px 20px; background-repeat: repeat; border: 2px solid #8c7ae6; z-index: 2; transform: rotateY(0deg) translateZ(1px); }
         .card-back { background-color: white; color: #2c3e50; transform: rotateY(180deg) translateZ(0); border: 2px solid #9c88ff; container-type: size; padding: 5px; z-index: 1; }
         
+        /* GİZLİLİK (KOPYA ENGELLEME) */
         .card:not(.flipped) .card-back > * { visibility: hidden; opacity: 0; }
         .card.flipped .card-back > * { visibility: visible; opacity: 1; transition: opacity 0s 0.1s; }
 
@@ -193,23 +194,157 @@
     <canvas id="compress-canvas" style="display:none;"></canvas>
 
     <script>
+        // GÜVENLİ BAŞLANGIÇ
         let gameState = null;
         const defaultState = { cards: [], teams: 1, currentTurn: 0, scores: {1:0, 2:0}, isLocked: false, flippedCards: [], teamNames: {1:"Grup 1", 2:"Grup 2"}, activeDeck: [] };
 
+        // --- BAŞLANGIÇ YÖNETİCİSİ ---
         window.onload = function() {
             window.addEventListener('resize', () => { clearTimeout(window.resizeTimer); window.resizeTimer = setTimeout(renderResponsiveGrid, 100); });
-            if (gameState && gameState.activeDeck && gameState.activeDeck.length > 0) {
-                closeSettings(); populateSettingsFromState(); renderResponsiveGrid();
+            
+            // Veri var mı? (İndirilen dosyadan)
+            if (gameState && gameState.cards && gameState.cards.length > 0) {
+                // Veri varsa, UI'ı doldur ve oyunu başlat
+                closeSettings(); 
+                populateSettingsFromState(); 
+                initGame(); 
             } else {
+                // Yoksa varsayılan başlat
                 gameState = JSON.parse(JSON.stringify(defaultState));
                 document.getElementById('global-type-select').value = 'text-text'; 
-                createDefaultDeck(); initGame(); 
+                createDefaultDeck(); 
+                initGame(); 
             }
         };
 
+        // --- İNDİRME SİSTEMİ (SANDBOXING) ---
+        function downloadPlayableHtml() {
+            // Önce mevcut inputlardan son hali state'e kaydet (Eğer ayarlar açıksa)
+            if(document.getElementById('settings-modal').style.display === 'flex') {
+                saveGameDataToState(); 
+            }
+
+            const saveState = {
+                rows: gameState.rows, cols: gameState.cols, teams: gameState.teams,
+                cards: gameState.cards, teamNames: gameState.teamNames,
+                // Oyunu sıfırla ama kartları koru
+                currentTurn:0, scores:{1:0,2:0}, isLocked:false, flippedCards:[],
+                activeDeck: [] // Yeniden dağıtılsın
+            };
+            
+            let html = document.documentElement.outerHTML;
+            const json = JSON.stringify(saveState);
+            
+            // KAPSÜL İÇİNE YAZMA
+            const startMarker = '/* <DATA_START> */';
+            const endMarker = '/* <DATA_END> */';
+            const regex = /\/\* <DATA_START> \*\/.*?\/\* <DATA_END> \*\//s;
+            
+            const newScript = `${startMarker}
+        gameState = ${json};
+        ${endMarker}`;
+
+            if (regex.test(html)) {
+                html = html.replace(regex, newScript);
+            } else {
+                alert("Hata: Kayıt şablonu bozulmuş. Lütfen orijinal dosyayı kullanın.");
+                return;
+            }
+
+            const blob = new Blob([html], {type:'text/html'});
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = 'Hafiza_Oyunu_v29.html'; 
+            a.click();
+        }
+
+        // --- OYUN MANTIĞI & ANİMASYON ---
+        function checkMatch() {
+            const [c1, c2] = gameState.flippedCards;
+            if (c1.data.matchId === c2.data.matchId) {
+                c1.data.isMatched = true; c2.data.isMatched = true;
+                c1.el.classList.add('matched'); c2.el.classList.add('matched');
+                
+                if(gameState.teams === 2) { setTimeout(() => flyCardsToTeam([c1.el, c2.el], gameState.currentTurn), 500); } 
+                else { setTimeout(() => flyCardsToTeam([c1.el, c2.el], 1), 500); }
+
+                setTimeout(() => {
+                    gameState.scores[gameState.currentTurn] += 10; 
+                    updateScoreUI(); 
+                    c1.el.classList.add('invisible'); 
+                    c2.el.classList.add('invisible');
+                    resetTurn();
+                }, 1300);
+            } else {
+                setTimeout(() => {
+                    c1.data.isFlipped = false; c2.data.isFlipped = false;
+                    c1.el.classList.remove('flipped'); c2.el.classList.remove('flipped');
+                    if(gameState.teams==2) gameState.currentTurn = gameState.currentTurn===1?2:1;
+                    updateScoreUI(); resetTurn();
+                }, 1200);
+            }
+        }
+
+        function flyCardsToTeam(elements, teamId) {
+            const targetBox = document.getElementById(teamId === 1 ? 'team1-box' : 'team2-box');
+            if(!targetBox) return;
+            const targetRect = targetBox.getBoundingClientRect();
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect(); 
+                el.classList.add('invisible'); 
+                
+                const clone = el.cloneNode(true); 
+                clone.classList.remove('invisible'); 
+                clone.classList.add('flying-card');
+                
+                const inner = clone.querySelector('.card-back > *');
+                if(inner) { inner.style.visibility = 'visible'; inner.style.opacity = '1'; }
+
+                clone.style.width = rect.width + 'px'; clone.style.height = rect.height + 'px'; 
+                clone.style.left = rect.left + 'px'; clone.style.top = rect.top + 'px';
+                
+                document.body.appendChild(clone);
+                requestAnimationFrame(() => {
+                    const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
+                    const targetY = targetRect.top + (targetRect.height / 2) - (rect.height / 2);
+                    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(0.2) rotate(360deg)`; 
+                    clone.style.opacity = '0';
+                });
+                setTimeout(() => { if(clone.parentNode) clone.parentNode.removeChild(clone); }, 800);
+            });
+        }
+
+        // --- VERİ YÖNETİMİ ---
+        function saveGameDataToState() {
+            const r = parseInt(document.getElementById('rows-input').value); 
+            const c = parseInt(document.getElementById('cols-input').value); 
+            const t = parseInt(document.getElementById('team-count').value);
+            const t1 = document.getElementById('input-team1').value || "Grup 1"; 
+            const t2 = document.getElementById('input-team2').value || "Grup 2";
+            let deck = [];
+            document.querySelectorAll('.data-pair').forEach((pair, idx) => {
+                pair.querySelectorAll('.input-group').forEach((g, i) => {
+                    const typeSel = g.querySelector('.type-sel').value;
+                    let content = typeSel === 'image-local' ? g.querySelector('.hidden-data').value : g.querySelector('.input-text').value;
+                    let type = typeSel.includes('image') ? 'image' : 'text'; 
+                    if(!content && type==='text') content=" ";
+                    deck.push({ id: idx*2+i, matchId: idx, type: type, content: content });
+                });
+            });
+            gameState.cards = deck; gameState.teams = t; gameState.teamNames = {1:t1, 2:t2}; gameState.rows = r; gameState.cols = c;
+        }
+
+        function saveAndStart() {
+            saveGameDataToState();
+            initGame(); 
+            closeSettings();
+        }
+
+        // --- GÖRÜNTÜ İŞLEME ---
         async function handleBatchUpload(input) {
             const files = Array.from(input.files); if (files.length === 0) return;
             const processedImages = await Promise.all(files.map(file => processFileToBase64(file)));
+            
             const totalCardsNeeded = files.length * 2; 
             let bestR = 1, bestC = totalCardsNeeded;
             for (let r = Math.floor(Math.sqrt(totalCardsNeeded)); r >= 1; r--) {
@@ -251,87 +386,12 @@
             });
         }
 
-        function downloadPlayableHtml() {
-            const saveState = {
-                rows: gameState.rows, cols: gameState.cols, teams: gameState.teams,
-                cards: gameState.cards, teamNames: gameState.teamNames,
-                currentTurn:0, scores:{1:0,2:0}, isLocked:false, flippedCards:[],
-                activeDeck: gameState.activeDeck 
-            };
-            let html = document.documentElement.outerHTML;
-            const json = JSON.stringify(saveState);
-            if (html.includes('// __DATA_PLACEHOLDER__')) {
-                html = html.replace('let gameState = null; // __DATA_PLACEHOLDER__', `let gameState = ${json}; // __DATA_PLACEHOLDER__`);
-            } else {
-                html = html.replace(/let gameState = \{.*?\};/s, `let gameState = ${json};`);
-            }
-            const blob = new Blob([html], {type:'text/html'});
-            const a = document.createElement('a'); 
-            a.href = URL.createObjectURL(blob); 
-            a.download = 'Hafiza_Oyunu_v28.html'; 
-            a.click();
-        }
-
-        function checkMatch() {
-            const [c1, c2] = gameState.flippedCards;
-            if (c1.data.matchId === c2.data.matchId) {
-                c1.data.isMatched = true; c2.data.isMatched = true;
-                c1.el.classList.add('matched'); c2.el.classList.add('matched');
-                
-                if(gameState.teams === 2) { setTimeout(() => flyCardsToTeam([c1.el, c2.el], gameState.currentTurn), 500); } 
-                else { setTimeout(() => flyCardsToTeam([c1.el, c2.el], 1), 500); }
-
-                setTimeout(() => {
-                    gameState.scores[gameState.currentTurn] += 10; 
-                    updateScoreUI(); 
-                    c1.el.classList.add('invisible'); 
-                    c2.el.classList.add('invisible');
-                    resetTurn();
-                }, 1300);
-            } else {
-                setTimeout(() => {
-                    c1.data.isFlipped = false; c2.data.isFlipped = false;
-                    c1.el.classList.remove('flipped'); c2.el.classList.remove('flipped');
-                    if(gameState.teams==2) gameState.currentTurn = gameState.currentTurn===1?2:1;
-                    updateScoreUI(); resetTurn();
-                }, 1200);
-            }
-        }
-
-        function flyCardsToTeam(elements, teamId) {
-            const targetBox = document.getElementById(teamId === 1 ? 'team1-box' : 'team2-box');
-            if(!targetBox) return;
-            const targetRect = targetBox.getBoundingClientRect();
-            elements.forEach(el => {
-                const rect = el.getBoundingClientRect(); 
-                // BURASI ÖNEMLİ: Orijinali hemen gizle (akıcı animasyon için)
-                el.classList.add('invisible'); 
-                
-                const clone = el.cloneNode(true); 
-                clone.classList.remove('invisible'); 
-                clone.classList.add('flying-card');
-                
-                const inner = clone.querySelector('.card-back > *');
-                if(inner) { inner.style.visibility = 'visible'; inner.style.opacity = '1'; }
-
-                clone.style.width = rect.width + 'px'; clone.style.height = rect.height + 'px'; 
-                clone.style.left = rect.left + 'px'; clone.style.top = rect.top + 'px';
-                
-                document.body.appendChild(clone);
-                requestAnimationFrame(() => {
-                    const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
-                    const targetY = targetRect.top + (targetRect.height / 2) - (rect.height / 2);
-                    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(0.2) rotate(360deg)`; 
-                    clone.style.opacity = '0';
-                });
-                setTimeout(() => { if(clone.parentNode) clone.parentNode.removeChild(clone); }, 800);
-            });
-        }
-
         function updateInputWithImage(group, base64Data) {
             const hidden = group.querySelector('.hidden-data'); const preview = group.querySelector('.preview-img'); const text = group.querySelector('.drop-text');
             hidden.value = base64Data; preview.src = base64Data; preview.style.display = 'block'; text.textContent = 'Resim Hazır';
         }
+
+        // --- STANDART FONKSİYONLAR ---
         function showWinner(winnerName, isDraw) {
             const modal = document.getElementById('winner-modal'), icon = document.getElementById('winner-icon'), title = document.getElementById('winner-title'), text = document.getElementById('winner-text');
             modal.style.display = 'flex';
@@ -485,20 +545,6 @@
                 }; img.src = e.target.result;
             }; reader.readAsDataURL(file);
         }
-        function saveAndStart() {
-            const r = parseInt(document.getElementById('rows-input').value); const c = parseInt(document.getElementById('cols-input').value); const t = parseInt(document.getElementById('team-count').value);
-            const t1 = document.getElementById('input-team1').value || "Grup 1"; const t2 = document.getElementById('input-team2').value || "Grup 2";
-            let deck = [];
-            document.querySelectorAll('.data-pair').forEach((pair, idx) => {
-                pair.querySelectorAll('.input-group').forEach((g, i) => {
-                    const typeSel = g.querySelector('.type-sel').value;
-                    let content = typeSel === 'image-local' ? g.querySelector('.hidden-data').value : g.querySelector('.input-text').value;
-                    let type = typeSel.includes('image') ? 'image' : 'text'; if(!content && type==='text') content=" ";
-                    deck.push({ id: idx*2+i, matchId: idx, type: type, content: content });
-                });
-            });
-            gameState.cards = deck; gameState.teams = t; gameState.teamNames = {1:t1, 2:t2}; gameState.rows = r; gameState.cols = c; initGame(); closeSettings();
-        }
         function importGame(input) {
             const file = input.files[0]; if (!file) return; const reader = new FileReader();
             reader.onload = function(e) {
@@ -509,15 +555,16 @@
                     if (file.name.endsWith('.json')) {
                         data = JSON.parse(content);
                     } else {
-                        const match = content.match(/let gameState = (\{.*?\}); \/\/ __DATA_PLACEHOLDER__/s) || content.match(/let gameState = (\{.*?\});/s);
+                        // Kapsül arasını bul
+                        const match = content.match(/\/\* <DATA_START> \*\/.*gameState = (\{.*?\});.*\/\* <DATA_END> \*\//s) || content.match(/let gameState = (\{.*?\});/s);
                         if(match) data = JSON.parse(match[1]);
                     }
                     if(data) {
                         gameState = data;
                         if(gameState.cards) gameState.cards.forEach(c => { if(c.content && c.content.startsWith('data:')) c.type='image'; });
-                        populateSettingsFromState(); generateInputs(false); repopulateInputsFromState(); alert("Oyun başarıyla yüklendi!");
+                        populateSettingsFromState(); generateInputs(false); repopulateInputsFromState(); initGame(); alert("Oyun yüklendi!");
                     } else throw new Error("Veri bulunamadı");
-                } catch(err){ alert("Hata: Dosya bozuk veya formatı yanlış."); console.error(err); }
+                } catch(err){ alert("Hata: Dosya formatı uyumsuz."); }
             }; reader.readAsText(file); input.value='';
         }
         function repopulateInputsFromState() {
@@ -543,8 +590,10 @@
         function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
         function handleDragOver(e) { e.preventDefault(); } function handleDragLeave(e) { } function handleDrop(e) { e.preventDefault(); if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0], e.currentTarget.parentElement); }
         
-        // __DATA_PLACEHOLDER__  <-- Bu satır çok önemlidir, sakın silmeyin. İndirme işlemi burayı hedef alır.
-        let placeholder_check = null; // __DATA_PLACEHOLDER__
+        // --- BU SATIRI SAKIN SİLMEYİN (Kapsül) ---
+        /* <DATA_START> */
+        gameState = null;
+        /* <DATA_END> */
     </script>
 </body>
 </html>
