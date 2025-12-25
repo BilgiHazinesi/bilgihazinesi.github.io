@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hafıza Oyunu: Glitch Fix v25</title>
+    <style>
+        /* --- 1. GENEL AYARLAR --- */
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; padding: 0; 
+            background-color: #ffffff; 
+            font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, sans-serif; 
+            height: 100vh; width: 100vw; 
+            overflow: hidden; 
+            display: flex; flex-direction: row; 
+        }
+
+        /* --- 2. YAN PANELLER --- */
+        .side-panel {
+            flex: 0 0 110px; 
+            background-color: #f9f9f9;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start;
+            padding: 10px 5px;
+            border-right: 1px solid #eee; border-left: 1px solid #eee;
+            z-index: 10; overflow-y: auto; position: relative;
+        }
+
+        .mascot-placeholder {
+            width: 50px; height: 50px; border-radius: 50%; margin-bottom: 5px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: white; flex-shrink: 0;
+        }
+
+        .team-box {
+            width: 100%; padding: 8px 2px; border-radius: 8px;
+            text-align: center; background-color: white;
+            border: 3px solid #e0e0e0; transition: all 0.3s ease;
+            opacity: 0.6; transform: scale(0.95); margin-bottom: 10px; flex-shrink: 0;
+        }
+
+        .team-name { font-size: 0.8rem; font-weight: bold; color: #777; margin-bottom: 0; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+        .team-score { font-size: 1.8rem; font-weight: 800; color: #333; display: block; line-height: 1.2;}
+        
+        .active-team-1 { border-color: #ff9f43; background-color: #fff3e0; opacity: 1; transform: scale(1.05); box-shadow: 0 5px 10px rgba(255, 159, 67, 0.3); }
+        .active-team-1 .team-name { color: #e67e22; }
+        .active-team-2 { border-color: #2ecc71; background-color: #e8f8f5; opacity: 1; transform: scale(1.05); box-shadow: 0 5px 10px rgba(46, 204, 113, 0.3); }
+        .active-team-2 .team-name { color: #27ae60; }
+
+        .controls { display: flex; gap: 5px; flex-direction: column; width: 100%; }
+        .btn { border: none; color: white; padding: 8px; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 0.8rem; transition: 0.2s; width: 100%; box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-blue { background-color: #54a0ff; }
+        .btn-orange { background-color: #ff9f43; }
+        .btn-purple { background-color: #5f27cd; }
+        .btn-red { background-color: #ff6b6b; }
+        .btn-teal { background-color: #00cec9; }
+
+        /* --- 3. OYUN ALANI --- */
+        #main-stage {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 5px; position: relative; background-color: white; overflow: hidden;
+        }
+
+        #game-board { 
+            display: grid; gap: 8px; 
+            width: 100%; height: 100%;
+            max-width: 100%; max-height: 95vh; 
+            align-content: center; justify-content: center;
+            /* Donanım hızlandırma için hack */
+            transform: translateZ(0);
+        }
+
+        /* --- 4. KART TASARIMI (GÜVENLİK GÜNCELLEMESİ) --- */
+        .card { 
+            background-color: transparent; perspective: 1000px; cursor: pointer; 
+            position: relative; width: 100%; height: 100%; 
+            user-select: none; -webkit-tap-highlight-color: transparent; 
+            min-width: 0; min-height: 0;
+        }
+        .card.invisible { visibility: hidden; pointer-events: none; }
+
+        .card-inner { 
+            position: relative; width: 100%; height: 100%; text-align: center; 
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transform-style: preserve-3d; 
+            border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            /* Tarayıcıya bu elementin değişeceğini bildir */
+            will-change: transform;
+        }
+        
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+        
+        /* Safari ve Chrome için Backface Fix */
+        .card-front, .card-back { 
+            position: absolute; width: 100%; height: 100%; 
+            -webkit-backface-visibility: hidden; backface-visibility: hidden; 
+            display: flex; align-items: center; justify-content: center; 
+            border-radius: 8px; overflow: hidden;
+        }
+
+        .card-front { 
+            background-color: #9c88ff;
+            background-image: linear-gradient(135deg, #8c7ae6 25%, transparent 25%), linear-gradient(225deg, #8c7ae6 25%, transparent 25%), linear-gradient(45deg, #8c7ae6 25%, transparent 25%), linear-gradient(315deg, #8c7ae6 25%, transparent 25%);
+            background-position: 10px 0, 10px 0, 0 0, 0 0; background-size: 20px 20px; background-repeat: repeat; border: 2px solid #8c7ae6;
+            z-index: 2; /* Ön yüz fiziksel olarak önde olsun */
+            transform: rotateY(0deg) translateZ(1px); /* Z ekseninde 1px öne it */
+        }
+
+        .card-back { 
+            background-color: white; color: #2c3e50; 
+            transform: rotateY(180deg) translateZ(0); 
+            border: 2px solid #9c88ff; 
+            container-type: size; padding: 5px; 
+            z-index: 1;
+        }
+
+        /* --- KOPYA KORUMASI (Anti-Glitch) --- */
+        /* Kart çevrilmemişse (flipped classı yoksa) arkadaki içeriği gizle */
+        .card:not(.flipped) .card-back > * {
+            visibility: hidden;
+            opacity: 0;
+        }
+        /* Kart çevrildiği an görünür yap */
+        .card.flipped .card-back > * {
+            visibility: visible;
+            opacity: 1;
+            transition: opacity 0s 0.1s; /* Çok hafif gecikmeli aç */
+        }
+
+        .card-back span { 
+            font-size: clamp(1rem, 18cqmin, 5rem);
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%; line-height: 1.1; 
+            word-break: break-word; overflow-wrap: break-word; text-align: center; font-weight: bold;
+        }
+        .card-back img { max-width: 95%; max-height: 95%; object-fit: contain; }
+        
+        .coord-header { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #b2bec3; font-size: 0.9rem; }
+        .flying-card { position: fixed; z-index: 9999; transition: all 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); pointer-events: none; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+
+        #dice-container { margin-bottom: 20px; text-align: center; display: none; }
+        #turn-randomizer { background: white; border: 2px solid #ddd; font-size: 1.5rem; cursor: pointer; padding: 5px; border-radius: 50%; box-shadow: 0 3px 6px rgba(0,0,0,0.1); transition: 0.2s; }
+        #turn-randomizer:hover { transform: rotate(20deg) scale(1.1); }
+        .spinning { animation: spin 0.5s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- 5. MOBİL UYUM --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .side-panel { flex: 0 0 auto; width: 100%; flex-direction: row; padding: 2px; justify-content: space-around; border-bottom: 1px solid #ddd; background-color: #fff; overflow-y: hidden; align-items: center; height: 60px; }
+            .mascot-placeholder { width: 30px; height: 30px; font-size: 1rem; margin: 0 5px 0 0;}
+            .team-box { width: 35%; padding: 2px; display: flex; align-items: center; justify-content: center; margin-bottom: 0; border-width: 2px;}
+            .team-name { font-size: 0.75rem; margin: 0 5px 0 0;}
+            .team-score { font-size: 1rem; }
+            #dice-container { margin: 0; display: block; }
+            #turn-randomizer { font-size: 1rem; padding: 2px; }
+            .controls { display: none; } 
+            #mobile-settings-btn { display: block !important; position: fixed; bottom: 15px; right: 15px; width: 45px; height: 45px; border-radius: 50%; background: #34495e; color: white; border: none; font-size: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 9999; cursor: pointer; }
+            #main-stage { padding: 5px; }
+            #game-board { gap: 4px; }
+        }
+        #mobile-settings-btn { display: none; } 
+
+        /* MODALLAR */
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(44, 62, 80, 0.95); color: white; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; z-index: 10000; overflow-y: auto; display: none;}
+        .setting-section { width: 95%; max-width: 700px; background: rgba(255,255,255,0.1); padding: 15px; margin-bottom: 20px; border-radius: 10px; }
+        .setting-row { margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .setting-row label { width: 120px; font-weight: bold; }
+        .setting-row input, .setting-row select { padding: 8px; flex-grow: 1; border-radius: 5px; border: none; }
+        #data-inputs { width: 100%; max-height: 40vh; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 5px; margin-bottom: 10px;}
+        .data-pair { display: flex; gap: 5px; margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; align-items: center; flex-direction: row;}
+        .input-group { display: flex; flex-direction: column; flex: 1; gap: 2px; }
+        .drop-zone { border: 2px dashed #bdc3c7; padding: 5px; text-align: center; cursor: pointer; border-radius: 5px; background: rgba(255,255,255,0.05); font-size: 0.8rem;}
+        .preview-img { max-height: 30px; display:none; margin: 2px auto; border:1px solid white; }
+
+        /* WINNER MODAL */
+        #winner-modal { justify-content: center; background-color: rgba(0,0,0,0.85); }
+        .winner-content { text-align: center; animation: popIn 0.5s ease-out; }
+        .trophy-icon { font-size: 8rem; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 20px gold); animation: float 2s infinite ease-in-out;}
+        .winner-title { font-size: 2rem; color: #f1c40f; margin-bottom: 10px; font-family: 'Comic Sans MS', cursive;}
+        .winner-name { font-size: 3rem; font-weight: bold; margin-bottom: 20px; color: white; text-shadow: 2px 2px 0 #000; }
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .confetti { position: absolute; width: 10px; height: 10px; background-color: #f00; animation: fall linear forwards; z-index: 99999; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+
+    </style>
+</head>
+<body>
+
+    <aside class="side-panel">
+        <div class="mascot-placeholder" style="background-color: #ffeaa7;">👾</div>
+        <div id="team1-box" class="team-box" onclick="manualSetTurn(1)">
+            <span class="team-name" id="label-team1">Grup 1</span>
+            <span class="team-score" id="score-team1">0</span>
+        </div>
+        <div class="controls">
+            <button class="btn btn-orange" onclick="openSettings()">⚙️ Ayarlar</button>
+            <button class="btn btn-blue" onclick="restartGame()">🔄 Yeniden</button>
+        </div>
+    </aside>
+
+    <main id="main-stage">
+        <div id="dice-container" style="display:none; position: absolute; top:5px; z-index:5;">
+             <button id="turn-randomizer" onclick="pickRandomTurn()" title="Kura">🎲</button>
+        </div>
+        <div id="game-board"></div>
+    </main>
+
+    <aside class="side-panel">
+        <div class="mascot-placeholder" id="mascot-2" style="background-color: #81ecec;">🤖</div>
+        <div id="team2-box" class="team-box" onclick="manualSetTurn(2)">
+            <span class="team-name" id="label-team2">Grup 2</span>
+            <span class="team-score" id="score-team2">0</span>
+        </div>
+    </aside>
+
+    <button id="mobile-settings-btn" onclick="openSettings()">⚙️</button>
+
+    <div id="settings-modal" class="modal-overlay">
+        <h2>Oyun Ayarları</h2>
+        <div class="setting-section">
+            <div style="background: rgba(0, 206, 201, 0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(0, 206, 201, 0.5);">
+                <h3 style="margin:0 0 10px 0; font-size:1rem;">🚀 Hızlı Resim Yükle</h3>
+                <div style="font-size:0.8rem; margin-bottom:5px;">Resimleri seçin, satır/sütun sayısını sistem ayarlasın!</div>
+                <label class="btn btn-teal" style="cursor: pointer; text-align:center; display:block;">
+                    📸 Toplu Görsel Seç
+                    <input type="file" id="batch-img-input" accept="image/*" multiple style="display: none;" onchange="handleBatchUpload(this)">
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <label>Grup Modu:</label>
+                <select id="team-count" onchange="toggleTeamNameInputs()">
+                    <option value="1">Tek Kişilik</option>
+                    <option value="2">İki Grup</option>
+                </select>
+            </div>
+            <div class="setting-row" id="team-names-row" style="display:none;">
+                <label>İsimler:</label>
+                <div style="display:flex; gap:10px; flex-grow:1; width:100%;">
+                    <input type="text" id="input-team1" placeholder="1. Grup" value="Grup 1">
+                    <input type="text" id="input-team2" placeholder="2. Grup" value="Grup 2">
+                </div>
+            </div>
+            <div class="setting-row">
+                <label>Kart Sayısı:</label>
+                <div style="display:flex; gap:10px; flex-grow:1; width:100%;">
+                    <input type="number" id="rows-input" value="3" min="2" max="10" placeholder="Satır" oninput="generateInputs(true)">
+                    <span style="align-self:center;">x</span>
+                    <input type="number" id="cols-input" value="4" min="2" max="10" placeholder="Sütun" oninput="generateInputs(true)">
+                </div>
+            </div>
+            <div class="setting-row" style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 5px;">
+                <label>İçerik Tipi:</label>
+                <select id="global-type-select" onchange="applyGlobalType(this.value)">
+                    <option value="">-- Şablon Seç --</option>
+                    <option value="text-text">Yazı - Yazı</option>
+                    <option value="text-img-local">Yazı - Resim</option>
+                    <option value="img-img-local">Resim - Resim</option>
+                </select>
+            </div>
+            <div id="data-inputs"></div>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap:wrap;">
+                <button class="btn btn-blue" style="flex:1;" onclick="saveAndStart()">BAŞLAT</button>
+                <label class="btn btn-green" style="flex:1; cursor: pointer; text-align:center;">
+                    DOSYA YÜKLE
+                    <input type="file" id="import-file" accept=".html,.json" style="display: none;" onchange="importGame(this)">
+                </label>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:10px;">
+                <button class="btn btn-purple" style="flex:1;" onclick="downloadPlayableHtml()">İNDİR (HTML)</button>
+                <button class="btn btn-red" style="flex:1;" onclick="closeSettings()">KAPAT</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="winner-modal" class="modal-overlay">
+        <div class="winner-content">
+            <span class="trophy-icon" id="winner-icon">🏆</span>
+            <div class="winner-title" id="winner-title">TEBRİKLER!</div>
+            <div class="winner-name" id="winner-text">Grup 1 Kazandı</div>
+            <button class="btn btn-orange" style="font-size: 1.2rem; padding: 15px 30px;" onclick="closeWinnerModal()">Yeni Oyun</button>
+        </div>
+    </div>
+
+    <canvas id="compress-canvas" style="display:none;"></canvas>
+
+    <script>
+        let gameState = { cards: [], teams: 1, currentTurn: 0, scores: {1:0, 2:0}, isLocked: false, flippedCards: [], teamNames: {1:"Grup 1", 2:"Grup 2"}, activeDeck: [] };
+
+        window.onload = function() {
+            window.addEventListener('resize', () => { clearTimeout(window.resizeTimer); window.resizeTimer = setTimeout(renderResponsiveGrid, 100); });
+            if (gameState.activeDeck && gameState.activeDeck.length > 0) { closeSettings(); populateSettingsFromState(); renderResponsiveGrid(); }
+            else { document.getElementById('global-type-select').value = 'text-text'; createDefaultDeck(); initGame(); }
+        };
+
+        async function handleBatchUpload(input) {
+            const files = Array.from(input.files); if (files.length === 0) return;
+            const processedImages = await Promise.all(files.map(file => processFileToBase64(file)));
+            const totalCardsNeeded = files.length * 2; 
+            let bestR = 1, bestC = totalCardsNeeded;
+            for (let r = Math.floor(Math.sqrt(totalCardsNeeded)); r >= 1; r--) {
+                if (totalCardsNeeded % r === 0) { bestR = r; bestC = totalCardsNeeded / r; break; }
+            }
+            document.getElementById('rows-input').value = bestR;
+            document.getElementById('cols-input').value = bestC;
+            const container = document.getElementById('data-inputs');
+            generateInputs(false);
+            const updatedPairs = container.querySelectorAll('.data-pair');
+            document.getElementById('global-type-select').value = 'img-img-local';
+            applyGlobalType('img-img-local');
+            updatedPairs.forEach((pair, index) => {
+                if(index < processedImages.length) {
+                    const imgData = processedImages[index];
+                    updateInputWithImage(pair.querySelectorAll('.input-group')[0], imgData);
+                    updateInputWithImage(pair.querySelectorAll('.input-group')[1], imgData);
+                }
+            });
+            alert(`${files.length} görsel yüklendi. Oyun ${bestR}x${bestC} olarak ayarlandı!`);
+            input.value = '';
+        }
+
+        function processFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.getElementById('compress-canvas'); const ctx = canvas.getContext('2d');
+                        const max = 300; let w = img.width, h = img.height; if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
+                        canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(file);
+            });
+        }
+        function updateInputWithImage(group, base64Data) {
+            const hidden = group.querySelector('.hidden-data'); const preview = group.querySelector('.preview-img'); const text = group.querySelector('.drop-text');
+            hidden.value = base64Data; preview.src = base64Data; preview.style.display = 'block'; text.textContent = 'Resim Hazır';
+        }
+        function showWinner(winnerName, isDraw) {
+            const modal = document.getElementById('winner-modal'), icon = document.getElementById('winner-icon'), title = document.getElementById('winner-title'), text = document.getElementById('winner-text');
+            modal.style.display = 'flex';
+            if (isDraw) { icon.textContent = "🤝"; title.textContent = "DOSTLUK KAZANDI!"; text.textContent = "Berabere!"; } 
+            else { icon.textContent = "🏆"; title.textContent = "TEBRİKLER!"; text.textContent = winnerName + " KAZANDI!"; }
+            startConfetti();
+        }
+        function closeWinnerModal() {
+            document.getElementById('winner-modal').style.display = 'none'; document.querySelectorAll('.confetti').forEach(e => e.remove()); initGame(); 
+        }
+        function startConfetti() {
+            const colors = ['#e74c3c', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6'];
+            for(let i=0; i<100; i++) {
+                const conf = document.createElement('div'); conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw'; conf.style.top = -10 + 'px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(conf);
+            }
+        }
+        function flyCardsToTeam(elements, teamId) {
+            const targetBox = document.getElementById(teamId === 1 ? 'team1-box' : 'team2-box');
+            if(!targetBox) return;
+            const targetRect = targetBox.getBoundingClientRect();
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect(); el.classList.add('invisible');
+                const clone = el.cloneNode(true); clone.classList.remove('invisible'); clone.classList.add('flying-card');
+                clone.style.width = rect.width + 'px'; clone.style.height = rect.height + 'px'; clone.style.left = rect.left + 'px'; clone.style.top = rect.top + 'px';
+                // Clone içeriği de görünür olmalı
+                const inner = clone.querySelector('.card-back > *');
+                if(inner) inner.style.visibility = 'visible';
+                if(inner) inner.style.opacity = '1';
+
+                document.body.appendChild(clone);
+                requestAnimationFrame(() => {
+                    const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
+                    const targetY = targetRect.top + (targetRect.height / 2) - (rect.height / 2);
+                    clone.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(0.2) rotate(360deg)`; clone.style.opacity = '0';
+                });
+                setTimeout(() => { if(clone.parentNode) clone.parentNode.removeChild(clone); }, 800);
+            });
+        }
+        function createDefaultDeck() {
+            const r = 3, c = 4; let deck = [];
+            for(let i=0; i<(r*c)/2; i++) { deck.push({ id: i*2, matchId: i, type: 'text', content: (i+1).toString() }); deck.push({ id: i*2+1, matchId: i, type: 'text', content: (i+1).toString() }); }
+            gameState.cards = deck; gameState.rows = r; gameState.cols = c; gameState.teams = 1; gameState.teamNames = {1:"Grup 1", 2:"Grup 2"};
+            document.getElementById('rows-input').value = r; document.getElementById('cols-input').value = c; generateInputs(false);
+        }
+        function renderResponsiveGrid() {
+            if (!gameState.activeDeck || gameState.activeDeck.length === 0) return;
+            const board = document.getElementById('game-board'); const totalCards = gameState.activeDeck.length;
+            const containerW = board.clientWidth; const containerH = board.clientHeight; const screenRatio = containerW / containerH;
+            let bestRows = 1, bestCols = totalCards, minDiff = 9999;
+            for (let r = 1; r <= Math.sqrt(totalCards); r++) {
+                if (totalCards % r === 0) {
+                    let c = totalCards / r; let ratio1 = c / r; 
+                    if (Math.abs(screenRatio - ratio1) < minDiff) { minDiff = Math.abs(screenRatio - ratio1); bestRows = r; bestCols = c; }
+                    let ratio2 = r / c; if (Math.abs(screenRatio - ratio2) < minDiff) { minDiff = Math.abs(screenRatio - ratio2); bestRows = c; bestCols = r; }
+                }
+            }
+            if (containerH > containerW && bestCols > bestRows) { let t = bestRows; bestRows = bestCols; bestCols = t; }
+            else if (containerW > containerH && bestRows > bestCols) { let t = bestRows; bestRows = bestCols; bestCols = t; }
+            board.innerHTML = '';
+            const coordSize = containerW < 600 ? "20px" : "30px";
+            board.style.gridTemplateColumns = `${coordSize} repeat(${bestCols}, 1fr)`;
+            board.style.gridTemplateRows = `${coordSize} repeat(${bestRows}, 1fr)`;
+            board.appendChild(createCoordHeader('')); for(let j=0; j<bestCols; j++) board.appendChild(createCoordHeader(j+1));
+            for(let i=0; i<bestRows; i++) {
+                board.appendChild(createCoordHeader(String.fromCharCode(65 + i)));
+                for(let j=0; j<bestCols; j++) {
+                    const cardIndex = (i * bestCols) + j; const card = gameState.activeDeck[cardIndex];
+                    if (card) {
+                        const el = document.createElement('div'); el.className = 'card';
+                        if(card.isMatched) el.classList.add('invisible'); else if(card.isFlipped) el.classList.add('flipped');
+                        let contentHtml = '';
+                        if (card.type.includes('image') || (card.content && card.content.startsWith('data:'))) { contentHtml = `<img src="${card.content}" alt="Görsel">`; } 
+                        else { let text = card.content || "?"; contentHtml = `<span>${text}</span>`; }
+                        el.innerHTML = `<div class="card-inner"><div class="card-front"></div><div class="card-back">${contentHtml}</div></div>`;
+                        el.onclick = () => handleCardClick(cardIndex, el); board.appendChild(el);
+                    }
+                }
+            }
+            updateScoreUI();
+        }
+        function createCoordHeader(text) { const el = document.createElement('div'); el.className = 'coord-header'; el.textContent = text; return el; }
+        function initGame() {
+            if (gameState.teams === 2) gameState.currentTurn = 0; else gameState.currentTurn = 1;
+            gameState.scores = {1:0, 2:0}; gameState.isLocked = false; gameState.flippedCards = [];
+            let tempDeck = JSON.parse(JSON.stringify(gameState.cards));
+            tempDeck.forEach(c => { c.isFlipped = false; c.isMatched = false; });
+            tempDeck.sort(() => 0.5 - Math.random()); gameState.activeDeck = tempDeck; renderResponsiveGrid();
+        }
+        function handleCardClick(index, element) {
+            const card = gameState.activeDeck[index];
+            if (gameState.teams === 2 && gameState.currentTurn === 0) { alert("Lütfen önce kuraya veya takım kutusuna tıklayın!"); return; }
+            if (gameState.isLocked || card.isFlipped || card.isMatched) return;
+            card.isFlipped = true; element.classList.add('flipped');
+            gameState.flippedCards.push({index: index, el: element, data: card});
+            if (gameState.flippedCards.length === 2) { gameState.isLocked = true; checkMatch(); }
+        }
+        function checkMatch() {
+            const [c1, c2] = gameState.flippedCards;
+            if (c1.data.matchId === c2.data.matchId) {
+                c1.data.isMatched = true; c2.data.isMatched = true;
+                c1.el.classList.add('matched'); c2.el.classList.add('matched');
+                if(gameState.teams === 2) { setTimeout(() => flyCardsToTeam([c1.el, c2.el], gameState.currentTurn), 500); } 
+                else { setTimeout(() => flyCardsToTeam([c1.el, c2.el], 1), 500); }
+                setTimeout(() => { gameState.scores[gameState.currentTurn] += 10; updateScoreUI(); resetTurn(); c1.el.classList.add('invisible'); c2.el.classList.add('invisible'); }, 1300);
+            } else {
+                setTimeout(() => {
+                    c1.data.isFlipped = false; c2.data.isFlipped = false;
+                    c1.el.classList.remove('flipped'); c2.el.classList.remove('flipped');
+                    if(gameState.teams==2) gameState.currentTurn = gameState.currentTurn===1?2:1;
+                    updateScoreUI(); resetTurn();
+                }, 1200);
+            }
+        }
+        function resetTurn() {
+            gameState.flippedCards = []; gameState.isLocked = false;
+            const allMatched = gameState.activeDeck.every(c => c.isMatched);
+            if (allMatched) {
+                setTimeout(() => {
+                    const s1 = gameState.scores[1]; const s2 = gameState.scores[2];
+                    if(gameState.teams===1) showWinner("ŞAMPİYON", false);
+                    else if(s1 > s2) showWinner(gameState.teamNames[1], false);
+                    else if(s2 > s1) showWinner(gameState.teamNames[2], false);
+                    else showWinner("", true);
+                }, 1500);
+            }
+        }
+        function updateScoreUI() {
+            const box1 = document.getElementById('team1-box'), box2 = document.getElementById('team2-box');
+            const masc2 = document.getElementById('mascot-2'), diceCont = document.getElementById('dice-container');
+            document.getElementById('label-team1').textContent = gameState.teamNames[1]; document.getElementById('label-team2').textContent = gameState.teamNames[2];
+            document.getElementById('score-team1').textContent = gameState.scores[1]; document.getElementById('score-team2').textContent = gameState.scores[2];
+            box1.classList.remove('active-team-1'); box2.classList.remove('active-team-2');
+            if(gameState.teams === 2) {
+                box2.style.visibility = 'visible'; masc2.style.visibility = 'visible'; 
+                if(window.innerWidth > 768) { diceCont.style.display = 'block'; diceCont.style.position = 'absolute'; diceCont.style.top = '10px'; } 
+                else { diceCont.style.display = 'block'; diceCont.style.position = 'relative'; }
+                if(gameState.currentTurn === 1) box1.classList.add('active-team-1');
+                if(gameState.currentTurn === 2) box2.classList.add('active-team-2');
+            } else { box2.style.visibility = 'hidden'; masc2.style.visibility = 'hidden'; diceCont.style.display = 'none'; }
+        }
+        function manualSetTurn(id) { if(gameState.teams===2){ gameState.currentTurn=id; updateScoreUI(); }}
+        function pickRandomTurn() { if(gameState.teams!=2) return; const b = document.getElementById('turn-randomizer'); b.classList.add('spinning'); setTimeout(()=>{ b.classList.remove('spinning'); gameState.currentTurn = Math.random()<0.5?1:2; updateScoreUI(); }, 600); }
+        function toggleTeamNameInputs() { const val = document.getElementById('team-count').value; const row = document.getElementById('team-names-row'); row.style.display = val=="2"?'flex':'none'; }
+        function generateInputs(keepData = true) {
+            const r = parseInt(document.getElementById('rows-input').value); const c = parseInt(document.getElementById('cols-input').value);
+            if(!r || !c || r < 2 || c < 2) return;
+            let savedPairs = [];
+            if (keepData) { document.querySelectorAll('.data-pair').forEach(pair => { const sides = pair.querySelectorAll('.input-group'); savedPairs.push({ left: extractGroupData(sides[0]), right: extractGroupData(sides[1]) }); }); }
+            const totalPairs = Math.floor((r * c) / 2);
+            const container = document.getElementById('data-inputs'); container.innerHTML = '';
+            for (let i = 0; i < totalPairs; i++) {
+                const savedData = (keepData && i < savedPairs.length) ? savedPairs[i] : null;
+                const div = document.createElement('div'); div.className = 'data-pair';
+                div.innerHTML = `<span style="font-weight:bold; color:#f39c12; align-self:center;">${i+1}</span>${createInputGroup(savedData ? savedData.left : null)}<span style="align-self:center;">=</span>${createInputGroup(savedData ? savedData.right : null)}`;
+                container.appendChild(div);
+            }
+        }
+        function extractGroupData(groupElement) {
+            if(!groupElement) return null; const type = groupElement.querySelector('.type-sel').value; let content = "";
+            if(type.includes('text') || type === 'image-url') content = groupElement.querySelector('.input-text').value; else content = groupElement.querySelector('.hidden-data').value;
+            return { type: type, content: content };
+        }
+        function createInputGroup(data = null) {
+            let type = "text"; let content = "";
+            if(data) { content = data.content; if (content && content.startsWith("data:image")) type = "image-local"; else if (content && content.startsWith("http")) type = "image-url"; else type = data.type; }
+            return `<div class="input-group"><select class="type-sel" onchange="handleTypeChange(this)"><option value="text" ${type=='text'?'selected':''}>Yazı</option><option value="image-url" ${type=='image-url'?'selected':''}>URL</option><option value="image-local" ${type=='image-local'?'selected':''}>Resim</option></select><input type="text" class="input-text" placeholder="Metin" value="${type!='image-local'?content:''}" style="display:${type!='image-local'?'block':'none'}"><div class="drop-zone" onclick="this.querySelector('input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" style="display:${type=='image-local'?'flex':'none'}"><span class="drop-text">${content ? 'Resim Hazır' : 'Resim Seç'}</span><img class="preview-img" src="${type=='image-local'?content:''}" style="display:${type=='image-local' && content ? 'block' : 'none'}"><input type="file" class="input-file" accept="image/*" style="display:none;" onchange="processFileSelect(this)"></div><input type="hidden" class="hidden-data" value="${type=='image-local'?content:''}"></div>`;
+        }
+        function handleTypeChange(elem) {
+            const group = elem.parentElement; const textIn = group.querySelector('.input-text'); const dropZone = group.querySelector('.drop-zone');
+            if (elem.value === 'text') { textIn.style.display = 'block'; textIn.placeholder = "Metin"; dropZone.style.display = 'none'; } else if (elem.value === 'image-url') { textIn.style.display = 'block'; textIn.placeholder = "https://..."; dropZone.style.display = 'none'; } else { textIn.style.display = 'none'; dropZone.style.display = 'flex'; }
+        }
+        function applyGlobalType(val) {
+            if (!val) return; document.querySelectorAll('.data-pair').forEach(pair => { const selects = pair.querySelectorAll('.type-sel'); if (val === 'text-text') { selects[0].value = 'text'; selects[1].value = 'text'; } else if (val === 'text-img-local') { selects[0].value = 'text'; selects[1].value = 'image-local'; } else if (val === 'img-img-local') { selects[0].value = 'image-local'; selects[1].value = 'image-local'; } handleTypeChange(selects[0]); handleTypeChange(selects[1]); });
+        }
+        function processFileSelect(input) { if(input.files[0]) processFile(input.files[0], input.parentElement.parentElement); }
+        function processFile(file, group) {
+            const status = group.querySelector('.drop-text'); const preview = group.querySelector('.preview-img'); const hidden = group.querySelector('.hidden-data'); status.textContent = "...";
+            const reader = new FileReader(); reader.onload = function(e) {
+                const img = new Image(); img.onload = function() {
+                    const canvas = document.getElementById('compress-canvas'); const ctx = canvas.getContext('2d');
+                    const max = 300; let w = img.width, h = img.height; if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
+                    canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7); hidden.value = dataUrl; status.textContent = "Hazır"; preview.src = dataUrl; preview.style.display = 'block';
+                }; img.src = e.target.result;
+            }; reader.readAsDataURL(file);
+        }
+        function saveAndStart() {
+            const r = parseInt(document.getElementById('rows-input').value); const c = parseInt(document.getElementById('cols-input').value); const t = parseInt(document.getElementById('team-count').value);
+            const t1 = document.getElementById('input-team1').value || "Grup 1"; const t2 = document.getElementById('input-team2').value || "Grup 2";
+            let deck = [];
+            document.querySelectorAll('.data-pair').forEach((pair, idx) => {
+                pair.querySelectorAll('.input-group').forEach((g, i) => {
+                    const typeSel = g.querySelector('.type-sel').value;
+                    let content = typeSel === 'image-local' ? g.querySelector('.hidden-data').value : g.querySelector('.input-text').value;
+                    let type = typeSel.includes('image') ? 'image' : 'text'; if(!content && type==='text') content=" ";
+                    deck.push({ id: idx*2+i, matchId: idx, type: type, content: content });
+                });
+            });
+            gameState.cards = deck; gameState.teams = t; gameState.teamNames = {1:t1, 2:t2}; gameState.rows = r; gameState.cols = c; initGame(); closeSettings();
+        }
+        function importGame(input) {
+            const file = input.files[0]; if (!file) return; const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    let data = file.name.endsWith('.json') ? JSON.parse(content) : JSON.parse(content.match(/let gameState = ({.*?});/s)[1]);
+                    if(data) {
+                        gameState = data;
+                        if(gameState.cards) gameState.cards.forEach(c => { if(c.content && c.content.startsWith('data:')) c.type='image'; });
+                        populateSettingsFromState(); generateInputs(false); repopulateInputsFromState(); alert("Yüklendi!");
+                    }
+                } catch(err){ alert("Hata!"); }
+            }; reader.readAsText(file); input.value='';
+        }
+        function repopulateInputsFromState() {
+            const container = document.getElementById('data-inputs'); container.innerHTML = '';
+            let pairs = {}; gameState.cards.forEach(c => { if(!pairs[c.matchId]) pairs[c.matchId]=[]; pairs[c.matchId].push(c); });
+            for(let k in pairs) {
+                const p = pairs[k]; if(p.length<2) continue;
+                const div = document.createElement('div'); div.className='data-pair';
+                const lData = { type: p[0].type.includes('image')?'image-local':p[0].type, content: p[0].content };
+                const rData = { type: p[1].type.includes('image')?'image-local':p[1].type, content: p[1].content };
+                div.innerHTML = `<span style="font-weight:bold; color:#f39c12; align-self:center;">${parseInt(k)+1}</span>${createInputGroup(lData)}<span style="align-self:center;">=</span>${createInputGroup(rData)}`;
+                container.appendChild(div);
+            }
+        }
+        function populateSettingsFromState() {
+            document.getElementById('rows-input').value = gameState.rows || 3; document.getElementById('cols-input').value = gameState.cols || 4;
+            document.getElementById('team-count').value = gameState.teams || 1;
+            if(gameState.teamNames) { document.getElementById('input-team1').value = gameState.teamNames[1]; document.getElementById('input-team2').value = gameState.teamNames[2]; }
+            toggleTeamNameInputs();
+        }
+        function downloadPlayableHtml() {
+            let html = document.documentElement.outerHTML;
+            let json = JSON.stringify({ rows: gameState.rows, cols: gameState.cols, teams: gameState.teams, cards: gameState.cards, teamNames: gameState.teamNames, currentTurn:0, scores:{1:0,2:0}, isLocked:false, flippedCards:[] });
+            html = html.replace(/let gameState = \{.*?\};/s, `let gameState = ${json};`);
+            const blob = new Blob([html], {type:'text/html'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Hafiza_Oyunu_v25.html'; a.click();
+        }
+        function restartGame() { if(confirm("Yeniden?")) initGame(); }
+        function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+        function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+        function handleDragOver(e) { e.preventDefault(); } function handleDragLeave(e) { } function handleDrop(e) { e.preventDefault(); if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0], e.currentTarget.parentElement); }
+    </script>
+</body>
+</html>
