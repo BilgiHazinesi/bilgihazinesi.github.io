@@ -3,140 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hafıza Oyunu: Glitch Fix v25</title>
+    <title>Hafıza Oyunu: Final Stable v26</title>
     <style>
         /* --- 1. GENEL AYARLAR --- */
         * { box-sizing: border-box; }
-        body { 
-            margin: 0; padding: 0; 
-            background-color: #ffffff; 
-            font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, sans-serif; 
-            height: 100vh; width: 100vw; 
-            overflow: hidden; 
-            display: flex; flex-direction: row; 
-        }
+        body { margin: 0; padding: 0; background-color: #ffffff; font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, sans-serif; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: row; }
 
         /* --- 2. YAN PANELLER --- */
-        .side-panel {
-            flex: 0 0 110px; 
-            background-color: #f9f9f9;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: flex-start;
-            padding: 10px 5px;
-            border-right: 1px solid #eee; border-left: 1px solid #eee;
-            z-index: 10; overflow-y: auto; position: relative;
-        }
-
-        .mascot-placeholder {
-            width: 50px; height: 50px; border-radius: 50%; margin-bottom: 5px;
-            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: white; flex-shrink: 0;
-        }
-
-        .team-box {
-            width: 100%; padding: 8px 2px; border-radius: 8px;
-            text-align: center; background-color: white;
-            border: 3px solid #e0e0e0; transition: all 0.3s ease;
-            opacity: 0.6; transform: scale(0.95); margin-bottom: 10px; flex-shrink: 0;
-        }
-
+        .side-panel { flex: 0 0 110px; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 10px 5px; border-right: 1px solid #eee; border-left: 1px solid #eee; z-index: 10; overflow-y: auto; position: relative; }
+        .mascot-placeholder { width: 50px; height: 50px; border-radius: 50%; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: white; flex-shrink: 0; }
+        .team-box { width: 100%; padding: 8px 2px; border-radius: 8px; text-align: center; background-color: white; border: 3px solid #e0e0e0; transition: all 0.3s ease; opacity: 0.6; transform: scale(0.95); margin-bottom: 10px; flex-shrink: 0; }
         .team-name { font-size: 0.8rem; font-weight: bold; color: #777; margin-bottom: 0; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
         .team-score { font-size: 1.8rem; font-weight: 800; color: #333; display: block; line-height: 1.2;}
-        
         .active-team-1 { border-color: #ff9f43; background-color: #fff3e0; opacity: 1; transform: scale(1.05); box-shadow: 0 5px 10px rgba(255, 159, 67, 0.3); }
         .active-team-1 .team-name { color: #e67e22; }
         .active-team-2 { border-color: #2ecc71; background-color: #e8f8f5; opacity: 1; transform: scale(1.05); box-shadow: 0 5px 10px rgba(46, 204, 113, 0.3); }
         .active-team-2 .team-name { color: #27ae60; }
-
         .controls { display: flex; gap: 5px; flex-direction: column; width: 100%; }
         .btn { border: none; color: white; padding: 8px; cursor: pointer; border-radius: 6px; font-weight: bold; font-size: 0.8rem; transition: 0.2s; width: 100%; box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-blue { background-color: #54a0ff; }
-        .btn-orange { background-color: #ff9f43; }
-        .btn-purple { background-color: #5f27cd; }
-        .btn-red { background-color: #ff6b6b; }
-        .btn-teal { background-color: #00cec9; }
+        .btn-blue { background-color: #54a0ff; } .btn-orange { background-color: #ff9f43; } .btn-purple { background-color: #5f27cd; } .btn-red { background-color: #ff6b6b; } .btn-teal { background-color: #00cec9; }
 
         /* --- 3. OYUN ALANI --- */
-        #main-stage {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            padding: 5px; position: relative; background-color: white; overflow: hidden;
-        }
+        #main-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 5px; position: relative; background-color: white; overflow: hidden; }
+        #game-board { display: grid; gap: 8px; width: 100%; height: 100%; max-width: 100%; max-height: 95vh; align-content: center; justify-content: center; transform: translateZ(0); }
 
-        #game-board { 
-            display: grid; gap: 8px; 
-            width: 100%; height: 100%;
-            max-width: 100%; max-height: 95vh; 
-            align-content: center; justify-content: center;
-            /* Donanım hızlandırma için hack */
-            transform: translateZ(0);
-        }
-
-        /* --- 4. KART TASARIMI (GÜVENLİK GÜNCELLEMESİ) --- */
-        .card { 
-            background-color: transparent; perspective: 1000px; cursor: pointer; 
-            position: relative; width: 100%; height: 100%; 
-            user-select: none; -webkit-tap-highlight-color: transparent; 
-            min-width: 0; min-height: 0;
-        }
+        /* --- 4. KART TASARIMI --- */
+        .card { background-color: transparent; perspective: 1000px; cursor: pointer; position: relative; width: 100%; height: 100%; user-select: none; -webkit-tap-highlight-color: transparent; min-width: 0; min-height: 0; }
         .card.invisible { visibility: hidden; pointer-events: none; }
-
-        .card-inner { 
-            position: relative; width: 100%; height: 100%; text-align: center; 
-            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            transform-style: preserve-3d; 
-            border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-            /* Tarayıcıya bu elementin değişeceğini bildir */
-            will-change: transform;
-        }
-        
+        .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); will-change: transform; }
         .card.flipped .card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 8px; overflow: hidden; }
+        .card-front { background-color: #9c88ff; background-image: linear-gradient(135deg, #8c7ae6 25%, transparent 25%), linear-gradient(225deg, #8c7ae6 25%, transparent 25%), linear-gradient(45deg, #8c7ae6 25%, transparent 25%), linear-gradient(315deg, #8c7ae6 25%, transparent 25%); background-position: 10px 0, 10px 0, 0 0, 0 0; background-size: 20px 20px; background-repeat: repeat; border: 2px solid #8c7ae6; z-index: 2; transform: rotateY(0deg) translateZ(1px); }
+        .card-back { background-color: white; color: #2c3e50; transform: rotateY(180deg) translateZ(0); border: 2px solid #9c88ff; container-type: size; padding: 5px; z-index: 1; }
         
-        /* Safari ve Chrome için Backface Fix */
-        .card-front, .card-back { 
-            position: absolute; width: 100%; height: 100%; 
-            -webkit-backface-visibility: hidden; backface-visibility: hidden; 
-            display: flex; align-items: center; justify-content: center; 
-            border-radius: 8px; overflow: hidden;
-        }
+        /* GİZLİLİK (KOPYA ENGELLEME) */
+        .card:not(.flipped) .card-back > * { visibility: hidden; opacity: 0; }
+        .card.flipped .card-back > * { visibility: visible; opacity: 1; transition: opacity 0s 0.1s; }
 
-        .card-front { 
-            background-color: #9c88ff;
-            background-image: linear-gradient(135deg, #8c7ae6 25%, transparent 25%), linear-gradient(225deg, #8c7ae6 25%, transparent 25%), linear-gradient(45deg, #8c7ae6 25%, transparent 25%), linear-gradient(315deg, #8c7ae6 25%, transparent 25%);
-            background-position: 10px 0, 10px 0, 0 0, 0 0; background-size: 20px 20px; background-repeat: repeat; border: 2px solid #8c7ae6;
-            z-index: 2; /* Ön yüz fiziksel olarak önde olsun */
-            transform: rotateY(0deg) translateZ(1px); /* Z ekseninde 1px öne it */
-        }
-
-        .card-back { 
-            background-color: white; color: #2c3e50; 
-            transform: rotateY(180deg) translateZ(0); 
-            border: 2px solid #9c88ff; 
-            container-type: size; padding: 5px; 
-            z-index: 1;
-        }
-
-        /* --- KOPYA KORUMASI (Anti-Glitch) --- */
-        /* Kart çevrilmemişse (flipped classı yoksa) arkadaki içeriği gizle */
-        .card:not(.flipped) .card-back > * {
-            visibility: hidden;
-            opacity: 0;
-        }
-        /* Kart çevrildiği an görünür yap */
-        .card.flipped .card-back > * {
-            visibility: visible;
-            opacity: 1;
-            transition: opacity 0s 0.1s; /* Çok hafif gecikmeli aç */
-        }
-
-        .card-back span { 
-            font-size: clamp(1rem, 18cqmin, 5rem);
-            display: flex; align-items: center; justify-content: center;
-            width: 100%; height: 100%; line-height: 1.1; 
-            word-break: break-word; overflow-wrap: break-word; text-align: center; font-weight: bold;
-        }
+        .card-back span { font-size: clamp(1rem, 18cqmin, 5rem); display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; line-height: 1.1; word-break: break-word; overflow-wrap: break-word; text-align: center; font-weight: bold; }
         .card-back img { max-width: 95%; max-height: 95%; object-fit: contain; }
-        
         .coord-header { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #b2bec3; font-size: 0.9rem; }
         .flying-card { position: fixed; z-index: 9999; transition: all 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); pointer-events: none; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
 
@@ -146,7 +52,7 @@
         .spinning { animation: spin 0.5s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* --- 5. MOBİL UYUM --- */
+        /* MOBİL */
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .side-panel { flex: 0 0 auto; width: 100%; flex-direction: row; padding: 2px; justify-content: space-around; border-bottom: 1px solid #ddd; background-color: #fff; overflow-y: hidden; align-items: center; height: 60px; }
@@ -175,7 +81,7 @@
         .drop-zone { border: 2px dashed #bdc3c7; padding: 5px; text-align: center; cursor: pointer; border-radius: 5px; background: rgba(255,255,255,0.05); font-size: 0.8rem;}
         .preview-img { max-height: 30px; display:none; margin: 2px auto; border:1px solid white; }
 
-        /* WINNER MODAL */
+        /* WINNER & CONFETTI */
         #winner-modal { justify-content: center; background-color: rgba(0,0,0,0.85); }
         .winner-content { text-align: center; animation: popIn 0.5s ease-out; }
         .trophy-icon { font-size: 8rem; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 20px gold); animation: float 2s infinite ease-in-out;}
@@ -185,7 +91,6 @@
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
         .confetti { position: absolute; width: 10px; height: 10px; background-color: #f00; animation: fall linear forwards; z-index: 99999; }
         @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
-
     </style>
 </head>
 <body>
@@ -224,7 +129,7 @@
         <div class="setting-section">
             <div style="background: rgba(0, 206, 201, 0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(0, 206, 201, 0.5);">
                 <h3 style="margin:0 0 10px 0; font-size:1rem;">🚀 Hızlı Resim Yükle</h3>
-                <div style="font-size:0.8rem; margin-bottom:5px;">Resimleri seçin, satır/sütun sayısını sistem ayarlasın!</div>
+                <div style="font-size:0.8rem; margin-bottom:5px;">Resimleri seçin, sistem oyunu otomatik kursun!</div>
                 <label class="btn btn-teal" style="cursor: pointer; text-align:center; display:block;">
                     📸 Toplu Görsel Seç
                     <input type="file" id="batch-img-input" accept="image/*" multiple style="display: none;" onchange="handleBatchUpload(this)">
@@ -289,17 +194,31 @@
     <canvas id="compress-canvas" style="display:none;"></canvas>
 
     <script>
-        let gameState = { cards: [], teams: 1, currentTurn: 0, scores: {1:0, 2:0}, isLocked: false, flippedCards: [], teamNames: {1:"Grup 1", 2:"Grup 2"}, activeDeck: [] };
+        // GÜVENLİ BAŞLANGIÇ: Boş state
+        let gameState = null;
+        const defaultState = { cards: [], teams: 1, currentTurn: 0, scores: {1:0, 2:0}, isLocked: false, flippedCards: [], teamNames: {1:"Grup 1", 2:"Grup 2"}, activeDeck: [] };
 
+        // --- SAYFA YÜKLENİNCE ---
         window.onload = function() {
             window.addEventListener('resize', () => { clearTimeout(window.resizeTimer); window.resizeTimer = setTimeout(renderResponsiveGrid, 100); });
-            if (gameState.activeDeck && gameState.activeDeck.length > 0) { closeSettings(); populateSettingsFromState(); renderResponsiveGrid(); }
-            else { document.getElementById('global-type-select').value = 'text-text'; createDefaultDeck(); initGame(); }
+            
+            // Eğer kodun içine gömülü veri varsa (indirilen dosya)
+            if (gameState && gameState.activeDeck && gameState.activeDeck.length > 0) {
+                closeSettings(); populateSettingsFromState(); renderResponsiveGrid();
+            } else {
+                // Yoksa sıfırdan başlat
+                gameState = JSON.parse(JSON.stringify(defaultState));
+                document.getElementById('global-type-select').value = 'text-text'; 
+                createDefaultDeck(); initGame(); 
+            }
         };
 
+        // --- GÖRÜNTÜ İŞLEME VE SIKIŞTIRMA (HATA ÖNLEYİCİ) ---
         async function handleBatchUpload(input) {
             const files = Array.from(input.files); if (files.length === 0) return;
+            // Promise.all ile hepsinin bitmesini bekle
             const processedImages = await Promise.all(files.map(file => processFileToBase64(file)));
+            
             const totalCardsNeeded = files.length * 2; 
             let bestR = 1, bestC = totalCardsNeeded;
             for (let r = Math.floor(Math.sqrt(totalCardsNeeded)); r >= 1; r--) {
@@ -319,7 +238,7 @@
                     updateInputWithImage(pair.querySelectorAll('.input-group')[1], imgData);
                 }
             });
-            alert(`${files.length} görsel yüklendi. Oyun ${bestR}x${bestC} olarak ayarlandı!`);
+            alert(`${files.length} görsel işlendi. Oyun ${bestR}x${bestC} olarak ayarlandı!`);
             input.value = '';
         }
 
@@ -330,12 +249,50 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.getElementById('compress-canvas'); const ctx = canvas.getContext('2d');
-                        const max = 300; let w = img.width, h = img.height; if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
-                        canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    }; img.src = e.target.result;
+                        // OPTİMİZASYON: Max 200px yeterli, fazlası dosyayı şişirir
+                        const max = 200; let w = img.width, h = img.height; 
+                        if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
+                        canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); 
+                        // Kaliteyi 0.6'ya düşür (Gözle fark edilmez ama dosya boyutu çok düşer)
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    }; 
+                    img.onerror = () => resolve(""); // Hata olursa boş dön, oyun çökmesin
+                    img.src = e.target.result;
                 }; reader.readAsDataURL(file);
             });
         }
+
+        // --- İNDİRME FONKSİYONU (GÜVENLİ REPLACE) ---
+        function downloadPlayableHtml() {
+            // Aktif state'i kaydet (Sadece gerekli veriler)
+            const saveState = {
+                rows: gameState.rows, cols: gameState.cols, teams: gameState.teams,
+                cards: gameState.cards, teamNames: gameState.teamNames,
+                currentTurn:0, scores:{1:0,2:0}, isLocked:false, flippedCards:[],
+                // Aktif deste de kaydedilmeli ki açınca oyun hazır olsun
+                activeDeck: gameState.activeDeck 
+            };
+            
+            let html = document.documentElement.outerHTML;
+            const json = JSON.stringify(saveState);
+            
+            // GÜVENLİ DEĞİŞTİRME: Placeholder'ı bul ve değiştir
+            // Eğer placeholder yoksa (daha önce indirilmişse), eski state'i bulup değiştir
+            if (html.includes('// __DATA_PLACEHOLDER__')) {
+                html = html.replace('let gameState = null; // __DATA_PLACEHOLDER__', `let gameState = ${json}; // __DATA_PLACEHOLDER__`);
+            } else {
+                // Eski usul regex (Fallback)
+                html = html.replace(/let gameState = \{.*?\};/s, `let gameState = ${json};`);
+            }
+
+            const blob = new Blob([html], {type:'text/html'});
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = 'Hafiza_Oyunu_v26.html'; 
+            a.click();
+        }
+
+        // --- STANDART FONKSİYONLAR ---
         function updateInputWithImage(group, base64Data) {
             const hidden = group.querySelector('.hidden-data'); const preview = group.querySelector('.preview-img'); const text = group.querySelector('.drop-text');
             hidden.value = base64Data; preview.src = base64Data; preview.style.display = 'block'; text.textContent = 'Resim Hazır';
@@ -368,11 +325,9 @@
                 const rect = el.getBoundingClientRect(); el.classList.add('invisible');
                 const clone = el.cloneNode(true); clone.classList.remove('invisible'); clone.classList.add('flying-card');
                 clone.style.width = rect.width + 'px'; clone.style.height = rect.height + 'px'; clone.style.left = rect.left + 'px'; clone.style.top = rect.top + 'px';
-                // Clone içeriği de görünür olmalı
+                // Clone içeriği görünür olmalı
                 const inner = clone.querySelector('.card-back > *');
-                if(inner) inner.style.visibility = 'visible';
-                if(inner) inner.style.opacity = '1';
-
+                if(inner) { inner.style.visibility = 'visible'; inner.style.opacity = '1'; }
                 document.body.appendChild(clone);
                 requestAnimationFrame(() => {
                     const targetX = targetRect.left + (targetRect.width / 2) - (rect.width / 2);
@@ -415,7 +370,9 @@
                         const el = document.createElement('div'); el.className = 'card';
                         if(card.isMatched) el.classList.add('invisible'); else if(card.isFlipped) el.classList.add('flipped');
                         let contentHtml = '';
-                        if (card.type.includes('image') || (card.content && card.content.startsWith('data:'))) { contentHtml = `<img src="${card.content}" alt="Görsel">`; } 
+                        if (card.type.includes('image') || (card.content && card.content.startsWith('data:'))) { 
+                            contentHtml = `<img src="${card.content}" alt="Görsel" onerror="this.src='';this.alt='Resim Hatası'">`; 
+                        } 
                         else { let text = card.content || "?"; contentHtml = `<span>${text}</span>`; }
                         el.innerHTML = `<div class="card-inner"><div class="card-front"></div><div class="card-back">${contentHtml}</div></div>`;
                         el.onclick = () => handleCardClick(cardIndex, el); board.appendChild(el);
@@ -524,9 +481,9 @@
             const reader = new FileReader(); reader.onload = function(e) {
                 const img = new Image(); img.onload = function() {
                     const canvas = document.getElementById('compress-canvas'); const ctx = canvas.getContext('2d');
-                    const max = 300; let w = img.width, h = img.height; if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
+                    const max = 200; let w = img.width, h = img.height; if (w>h) { if(w>max){h*=max/w; w=max;}} else { if(h>max){w*=max/h; h=max;}}
                     canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7); hidden.value = dataUrl; status.textContent = "Hazır"; preview.src = dataUrl; preview.style.display = 'block';
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6); hidden.value = dataUrl; status.textContent = "Hazır"; preview.src = dataUrl; preview.style.display = 'block';
                 }; img.src = e.target.result;
             }; reader.readAsDataURL(file);
         }
@@ -549,13 +506,21 @@
             reader.onload = function(e) {
                 try {
                     const content = e.target.result;
-                    let data = file.name.endsWith('.json') ? JSON.parse(content) : JSON.parse(content.match(/let gameState = ({.*?});/s)[1]);
+                    // YENİ GÜVENLİ PARSE YÖNTEMİ
+                    let data;
+                    if (file.name.endsWith('.json')) {
+                        data = JSON.parse(content);
+                    } else {
+                        // HTML içinden JSON'u bul
+                        const match = content.match(/let gameState = (\{.*?\}); \/\/ __DATA_PLACEHOLDER__/s) || content.match(/let gameState = (\{.*?\});/s);
+                        if(match) data = JSON.parse(match[1]);
+                    }
                     if(data) {
                         gameState = data;
                         if(gameState.cards) gameState.cards.forEach(c => { if(c.content && c.content.startsWith('data:')) c.type='image'; });
-                        populateSettingsFromState(); generateInputs(false); repopulateInputsFromState(); alert("Yüklendi!");
-                    }
-                } catch(err){ alert("Hata!"); }
+                        populateSettingsFromState(); generateInputs(false); repopulateInputsFromState(); alert("Oyun başarıyla yüklendi!");
+                    } else throw new Error("Veri bulunamadı");
+                } catch(err){ alert("Hata: Dosya bozuk veya formatı yanlış."); console.error(err); }
             }; reader.readAsText(file); input.value='';
         }
         function repopulateInputsFromState() {
@@ -576,17 +541,13 @@
             if(gameState.teamNames) { document.getElementById('input-team1').value = gameState.teamNames[1]; document.getElementById('input-team2').value = gameState.teamNames[2]; }
             toggleTeamNameInputs();
         }
-        function downloadPlayableHtml() {
-            let html = document.documentElement.outerHTML;
-            let json = JSON.stringify({ rows: gameState.rows, cols: gameState.cols, teams: gameState.teams, cards: gameState.cards, teamNames: gameState.teamNames, currentTurn:0, scores:{1:0,2:0}, isLocked:false, flippedCards:[] });
-            html = html.replace(/let gameState = \{.*?\};/s, `let gameState = ${json};`);
-            const blob = new Blob([html], {type:'text/html'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Hafiza_Oyunu_v25.html'; a.click();
-        }
         function restartGame() { if(confirm("Yeniden?")) initGame(); }
         function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
         function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
         function handleDragOver(e) { e.preventDefault(); } function handleDragLeave(e) { } function handleDrop(e) { e.preventDefault(); if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0], e.currentTarget.parentElement); }
+        
+        // __DATA_PLACEHOLDER__  <-- Bu satır çok önemlidir, sakın silmeyin. İndirme işlemi burayı hedef alır.
+        let placeholder_check = null; // __DATA_PLACEHOLDER__
     </script>
 </body>
 </html>
