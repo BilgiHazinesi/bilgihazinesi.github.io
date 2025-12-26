@@ -8,20 +8,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f5f7fa">
     
-    <title>Zeynal Öğretmen Kütüphane (V33)</title>
+    <title>Zeynal Öğretmen Kütüphane (V35)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* --- TEMA AYARLARI --- */
         :root {
-            /* AYDINLIK MOD */
             --bg-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            
-            /* NET CAM (CRYSTAL) */
             --glass-bg: rgba(255, 255, 255, 0.2); 
             --nav-bg: rgba(255, 255, 255, 0.35); 
             --glass-border: 1px solid rgba(255, 255, 255, 0.5);
             --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-            
             --text-main: #1d1d1f;
             --text-sub: #4b5563;
             --primary: #2563eb;
@@ -29,7 +25,6 @@
             --bar-bg: rgba(255, 255, 255, 0.5);
         }
 
-        /* KARANLIK MOD */
         body.dark-mode {
             --bg-image: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             --glass-bg: rgba(0, 0, 0, 0.25);
@@ -144,17 +139,28 @@
 
         .btn-delete { background: rgba(220, 38, 38, 0.1); color: #ef4444; border: 1px solid #ef4444; padding: 4px 10px; font-size: 0.75rem; border-radius: 8px; margin-left: auto; cursor:pointer;}
 
-        /* --- LİSTE --- */
+        /* --- LİSTE VE MADALYA DÜZENİ --- */
         .list-item {
             display: flex; align-items: center; justify-content: space-between; 
             padding: 14px 0; border-bottom: 1px solid rgba(150,150,150,0.15);
         }
         .list-item:last-child { border-bottom: none; }
         
-        .item-content { flex: 1; margin-right: 10px; } 
+        .item-content { flex: 1; margin-right: 10px; overflow: hidden; } 
         .item-content h4 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-main); }
         .item-content p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-sub); display: flex; align-items: center; gap: 5px; }
         
+        /* ÖNEMLİ: Madalyalar için esnek kutu yapısı */
+        .rank-info { font-size:0.75rem; color:var(--primary); margin-top:4px; font-weight:700; text-transform: uppercase; letter-spacing: 0.5px;}
+        .medal-container {
+            display: flex; 
+            flex-wrap: wrap; /* Çok madalya olunca alt satıra geç */
+            gap: 2px; 
+            margin-top: 5px; 
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
         .overdue-warning { color: #ef4444; font-weight: 700; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
@@ -194,24 +200,38 @@
 
         #loader { display: none; margin-top: 15px; font-weight: 600; color: var(--primary); }
         
-        /* GİRİŞ */
-        #loginOverlay {
+        /* OVERLAY ORTAK YAPISI */
+        .overlay-bg {
             position: fixed; inset: 0; z-index: 9999;
-            background: var(--bg-image); display: flex; justify-content: center; align-items: center;
+            background: var(--bg-image); display: none; justify-content: center; align-items: center;
         }
-        body.dark-mode #loginOverlay { background-color: #0f172a; }
-        .login-card {
+        body.dark-mode .overlay-bg { background-color: #0f172a; }
+
+        .modal-card {
             background: var(--glass-bg); backdrop-filter: blur(30px);
-            padding: 40px; border-radius: 32px; border: 1px solid var(--glass-border);
+            padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border);
             width: 90%; max-width: 350px; text-align: center;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* MOBİL PUANLAMA MODALI İÇİN ÖZEL STİL */
+        .rating-btn-group { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+        .rating-btn {
+            width: 45px; height: 45px; border-radius: 50%; border: var(--glass-border);
+            background: rgba(255,255,255,0.1); font-size: 1.2rem; cursor: pointer;
+            color: var(--text-main); display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .rating-btn:hover, .rating-btn:active { background: #f59e0b; color: white; transform: scale(1.1); }
+
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-card">
+<div id="loginOverlay" class="overlay-bg" style="display:flex;">
+    <div class="modal-card">
         <h2 style="margin: 0 0 10px 0; color: var(--text-main);">Öğretmen Girişi</h2>
         <p style="color: var(--text-sub); margin-bottom: 20px;">Zeynal Öğretmen Kitap Takibi</p>
         <div class="input-wrapper">
@@ -222,7 +242,24 @@
     </div>
 </div>
 
-<div id="appContainer">
+<div id="ratingOverlay" class="overlay-bg" style="background: rgba(0,0,0,0.6);">
+    <div class="modal-card" style="background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2);">
+        <h3 style="margin-top:0; color:#fff;">Kitabı Puanla</h3>
+        <p style="font-size:0.9rem; opacity:0.8; color:#cbd5e1;">Öğrenci bu kitabı ne kadar sevdi?</p>
+        
+        <div class="rating-btn-group">
+            <button class="rating-btn" onclick="confirmReturn(1)">1</button>
+            <button class="rating-btn" onclick="confirmReturn(2)">2</button>
+            <button class="rating-btn" onclick="confirmReturn(3)">3</button>
+            <button class="rating-btn" onclick="confirmReturn(4)">4</button>
+            <button class="rating-btn" onclick="confirmReturn(5)">5</button>
+        </div>
+        
+        <button class="btn" style="background:rgba(255,255,255,0.1); color:white; margin-top:10px;" onclick="closeRatingModal()">İptal</button>
+    </div>
+</div>
+
+<div id="appContainer" style="display:none;">
     <div class="app-header">
         <div class="app-title">Zeynal Öğretmen Kütüphane</div>
         <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">🌙</button>
@@ -344,6 +381,7 @@
     let lastHistoryMap = {};
     let currentFilter = 'all';
     let statsSortOrder = 'desc'; 
+    let tempReturnId = null; // Puanlama için geçici ID tutucu
 
     // SİLME BUTONU
     function handleInput(input) {
@@ -536,17 +574,30 @@
         updateUI(); syncData();
     }
 
+    // --- PUANLAMA & İADE SİSTEMİ (MOBİL UYUMLU MODAL) ---
     function returnBook(id) {
-        let rec = records.find(r => r.id === id);
+        tempReturnId = id;
+        document.getElementById('ratingOverlay').style.display = 'flex'; // Pencereyi aç
+    }
+
+    function closeRatingModal() {
+        document.getElementById('ratingOverlay').style.display = 'none';
+        tempReturnId = null;
+    }
+
+    function confirmReturn(rating) {
+        if (!tempReturnId) return;
+        
+        let rec = records.find(r => r.id === tempReturnId);
         if(rec) {
-            let rating = prompt("Öğrenci kitaba kaç puan verdi? (1-5)", "");
-            if(rating && (rating < 1 || rating > 5)) rating = "";
             rec.status = "İade Etti";
             rec.returnDate = new Date().toLocaleDateString('tr-TR');
-            if(rating) rec.rating = rating;
+            rec.rating = rating; // Puanı kaydet
             updateUI(); syncData();
         }
+        closeRatingModal();
     }
+    // ---------------------------------------------
 
     function filterBooks(type, el) {
         currentFilter = type;
@@ -555,7 +606,6 @@
         renderBookManager();
     }
 
-    // Yardımcı: Kitap puanını sayı olarak al
     function getRawRating(bookName) {
         let bookRecs = records.filter(r => normalizeStr(r.book) === normalizeStr(bookName) && r.rating);
         if(bookRecs.length === 0) return 0;
@@ -579,7 +629,7 @@
             let activeList = activeBooksMap[key] || [];
             let lastReader = lastHistoryMap[key];
             let status = activeList.length > 0 ? 'out' : 'in';
-            let avgScore = getRawRating(b); // Puan sıralaması için veriyi çek
+            let avgScore = getRawRating(b);
             return { name: b, status: status, activeList: activeList, lastReader: lastReader, avgScore: avgScore };
         });
 
@@ -587,16 +637,12 @@
             if(!item.name.toLowerCase().includes(search)) return false;
             if(currentFilter === 'out' && item.status !== 'out') return false;
             if(currentFilter === 'in' && item.status !== 'in') return false;
-            // Rating filtresinde de tüm kitapları gösterelim ki sıralamayı görsünler
             return true;
         });
 
-        // SIRALAMA MANTIĞI
         if(currentFilter === 'rating') {
-             // Puana göre çoktan aza sırala
              displayList.sort((a,b) => b.avgScore - a.avgScore);
         } else {
-             // Varsayılan: Dışarıdakiler önce
              displayList.sort((a,b) => a.status === 'out' ? -1 : 1);
         }
 
@@ -646,9 +692,7 @@
         if(val && !books.includes(val)) { books.push(val); books.sort(); document.getElementById('newBookInput').value = ""; updateUI(); syncData(); }
     }
 
-    // --- MADALYA SİSTEMİ GÜNCELLENDİ ---
-    // Her 5 kitap = 1 Altın
-    // Her 3 kitap = 1 Gümüş (Kümülatif)
+    // --- YENİ MADALYA SİSTEMİ (Her 5 ve 3 kitapta bir) ---
     function getMedals(count) {
         let goldCount = Math.floor(count / 5);
         let silverCount = Math.floor(count / 3);
@@ -660,11 +704,17 @@
         return medals;
     }
 
+    // --- YENİ RÜTBE SİSTEMİ (8 KADEME - Her 5 Kitapta Bir Değişir) ---
     function getRank(count) {
-        if(count >= 30) return "👑 Üstad";
-        if(count >= 16) return "🚀 Kaşif";
-        if(count >= 6) return "🦁 Kitap Kurdu";
-        return "🌱 Çırak";
+        if(count >= 40) return "💎 EFSANE";
+        if(count >= 35) return "🌍 Bilge Okur";
+        if(count >= 30) return "🎩 Edebiyat Ustası";
+        if(count >= 25) return "👑 Kütüphane Muhafızı";
+        if(count >= 20) return "🏹 Kelime Avcısı";
+        if(count >= 15) return "🚀 Bilgi Kaşifi";
+        if(count >= 10) return "📖 Kitap Kurdu";
+        if(count >= 5)  return "🥉 Okuma Çırağı";
+        return "🌱 Başlangıç";
     }
 
     function generateReport() {
@@ -723,7 +773,8 @@
                 <div class="item-content">
                     <span style="font-weight:bold; color:var(--text-sub); margin-right:10px;">${i+1}.</span>
                     <span style="font-weight:600;">${s.n}</span>
-                    <div style="font-size:0.75rem; color:var(--primary); margin-left:25px; margin-top:2px;">${rank} ${medals}</div>
+                    <div class="rank-info">${rank}</div>
+                    <div class="medal-container">${medals}</div>
                 </div>
                 <span style="font-weight:800; color:var(--primary); font-size:1.1rem; text-align:right;">${s.c}</span>
             </div>`;
