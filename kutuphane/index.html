@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#f5f7fa">
-    <title>Zeynal Öğretmen Kütüphane (V41 - Uzay Yolu)</title>
+    <title>Zeynal Öğretmen Kütüphane (V41 - Sesli Kartlar)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* --- TEMA AYARLARI --- */
@@ -94,14 +94,15 @@
 
         /* INPUTS */
         .input-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
-        input {
+        input, select, textarea {
             width: 100%; padding: 14px; padding-right: 40px; font-size: 1rem;
             background: var(--input-bg);
             border: var(--glass-border);
             border-radius: 14px; color: var(--text-main);
-            transition: 0.3s;
+            transition: 0.3s; font-family: inherit;
         }
-        input:focus { border-color: var(--primary); background: rgba(255,255,255,0.25); }
+        textarea { resize: none; height: 80px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: rgba(255,255,255,0.25); }
         .clear-btn {
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
             color: var(--text-sub); cursor: pointer; font-size: 1.1rem;
@@ -117,7 +118,6 @@
         }
         .btn:active { transform: scale(0.97); }
         .btn-primary { background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; }
-        
         .btn-return { 
             background: #f97316; color: white; border: none; 
             padding: 8px 16px; border-radius: 10px; font-weight: 600; 
@@ -125,12 +125,6 @@
             box-shadow: 0 2px 5px rgba(249, 115, 22, 0.4);
         }
         .btn-delete { background: rgba(220, 38, 38, 0.1); color: #ef4444; border: 1px solid #ef4444; padding: 4px 10px; font-size: 0.75rem; border-radius: 8px; margin-left: auto; cursor:pointer;}
-        .btn-edit-toggle {
-            background: none; border: 1px solid var(--text-sub); color: var(--text-sub);
-            border-radius: 12px; padding: 5px 15px; font-size: 0.8rem; cursor: pointer;
-            display: flex; align-items: center; gap: 5px;
-        }
-        .btn-edit-toggle.active { background: var(--primary); color: white; border-color: var(--primary); }
         .btn-save-small {
             background: #10b981; color: white; border: none; padding: 8px 12px;
             border-radius: 8px; font-size: 0.8rem; cursor: pointer; white-space: nowrap;
@@ -146,16 +140,11 @@
         .item-content h4 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-main); }
         .item-content p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-sub); display: flex; align-items: center; gap: 5px; }
         .rank-info { font-size:0.75rem; color:var(--primary); margin-top:4px; font-weight:700; text-transform: uppercase; letter-spacing: 0.5px;}
-        .medal-container {
-            display: flex; flex-wrap: wrap; gap: 2px; margin-top: 5px; font-size: 0.9rem; line-height: 1.4;
-        }
+        .medal-container { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 5px; font-size: 0.9rem; line-height: 1.4; }
 
-        /* STATS BOXES */
+        /* STATS */
         .stats-summary { display: flex; gap: 10px; margin-bottom: 20px; }
-        .summary-box {
-            flex: 1; background: var(--input-bg); border: var(--glass-border);
-            border-radius: 16px; padding: 15px; text-align: center;
-        }
+        .summary-box { flex: 1; background: var(--input-bg); border: var(--glass-border); border-radius: 16px; padding: 15px; text-align: center; }
         .sb-title { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 5px; font-weight: 600; }
         .sb-value { font-size: 1.1rem; color: var(--primary); font-weight: 800; }
         .overdue-warning { color: #ef4444; font-weight: 700; animation: pulse 2s infinite; }
@@ -163,122 +152,56 @@
 
         /* FILTERS */
         .filter-group { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .filter-chip {
-            flex: 1; padding: 12px; text-align: center; white-space: nowrap;
-            background: var(--input-bg); border: var(--glass-border);
-            border-radius: 14px; font-size: 0.85rem; font-weight: 600;
-            color: var(--text-sub); cursor: pointer; transition: 0.3s;
-        }
+        .filter-chip { flex: 1; padding: 12px; text-align: center; white-space: nowrap; background: var(--input-bg); border: var(--glass-border); border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: 0.3s; }
         .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* NAVIGATION */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 90px;
-            background: var(--nav-bg);
-            border-top: var(--glass-border);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            display: flex; justify-content: space-around; align-items: flex-start;
-            padding-top: 15px; z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center;
-            background: none; border: none; color: var(--text-sub);
-            font-size: 0.7rem; transition: 0.3s; opacity: 0.7; flex: 1;
-        }
+        /* NAV */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 90px; background: var(--nav-bg); border-top: var(--glass-border); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); display: flex; justify-content: space-around; align-items: flex-start; padding-top: 15px; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; background: none; border: none; color: var(--text-sub); font-size: 0.7rem; transition: 0.3s; opacity: 0.7; flex: 1; }
         .nav-item i { font-size: 1.5rem; margin-bottom: 5px; }
         .nav-item.active { color: var(--primary); opacity: 1; transform: translateY(-3px); }
-        .sort-btn {
-            background: none; border: 1px solid var(--text-sub); color: var(--text-sub);
-            border-radius: 12px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer;
-        }
+        .sort-btn { background: none; border: 1px solid var(--text-sub); color: var(--text-sub); border-radius: 12px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer; }
 
+        /* OVERLAYS */
         #loader { display: none; margin-top: 15px; font-weight: 600; color: var(--primary); }
-        .overlay-bg { position: fixed; inset: 0; z-index: 9999; background: var(--bg-image); display: none; justify-content: center; align-items: center; }
+        .overlay-bg { position: fixed; inset: 0; z-index: 9999; background: var(--bg-image); display: none; justify-content: center; align-items: center; overflow-y: auto; padding: 20px;}
         body.dark-mode .overlay-bg { background-color: #0f172a; }
-        .modal-card { background: var(--glass-bg); backdrop-filter: blur(30px); padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border); width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .modal-card { background: var(--glass-bg); backdrop-filter: blur(30px); padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); margin: auto;}
         @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .rating-btn-group { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
-        .rating-btn { width: 45px; height: 45px; border-radius: 50%; border: var(--glass-border); background: rgba(255,255,255,0.1); font-size: 1.2rem; cursor: pointer; color: var(--text-main); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .rating-btn:hover, .rating-btn:active { background: #f59e0b; color: white; transform: scale(1.1); }
-        .edit-input { padding: 8px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; margin-bottom: 5px; }
-
-        /* --- 🚀 YENİ UZAY YOLU STİLLERİ --- */
-        .journey-map-container {
-            position: relative;
-            width: 100%;
-            height: 450px; /* Biraz daha uzun yaptık ki kıvrımlar rahat sığsın */
-            background: radial-gradient(ellipse at center, #1b2735 0%, #090a0f 100%);
-            border-radius: 24px;
-            overflow: hidden;
-            border: var(--glass-border);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            margin-top: 20px;
-        }
-        .stars {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center;
-            z-index: 0; opacity: 0.6; animation: moveStars 100s linear infinite;
-        }
-        @keyframes moveStars { from {background-position: 0 0;} to {background-position: 0 1000px;} }
         
-        /* SVG Çizgi Yolu */
-        #journeySvg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
-        }
-        .path-line {
-            fill: none; stroke: rgba(255, 255, 255, 0.2); stroke-width: 3; stroke-dasharray: 10, 10;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
-        }
+        .rating-btn-group { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .rating-btn { width: 40px; height: 40px; border-radius: 50%; border: var(--glass-border); background: rgba(255,255,255,0.1); font-size: 1rem; cursor: pointer; color: var(--text-main); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .rating-btn.selected, .rating-btn:hover { background: #f59e0b; color: white; transform: scale(1.1); border-color: #f59e0b; }
+        
+        .card-question { font-size: 0.85rem; color: var(--primary); font-style: italic; margin: 10px 0; min-height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: 12px; }
+        
+        .mic-btn { position: absolute; right: 10px; bottom: 10px; background: var(--primary); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .mic-btn.listening { background: #ef4444; animation: pulseMic 1s infinite; }
+        @keyframes pulseMic { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* İstasyonlar */
-        .station {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            width: 55px; height: 55px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #94a3b8; font-size: 0.7rem; font-weight: bold;
-            z-index: 2; transition: all 0.5s ease;
-            backdrop-filter: blur(2px);
-        }
+        /* UZAY YOLU */
+        .journey-map-container { position: relative; width: 100%; height: 450px; background: radial-gradient(ellipse at center, #1b2735 0%, #090a0f 100%); border-radius: 24px; overflow: hidden; border: var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.5); margin-top: 20px; }
+        .stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; z-index: 0; opacity: 0.6; animation: moveStars 100s linear infinite; }
+        @keyframes moveStars { from {background-position: 0 0;} to {background-position: 0 1000px;} }
+        #journeySvg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .path-line { fill: none; stroke: rgba(255, 255, 255, 0.2); stroke-width: 3; stroke-dasharray: 10, 10; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
+        .station { position: absolute; transform: translate(-50%, -50%); width: 55px; height: 55px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.7rem; font-weight: bold; z-index: 2; transition: all 0.5s ease; backdrop-filter: blur(2px); }
         .station i { font-size: 1.2rem; margin-bottom: 2px; }
         .station span { font-size: 0.6rem; opacity: 0.7; text-align: center; line-height: 1; }
-
-        /* Aktif İstasyon (Ulaşılanlar) */
-        .station.reached {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: #3b82f6;
-            color: #60a5fa;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-        }
-        
-        /* Son Ulaşılan İstasyon (Parlayan) */
-        .station.current {
-            background: radial-gradient(circle, #3b82f6 0%, #1e40af 100%);
-            border-color: #ffffff;
-            color: white;
-            width: 70px; height: 70px; /* Biraz büyüsün */
-            box-shadow: 0 0 30px #3b82f6;
-            z-index: 3;
-        }
+        .station.reached { background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #60a5fa; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .station.current { background: radial-gradient(circle, #3b82f6 0%, #1e40af 100%); border-color: #ffffff; color: white; width: 70px; height: 70px; box-shadow: 0 0 30px #3b82f6; z-index: 3; }
         .station.current i { font-size: 1.6rem; animation: pulseIcon 2s infinite; }
-        
-        /* Astronot */
-        .astronaut {
-            position: absolute;
-            top: -35px; left: 50%; transform: translateX(-50%);
-            font-size: 2rem;
-            filter: drop-shadow(0 0 10px #f59e0b);
-            animation: floatAstronaut 3s ease-in-out infinite;
-            display: none;
-        }
+        .astronaut { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-size: 2rem; filter: drop-shadow(0 0 10px #f59e0b); animation: floatAstronaut 3s ease-in-out infinite; display: none; }
         .station.current .astronaut { display: block; }
-
         @keyframes floatAstronaut { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10px); } }
         @keyframes pulseIcon { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        /* REVIEW CARD STYLE IN DETAIL VIEW */
+        .review-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; margin-bottom: 10px; text-align: left; }
+        .rc-header { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; color: var(--primary); font-weight: bold; }
+        .rc-type { font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 6px; color: var(--text-sub); }
+        .rc-text { font-size: 0.9rem; color: var(--text-main); line-height: 1.4; font-style: italic; }
+        .close-overlay-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-main); font-size: 1.5rem; cursor: pointer; }
 
     </style>
 </head>
@@ -296,18 +219,50 @@
     </div>
 </div>
 
-<div id="ratingOverlay" class="overlay-bg" style="background: rgba(0,0,0,0.6);">
-    <div class="modal-card" style="background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2);">
-        <h3 style="margin-top:0; color:#fff;">Kitabı Puanla</h3>
-        <p style="font-size:0.9rem; opacity:0.8; color:#cbd5e1;">Öğrenci bu kitabı ne kadar sevdi?</p>
-        <div class="rating-btn-group">
-            <button class="rating-btn" onclick="confirmReturn(1)">1</button>
-            <button class="rating-btn" onclick="confirmReturn(2)">2</button>
-            <button class="rating-btn" onclick="confirmReturn(3)">3</button>
-            <button class="rating-btn" onclick="confirmReturn(4)">4</button>
-            <button class="rating-btn" onclick="confirmReturn(5)">5</button>
+<div id="ratingOverlay" class="overlay-bg" style="background: rgba(0,0,0,0.8);">
+    <div class="modal-card" style="background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); max-width: 450px;">
+        <h3 style="margin-top:0; color:#fff;">Kitabı Değerlendir</h3>
+        
+        <p style="font-size:0.8rem; opacity:0.7; margin-bottom:5px;">1. Puanın Kaç?</p>
+        <div class="rating-btn-group" id="starGroup">
+            <button class="rating-btn" onclick="selectStar(1)">1</button>
+            <button class="rating-btn" onclick="selectStar(2)">2</button>
+            <button class="rating-btn" onclick="selectStar(3)">3</button>
+            <button class="rating-btn" onclick="selectStar(4)">4</button>
+            <button class="rating-btn" onclick="selectStar(5)">5</button>
         </div>
-        <button class="btn" style="background:rgba(255,255,255,0.1); color:white; margin-top:10px;" onclick="closeRatingModal()">İptal</button>
+
+        <p style="font-size:0.8rem; opacity:0.7; margin-bottom:5px;">2. Bir Çıkış Kartı Seç</p>
+        <div class="input-wrapper" style="margin-bottom:5px;">
+            <select id="exitCardSelect" onchange="updateCardPrompt()" style="background:rgba(255,255,255,0.1); color:white;">
+                <option value="">-- Kart Seçiniz --</option>
+                </select>
+        </div>
+
+        <div id="cardPromptBox" class="card-question" style="display:none;">
+            </div>
+
+        <div class="input-wrapper" id="commentWrapper" style="display:none;">
+            <textarea id="returnComment" placeholder="Cevabını buraya söyle veya yaz..." style="background:rgba(255,255,255,0.1); color:white;"></textarea>
+            <button class="mic-btn" onclick="startDictation()"><i class="fas fa-microphone"></i></button>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn" style="background:rgba(255,255,255,0.1); color:white; flex:1;" onclick="closeRatingModal()">İptal</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="submitReturn()">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<div id="bookDetailOverlay" class="overlay-bg">
+    <div class="modal-card" style="text-align:left; max-width:500px; padding-top:40px;">
+        <button class="close-overlay-btn" onclick="closeBookDetail()">&times;</button>
+        <h3 id="bdTitle" style="margin:0 0 5px 0; color:var(--primary);">Kitap Adı</h3>
+        <p id="bdStats" style="font-size:0.8rem; color:var(--text-sub); margin-bottom:20px;">0 Okuma | Ort. 0 Puan</p>
+        
+        <h4 style="margin-bottom:10px; border-bottom:1px solid var(--glass-border); padding-bottom:5px;">Öğrenci Yorumları</h4>
+        <div id="bdReviews" style="max-height:300px; overflow-y:auto;">
+            </div>
     </div>
 </div>
 
@@ -361,23 +316,12 @@
                         <div class="filter-chip" onclick="filterBooks('out', this)">Dışarıda</div>
                         <div class="filter-chip" onclick="filterBooks('rating', this)">Puan</div>
                    </div>
-                   <button class="btn-edit-toggle" id="editToggleBtn" onclick="toggleEditMode()">
-                        ✏️ Düzenle
-                   </button>
-                </div>
+                   </div>
                 <div class="input-wrapper">
                     <input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="handleInput(this); renderBookManager()">
                     <i class="fas fa-times-circle clear-btn" onclick="clearField('bookSearch', renderBookManager)"></i>
                 </div>
                 <div id="bookManagerList"></div>
-            </div>
-            <div class="glass-panel">
-                <h4 style="margin:0 0 10px 0; color:var(--text-main);">Yeni Kitap Ekle</h4>
-                <div class="input-wrapper">
-                    <input type="text" id="newBookInput" placeholder="Kitap Adı..." oninput="handleInput(this)">
-                    <i class="fas fa-times-circle clear-btn" onclick="clearField('newBookInput')"></i>
-                </div>
-                <button class="btn btn-primary" onclick="addNewBook()">Ekle</button>
             </div>
         </div>
 
@@ -446,7 +390,20 @@
     let currentFilter = 'all';
     let statsSortMode = 'book_desc'; 
     let tempReturnId = null; 
-    let isEditMode = false;
+    let currentRating = 0; // Seçilen yıldız
+
+    // --- ÇIKIŞ KARTLARI TANIMLARI ---
+    const EXIT_CARDS = {
+        "1": { title: "Macera Hatırası", prompt: "Kitabın en unutulmaz sahnesini veya karakterini seç ve seni nasıl etkilediğini anlat." },
+        "2": { title: "Öğrenen Profil", prompt: "Kitaptaki karakter hangi IB özelliğini (araştıran, duyarlı vb.) taşıyor? Neden?" },
+        "3": { title: "Duygu Kartı", prompt: "Kitap boyunca hangi duyguları hissettin? En baskın duygu neydi?" },
+        "4": { title: "Bağlantı Kartı", prompt: "Kitaptaki olaylardan biriyle kendi hayatın arasında nasıl bir bağ kurdun?" },
+        "5": { title: "Eleştiri Kartı", prompt: "Kitapta katılmadığın bir olay veya karakter davranışı var mı? Neden?" },
+        "6": { title: "Soru Kartı", prompt: "Kitapta seni en çok meraklandıran veya düşündüren soru neydi?" },
+        "7": { title: "Yaratıcı Son", prompt: "Kitabın sonunu nasıl değiştirirdin? Kısaca yeni sonu anlat." },
+        "8": { title: "Gelişim Kartı", prompt: "Bu kitap hangi becerini (hayal gücü, bilgi vb.) geliştirdi?" },
+        "9": { title: "Tavsiye Kartı", prompt: "Bu kitabı arkadaşlarına tavsiye eder misin? Neden?" }
+    };
 
     function handleInput(input) {
         let btn = input.nextElementSibling;
@@ -473,6 +430,16 @@
         } else {
             document.getElementById('themeIcon').innerText = '🌙';
         }
+        
+        // Kart seçeneklerini doldur
+        let select = document.getElementById('exitCardSelect');
+        for (const [key, value] of Object.entries(EXIT_CARDS)) {
+            let opt = document.createElement('option');
+            opt.value = key;
+            opt.innerText = value.title;
+            select.appendChild(opt);
+        }
+
         if(API_URL.includes("BURAYA")) { alert("Lütfen API Linkini düzenleyin."); return; }
         const cached = localStorage.getItem('libraryData');
         if (cached) { try { const data = JSON.parse(cached); processData(data); } catch(e) {} }
@@ -587,59 +554,122 @@
         handleInput(document.getElementById('bookInput'));
         updateUI(); syncData();
     }
+
+    // --- YENİ İADE VE KART SİSTEMİ ---
     function returnBook(id) {
         tempReturnId = id;
+        currentRating = 0;
+        updateStars();
+        document.getElementById('exitCardSelect').value = "";
+        document.getElementById('cardPromptBox').style.display = 'none';
+        document.getElementById('commentWrapper').style.display = 'none';
+        document.getElementById('returnComment').value = "";
         document.getElementById('ratingOverlay').style.display = 'flex';
     }
+
+    function selectStar(n) {
+        currentRating = n;
+        updateStars();
+    }
+
+    function updateStars() {
+        let btns = document.getElementById('starGroup').children;
+        for(let i=0; i<btns.length; i++) {
+            if(i < currentRating) btns[i].classList.add('selected');
+            else btns[i].classList.remove('selected');
+        }
+    }
+
+    function updateCardPrompt() {
+        let val = document.getElementById('exitCardSelect').value;
+        let box = document.getElementById('cardPromptBox');
+        let wrap = document.getElementById('commentWrapper');
+        
+        if(val && EXIT_CARDS[val]) {
+            box.innerHTML = `<i class="fas fa-question-circle"></i> ${EXIT_CARDS[val].prompt}`;
+            box.style.display = 'flex';
+            wrap.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+            wrap.style.display = 'none';
+        }
+    }
+
+    // --- SESLİ KOMUT (Web Speech API) ---
+    function startDictation() {
+        if (window.hasOwnProperty('webkitSpeechRecognition')) {
+            let recognition = new webkitSpeechRecognition();
+            let btn = document.querySelector('.mic-btn');
+            
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = "tr-TR";
+            
+            recognition.start();
+            btn.classList.add('listening');
+
+            recognition.onresult = function(e) {
+                document.getElementById('returnComment').value = e.results[0][0].transcript;
+                recognition.stop();
+                btn.classList.remove('listening');
+            };
+
+            recognition.onerror = function(e) {
+                recognition.stop();
+                btn.classList.remove('listening');
+            };
+            
+            recognition.onend = function() {
+                btn.classList.remove('listening');
+            };
+        } else {
+            alert("Tarayıcınız sesli komutu desteklemiyor (Chrome önerilir).");
+        }
+    }
+
     function closeRatingModal() {
         document.getElementById('ratingOverlay').style.display = 'none';
         tempReturnId = null;
     }
-    function confirmReturn(rating) {
+
+    function submitReturn() {
         if (!tempReturnId) return;
         let rec = records.find(r => r.id === tempReturnId);
+        
+        // Kart verilerini al
+        let cardId = document.getElementById('exitCardSelect').value;
+        let comment = document.getElementById('returnComment').value;
+
         if(rec) {
             rec.status = "İade Etti";
             rec.returnDate = new Date().toLocaleDateString('tr-TR');
-            rec.rating = rating;
+            if(currentRating > 0) rec.rating = currentRating;
+            
+            // Yeni Verileri Ekle
+            if(cardId) {
+                rec.cardId = cardId;
+                rec.cardTitle = EXIT_CARDS[cardId].title;
+                rec.comment = comment;
+            }
+
             updateUI(); syncData();
         }
         closeRatingModal();
     }
-    function toggleEditMode() {
-        isEditMode = !isEditMode;
-        document.getElementById('editToggleBtn').classList.toggle('active');
-        document.getElementById('editToggleBtn').innerText = isEditMode ? '✅ Bitir' : '✏️ Düzenle';
-        renderBookManager();
-    }
-    function saveBookEdits(index) {
-        let oldName = books[index];
-        let nameInput = document.getElementById(`edit-name-${index}`);
-        let pageInput = document.getElementById(`edit-page-${index}`);
-        if (!nameInput || !pageInput) return;
-        let newName = nameInput.value.trim();
-        let newPage = parseInt(pageInput.value) || 0;
-        if(!newName) return alert("Kitap adı boş olamaz.");
-        if(newName !== oldName) {
-            books[index] = newName;
-            if(bookPages[oldName]) delete bookPages[oldName];
-            records.forEach(r => { if(r.book === oldName) r.book = newName; });
-        }
-        bookPages[newName] = newPage;
-        alert("Kaydedildi!");
-        books.sort(); renderBookManager(); updateUI(); syncData();
-    }
+
     function filterBooks(type, el) {
         currentFilter = type;
         document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         renderBookManager();
     }
+    
     function getRawRating(bookName) {
         let bookRecs = records.filter(r => normalizeStr(r.book) === normalizeStr(bookName) && r.rating);
         if(bookRecs.length === 0) return 0;
         return bookRecs.reduce((a, b) => a + parseInt(b.rating), 0) / bookRecs.length;
     }
+
     function renderBookManager() {
         const search = document.getElementById('bookSearch').value.toLowerCase();
         const div = document.getElementById('bookManagerList');
@@ -661,33 +691,68 @@
         });
         if(currentFilter === 'rating') displayList.sort((a,b) => b.avgScore - a.avgScore);
         else displayList.sort((a,b) => a.status === 'out' ? -1 : 1);
+        
         displayList.forEach((item) => {
-            let contentHtml = "";
-            let badge = "";
-            if(isEditMode) {
-                contentHtml = `<div style="display:flex; flex-direction:column; gap:5px; width:100%;"><label style="font-size:0.75rem; color:var(--text-sub);">Kitap Adı:</label><input type="text" class="edit-input" id="edit-name-${item.originalIndex}" value="${item.name}"><div style="display:flex; gap:10px;"><div style="flex:1;"><label style="font-size:0.75rem; color:var(--text-sub);">Sayfa Sayısı:</label><input type="number" class="edit-input" id="edit-page-${item.originalIndex}" value="${item.pageCount}"></div><button class="btn-save-small" style="align-self:end; height:36px; margin-bottom:5px;" onclick="saveBookEdits(${item.originalIndex})">Kaydet</button></div></div>`;
-            } else {
-                let ratingHtml = item.avgScore > 0 ? ` <span style="color:#f59e0b; font-size:0.85rem;">⭐${item.avgScore.toFixed(1)}</span>` : "";
-                let pageHtml = item.pageCount > 0 ? `<span style="font-size:0.75rem; color:var(--text-sub); border:1px solid #ccc; padding:2px 6px; border-radius:8px; margin-left:5px;">${item.pageCount} Syf.</span>` : "";
-                let details = "";
-                if(item.status === 'out') {
-                    badge = `<span class="status-badge bg-red" style="color:#ef4444; font-weight:bold; font-size:0.8rem;">Dışarıda</span>`;
-                    item.activeList.forEach(r => {
-                        let isOverdue = checkOverdue(r.date);
-                        let warning = isOverdue ? `<span class="overdue-warning">⚠️ 15 Gün!</span>` : "";
-                        let dateColor = isOverdue ? "#ef4444" : "inherit";
-                        details += `<div style="font-size:0.85rem; margin-top:5px; display:flex; justify-content:space-between; align-items:center;"><span style="color:${dateColor}">🔴 <b>${r.student}</b> (${r.date}) ${warning}</span><button class="btn-delete" onclick="deleteRecord(${r.id})">Sil</button></div>`;
-                    });
-                } else {
-                    badge = `<span class="status-badge bg-green" style="color:#10b981; font-weight:bold; font-size:0.8rem;">Rafta</span>`;
-                    if(item.lastReader) details = `<span style="font-size:0.8rem; color:var(--text-sub);">Son: ${item.lastReader.student} (${item.lastReader.date})</span>`;
-                    else details = `<span style="font-size:0.8rem; color:var(--text-sub); opacity:0.7;">Hiç okunmadı</span>`;
-                }
-                contentHtml = `<div style="display:flex; justify-content:space-between; align-items:center;"><h4 style="margin:0; font-size:1rem; color:var(--text-main);">${item.name} ${ratingHtml} ${pageHtml}</h4>${badge}</div><div style="margin-top:5px;">${details}</div>`;
-            }
-            div.innerHTML += `<div class="glass-panel" style="padding:15px; margin-bottom:10px;">${contentHtml}</div>`;
+            let ratingHtml = item.avgScore > 0 ? ` <span style="color:#f59e0b; font-size:0.85rem;">⭐${item.avgScore.toFixed(1)}</span>` : "";
+            let pageHtml = item.pageCount > 0 ? `<span style="font-size:0.75rem; color:var(--text-sub); border:1px solid #ccc; padding:2px 6px; border-radius:8px; margin-left:5px;">${item.pageCount} Syf.</span>` : "";
+            let badge = item.status === 'out' ? `<span style="color:#ef4444; font-weight:bold; font-size:0.8rem;">Dışarıda</span>` : `<span style="color:#10b981; font-weight:bold; font-size:0.8rem;">Rafta</span>`;
+            
+            // KİTAP ADINA TIKLAYINCA DETAY AÇMA EKLENDİ
+            div.innerHTML += `
+            <div class="glass-panel" style="padding:15px; margin-bottom:10px; cursor:pointer;" onclick="openBookDetail('${item.name}')">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${item.name} ${ratingHtml} ${pageHtml}</h4>
+                    ${badge}
+                </div>
+                <div style="margin-top:5px; font-size:0.8rem; color:var(--text-sub); opacity:0.8;">Detaylar için tıkla ▶</div>
+            </div>`;
         });
     }
+
+    // --- KİTAP DETAY PENCERESİ FONKSİYONLARI ---
+    function openBookDetail(bookName) {
+        document.getElementById('bdTitle').innerText = bookName;
+        let bookRecs = records.filter(r => normalizeStr(r.book) === normalizeStr(bookName) && r.status === "İade Etti");
+        
+        let avg = 0;
+        if(bookRecs.length > 0) {
+            let sum = bookRecs.reduce((a, b) => a + (parseInt(b.rating)||0), 0);
+            avg = (sum / bookRecs.length).toFixed(1);
+        }
+        
+        document.getElementById('bdStats').innerText = `${bookRecs.length} Okuma | Ort. ${avg} Puan`;
+        
+        let container = document.getElementById('bdReviews');
+        container.innerHTML = "";
+        
+        if(bookRecs.length === 0) {
+            container.innerHTML = "<p>Henüz yorum yapılmamış.</p>";
+        } else {
+            bookRecs.forEach(r => {
+                let starStr = r.rating ? "⭐".repeat(r.rating) : "";
+                let cardHtml = r.cardTitle ? `<span class="rc-type">${r.cardTitle}</span>` : "";
+                let commentHtml = r.comment ? `<div class="rc-text">"${r.comment}"</div>` : "";
+                
+                container.innerHTML += `
+                <div class="review-card">
+                    <div class="rc-header">
+                        <span>${r.student}</span>
+                        <span>${starStr}</span>
+                    </div>
+                    ${cardHtml}
+                    ${commentHtml}
+                    <div style="font-size:0.7rem; color:var(--text-sub); margin-top:5px; text-align:right;">${r.returnDate}</div>
+                </div>`;
+            });
+        }
+        
+        document.getElementById('bookDetailOverlay').style.display = 'flex';
+    }
+
+    function closeBookDetail() {
+        document.getElementById('bookDetailOverlay').style.display = 'none';
+    }
+
     function deleteRecord(id) { if(confirm("Silmek istiyor musunuz?")) { records = records.filter(r => r.id !== id); updateUI(); syncData(); } }
     function addNewBook() {
         const val = document.getElementById('newBookInput').value.trim();
@@ -701,16 +766,16 @@
         for(let i=0; i<silverCount; i++) medals += "🥈";
         return medals;
     }
-    function getRank(count) {
-        if(count >= 40) return "💎 EFSANE";
-        if(count >= 35) return "🌍 Bilge Okur";
-        if(count >= 30) return "🎩 Edebiyat Ustası";
-        if(count >= 25) return "👑 Kütüphane Muhafızı";
-        if(count >= 20) return "🏹 Kelime Avcısı";
-        if(count >= 15) return "🚀 Bilgi Kaşifi";
-        if(count >= 10) return "📖 Kitap Kurdu";
-        if(count >= 5)  return "🥉 Okuma Çırağı";
-        return "🌱 Başlangıç";
+    function getRankInfo(count) {
+        if(count >= 40) return { t:"💎 EFSANE", i:"fas fa-gem" };
+        if(count >= 35) return { t:"🌍 Bilge Okur", i:"fas fa-globe-americas" };
+        if(count >= 30) return { t:"🎩 Edebiyat Ustası", i:"fas fa-hat-wizard" };
+        if(count >= 25) return { t:"👑 Kütüphane Muhafızı", i:"fas fa-crown" };
+        if(count >= 20) return { t:"🏹 Kelime Avcısı", i:"fas fa-bullseye" };
+        if(count >= 15) return { t:"🚀 Bilgi Kaşifi", i:"fas fa-rocket" };
+        if(count >= 10) return { t:"📖 Kitap Kurdu", i:"fas fa-book-open" };
+        if(count >= 5)  return { t:"🥉 Okuma Çırağı", i:"fas fa-medal" };
+        return { t:"🌱 Başlangıç", i:"fas fa-seedling" };
     }
     function toggleStatsSort() {
         if(statsSortMode === 'book_desc') { statsSortMode = 'book_asc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬆"; }
@@ -738,12 +803,12 @@
         else if(statsSortMode === 'page_desc') sorted.sort((a,b) => b.p - a.p);
         let html = "";
         sorted.forEach((s,i) => {
-            let rank = getRank(s.c);
+            let rankInfo = getRankInfo(s.c);
             let medals = getMedals(s.c);
             let highlight = (i === 0 && statsSortMode !== 'book_asc') ? "color:#f59e0b;" : "color:var(--text-sub);";
             let rankNum = (i === sorted.length - 1 && sorted.length > 1) ? `<span style="color:#ef4444; font-size:0.7rem;">(Son)</span>` : `${i+1}.`;
             if (i === 0) rankNum = "👑";
-            html += `<div class="list-item"><div class="item-content"><span style="font-weight:bold; ${highlight} margin-right:10px; min-width:20px; display:inline-block;">${rankNum}</span><span style="font-weight:600;">${s.n}</span><div class="rank-info">${rank}</div><div class="medal-container">${medals}</div></div><div style="text-align:right;"><div style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c} Kitap</div><div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">${s.p.toLocaleString()} Sayfa</div></div></div>`;
+            html += `<div class="list-item"><div class="item-content"><span style="font-weight:bold; ${highlight} margin-right:10px; min-width:20px; display:inline-block;">${rankNum}</span><span style="font-weight:600;">${s.n}</span><div class="rank-info">${rankInfo.t}</div><div class="medal-container">${medals}</div></div><div style="text-align:right;"><div style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c} Kitap</div><div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">${s.p.toLocaleString()} Sayfa</div></div></div>`;
         });
         document.getElementById('rankingList').innerHTML = html;
     }
@@ -779,14 +844,11 @@
         books.sort().forEach(b => bl.innerHTML += `<option value="${b}">`);
     }
 
-    // --- UZAY YOLU RENDER FONKSİYONU (KAVİSLİ) ---
     function renderJourneyMap(count) {
         const container = document.getElementById('journeyMap');
-        // SVG hariç temizle
         const oldStations = container.querySelectorAll('.station');
         oldStations.forEach(el => el.remove());
 
-        // Hedefler (Rütbeler)
         const milestones = [
             { c: 0,  i: "fas fa-seedling",       n: "Başlangıç" },
             { c: 5,  i: "fas fa-medal",          n: "Çırak" },
@@ -805,33 +867,19 @@
             else break;
         }
 
-        // SVG Yolu Çizimi ve İstasyon Konumlandırma
         const width = container.offsetWidth;
         const height = container.offsetHeight;
-        let pathD = "M"; // Move to start
+        let pathD = "M"; 
         
         milestones.forEach((m, index) => {
-            // X konumu: %10'dan %90'a kadar yayılır
             let x = (width * 0.1) + (width * 0.8) * (index / (milestones.length - 1));
-            
-            // Y konumu: Sinüs dalgası (Yukarı aşağı kıvrım)
-            // Ortadan başlar (height/2), sinüs ile yukarı aşağı salınır (-60px ile +60px arası)
             let y = (height / 2) + Math.sin(index * 0.8) * 80;
 
-            // İlk nokta ise M komutu, değilse L (Line) veya Curve
             if(index === 0) pathD += ` ${x} ${y}`;
-            else {
-                // Bezier Curve için basit bir yaklaşım: Önceki nokta ile şimdiki nokta arasına kavis at
-                // Bu basit olması için düz çizgi (L) yerine S (Smooth curve) kullanılabilir ama 
-                // JS ile dinamik hesaplamak için L (Line) kullanıp CSS'de stroke-linejoin round yapıyoruz.
-                // Veya daha iyisi: Quadratic curve
-                pathD += ` L ${x} ${y}`;
-            }
+            else pathD += ` L ${x} ${y}`;
 
-            // İstasyon Div'ini Ekle
             let isActive = index <= currentMilestoneIndex ? 'reached' : '';
             let isCurrent = index === currentMilestoneIndex ? 'current' : '';
-            
             let astronautHtml = isCurrent ? '<i class="fas fa-user-astronaut astronaut"></i>' : '';
             
             let stationDiv = document.createElement('div');
@@ -843,7 +891,6 @@
             container.appendChild(stationDiv);
         });
 
-        // SVG Path'ini güncelle
         document.getElementById('journeyPath').setAttribute('d', pathD);
     }
 </script>
