@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f5f7fa">
-    <title>Zeynal Öğretmen Kütüphane (Günlük)</title>
+    <title>Zeynal Öğretmen Kütüphane (V41 - Uzay Yolu)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* --- TEMA AYARLARI --- */
@@ -74,6 +73,8 @@
         .section { display: none; animation: fadeIn 0.3s; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
+        
+        /* PROGRESS BAR */
         .progress-container {
             width: 100%; background: var(--bar-bg); 
             border-radius: 15px; margin-bottom: 20px;
@@ -90,6 +91,8 @@
             font-size: 0.75rem; font-weight: 700; color: var(--text-main);
             top: 50%; transform: translateY(-50%); text-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
+
+        /* INPUTS */
         .input-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
         input {
             width: 100%; padding: 14px; padding-right: 40px; font-size: 1rem;
@@ -104,6 +107,8 @@
             color: var(--text-sub); cursor: pointer; font-size: 1.1rem;
             display: none; z-index: 2; padding: 5px;
         }
+
+        /* BUTTONS */
         .btn {
             width: 100%; padding: 14px; border: none; border-radius: 14px;
             font-size: 1rem; font-weight: 700; cursor: pointer;
@@ -112,6 +117,7 @@
         }
         .btn:active { transform: scale(0.97); }
         .btn-primary { background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; }
+        
         .btn-return { 
             background: #f97316; color: white; border: none; 
             padding: 8px 16px; border-radius: 10px; font-weight: 600; 
@@ -129,6 +135,8 @@
             background: #10b981; color: white; border: none; padding: 8px 12px;
             border-radius: 8px; font-size: 0.8rem; cursor: pointer; white-space: nowrap;
         }
+
+        /* LIST & ITEMS */
         .list-item {
             display: flex; align-items: center; justify-content: space-between; 
             padding: 14px 0; border-bottom: 1px solid rgba(150,150,150,0.15);
@@ -141,6 +149,8 @@
         .medal-container {
             display: flex; flex-wrap: wrap; gap: 2px; margin-top: 5px; font-size: 0.9rem; line-height: 1.4;
         }
+
+        /* STATS BOXES */
         .stats-summary { display: flex; gap: 10px; margin-bottom: 20px; }
         .summary-box {
             flex: 1; background: var(--input-bg); border: var(--glass-border);
@@ -150,6 +160,8 @@
         .sb-value { font-size: 1.1rem; color: var(--primary); font-weight: 800; }
         .overdue-warning { color: #ef4444; font-weight: 700; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* FILTERS */
         .filter-group { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .filter-chip {
             flex: 1; padding: 12px; text-align: center; white-space: nowrap;
@@ -158,6 +170,8 @@
             color: var(--text-sub); cursor: pointer; transition: 0.3s;
         }
         .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* NAVIGATION */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; height: 90px;
             background: var(--nav-bg);
@@ -178,32 +192,98 @@
             background: none; border: 1px solid var(--text-sub); color: var(--text-sub);
             border-radius: 12px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer;
         }
+
         #loader { display: none; margin-top: 15px; font-weight: 600; color: var(--primary); }
-        .overlay-bg {
-            position: fixed; inset: 0; z-index: 9999;
-            background: var(--bg-image); display: none; justify-content: center; align-items: center;
-        }
+        .overlay-bg { position: fixed; inset: 0; z-index: 9999; background: var(--bg-image); display: none; justify-content: center; align-items: center; }
         body.dark-mode .overlay-bg { background-color: #0f172a; }
-        .modal-card {
-            background: var(--glass-bg); backdrop-filter: blur(30px);
-            padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border);
-            width: 90%; max-width: 350px; text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-        }
+        .modal-card { background: var(--glass-bg); backdrop-filter: blur(30px); padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border); width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
         @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .rating-btn-group { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
-        .rating-btn {
-            width: 45px; height: 45px; border-radius: 50%; border: var(--glass-border);
-            background: rgba(255,255,255,0.1); font-size: 1.2rem; cursor: pointer;
-            color: var(--text-main); display: flex; align-items: center; justify-content: center;
-            transition: 0.2s;
-        }
+        .rating-btn { width: 45px; height: 45px; border-radius: 50%; border: var(--glass-border); background: rgba(255,255,255,0.1); font-size: 1.2rem; cursor: pointer; color: var(--text-main); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .rating-btn:hover, .rating-btn:active { background: #f59e0b; color: white; transform: scale(1.1); }
         .edit-input { padding: 8px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 0.9rem; margin-bottom: 5px; }
+
+        /* --- 🚀 YENİ UZAY YOLU STİLLERİ --- */
+        .journey-map-container {
+            position: relative;
+            width: 100%;
+            height: 450px; /* Biraz daha uzun yaptık ki kıvrımlar rahat sığsın */
+            background: radial-gradient(ellipse at center, #1b2735 0%, #090a0f 100%);
+            border-radius: 24px;
+            overflow: hidden;
+            border: var(--glass-border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            margin-top: 20px;
+        }
+        .stars {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center;
+            z-index: 0; opacity: 0.6; animation: moveStars 100s linear infinite;
+        }
+        @keyframes moveStars { from {background-position: 0 0;} to {background-position: 0 1000px;} }
+        
+        /* SVG Çizgi Yolu */
+        #journeySvg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
+        }
+        .path-line {
+            fill: none; stroke: rgba(255, 255, 255, 0.2); stroke-width: 3; stroke-dasharray: 10, 10;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
+        }
+
+        /* İstasyonlar */
+        .station {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 55px; height: 55px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #94a3b8; font-size: 0.7rem; font-weight: bold;
+            z-index: 2; transition: all 0.5s ease;
+            backdrop-filter: blur(2px);
+        }
+        .station i { font-size: 1.2rem; margin-bottom: 2px; }
+        .station span { font-size: 0.6rem; opacity: 0.7; text-align: center; line-height: 1; }
+
+        /* Aktif İstasyon (Ulaşılanlar) */
+        .station.reached {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            color: #60a5fa;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        /* Son Ulaşılan İstasyon (Parlayan) */
+        .station.current {
+            background: radial-gradient(circle, #3b82f6 0%, #1e40af 100%);
+            border-color: #ffffff;
+            color: white;
+            width: 70px; height: 70px; /* Biraz büyüsün */
+            box-shadow: 0 0 30px #3b82f6;
+            z-index: 3;
+        }
+        .station.current i { font-size: 1.6rem; animation: pulseIcon 2s infinite; }
+        
+        /* Astronot */
+        .astronaut {
+            position: absolute;
+            top: -35px; left: 50%; transform: translateX(-50%);
+            font-size: 2rem;
+            filter: drop-shadow(0 0 10px #f59e0b);
+            animation: floatAstronaut 3s ease-in-out infinite;
+            display: none;
+        }
+        .station.current .astronaut { display: block; }
+
+        @keyframes floatAstronaut { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10px); } }
+        @keyframes pulseIcon { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
     </style>
 </head>
 <body>
+
 <div id="loginOverlay" class="overlay-bg" style="display:flex;">
     <div class="modal-card">
         <h2 style="margin: 0 0 10px 0; color: var(--text-main);">Öğretmen Girişi</h2>
@@ -215,6 +295,7 @@
         <div id="loader">Veriler Yükleniyor...</div>
     </div>
 </div>
+
 <div id="ratingOverlay" class="overlay-bg" style="background: rgba(0,0,0,0.6);">
     <div class="modal-card" style="background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2);">
         <h3 style="margin-top:0; color:#fff;">Kitabı Puanla</h3>
@@ -229,11 +310,13 @@
         <button class="btn" style="background:rgba(255,255,255,0.1); color:white; margin-top:10px;" onclick="closeRatingModal()">İptal</button>
     </div>
 </div>
+
 <div id="appContainer" style="display:none;">
     <div class="app-header">
         <div class="app-title">Zeynal Öğretmen Kütüphane</div>
         <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">🌙</button>
     </div>
+
     <div class="container" style="display:block;">
         <div class="glass-panel" style="padding: 15px; padding-bottom: 10px; margin-bottom: 20px;">
             <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem; font-weight:600; color:var(--text-sub);">
@@ -245,6 +328,7 @@
                 <div class="progress-text" id="progressPercent">0%</div>
             </div>
         </div>
+
         <div id="tab-lend" class="section active">
             <div class="glass-panel">
                 <h3 style="margin:0 0 15px 0; color:var(--primary);">Hızlı İşlem</h3>
@@ -268,6 +352,7 @@
                 <div id="historyList"></div>
             </div>
         </div>
+
         <div id="tab-books" class="section">
             <div class="glass-panel">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -295,6 +380,7 @@
                 <button class="btn btn-primary" onclick="addNewBook()">Ekle</button>
             </div>
         </div>
+
         <div id="tab-report" class="section">
             <div class="glass-panel">
                 <h3 style="margin:0 0 15px 0; color:var(--primary);">Motivasyon Raporu</h3>
@@ -306,7 +392,15 @@
                 <div id="reportOutput" style="background:var(--input-bg); padding:15px; border-radius:12px; margin:15px 0; white-space:pre-wrap; font-size:0.9rem; color:var(--text-main); border:var(--glass-border);">...</div>
                 <button class="btn btn-primary" onclick="copyReport()"><i class="far fa-copy"></i> Kopyala</button>
             </div>
+            
+            <div class="glass-panel" id="journeyPanel" style="display:none; padding:0;">
+                <div class="journey-map-container" id="journeyMap">
+                    <div class="stars"></div>
+                    <svg id="journeySvg"><path id="journeyPath" class="path-line" d="" /></svg>
+                    </div>
+            </div>
         </div>
+
         <div id="tab-stats" class="section">
             <div class="stats-summary">
                 <div class="summary-box">
@@ -327,6 +421,7 @@
             </div>
         </div>
     </div>
+
     <div class="bottom-nav">
         <button class="nav-item active" onclick="switchTab('lend', this)"><i class="fas fa-home"></i><span>Giriş</span></button>
         <button class="nav-item" onclick="switchTab('books', this)"><i class="fas fa-book"></i><span>Kitaplar</span></button>
@@ -334,10 +429,11 @@
         <button class="nav-item" onclick="switchTab('stats', this)"><i class="fas fa-chart-pie"></i><span>İstatistik</span></button>
     </div>
 </div>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbx3IoRsVhIzuAJzr4UzBCq6qLay0HFMOueJtm1JCmGINEanpX2ccPIdMePGYPhdFyp3/exec"; 
     
-    // Varsayılan (Sunucudan güncellenecek)
+    // Varsayılan
     let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
     let students = [];
     let books = [];
@@ -671,6 +767,9 @@
         }
         txt += `\nİlginiz ve desteğiniz için teşekkür ederiz.\nZeynal Öğretmen`;
         document.getElementById('reportOutput').innerText = txt;
+        
+        renderJourneyMap(history.length);
+        document.getElementById('journeyPanel').style.display = 'block';
     }
     function copyReport() { navigator.clipboard.writeText(document.getElementById('reportOutput').innerText); alert("Kopyalandı!"); }
     function populateDatalists() {
@@ -678,6 +777,74 @@
         students.sort().forEach(s => sl.innerHTML += `<option value="${s}">`);
         let bl = document.getElementById('bookList'); bl.innerHTML = '';
         books.sort().forEach(b => bl.innerHTML += `<option value="${b}">`);
+    }
+
+    // --- UZAY YOLU RENDER FONKSİYONU (KAVİSLİ) ---
+    function renderJourneyMap(count) {
+        const container = document.getElementById('journeyMap');
+        // SVG hariç temizle
+        const oldStations = container.querySelectorAll('.station');
+        oldStations.forEach(el => el.remove());
+
+        // Hedefler (Rütbeler)
+        const milestones = [
+            { c: 0,  i: "fas fa-seedling",       n: "Başlangıç" },
+            { c: 5,  i: "fas fa-medal",          n: "Çırak" },
+            { c: 10, i: "fas fa-book-open",      n: "Kitap Kurdu" },
+            { c: 15, i: "fas fa-rocket",         n: "Kaşif" },
+            { c: 20, i: "fas fa-bullseye",       n: "Avcı" },
+            { c: 25, i: "fas fa-crown",          n: "Muhafız" },
+            { c: 30, i: "fas fa-hat-wizard",     n: "Usta" },
+            { c: 35, i: "fas fa-globe-americas", n: "Bilge" },
+            { c: 40, i: "fas fa-gem",            n: "EFSANE" }
+        ];
+
+        let currentMilestoneIndex = 0;
+        for (let i = 0; i < milestones.length; i++) {
+            if (count >= milestones[i].c) currentMilestoneIndex = i;
+            else break;
+        }
+
+        // SVG Yolu Çizimi ve İstasyon Konumlandırma
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
+        let pathD = "M"; // Move to start
+        
+        milestones.forEach((m, index) => {
+            // X konumu: %10'dan %90'a kadar yayılır
+            let x = (width * 0.1) + (width * 0.8) * (index / (milestones.length - 1));
+            
+            // Y konumu: Sinüs dalgası (Yukarı aşağı kıvrım)
+            // Ortadan başlar (height/2), sinüs ile yukarı aşağı salınır (-60px ile +60px arası)
+            let y = (height / 2) + Math.sin(index * 0.8) * 80;
+
+            // İlk nokta ise M komutu, değilse L (Line) veya Curve
+            if(index === 0) pathD += ` ${x} ${y}`;
+            else {
+                // Bezier Curve için basit bir yaklaşım: Önceki nokta ile şimdiki nokta arasına kavis at
+                // Bu basit olması için düz çizgi (L) yerine S (Smooth curve) kullanılabilir ama 
+                // JS ile dinamik hesaplamak için L (Line) kullanıp CSS'de stroke-linejoin round yapıyoruz.
+                // Veya daha iyisi: Quadratic curve
+                pathD += ` L ${x} ${y}`;
+            }
+
+            // İstasyon Div'ini Ekle
+            let isActive = index <= currentMilestoneIndex ? 'reached' : '';
+            let isCurrent = index === currentMilestoneIndex ? 'current' : '';
+            
+            let astronautHtml = isCurrent ? '<i class="fas fa-user-astronaut astronaut"></i>' : '';
+            
+            let stationDiv = document.createElement('div');
+            stationDiv.className = `station ${isActive} ${isCurrent}`;
+            stationDiv.style.left = `${x}px`;
+            stationDiv.style.top = `${y}px`;
+            stationDiv.innerHTML = `<i class="${m.i}"></i><span>${m.n}</span>${astronautHtml}`;
+            
+            container.appendChild(stationDiv);
+        });
+
+        // SVG Path'ini güncelle
+        document.getElementById('journeyPath').setAttribute('d', pathD);
     }
 </script>
 </body>
