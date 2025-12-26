@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kusursuz Matematik Atölyesi (V4)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* --- GENEL SAYFA --- */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            color: #333;
+        }
+
+        /* --- KONTROL PANELİ --- */
+        .toolbar {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 1000px;
+            border-top: 6px solid #2c3e50;
+        }
+
+        .settings-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .op-group { display: flex; flex-direction: column; background-color: #f9f9f9; padding: 10px 15px; border-radius: 8px; border: 1px solid #e0e0e0; flex: 1; min-width: 160px; }
+        .op-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: bold; color: #2c3e50; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .op-header input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .op-controls { display: flex; gap: 5px; flex-wrap: wrap; }
+        .input-mini { display: flex; flex-direction: column; }
+        .input-mini label { font-size: 10px; color: #7f8c8d; font-weight: bold; }
+        .input-mini select { padding: 4px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+        .action-row { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+        
+        button { padding: 12px 24px; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .btn-gen { background-color: #2980b9; } .btn-gen:hover { background-color: #1a5276; }
+        .btn-print { background-color: #27ae60; } .btn-print:hover { background-color: #1e8449; }
+
+        /* --- SAYFA DÜZENİ (GRID) --- */
+        .grid-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; max-width: 1100px; }
+        .card { background-color: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 250px; border: 1px solid #eee; position: relative; }
+        .card-header { position: absolute; top: 5px; width: 90%; display: flex; justify-content: space-between; z-index: 10; }
+        .delete-btn { background: none; color: #e74c3c; font-size: 20px; padding: 0; width: auto; height: auto; border:none; cursor: pointer;}
+        .reveal-btn { background-color: #95a5a6; font-size: 10px; padding: 3px 8px; height: auto; border-radius: 4px; border:none; color:white; cursor: pointer;}
+
+        /* --- İŞLEM GRID YAPISI --- */
+        .calc-grid { display: inline-grid; gap: 0; }
+        .cell { width: 32px; height: 36px; background-color: transparent; display: flex; align-items: center; justify-content: center; font-family: 'Courier Prime', monospace; font-size: 22px; font-weight: bold; color: black; box-sizing: border-box; }
+        .cell-op { font-size: 20px; }
+
+        /* --- YENİ ÇİZGİ SİSTEMİ --- */
+        .full-width-line { grid-column: 1 / -1; height: 0px; border-bottom: 3px solid #000; margin: 0; padding: 0; }
+        .vertical-line-cell { width: 0px !important; padding: 0; border-right: 3px solid #000 !important; background: transparent; }
+        .border-bottom-thick { border-bottom: 3px solid #000 !important; }
+
+        /* --- GİZLİLİK --- */
+        .hidden-answer { color: transparent !important; text-shadow: none !important; user-select: none; }
+        .print-header { display: none; }
+        .page-break { display: block; height: 1px; margin: 20px 0; }
+
+        /* --- YAZDIRMA MODU (DÜZELTİLDİ) --- */
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            body, html { margin: 0; padding: 0; background: white; }
+            .toolbar, .card-header, .reveal-btn, .delete-btn { display: none !important; }
+            
+            /* DÜZELTME BURADA: grid-template-rows 'max-content repeat(3, 1fr)' YAPILDI */
+            .grid-layout { 
+                display: grid !important; 
+                grid-template-columns: repeat(3, 1fr) !important; 
+                grid-template-rows: max-content repeat(3, 1fr) !important; 
+                width: 100% !important; 
+                height: 98vh !important; 
+                gap: 10px !important; 
+                page-break-after: always; 
+            }
+            
+            .card { box-shadow: none !important; border: 1px dashed #ccc !important; border-radius: 8px !important; padding: 0 !important; height: 100% !important; justify-content: center !important; }
+            .page-break { page-break-before: always; }
+            .print-header { display: block !important; text-align: center; font-size: 18px; font-weight: bold; width: 100%; grid-column: span 3; margin-bottom: 5px; border-bottom: 2px solid #000; padding-bottom: 5px; }
+            
+            .full-width-line { border-bottom: 3px solid #000 !important; -webkit-print-color-adjust: exact; }
+            .border-bottom-thick { border-bottom: 3px solid #000 !important; }
+            .vertical-line-cell { border-right: 3px solid #000 !important; }
+            .hidden-answer { font-size: 0px !important; opacity: 0 !important; visibility: hidden !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <h2 style="margin:0 0 10px 0; text-align:center;">Matematik Atölyesi</h2>
+        
+        <div class="settings-row">
+            <div class="op-group"><div class="op-header"><input type="checkbox" id="chkAdd" checked><label for="chkAdd">Toplama (+)</label></div><div class="op-controls"><div class="input-mini"><label>Basamak</label><select id="addDig"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div></div></div>
+            <div class="op-group"><div class="op-header"><input type="checkbox" id="chkSub" checked><label for="chkSub">Çıkarma (-)</label></div><div class="op-controls"><div class="input-mini"><label>Basamak</label><select id="subDig"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div></div></div>
+            <div class="op-group"><div class="op-header"><input type="checkbox" id="chkMul" checked><label for="chkMul">Çarpma (x)</label></div><div class="op-controls"><div class="input-mini"><label>1. Sayı</label><select id="mulDig1"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select></div><div class="input-mini"><label>2. Sayı</label><select id="mulDig2"><option value="1">1</option><option value="2" selected>2</option></select></div></div></div>
+            <div class="op-group"><div class="op-header"><input type="checkbox" id="chkDiv" checked><label for="chkDiv">Bölme (÷)</label></div><div class="op-controls"><div class="input-mini"><label>Bölünen</label><select id="divDig1"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div><div class="input-mini"><label>Bölen</label><select id="divDig2"><option value="1">1</option><option value="2">2</option></select></div><div class="input-mini"><label>Tür</label><select id="divMode"><option value="all">Hepsi</option><option value="exact">Tam</option><option value="rem">Kalanlı</option></select></div></div></div>
+        </div>
+
+        <div class="action-row">
+            <button class="btn-gen" onclick="generateWorksheet()">📄 Sayfayı Oluştur (9 Soru)</button>
+            <button class="btn-print" onclick="window.print()">🖨️ Yazdır</button>
+        </div>
+    </div>
+
+    <div id="qContainer" class="grid-layout"></div>
+    <div class="page-break"></div>
+    <div id="aContainer" class="grid-layout" style="display:none;"></div>
+
+    <script>
+        function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function getRandomNumber(digits) {
+            const min = Math.pow(10, digits - 1);
+            const max = Math.pow(10, digits) - 1;
+            return getRandomInt(min, max);
+        }
+
+        // --- 1. TOPLAMA ---
+        function createAdditionGrid(data, isHidden) {
+            const n1 = data.n1.toString(), n2 = data.n2.toString(), res = data.res.toString();
+            const width = Math.max(n1.length, n2.length, res.length);
+            const cols = width + 1; 
+            const hideCls = isHidden ? "hidden-answer" : "";
+            
+            // Elde hesabı
+            let carries = [], c = 0, len = Math.max(n1.length, n2.length);
+            for(let i=0; i<len; i++) {
+                let d1 = parseInt(n1[n1.length-1-i]||0), d2 = parseInt(n2[n2.length-1-i]||0);
+                let sum = d1+d2+c; carries.unshift(sum>=10?1:0); c=sum>=10?1:0;
+            }
+            if(c>0) carries.unshift(1);
+
+            let html = `<div class="calc-grid" style="grid-template-columns: repeat(${cols}, 1fr);">`;
+            html += `<div class="cell"></div>`;
+            for(let i=0; i<width-carries.length; i++) html += `<div class="cell"></div>`;
+            for(let c of carries) html += `<div class="cell ${hideCls}" style="font-size:12px; color:#888;">${c>0?c:''}</div>`; // Eldeler
+
+            html += `<div class="cell"></div>`;
+            for(let i=0; i<width-n1.length; i++) html += `<div class="cell"></div>`;
+            for(let char of n1) html += `<div class="cell">${char}</div>`;
+
+            html += `<div class="cell cell-op">+</div>`;
+            for(let i=0; i<width-n2.length; i++) html += `<div class="cell"></div>`;
+            for(let char of n2) html += `<div class="cell">${char}</div>`;
+
+            html += `<div class="full-width-line"></div>`; // ÇİZGİ
+
+            html += `<div class="cell"></div>`;
+            for(let char of res) html += `<div class="cell ${hideCls}">${char}</div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        // --- 2. ÇIKARMA ---
+        function createSubtractionGrid(data, isHidden) {
+            const n1 = data.n1.toString(), n2 = data.n2.toString(), res = data.res.toString();
+            const width = n1.length; const cols = width + 1; const hideCls = isHidden ? "hidden-answer" : "";
+            let html = `<div class="calc-grid" style="grid-template-columns: repeat(${cols}, 1fr);">`;
+
+            html += `<div class="cell"></div>`; for(let i=0; i<width; i++) html += `<div class="cell ${hideCls}"></div>`; 
+            html += `<div class="cell"></div>`; for(let char of n1) html += `<div class="cell">${char}</div>`;
+            html += `<div class="cell cell-op">-</div>`;
+            for(let i=0; i<width-n2.length; i++) html += `<div class="cell"></div>`;
+            for(let char of n2) html += `<div class="cell">${char}</div>`;
+
+            html += `<div class="full-width-line"></div>`; // ÇİZGİ
+
+            html += `<div class="cell"></div>`;
+            for(let i=0; i<width-res.length; i++) html += `<div class="cell"></div>`;
+            for(let char of res) html += `<div class="cell ${hideCls}">${char}</div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        // --- 3. ÇARPMA (DÜZELTİLDİ: + Çizginin Üstüne) ---
+        function createMultiplicationGrid(data, isHidden) {
+            const n1 = data.n1.toString(), n2 = data.n2.toString(), res = data.res.toString();
+            const width = res.length; const cols = width + 1; const hideCls = isHidden ? "hidden-answer" : "";
+            let html = `<div class="calc-grid" style="grid-template-columns: repeat(${cols}, 1fr);">`;
+
+            html += `<div class="cell"></div>`;
+            for(let i=0; i<width-n1.length; i++) html += `<div class="cell"></div>`;
+            for(let char of n1) html += `<div class="cell">${char}</div>`;
+
+            html += `<div class="cell cell-op">x</div>`;
+            for(let i=0; i<width-n2.length; i++) html += `<div class="cell"></div>`;
+            for(let char of n2) html += `<div class="cell">${char}</div>`;
+
+            html += `<div class="full-width-line"></div>`; // İLK ÇİZGİ
+
+            for(let i=0; i<n2.length; i++) {
+                let digit = parseInt(n2[n2.length - 1 - i]);
+                let partial = (data.n1 * digit).toString();
+                let shift = i;
+                let leftPad = width - (partial.length + shift);
+                
+                // DÜZELTME: Eğer bu son ara işlemse ve 2 basamaklı çarpma ise, '+' buraya, en başa gelecek.
+                let isLastPartial = (i === n2.length - 1 && n2.length > 1);
+                let firstCellContent = isLastPartial ? "+" : "";
+
+                html += `<div class="cell cell-op">${firstCellContent}</div>`;
+                for(let k=0; k<leftPad; k++) html += `<div class="cell"></div>`;
+                for(let char of partial) html += `<div class="cell ${hideCls}">${char}</div>`;
+                for(let k=0; k<shift; k++) html += `<div class="cell"></div>`;
+            }
+
+            // İKİNCİ ÇİZGİ (Toplama) - Sadece 2+ basamaklı ise
+            if(n2.length > 1) {
+                html += `<div class="full-width-line"></div>`;
+                html += `<div class="cell"></div>`; // Artık + yukarıda, burası boş
+                for(let char of res) html += `<div class="cell ${hideCls}">${char}</div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        // --- 4. BÖLME ---
+        function createDivisionGrid(data, isHidden) {
+            const dividend = data.n1, divisor = data.n2;
+            const dividendStr = dividend.toString(), divisorStr = divisor.toString();
+            let steps = [], qVal = Math.floor(dividend / divisor), rVal = dividend % divisor;
+            let currentPart = "", fullQuotient = "";
+
+            for(let i=0; i<dividendStr.length; i++) {
+                currentPart += dividendStr[i];
+                let currentNum = parseInt(currentPart);
+                if(currentNum < divisor) { if(fullQuotient.length>0) fullQuotient+="0"; continue; }
+                let q = Math.floor(currentNum / divisor);
+                let mult = q * divisor;
+                let rem = currentNum - mult;
+                fullQuotient += q;
+                steps.push({ val: mult, rem: rem, idx: i });
+                currentPart = rem.toString();
+            }
+
+            const totalColsLeft = dividendStr.length;
+            const totalColsRight = Math.max(divisorStr.length, qVal.toString().length);
+            const hideCls = isHidden ? "hidden-answer" : "";
+            const vLine = `<div class="cell vertical-line-cell"></div>`;
+
+            let html = `<div class="calc-grid" style="grid-template-columns: repeat(${totalColsLeft}, 1fr) 5px repeat(${totalColsRight}, 1fr);">`;
+
+            for(let char of dividendStr) html += `<div class="cell">${char}</div>`;
+            html += vLine;
+            for(let i=0; i<totalColsRight; i++) {
+                if(i < divisorStr.length) html += `<div class="cell border-bottom-thick">${divisorStr[i]}</div>`;
+                else html += `<div class="cell"></div>`;
+            }
+
+            if(steps.length > 0) {
+                const step = steps[0];
+                const multStr = step.val.toString();
+                let emptyLeft = step.idx - multStr.length + 1;
+                for(let i=0; i<totalColsLeft; i++) {
+                    if(i >= emptyLeft && i <= step.idx) {
+                        html += `<div class="cell ${hideCls}">${multStr[i-emptyLeft]}</div>`;
+                    } else { html += `<div class="cell"></div>`; }
+                }
+                html += vLine;
+                const qStr = qVal.toString();
+                for(let i=0; i<totalColsRight; i++) {
+                    html += `<div class="cell ${hideCls}">${i<qStr.length ? qStr[i] : ''}</div>`;
+                }
+
+                for(let k=0; k<steps.length; k++) {
+                    let isLast = (k === steps.length - 1);
+                    let numberToWrite = isLast ? rVal.toString() : (steps[k+1].val + steps[k+1].rem).toString();
+                    let endIndex = isLast ? totalColsLeft - 1 : steps[k+1].idx;
+                    let emptyL = endIndex - numberToWrite.length + 1;
+                    
+                    for(let i=0; i<totalColsLeft; i++) {
+                        if(i >= emptyL && i <= endIndex) {
+                            html += `<div class="cell border-top-thick ${hideCls}">${numberToWrite[i-emptyL]}</div>`;
+                        } else { html += `<div class="cell"></div>`; }
+                    }
+                    html += vLine;
+                    for(let r=0; r<totalColsRight; r++) html += `<div class="cell"></div>`;
+
+                    if(!isLast) {
+                         const nextStep = steps[k+1];
+                         const nMult = nextStep.val.toString();
+                         let nEmpty = nextStep.idx - nMult.length + 1;
+                         for(let i=0; i<totalColsLeft; i++) {
+                            if(i >= nEmpty && i <= nextStep.idx) {
+                                html += `<div class="cell ${hideCls}">${nMult[i-nEmpty]}</div>`;
+                            } else { html += `<div class="cell"></div>`; }
+                        }
+                        html += vLine;
+                        for(let r=0; r<totalColsRight; r++) html += `<div class="cell"></div>`;
+                    }
+                }
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        // --- ANA FONKSİYON ---
+        function generateWorksheet() {
+            const qContainer = document.getElementById('qContainer');
+            const aContainer = document.getElementById('aContainer');
+            qContainer.innerHTML = '<div class="print-header">Matematik Atölyesi - İsim: _________________</div>';
+            aContainer.innerHTML = '<div class="print-header">Cevap Anahtarı</div>';
+            aContainer.style.display = 'grid';
+
+            let pool = [];
+            if(document.getElementById('chkAdd').checked) pool.push('add');
+            if(document.getElementById('chkSub').checked) pool.push('sub');
+            if(document.getElementById('chkMul').checked) pool.push('mul');
+            if(document.getElementById('chkDiv').checked) pool.push('div');
+
+            if(pool.length === 0) { alert("Lütfen en az bir işlem seçin!"); return; }
+
+            for(let i=0; i<9; i++) {
+                const type = pool[Math.floor(Math.random() * pool.length)];
+                let data, qHtml, aHtml;
+
+                if(type === 'add') { data = getAddData(); qHtml = createAdditionGrid(data, true); aHtml = createAdditionGrid(data, false); }
+                if(type === 'sub') { data = getSubData(); qHtml = createSubtractionGrid(data, true); aHtml = createSubtractionGrid(data, false); }
+                if(type === 'mul') { data = getMulData(); qHtml = createMultiplicationGrid(data, true); aHtml = createMultiplicationGrid(data, false); }
+                if(type === 'div') { data = getDivData(); qHtml = createDivisionGrid(data, true); aHtml = createDivisionGrid(data, false); }
+
+                const cardQ = document.createElement('div'); cardQ.className = 'card'; 
+                cardQ.innerHTML = `
+                    <div class="card-header">
+                        <button class="reveal-btn" onclick="toggleCard(this)">Göster</button>
+                        <button class="delete-btn" onclick="this.closest('.card').remove()">×</button>
+                    </div>
+                    ${qHtml}`;
+                qContainer.appendChild(cardQ);
+
+                const cardA = document.createElement('div'); cardA.className = 'card'; 
+                cardA.innerHTML = aHtml; 
+                aContainer.appendChild(cardA);
+            }
+        }
+
+        function toggleCard(btn) {
+            const card = btn.closest('.card');
+            const hiddenEls = card.querySelectorAll('.hidden-answer');
+            if(hiddenEls.length > 0) {
+                hiddenEls.forEach(el => el.classList.remove('hidden-answer'));
+                btn.textContent = "Gizle";
+            } else {
+                alert("Tekrar gizlemek için yeni soru üretiniz.");
+            }
+        }
+
+        function getAddData() { 
+            const d = parseInt(document.getElementById('addDig').value);
+            const n1 = getRandomNumber(d); const n2 = getRandomNumber(d);
+            return { n1, n2, res: n1+n2 };
+        }
+        function getSubData() {
+            const d = parseInt(document.getElementById('subDig').value);
+            let n1 = getRandomNumber(d), n2 = getRandomNumber(d);
+            if(n2 > n1) [n1, n2] = [n2, n1];
+            return { n1, n2, res: n1-n2 };
+        }
+        function getMulData() {
+            const n1 = getRandomNumber(parseInt(document.getElementById('mulDig1').value));
+            const n2 = getRandomNumber(parseInt(document.getElementById('mulDig2').value));
+            return { n1, n2, res: n1*n2 };
+        }
+        function getDivData() {
+            const d1 = parseInt(document.getElementById('divDig1').value);
+            const d2 = parseInt(document.getElementById('divDig2').value);
+            const mode = document.getElementById('divMode').value;
+            let div, sor, isValid=false, att=0;
+            while(!isValid && att<1000) {
+                att++; div = getRandomNumber(d1); sor = getRandomNumber(d2);
+                if(sor>=div || sor===0) continue;
+                let rem = div%sor;
+                if(mode==='exact' && rem!==0) continue;
+                if(mode==='rem' && rem===0) continue;
+                isValid=true;
+            }
+            return { n1: div, n2: sor };
+        }
+        
+        window.onload = generateWorksheet;
+
+    </script>
+</body>
+</html>
