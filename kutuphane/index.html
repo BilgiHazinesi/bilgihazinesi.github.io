@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#f5f7fa">
-    <title>Zeynal Öğretmen Kütüphane (V41 - Sesli Kartlar)</title>
+    <title>Zeynal Öğretmen Kütüphane (V42 - Bilgi Ağacı)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* --- TEMA AYARLARI --- */
@@ -124,6 +124,12 @@
             cursor: pointer; font-size: 0.85rem; min-width: 80px; text-align: center;
             box-shadow: 0 2px 5px rgba(249, 115, 22, 0.4);
         }
+        .btn-comment {
+            background: #8b5cf6; color: white; border: none; 
+            padding: 8px 16px; border-radius: 10px; font-weight: 600; 
+            cursor: pointer; font-size: 0.85rem; min-width: 80px; text-align: center;
+            box-shadow: 0 2px 5px rgba(139, 92, 246, 0.4);
+        }
         .btn-delete { background: rgba(220, 38, 38, 0.1); color: #ef4444; border: 1px solid #ef4444; padding: 4px 10px; font-size: 0.75rem; border-radius: 8px; margin-left: auto; cursor:pointer;}
         .btn-save-small {
             background: #10b981; color: white; border: none; padding: 8px 12px;
@@ -179,7 +185,7 @@
         .mic-btn.listening { background: #ef4444; animation: pulseMic 1s infinite; }
         @keyframes pulseMic { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* UZAY YOLU */
+        /* UZAY YOLU (SİNÜS KAVİSLİ) */
         .journey-map-container { position: relative; width: 100%; height: 450px; background: radial-gradient(ellipse at center, #1b2735 0%, #090a0f 100%); border-radius: 24px; overflow: hidden; border: var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.5); margin-top: 20px; }
         .stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; z-index: 0; opacity: 0.6; animation: moveStars 100s linear infinite; }
         @keyframes moveStars { from {background-position: 0 0;} to {background-position: 0 1000px;} }
@@ -196,12 +202,37 @@
         @keyframes floatAstronaut { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10px); } }
         @keyframes pulseIcon { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* REVIEW CARD STYLE IN DETAIL VIEW */
-        .review-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; margin-bottom: 10px; text-align: left; }
-        .rc-header { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; color: var(--primary); font-weight: bold; }
-        .rc-type { font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 6px; color: var(--text-sub); }
-        .rc-text { font-size: 0.9rem; color: var(--text-main); line-height: 1.4; font-style: italic; }
-        .close-overlay-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-main); font-size: 1.5rem; cursor: pointer; }
+        /* --- 🌳 BİLGİ AĞACI STİLİ (Book Detail) --- */
+        .tree-wrapper {
+            position: relative; width: 100%; height: 400px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%); /* Gökyüzü */
+            border-radius: 12px; overflow: hidden; margin-top: 10px;
+            display: flex; justify-content: center; align-items: flex-end;
+        }
+        body.dark-mode .tree-wrapper { background: linear-gradient(to bottom, #1a202c 0%, #2d3748 100%); }
+        
+        .tree-trunk {
+            width: 40px; height: 100px; background: #5D4037;
+            position: relative; z-index: 1; border-radius: 5px;
+        }
+        .tree-canopy {
+            position: absolute; bottom: 80px; width: 250px; height: 250px;
+            background: radial-gradient(circle, #4CAF50 60%, #388E3C 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            z-index: 2; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .tree-fruit {
+            position: absolute; font-size: 1.5rem; cursor: pointer;
+            transition: transform 0.2s; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+        }
+        .tree-fruit:hover { transform: scale(1.3) rotate(10deg); z-index: 10; }
+        
+        .fruit-detail {
+            background: var(--input-bg); border: var(--glass-border);
+            padding: 10px; border-radius: 10px; margin-top: 10px;
+            font-size: 0.9rem; display: none;
+        }
+        .close-overlay-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; color: var(--text-main); cursor: pointer; z-index: 20; }
 
     </style>
 </head>
@@ -255,14 +286,22 @@
 </div>
 
 <div id="bookDetailOverlay" class="overlay-bg">
-    <div class="modal-card" style="text-align:left; max-width:500px; padding-top:40px;">
+    <div class="modal-card" style="text-align:left; max-width:500px; padding-top:20px; overflow:hidden;">
         <button class="close-overlay-btn" onclick="closeBookDetail()">&times;</button>
-        <h3 id="bdTitle" style="margin:0 0 5px 0; color:var(--primary);">Kitap Adı</h3>
-        <p id="bdStats" style="font-size:0.8rem; color:var(--text-sub); margin-bottom:20px;">0 Okuma | Ort. 0 Puan</p>
+        <h3 id="bdTitle" style="margin:0 0 5px 0; color:var(--primary); text-align:center;">Kitap Adı</h3>
+        <p id="bdStats" style="font-size:0.8rem; color:var(--text-sub); margin-bottom:10px; text-align:center;">0 Okuma</p>
         
-        <h4 style="margin-bottom:10px; border-bottom:1px solid var(--glass-border); padding-bottom:5px;">Öğrenci Yorumları</h4>
-        <div id="bdReviews" style="max-height:300px; overflow-y:auto;">
-            </div>
+        <div class="tree-wrapper">
+            <div class="tree-canopy" id="treeCanopy">
+                </div>
+            <div class="tree-trunk"></div>
+        </div>
+
+        <div id="fruitDetailBox" class="fruit-detail">
+            <div style="font-weight:bold; color:var(--primary); margin-bottom:5px;" id="fdStudent"></div>
+            <div style="font-size:0.8rem; opacity:0.8; margin-bottom:5px;" id="fdCard"></div>
+            <div style="font-style:italic;" id="fdComment"></div>
+        </div>
     </div>
 </div>
 
@@ -316,7 +355,7 @@
                         <div class="filter-chip" onclick="filterBooks('out', this)">Dışarıda</div>
                         <div class="filter-chip" onclick="filterBooks('rating', this)">Puan</div>
                    </div>
-                   </div>
+                </div>
                 <div class="input-wrapper">
                     <input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="handleInput(this); renderBookManager()">
                     <i class="fas fa-times-circle clear-btn" onclick="clearField('bookSearch', renderBookManager)"></i>
@@ -341,7 +380,7 @@
                 <div class="journey-map-container" id="journeyMap">
                     <div class="stars"></div>
                     <svg id="journeySvg"><path id="journeyPath" class="path-line" d="" /></svg>
-                    </div>
+                </div>
             </div>
         </div>
 
@@ -377,7 +416,6 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbx3IoRsVhIzuAJzr4UzBCq6qLay0HFMOueJtm1JCmGINEanpX2ccPIdMePGYPhdFyp3/exec"; 
     
-    // Varsayılan
     let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
     let students = [];
     let books = [];
@@ -390,9 +428,9 @@
     let currentFilter = 'all';
     let statsSortMode = 'book_desc'; 
     let tempReturnId = null; 
-    let currentRating = 0; // Seçilen yıldız
+    let currentRating = 0; 
 
-    // --- ÇIKIŞ KARTLARI TANIMLARI ---
+    // --- ÇIKIŞ KARTLARI ---
     const EXIT_CARDS = {
         "1": { title: "Macera Hatırası", prompt: "Kitabın en unutulmaz sahnesini veya karakterini seç ve seni nasıl etkilediğini anlat." },
         "2": { title: "Öğrenen Profil", prompt: "Kitaptaki karakter hangi IB özelliğini (araştıran, duyarlı vb.) taşıyor? Neden?" },
@@ -431,7 +469,6 @@
             document.getElementById('themeIcon').innerText = '🌙';
         }
         
-        // Kart seçeneklerini doldur
         let select = document.getElementById('exitCardSelect');
         for (const [key, value] of Object.entries(EXIT_CARDS)) {
             let opt = document.createElement('option');
@@ -530,18 +567,48 @@
         let diffTime = Math.abs(new Date() - bookDate);
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) > 15;
     }
+    
+    // --- GÜNCELLENEN RENDER HISTORY ---
     function renderHistory() {
         const sVal = document.getElementById('studentInput').value.trim().toUpperCase();
         const div = document.getElementById('historyList');
         div.innerHTML = "";
-        let list = sVal ? records.filter(r => r.student === sVal) : records.filter(r => r.status === "Okuyor");
+        
+        // Eğer öğrenci seçili değilse sadece "Okuyor"ları göster
+        // Eğer öğrenci seçiliyse, o öğrencinin HEPSİNİ göster (geçmiş dahil)
+        let list;
+        if(sVal) {
+            list = records.filter(r => r.student === sVal);
+        } else {
+            list = records.filter(r => r.status === "Okuyor");
+        }
+        
         if(list.length === 0) div.innerHTML = "<p style='text-align:center; color:var(--text-sub); opacity:0.7;'>Kayıt yok.</p>";
+        
         list.forEach(r => {
-            let isReading = r.status === "Okuyor";
-            let btnHtml = isReading ? `<button class="btn-return" onclick="returnBook(${r.id})">İade Al</button>` : `<span style="color:var(--text-sub); font-size:0.8rem;">${r.returnDate}</span>`;
-            div.innerHTML += `<div class="list-item"><div class="item-content"><h4>${r.book}</h4><p>${r.student} • ${r.date}</p></div>${btnHtml}</div>`;
+            let actionBtn = "";
+            if (r.status === "Okuyor") {
+                actionBtn = `<button class="btn-return" onclick="returnBook(${r.id})">İade Al</button>`;
+            } else {
+                // SADECE ÖĞRENCİ SEÇİLİYSE YORUM DÜZENLEME BUTONU ÇIKSIN
+                if(sVal) {
+                    actionBtn = `<button class="btn-comment" onclick="returnBook(${r.id})"><i class="fas fa-edit"></i> Yorumla</button>`;
+                } else {
+                    actionBtn = `<span style="color:var(--text-sub); font-size:0.8rem;">${r.returnDate}</span>`;
+                }
+            }
+
+            div.innerHTML += `
+            <div class="list-item">
+                <div class="item-content">
+                    <h4>${r.book}</h4>
+                    <p>${r.student} • ${r.date}</p>
+                </div>
+                ${actionBtn}
+            </div>`;
         });
     }
+
     function lendBook() {
         const s = document.getElementById('studentInput').value.trim().toUpperCase();
         const b = document.getElementById('bookInput').value.trim();
@@ -558,12 +625,21 @@
     // --- YENİ İADE VE KART SİSTEMİ ---
     function returnBook(id) {
         tempReturnId = id;
-        currentRating = 0;
+        
+        // Mevcut kaydı bul ve varsa eski yorumu getir
+        let rec = records.find(r => r.id === id);
+        if(rec) {
+            currentRating = rec.rating || 0;
+            document.getElementById('exitCardSelect').value = rec.cardId || "";
+            document.getElementById('returnComment').value = rec.comment || "";
+        } else {
+            currentRating = 0;
+            document.getElementById('exitCardSelect').value = "";
+            document.getElementById('returnComment').value = "";
+        }
+        
         updateStars();
-        document.getElementById('exitCardSelect').value = "";
-        document.getElementById('cardPromptBox').style.display = 'none';
-        document.getElementById('commentWrapper').style.display = 'none';
-        document.getElementById('returnComment').value = "";
+        updateCardPrompt();
         document.getElementById('ratingOverlay').style.display = 'flex';
     }
 
@@ -636,16 +712,17 @@
         if (!tempReturnId) return;
         let rec = records.find(r => r.id === tempReturnId);
         
-        // Kart verilerini al
         let cardId = document.getElementById('exitCardSelect').value;
         let comment = document.getElementById('returnComment').value;
 
         if(rec) {
             rec.status = "İade Etti";
-            rec.returnDate = new Date().toLocaleDateString('tr-TR');
+            // Eğer tarih yoksa (yeni iade ediliyorsa) ekle, eskiyse dokunma
+            if(!rec.returnDate || rec.returnDate === "-") {
+                rec.returnDate = new Date().toLocaleDateString('tr-TR');
+            }
             if(currentRating > 0) rec.rating = currentRating;
             
-            // Yeni Verileri Ekle
             if(cardId) {
                 rec.cardId = cardId;
                 rec.cardTitle = EXIT_CARDS[cardId].title;
@@ -697,56 +774,64 @@
             let pageHtml = item.pageCount > 0 ? `<span style="font-size:0.75rem; color:var(--text-sub); border:1px solid #ccc; padding:2px 6px; border-radius:8px; margin-left:5px;">${item.pageCount} Syf.</span>` : "";
             let badge = item.status === 'out' ? `<span style="color:#ef4444; font-weight:bold; font-size:0.8rem;">Dışarıda</span>` : `<span style="color:#10b981; font-weight:bold; font-size:0.8rem;">Rafta</span>`;
             
-            // KİTAP ADINA TIKLAYINCA DETAY AÇMA EKLENDİ
             div.innerHTML += `
             <div class="glass-panel" style="padding:15px; margin-bottom:10px; cursor:pointer;" onclick="openBookDetail('${item.name}')">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${item.name} ${ratingHtml} ${pageHtml}</h4>
                     ${badge}
                 </div>
-                <div style="margin-top:5px; font-size:0.8rem; color:var(--text-sub); opacity:0.8;">Detaylar için tıkla ▶</div>
+                <div style="margin-top:5px; font-size:0.8rem; color:var(--text-sub); opacity:0.8;">Bilgi Ağacı İçin Tıkla 🌳</div>
             </div>`;
         });
     }
 
-    // --- KİTAP DETAY PENCERESİ FONKSİYONLARI ---
+    // --- 🌳 BİLGİ AĞACI RENDER ---
     function openBookDetail(bookName) {
         document.getElementById('bdTitle').innerText = bookName;
         let bookRecs = records.filter(r => normalizeStr(r.book) === normalizeStr(bookName) && r.status === "İade Etti");
+        document.getElementById('bdStats').innerText = `${bookRecs.length} Meyve Toplandı`;
         
-        let avg = 0;
-        if(bookRecs.length > 0) {
-            let sum = bookRecs.reduce((a, b) => a + (parseInt(b.rating)||0), 0);
-            avg = (sum / bookRecs.length).toFixed(1);
-        }
-        
-        document.getElementById('bdStats').innerText = `${bookRecs.length} Okuma | Ort. ${avg} Puan`;
-        
-        let container = document.getElementById('bdReviews');
-        container.innerHTML = "";
+        let canopy = document.getElementById('treeCanopy');
+        canopy.innerHTML = "";
         
         if(bookRecs.length === 0) {
-            container.innerHTML = "<p>Henüz yorum yapılmamış.</p>";
+            canopy.innerHTML = "<div style='text-align:center; color:white; padding-top:100px;'>Henüz meyve yok...</div>";
         } else {
-            bookRecs.forEach(r => {
-                let starStr = r.rating ? "⭐".repeat(r.rating) : "";
-                let cardHtml = r.cardTitle ? `<span class="rc-type">${r.cardTitle}</span>` : "";
-                let commentHtml = r.comment ? `<div class="rc-text">"${r.comment}"</div>` : "";
+            bookRecs.forEach((r, i) => {
+                // Meyve Tipi (Karta Göre)
+                let icon = "🍎";
+                if(r.cardId >= 4 && r.cardId <= 6) icon = "🍏";
+                if(r.cardId >= 7) icon = "🍊";
+                if(!r.cardId) icon = "🍋";
+
+                let fruit = document.createElement('div');
+                fruit.className = 'tree-fruit';
+                fruit.innerText = icon;
                 
-                container.innerHTML += `
-                <div class="review-card">
-                    <div class="rc-header">
-                        <span>${r.student}</span>
-                        <span>${starStr}</span>
-                    </div>
-                    ${cardHtml}
-                    ${commentHtml}
-                    <div style="font-size:0.7rem; color:var(--text-sub); margin-top:5px; text-align:right;">${r.returnDate}</div>
-                </div>`;
+                // Rastgele Konumlandırma (Ağacın içinde)
+                let top = 20 + Math.random() * 180;
+                let left = 20 + Math.random() * 180;
+                
+                fruit.style.top = top + "px";
+                fruit.style.left = left + "px";
+                
+                fruit.onclick = () => showFruitDetail(r);
+                
+                canopy.appendChild(fruit);
             });
         }
         
+        document.getElementById('fruitDetailBox').style.display = 'none';
         document.getElementById('bookDetailOverlay').style.display = 'flex';
+    }
+
+    function showFruitDetail(rec) {
+        let box = document.getElementById('fruitDetailBox');
+        let starStr = rec.rating ? "⭐".repeat(rec.rating) : "";
+        document.getElementById('fdStudent').innerText = `${rec.student} ${starStr}`;
+        document.getElementById('fdCard').innerText = rec.cardTitle || "Standart Okuma";
+        document.getElementById('fdComment').innerText = rec.comment ? `"${rec.comment}"` : "(Yorum yok)";
+        box.style.display = 'block';
     }
 
     function closeBookDetail() {
