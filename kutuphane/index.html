@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f5f7fa">
     
-    <title>Zeynal Öğretmen Kütüphane (V32)</title>
+    <title>Zeynal Öğretmen Kütüphane (V33)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* --- TEMA AYARLARI --- */
@@ -159,9 +159,9 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         /* --- FİLTRE --- */
-        .filter-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        .filter-group { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .filter-chip {
-            flex: 1; padding: 12px; text-align: center;
+            flex: 1; padding: 12px; text-align: center; white-space: nowrap;
             background: var(--input-bg); border: var(--glass-border);
             border-radius: 14px; font-size: 0.85rem; font-weight: 600;
             color: var(--text-sub); cursor: pointer; transition: 0.3s;
@@ -275,6 +275,7 @@
                     <div class="filter-chip active" onclick="filterBooks('all', this)">Tümü (<span id="cnt-all">0</span>)</div>
                     <div class="filter-chip" onclick="filterBooks('out', this)">Dışarıda (<span id="cnt-out">0</span>)</div>
                     <div class="filter-chip" onclick="filterBooks('in', this)">Rafta (<span id="cnt-in">0</span>)</div>
+                    <div class="filter-chip" onclick="filterBooks('rating', this)">Puan 🌟</div>
                 </div>
                 
                 <div class="input-wrapper">
@@ -554,12 +555,18 @@
         renderBookManager();
     }
 
-    function getBookRating(bookName) {
+    // Yardımcı: Kitap puanını sayı olarak al
+    function getRawRating(bookName) {
         let bookRecs = records.filter(r => normalizeStr(r.book) === normalizeStr(bookName) && r.rating);
-        if(bookRecs.length === 0) return "";
+        if(bookRecs.length === 0) return 0;
         let sum = bookRecs.reduce((a, b) => a + parseInt(b.rating), 0);
-        let avg = (sum / bookRecs.length).toFixed(1);
-        return ` <span style="color:#f59e0b; font-size:0.85rem;">⭐${avg}</span>`;
+        return sum / bookRecs.length;
+    }
+
+    function getBookRating(bookName) {
+        let avg = getRawRating(bookName);
+        if(avg === 0) return "";
+        return ` <span style="color:#f59e0b; font-size:0.85rem;">⭐${avg.toFixed(1)}</span>`;
     }
 
     function renderBookManager() {
@@ -572,17 +579,26 @@
             let activeList = activeBooksMap[key] || [];
             let lastReader = lastHistoryMap[key];
             let status = activeList.length > 0 ? 'out' : 'in';
-            return { name: b, status: status, activeList: activeList, lastReader: lastReader };
+            let avgScore = getRawRating(b); // Puan sıralaması için veriyi çek
+            return { name: b, status: status, activeList: activeList, lastReader: lastReader, avgScore: avgScore };
         });
 
         displayList = displayList.filter(item => {
             if(!item.name.toLowerCase().includes(search)) return false;
             if(currentFilter === 'out' && item.status !== 'out') return false;
             if(currentFilter === 'in' && item.status !== 'in') return false;
+            // Rating filtresinde de tüm kitapları gösterelim ki sıralamayı görsünler
             return true;
         });
 
-        displayList.sort((a,b) => a.status === 'out' ? -1 : 1);
+        // SIRALAMA MANTIĞI
+        if(currentFilter === 'rating') {
+             // Puana göre çoktan aza sırala
+             displayList.sort((a,b) => b.avgScore - a.avgScore);
+        } else {
+             // Varsayılan: Dışarıdakiler önce
+             displayList.sort((a,b) => a.status === 'out' ? -1 : 1);
+        }
 
         displayList.forEach(item => {
             let details = "";
@@ -630,15 +646,16 @@
         if(val && !books.includes(val)) { books.push(val); books.sort(); document.getElementById('newBookInput').value = ""; updateUI(); syncData(); }
     }
 
-    // --- MADALYA SİSTEMİ ---
+    // --- MADALYA SİSTEMİ GÜNCELLENDİ ---
+    // Her 5 kitap = 1 Altın
+    // Her 3 kitap = 1 Gümüş (Kümülatif)
     function getMedals(count) {
-        let gold = Math.floor(count / 15);
-        let remainder = count % 15;
-        let silver = Math.floor(remainder / 5);
+        let goldCount = Math.floor(count / 5);
+        let silverCount = Math.floor(count / 3);
         
         let medals = "";
-        for(let i=0; i<gold; i++) medals += "🥇";
-        for(let i=0; i<silver; i++) medals += "🥈";
+        for(let i=0; i<goldCount; i++) medals += "🥇";
+        for(let i=0; i<silverCount; i++) medals += "🥈";
         
         return medals;
     }
