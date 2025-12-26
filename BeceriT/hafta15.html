@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>A4 Matematik Beceri Temelli - 15. Hafta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Open+Sans:wght@400;600;700&family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- GENEL AYARLAR --- */
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
+
+        body {
+            margin: 0; padding: 20px;
+            background-color: #525659; /* PDF okuyucu grisi */
+            font-family: 'Open Sans', sans-serif;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+        }
+
+        /* --- GİRİŞ EKRANI (MODAL) --- */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.95); z-index: 9999;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 15px; text-align: center; width: 350px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 4px solid #f39c12;
+        }
+        .login-input {
+            width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;
+        }
+        .btn-start {
+            background: #27ae60; color: white; border: none; padding: 12px 30px; font-size: 18px; 
+            border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;
+        }
+
+        /* --- KAĞIT TASARIMI --- */
+        .page {
+            width: 210mm; min-height: 297mm; /* A4 Boyutu */
+            background: white; padding: 15mm;
+            position: relative; box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column;
+        }
+
+        /* --- BAŞLIK ALANI --- */
+        .header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px; height: 70px;
+        }
+        .title-area h1 {
+            font-family: 'Patrick Hand', cursive; font-size: 26pt; margin: 0; color: #d35400; letter-spacing: 1px;
+        }
+        .title-area span { font-size: 11pt; color: #555; font-weight: bold; }
+        .student-details { text-align: right; font-size: 11pt; font-weight: 600; }
+        .student-info-print { display: none; } 
+
+        /* --- IZGARA YAPISI (4 Satır x 2 Sütun = 8 Soru) --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(4, 1fr); 
+            gap: 15px; flex-grow: 1;
+        }
+
+        /* --- SORU KARTI --- */
+        .question-card {
+            border: 2px solid #333; border-radius: 8px; padding: 10px;
+            display: flex; flex-direction: column; background-color: #fff;
+            position: relative; overflow: hidden;
+        }
+        
+        .q-header {
+            display: flex; justify-content: space-between; border-bottom: 1px solid #ddd;
+            padding-bottom: 5px; margin-bottom: 8px;
+        }
+        .q-number {
+            background: #2c3e50; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10pt; font-weight: bold;
+        }
+        .q-topic { font-size: 8pt; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-top: 2px; }
+        .q-content { font-size: 10pt; line-height: 1.3; flex-grow: 1; margin-bottom: 5px; }
+
+        /* --- GÖRSELLEŞTİRME CSS --- */
+        .mini-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-top: 5px; }
+        .mini-table th { background: #ecf0f1; padding: 4px; text-align: left; border: 1px solid #bdc3c7; }
+        .mini-table td { padding: 4px; border: 1px solid #bdc3c7; }
+
+        .pattern-row { display: flex; gap: 3px; margin-top: 5px; justify-content: center; }
+        .tile { width: 15px; height: 15px; border: 1px solid #555; border-radius: 2px; }
+        .t-y { background: #f1c40f; } .t-g { background: #95a5a6; } .t-b { background: #34495e; }
+
+        .card-row { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; margin-top: 5px; }
+        .num-card { background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9pt; font-weight: bold; }
+
+        .price-row { display: flex; gap: 5px; justify-content: space-around; margin-top: 5px; text-align: center; }
+        .p-box { background: #f0f3f4; border: 1px solid #ccc; padding: 3px; border-radius: 4px; font-size: 8pt; width: 32%; }
+        .p-title { font-weight: bold; color: #2980b9; display: block; }
+
+        /* --- CEVAP ALANI --- */
+        .solution-area {
+            height: 35px; background-color: #f9f9f9; border-top: 1px dashed #999;
+            display: flex; align-items: center; padding: 0 5px; position: relative;
+        }
+        .solution-label { font-size: 9pt; font-weight: bold; color: #555; margin-right: 10px; }
+        
+        .ans-input {
+            border: 2px solid #3498db; border-radius: 4px; padding: 5px; 
+            width: 100px; font-weight: bold; font-size: 11pt; color: #333;
+            background: white; outline: none; transition: 0.3s;
+        }
+        .ans-input:focus { border-color: #e67e22; background: #fffdf6; }
+        
+        /* Doğru / Yanlış Stilleri */
+        .ans-input.correct { border-color: #27ae60; background-color: #d4edda; color: #155724; }
+        .ans-input.wrong { border-color: #e74c3c; background-color: #f8d7da; color: #721c24; }
+
+        /* --- PDF EKSTRA BÖLÜMÜ --- */
+        .extra-section {
+            margin-top: 15px; padding: 10px; border: 2px dashed #95a5a6; border-radius: 8px;
+            background: #fdfdfd; display: flex; flex-direction: column; gap: 10px;
+        }
+        .extra-title { font-size: 10pt; font-weight: bold; color: #2c3e50; text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 5px;}
+        .extra-row { display: flex; justify-content: space-around; align-items: center; }
+        .extra-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        .extra-label { font-size: 8pt; font-weight: bold; color: #7f8c8d; }
+        .extra-input { 
+            width: 40px; height: 30px; text-align: center; text-transform: uppercase; 
+            font-weight: bold; border: 2px solid #bdc3c7; border-radius: 4px;
+        }
+
+        /* --- KONTROL PANELİ --- */
+        .control-panel {
+            margin-top: 20px; text-align: center; background: white; padding: 15px; 
+            border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 210mm;
+            display: flex; gap: 10px; justify-content: center; flex-direction: column;
+        }
+        .btn-check {
+            background: #f39c12; color: white; border: none; padding: 15px 50px;
+            font-size: 18px; border-radius: 30px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 4px #d35400; transition: 0.2s;
+        }
+        .btn-submit {
+            background: #27ae60; color: white; border: none; padding: 15px 50px;
+            font-size: 18px; border-radius: 30px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 4px #1e8449; transition: 0.2s; display: none; /* Başlangıçta gizli */
+        }
+        .btn-check:active, .btn-submit:active { transform: translateY(3px); box-shadow: none; }
+        .status-msg { margin-top: 10px; font-weight: bold; font-size: 14px; min-height: 20px;}
+
+        /* --- YAZDIRMA (PRINT) MODU --- */
+        @media print {
+            body { background: none; padding: 0; display: block; }
+            #loginOverlay, .control-panel { display: none !important; }
+            .page { width: 100%; height: 100%; box-shadow: none; margin: 0; padding: 10mm; page-break-after: always; }
+            .ans-input, .extra-input { border: none; border-bottom: 1px dotted #000; background: none !important; width: 100%; padding: 0; color: #000 !important; }
+            .student-info-screen { display: none; }
+            .student-info-print { display: block; }
+            /* Renkleri sıfırla */
+            .ans-input.correct, .ans-input.wrong { border: none; background: none; color: black; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h2 style="margin-top:0; color:#d35400;">🎒 Matematik Avcıları</h2>
+            <p>Çalışma Kağıdına Başla</p>
+            <select id="studentClass" class="login-input">
+                <option value="">Sınıfını Seç</option>
+                <option value="4-A">4-A</option>
+                <option value="4-B">4-B</option>
+                <option value="4-C">4-C</option>
+                <option value="4-D">4-D</option>
+            </select>
+            <input type="text" id="studentName" class="login-input" placeholder="Adın Soyadın">
+            <button class="btn-start" onclick="startWorksheet()">BAŞLA</button>
+        </div>
+    </div>
+
+    <div class="page">
+        
+        <div class="header">
+            <div class="title-area">
+                <h1>Matematik Avcıları</h1>
+                <span>15. Hafta Beceri Temelli Tarama</span>
+            </div>
+            <div class="student-details">
+                <div class="student-info-screen">
+                    <div>Öğrenci: <span id="dispName" style="color:#2980b9;">...</span></div>
+                    <div>Sınıf: <span id="dispClass" style="color:#2980b9;">...</span></div>
+                </div>
+                <div class="student-info-print">
+                    <div>Adı Soyadı: __________________</div>
+                    <div>Sınıfı: _________ Tarih: __/__/____</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-container">
+
+            <div class="question-card" data-id="1">
+                <div class="q-header"><span class="q-number">Soru 1</span><span class="q-topic">Tablo Yorumlama</span></div>
+                <div class="q-content">
+                    Konsere gelenler tabloda verilmiştir. Toplam seyircinin <b>yarısı</b> Pazartesi gelmiştir. Salı günü gelenler Pazartesi'den <b>1250 fazladır</b>.
+                    <table class="mini-table">
+                        <tr><th>Gün</th><th>Seyirci</th></tr>
+                        <tr><td>Cuma</td><td>2450</td></tr>
+                        <tr><td>Cumartesi</td><td>3100</td></tr>
+                        <tr><td>Pazar</td><td>2850</td></tr>
+                    </table>
+                    <br><b>Salı günü kaç seyirci gelmiştir?</b>
+                </div>
+                <div class="solution-area"><span class="solution-label">Cevap:</span><input type="number" class="ans-input" id="ans1"></div>
+            </div>
+
+            <div class="question-card" data-id="2">
+                <div class="q-header"><span class="q-number">Soru 2</span><span class="q-topic">Örüntü</span></div>
+                <div class="q-content">
+                    Usta taşları şu sırayla diziyor: <b>2 Sarı, 3 Gri, 1 Siyah</b>.
+                    <div class="pattern-row">
+                        <div class="tile t-y"></div><div class="tile t-y"></div>
+                        <div class="tile t-g"></div><div class="tile t-g"></div><div class="tile t-g"></div>
+                        <div class="tile t-b"></div>...
+                    </div>
+                    <br>Usta toplam <b>72 taş</b> kullandığında, kaç tane <b>Gri</b> taş kullanmış olur?
+                </div>
+                <div class="solution-area"><span class="solution-label">Cevap:</span><input type="number" class="ans-input" id="ans2"></div>
+            </div>
+
+            <div class="question-card" data-id="3">
+                <div class="q-header"><span class="q-number">Soru 3</span><span class="q-topic">Doğal Sayılar</span></div>
+                <div class="q-content">
+                    <div class="card-row">
+                        <span class="num-card">215</span> <span class="num-card">890</span> <span class="num-card">432</span> 
+                        <span class="num-card">105</span> <span class="num-card">764</span> <span class="num-card">550</span>
+                    </div>
+                    <ul style="margin:2px 0; padding-left:15px; font-size:8pt;">
+                        <li><b>1. Sayı:</b> Binler bölüğüne en büyük, birler bölüğüne en küçük kart.</li>
+                        <li><b>2. Sayı:</b> Kalanlarla en büyük sayı.</li>
+                    </ul>
+                    <b>Bu iki sayının farkı kaçtır?</b>
+                </div>
+                <div class="solution-area"><span class="solution-label">Cevap:</span><input type="number" class="ans-input" id="ans3"></div>
+            </div>
+
+            <div class="question-card" data-id="4">
+                <div class="q-header"><span class="q-number">Soru 4</span><span class="q-topic">Kat Problemleri</span></div>
+                <div class="q-content">
+                    <div class="price-row">
+                        <div class="p-box"><span class="p-title">Ceket</span>1500 TL</div>
+                        <div class="p-box"><span class="p-title">Ayakkabı</span>Ceketin 2 katının 300 eksiği</div>
+                        <div class="p-box"><span class="p-title">Çanta</span>Ayakkabının Yarısı</div>
+                    </div>
+                    <br><b>Buna göre Çanta kaç TL'dir?</b>
+                </div>
+                <div class="solution-area"><span class="solution-label">Cevap:</span><input type="number" class="ans-input" id="ans4"></div>
+            </div>
+
+            <div class="question-card" data-id="5">
+                <div class="q-header"><span class="q-number">Soru 5</span><span class="q-topic">Yuvarlama</span></div>
+                <div class="q-content">
+                    Fiyatlar <b>en yakın yüzlüğe</b> yuvarlanıyor.
+                    <table class="mini-table">
+                        <tr><td>Telefon</td><td>12.485 TL</td></tr>
+                        <tr><td>Tablet</td><td>8.749 TL</td></tr>
+                        <tr><td>Bilgisayar</td><td>21.320 TL</td></tr>
+                    </table>
+                    En çok artan ile en çok azalan arasındaki fark kaçtır?
+                </div>
+                <div class="solution-area"><span class="solution-label">Cevap:</span><input type="number" class="ans-input" id="ans5"></div>
+            </div>
+
+            <div class="question-card" data-id="6">
+                <div class="q-header"><span class="q-number">Soru 6</span><span class="q-topic">Paylaşım Problemi</span></div>
+                <div class="q-content">
+                    Dedemin cebindeki para 6 torununa eşit paylaştırılıyor. Her torunun 150 TL alması için 40 TL'ye daha ihtiyaç vardır.
+                    <br><br><b>Dedemin başlangıçta kaç TL'si vardır?</b>
+                </div>
+                <div class="solution-area"><span class="solution-label">Cevap:</span><input type="number" class="ans-input" id="ans6"></div>
+            </div>
+
+            <div class="question-card" data-id="7">
+                <div class="q-header"><span class="q-number">Soru 7</span><span class="q-topic">Alışveriş Problemi</span></div>
+                <div class="q-content">
+                    Mavi kalemler 50'li kolilerde (Koli fiyatı 30 TL), kırmızı kalemler 25'li kolilerde (Koli fiyatı 40 TL) satılmaktadır.
+                    <br><br><b>3 koli mavi ve 4 koli kırmızı kalem alan bir kırtasiyeci toplam kaç TL öder?</b>
+                </div>
+                <div class="solution-area"><span class="solution-label">Cevap:</span><input type="number" class="ans-input" id="ans7"></div>
+            </div>
+
+            <div class="question-card" data-id="8">
+                <div class="q-header"><span class="q-number">Soru 8</span><span class="q-topic">Stok Problemi</span></div>
+                <div class="q-content">
+                    8 kasa elma (her biri 20 kg) ve 6 kasa portakal (her biri 15 kg) var. Her ikisinden dörder kasa satıldı.
+                    <br><br><b>SATILMAYAN elma ile SATILAN portakal toplam kaç kg'dır?</b>
+                </div>
+                <div class="solution-area"><span class="solution-label">Cevap:</span><input type="number" class="ans-input" id="ans8"></div>
+            </div>
+
+        </div> 
+
+        <div class="extra-section">
+            <div class="extra-title">📄 PDF ETKİNLİK CEVAPLARI (A, B, C, D)</div>
+            <div class="extra-row">
+                <div class="extra-item">
+                    <span class="extra-label">Benzetme 1</span>
+                    <input type="text" class="extra-input ans-input" id="ans9" maxlength="1" placeholder="?">
+                </div>
+                <div class="extra-item">
+                    <span class="extra-label">Benzetme 2</span>
+                    <input type="text" class="extra-input ans-input" id="ans10" maxlength="1" placeholder="?">
+                </div>
+                <div class="extra-item">
+                    <span class="extra-label">Örneklendirme 1</span>
+                    <input type="text" class="extra-input ans-input" id="ans11" maxlength="1" placeholder="?">
+                </div>
+                <div class="extra-item">
+                    <span class="extra-label">Örneklendirme 2</span>
+                    <input type="text" class="extra-input ans-input" id="ans12" maxlength="1" placeholder="?">
+                </div>
+            </div>
+        </div>
+
+    </div> 
+
+    <div class="control-panel">
+        <div id="msgBox" class="status-msg">Önce cevaplarını kontrol etmelisin 👇</div>
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            <button class="btn-check" onclick="checkAnswers()">🔍 CEVAPLARI KONTROL ET</button>
+            <button class="btn-submit" onclick="submitResults()">📤 ÖĞRETMENE GÖNDER</button>
+        </div>
+    </div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwHhBnsCgUkwqq6TqiEAjPeIRmZgqlcbNjcK7FLS1vjnitl5_Oubd3mPTZHi6N7BLNLFA/exec"; 
+
+    // DOĞRU CEVAP ANAHTARI
+    const answersKey = {
+        1: "5450", 2: "36", 3: "125555", 4: "1350", 5: "34", 6: "860", 7: "250", 8: "140",
+        9: "D", 10: "B", 11: "C", 12: "D"
+    };
+
+    function startWorksheet() {
+        const name = document.getElementById('studentName').value;
+        const cls = document.getElementById('studentClass').value;
+        if(!name || !cls) { alert("Lütfen adını ve sınıfını gir."); return; }
+        document.getElementById('dispName').innerText = name;
+        document.getElementById('dispClass').innerText = cls;
+        document.getElementById('loginOverlay').style.display = 'none';
+    }
+
+    function checkAnswers() {
+        let correctCount = 0;
+        let wrongCount = 0;
+        let emptyCount = 0;
+
+        for (let i = 1; i <= 12; i++) {
+            let inputEl = document.getElementById('ans' + i);
+            let userVal = inputEl.value.trim().toUpperCase();
+            let cleanVal = userVal.replace(/\./g, '').replace(/\s/g, ''); 
+            
+            inputEl.classList.remove('correct', 'wrong');
+
+            if (cleanVal === "") {
+                emptyCount++;
+                inputEl.classList.add('wrong'); 
+            } else if (cleanVal === answersKey[i]) {
+                inputEl.classList.add('correct');
+                correctCount++;
+            } else {
+                inputEl.classList.add('wrong');
+                wrongCount++;
+            }
+        }
+
+        const msgBox = document.getElementById('msgBox');
+        const btnSubmit = document.querySelector('.btn-submit');
+        
+        // Gönder butonu her zaman görünür hale gelir
+        btnSubmit.style.display = "block"; 
+
+        if (wrongCount === 0 && emptyCount === 0) {
+            msgBox.innerHTML = "✅ Harika! Hepsi doğru. Hemen gönderebilirsin.";
+            msgBox.style.color = "#27ae60";
+        } else {
+            msgBox.innerHTML = `⚠️ ${wrongCount} Yanlış, ${emptyCount} Boş cevabın var. İstersen düzelt, istersen bu haliyle gönder.`;
+            msgBox.style.color = "#d35400";
+        }
+    }
+
+    function submitResults() {
+        // Yanlış veya boş cevap kontrolü
+        let hasErrors = document.querySelectorAll('.ans-input.wrong').length > 0;
+        let hasEmpty = document.querySelectorAll('.ans-input:not(.correct):not(.wrong)').length > 0;
+
+        // Uyarı mesajı
+        if (hasErrors || hasEmpty) {
+            if(!confirm("Bazı cevapların yanlış veya boş görünüyor. Yine de bu haliyle göndermek istiyor musun?")) {
+                return; 
+            }
+        }
+
+        const name = document.getElementById('studentName').value;
+        const cls = document.getElementById('studentClass').value;
+        
+        let resultSummary = `[15. Hafta + PDF]\n`;
+        for (let i = 1; i <= 12; i++) {
+            let val = document.getElementById('ans' + i).value;
+            let el = document.getElementById('ans' + i);
+            let status = '❓';
+            if (el.classList.contains('correct')) status = '✅';
+            if (el.classList.contains('wrong')) status = '❌';
+            
+            resultSummary += `Soru ${i}: ${status} (${val})\n`;
+        }
+
+        const btn = document.querySelector('.btn-submit');
+        btn.disabled = true;
+        btn.innerText = "GÖNDERİLİYOR...";
+
+        const data = { branch: cls, name: name, results: resultSummary };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(() => {
+            alert(`✅ Tebrikler! Cevapların başarıyla gönderildi.`);
+            document.querySelectorAll('.ans-input').forEach(i => i.disabled = true);
+            btn.innerText = "GÖNDERİLDİ ✅";
+        })
+        .catch(() => {
+            alert("❌ Bir hata oluştu. İnternetini kontrol et.");
+            btn.disabled = false;
+            btn.innerText = "📤 TEKRAR DENE";
+        });
+    }
+</script>
+
+</body>
+</html>
