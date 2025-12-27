@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#f5f7fa">
-    <title>Zeynal Öğretmen Kütüphane (V47 - Petek Ağaç)</title>
+    <title>Zeynal Öğretmen Kütüphane (V48 - Akıllı Ağaç)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* --- TEMA AYARLARI --- */
@@ -198,7 +198,7 @@
         @keyframes floatAstronaut { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10px); } }
         @keyframes pulseIcon { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* --- 🌳 PETEK AĞAÇ (V47) --- */
+        /* --- 🌳 V48 AKILLI AĞAÇ STİLİ --- */
         .tree-wrapper {
             position: relative; width: 100%; height: 500px;
             /* Gökyüzü ve Çim */
@@ -756,8 +756,11 @@
             let pageHtml = item.pageCount > 0 ? `<span style="font-size:0.75rem; color:var(--text-sub); border:1px solid #ccc; padding:2px 6px; border-radius:8px; margin-left:5px;">${item.pageCount} Syf.</span>` : "";
             let badge = item.status === 'out' ? `<span style="color:#ef4444; font-weight:bold; font-size:0.8rem;">Dışarıda</span>` : `<span style="color:#10b981; font-weight:bold; font-size:0.8rem;">Rafta</span>`;
             
+            // Kesme işareti sorunu için escape
+            let safeName = item.name.replace(/'/g, "\\'"); 
+            
             div.innerHTML += `
-            <div class="glass-panel" style="padding:15px; margin-bottom:10px; cursor:pointer;" onclick="openBookDetail('${item.name}')">
+            <div class="glass-panel" style="padding:15px; margin-bottom:10px; cursor:pointer;" onclick="openBookDetail('${safeName}')">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${item.name} ${ratingHtml} ${pageHtml}</h4>
                     ${badge}
@@ -777,34 +780,38 @@
         fruitsContainer.innerHTML = "";
         
         // PETEK MATEMATİĞİ (HEX GRID)
-        // Merkez noktası (Ağacın yeşil kısmının ortası)
         const centerX = 250; 
         const centerY = 200; 
-        const spacing = 45; // Meyveler arası mesafe
+        
+        // Dinamik Boşluk Ayarı (Az ise geniş, çok ise sıkışık)
+        let spacing = 45; 
+        if(bookRecs.length > 30) spacing = 30;
+        else if(bookRecs.length < 10) spacing = 60;
 
-        // Spiral Hex Grid algoritması ile meyveleri yerleştir
         bookRecs.forEach((r, i) => {
             let pos = getHexPosition(i, spacing);
             let posX = centerX + pos.x;
             let posY = centerY + pos.y;
 
-            let icon = "🍏"; // Varsayılan Yeşil (Yorumsuz)
+            let icon = "🍏"; // Yeşil (Yorumsuz)
             if(r.cardId && r.comment) icon = "🍎"; // Kırmızı (Yorumlu)
 
             let fruit = document.createElement('div');
             fruit.className = 'tree-fruit';
             fruit.innerText = icon;
-            fruit.style.left = (posX - 20) + "px"; // Merkezleme
+            
+            // Meyve boyutu kalabalıkta küçülsün
+            if(bookRecs.length > 30) fruit.style.fontSize = "1.5rem";
+            
+            fruit.style.left = (posX - 20) + "px"; 
             fruit.style.top = (posY - 20) + "px";
             
-            // Animasyon (Sırayla gelsinler)
             fruit.style.animation = `popUp 0.5s ease backwards ${i * 0.05}s`;
             
             fruit.onclick = () => showFruitDetail(r);
             fruitsContainer.appendChild(fruit);
         });
         
-        // Alt Liste
         let listContainer = document.getElementById('bdReviews');
         listContainer.innerHTML = "";
         if(bookRecs.length === 0) listContainer.innerHTML = "<div style='text-align:center; padding:10px; color:#ccc;'>Henüz yorum yok.</div>";
@@ -834,8 +841,6 @@
     function getHexPosition(index, size) {
         if (index === 0) return { x: 0, y: 0 };
         
-        // Basitleştirilmiş Spiral Yerleşim
-        // (Tam matematiksel hex grid yerine daireler çizerek büyüme)
         let layer = 0;
         let countInLayer = 1;
         let totalCount = 1;
@@ -851,7 +856,7 @@
         let angle = remaining * angleStep;
         
         return {
-            x: Math.cos(angle) * (size * layer * 0.9), // Hafif sıkışık olsun
+            x: Math.cos(angle) * (size * layer * 0.9), 
             y: Math.sin(angle) * (size * layer * 0.9)
         };
     }
