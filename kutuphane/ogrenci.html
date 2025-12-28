@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Öğrenci Paneli</title>
+    <title>Öğrenci Paneli (V66 - Tam Yolculuk)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- PREMIUM ÖĞRENCİ TEMASI --- */
+        /* --- PREMIUM ÖĞRENCİ TEMASI (AYNI) --- */
         :root {
             --bg: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
             --glass: rgba(255, 255, 255, 0.6);
@@ -49,11 +49,15 @@
         .stat-val { font-size: 1.4rem; font-weight: 800; display: block; }
         .stat-lbl { font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; }
 
-        /* UZAY YOLU */
-        .journey-wrapper { position: relative; height: 120px; background: #2d3436; border-radius: 16px; overflow: hidden; margin-top: 20px; border: 2px solid rgba(255,255,255,0.2); }
-        .stars { position: absolute; inset:0; background: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png'); opacity: 0.6; }
-        .path-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        .astro { position: absolute; font-size: 2rem; top: 50%; transform: translate(-50%, -60%); transition: left 1s ease-in-out; filter: drop-shadow(0 0 10px gold); z-index: 5; }
+        /* --- YENİ UZAY YOLU STİLLERİ (V66) --- */
+        .journey-map-container { position: relative; height: 300px; background: radial-gradient(ellipse at bottom, #2d3436, #000000); border-radius: 20px; overflow: hidden; margin-top: 20px; border: 2px solid rgba(255,255,255,0.2); }
+        .stars-bg { position: absolute; inset: 0; background: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png'); opacity: 0.6; }
+        .station-point { position: absolute; width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transform: translate(-50%, -50%); z-index: 5; backdrop-filter: blur(5px); transition: 0.3s; }
+        .station-point.active { background: var(--primary); border-color: white; color: white; box-shadow: 0 0 15px var(--primary); transform: translate(-50%, -50%) scale(1.15); }
+        .station-label { position: absolute; top: 48px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; color: rgba(255,255,255,0.7); white-space: nowrap; text-align: center; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .station-point.active .station-label { color: white; }
+        .astronaut-marker { position: absolute; font-size: 3rem; transform: translate(-50%, -70%); filter: drop-shadow(0 0 10px gold); z-index: 10; transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translate(-50%, -70%); } 50% { transform: translate(-50%, -85%); } }
         
         /* KİTAP LİSTESİ */
         .book-card { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); transition: 0.2s; }
@@ -93,24 +97,13 @@
         <div id="medals" style="margin:10px 0; font-size:1.4rem; letter-spacing:3px;"></div>
         
         <div class="stats-grid">
-            <div class="stat-box">
-                <span class="stat-val" id="totalBooks">0</span>
-                <span class="stat-lbl">Kitap</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-val" id="totalPages">0</span>
-                <span class="stat-lbl">Sayfa</span>
-            </div>
+            <div class="stat-box"><span class="stat-val" id="totalBooks">0</span><span class="stat-lbl">Kitap</span></div>
+            <div class="stat-box"><span class="stat-val" id="totalPages">0</span><span class="stat-lbl">Sayfa</span></div>
         </div>
 
-        <div class="journey-wrapper">
-            <div class="stars"></div>
-            <svg class="path-svg">
-                <path d="M 0 60 Q 150 10, 300 60 T 600 60" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-dasharray="10,5"></path>
-            </svg>
-            <div class="astro" id="astro">🚀</div>
-            <div style="position:absolute; bottom:5px; width:100%; text-align:center; color:white; font-size:0.7rem; opacity:0.8;">Sonraki Rütbeye İlerle!</div>
-        </div>
+        <div class="journey-map-container" id="studentJourneyMap">
+            <div class="stars-bg"></div>
+            </div>
     </div>
 
     <div class="panel">
@@ -126,170 +119,127 @@
 <div id="rateModal" class="overlay">
     <div class="modal-card">
         <h3>Kitabı Değerlendir</h3>
-        <div class="stars-wrapper" id="starGroup">
-            <button class="star-btn" onclick="setStar(1)">★</button>
-            <button class="star-btn" onclick="setStar(2)">★</button>
-            <button class="star-btn" onclick="setStar(3)">★</button>
-            <button class="star-btn" onclick="setStar(4)">★</button>
-            <button class="star-btn" onclick="setStar(5)">★</button>
-        </div>
-        <select id="exitCard">
-            <option value="">-- Çıkış Kartı Seç --</option>
-        </select>
+        <div class="stars-wrapper" id="starGroup"><button class="star-btn" onclick="setStar(1)">★</button><button class="star-btn" onclick="setStar(2)">★</button><button class="star-btn" onclick="setStar(3)">★</button><button class="star-btn" onclick="setStar(4)">★</button><button class="star-btn" onclick="setStar(5)">★</button></div>
+        <select id="exitCard"><option value="">-- Çıkış Kartı Seç --</option></select>
         <p id="cardPrompt" style="font-size:0.8rem; font-style:italic; color:#636e72; margin-bottom:10px;"></p>
         <textarea id="comment" placeholder="Yorumunu buraya yaz..." style="height:100px;"></textarea>
-        <div style="display:flex; gap:10px;">
-            <button class="btn" style="background:#b2bec3; color:#2d3436;" onclick="closeModal()">Vazgeç</button>
-            <button class="btn" onclick="saveReview()">Kaydet</button>
-        </div>
+        <div style="display:flex; gap:10px;"><button class="btn" style="background:#b2bec3; color:#2d3436;" onclick="closeModal()">Vazgeç</button><button class="btn" onclick="saveReview()">Kaydet</button></div>
     </div>
 </div>
 
 <script>
-    // --- API URL BURAYA (AYNI URL) ---
     const API = "https://script.google.com/macros/s/AKfycbyhgWUBb-Aj2gwBosZMVn15tH0q5-ACUqd3lEsIn9z-1iyL4OESsehoeU8zM4Vx14IN/exec";
+    let data = {}, tempId = null, tempRating = 0;
 
-    let data = {};
-    let tempId = null;
-    let tempRating = 0;
-
-    const RANKS = [
-        {c:0, t:"Başlangıç", i:"🌱"}, {c:5, t:"Okuma Çırağı", i:"🥉"}, {c:10, t:"Kitap Kurdu", i:"📖"},
-        {c:15, t:"Bilgi Kaşifi", i:"🚀"}, {c:20, t:"Kelime Avcısı", i:"🏹"}, {c:25, t:"Kütüphane Muhafızı", i:"👑"},
-        {c:30, t:"Edebiyat Ustası", i:"🎩"}, {c:35, t:"Bilge Okur", i:"🌍"}, {c:40, t:"EFSANE", i:"💎"}
+    // TÜM RÜTBELER (9 İSTASYON) - Öğretmen paneliyle aynı
+    const ALL_RANKS = [
+        {c:0, t:"Başlangıç", e:"🌱"}, {c:5, t:"Çırak", e:"🥉"}, {c:10, t:"Kurdu", e:"📖"},
+        {c:15, t:"Kaşif", e:"🚀"}, {c:20, t:"Avcı", e:"🏹"}, {c:25, t:"Muhafız", e:"👑"},
+        {c:30, t:"Usta", e:"🎩"}, {c:35, t:"Bilge", e:"🌍"}, {c:40, t:"EFSANE", e:"💎"}
     ];
-    
-    const CARDS = {
-        "1": {t:"Macera Hatırası", p:"En unutulmaz sahne neydi?"},
-        "2": {t:"Öğrenen Profil", p:"Karakter hangi özelliği taşıyor?"},
-        "3": {t:"Duygu Kartı", p:"Hangi duyguları hissettin?"},
-        "4": {t:"Bağlantı Kartı", p:"Hayatınla nasıl bağ kurdun?"},
-        "5": {t:"Eleştiri Kartı", p:"Katılmadığın bir olay var mı?"},
-        "6": {t:"Soru Kartı", p:"Seni düşündüren soru neydi?"},
-        "7": {t:"Yaratıcı Son", p:"Sonunu nasıl değiştirirdin?"},
-        "8": {t:"Gelişim", p:"Hangi becerini geliştirdi?"},
-        "9": {t:"Tavsiye", p:"Tavsiye eder misin?"}
-    };
+    const CARDS = {"1":{t:"Macera Hatırası",p:"En unutulmaz sahne neydi?"},"2":{t:"Öğrenen Profil",p:"Karakter hangi özelliği taşıyor?"},"3":{t:"Duygu Kartı",p:"Hangi duyguları hissettin?"},"4":{t:"Bağlantı Kartı",p:"Hayatınla nasıl bağ kurdun?"},"5":{t:"Eleştiri Kartı",p:"Katılmadığın bir olay var mı?"},"6":{t:"Soru Kartı",p:"Seni düşündüren soru neydi?"},"7":{t:"Yaratıcı Son",p:"Sonunu nasıl değiştirirdin?"},"8":{t:"Gelişim",p:"Hangi becerini geliştirdi?"},"9":{t:"Tavsiye",p:"Tavsiye eder misin?"}};
 
-    // GİRİŞ
     function login() {
-        let p = document.getElementById('pass').value;
-        if(!p) return;
+        let p = document.getElementById('pass').value; if(!p) return;
         document.getElementById('loader').style.display = 'block';
-        fetch(API + "?action=login_student&password=" + p)
-        .then(r => r.json()).then(d => {
-            if(d.error) { alert(d.error); document.getElementById('loader').style.display='none'; }
-            else { data = d; init(); }
+        fetch(API + "?action=login_student&password=" + p).then(r => r.json()).then(d => {
+            if(d.error) { alert(d.error); document.getElementById('loader').style.display='none'; } else { data = d; init(); }
         });
     }
 
     function init() {
-        document.getElementById('loginOverlay').style.display='none';
-        document.getElementById('app').style.display='block';
-        
+        document.getElementById('loginOverlay').style.display='none'; document.getElementById('app').style.display='block';
         let sName = data.studentName;
-        // Filtrele: Sadece bu öğrenciye ait kayıtlar
         let myRecs = data.records.filter(r => r.student === sName && r.status === "İade Etti");
         let active = data.records.find(r => r.student === sName && r.status === "Okuyor");
         
-        // 1. İSTATİSTİKLER
         document.getElementById('stName').innerText = sName;
         document.getElementById('totalBooks').innerText = myRecs.length;
-        
-        let pages = 0;
-        myRecs.forEach(r => pages += parseInt(data.bookPages[r.book]) || 0);
+        let pages = 0; myRecs.forEach(r => pages += parseInt(data.bookPages[r.book]) || 0);
         document.getElementById('totalPages').innerText = pages;
         
-        // 2. RÜTBE & MADALYA
-        let rank = RANKS[0];
-        for(let i=0; i<RANKS.length; i++) if(myRecs.length >= RANKS[i].c) rank = RANKS[i];
-        document.getElementById('rankIcon').innerText = rank.i;
+        // Rütbe Bulma (Yeni Liste ile)
+        let rank = ALL_RANKS[0];
+        for(let i=0; i<ALL_RANKS.length; i++) if(myRecs.length >= ALL_RANKS[i].c) rank = ALL_RANKS[i];
+        document.getElementById('rankIcon').innerText = rank.e;
         document.getElementById('rankTitle').innerText = rank.t.toUpperCase();
         
         let g = Math.floor(myRecs.length / data.settings.gold);
         let si = Math.floor(myRecs.length / data.settings.silver);
         document.getElementById('medals').innerText = "🥇".repeat(g) + "🥈".repeat(si);
         
-        // 3. UZAY İLERLEMESİ
-        let max = 40; // Hedef
-        let pct = Math.min(100, (myRecs.length / max) * 100);
-        document.getElementById('astro').style.left = pct + "%";
-        
-        // 4. LİSTELEME
+        // YENİ UZAY HARİTASINI ÇAĞIR
+        // Biraz gecikme ile render et ki container boyutu otursun
+        setTimeout(() => {
+             renderFullJourney('studentJourneyMap', myRecs.length);
+        }, 100);
+       
+        // Kitap Listesi
         let div = document.getElementById('bookList'); div.innerHTML="";
+        if(active) { div.innerHTML += `<div class="book-card" style="background:rgba(255,234,167,0.3); border-left:4px solid #fdcb6e;"><div class="book-info"><b>${active.book}</b><span>${active.date}</span></div><div class="status-reading">Okuyorsun...</div></div>`; }
+        myRecs.forEach(r => { let btnText = r.comment ? "Düzenle" : "Yorumla"; let stars = r.rating ? "⭐".repeat(r.rating) : ""; div.innerHTML += `<div class="book-card"><div class="book-info"><b>${r.book}</b><span>${r.returnDate} ${stars}</span></div><button class="action-btn" onclick="openRate(${r.id})">${btnText}</button></div>`; });
         
-        if(active) {
-            div.innerHTML += `<div class="book-card" style="background:rgba(255,234,167,0.3); border-left:4px solid #fdcb6e;">
-                <div class="book-info"><b>${active.book}</b><span>${active.date}</span></div>
-                <div class="status-reading">Okuyorsun...</div>
-            </div>`;
-        }
-        
-        myRecs.forEach(r => {
-            let btnText = r.comment ? "Düzenle" : "Yorumla";
-            let stars = r.rating ? "⭐".repeat(r.rating) : "";
-            div.innerHTML += `<div class="book-card">
-                <div class="book-info"><b>${r.book}</b><span>${r.returnDate} ${stars}</span></div>
-                <button class="action-btn" onclick="openRate(${r.id})">${btnText}</button>
-            </div>`;
-        });
-        
-        // Modal Kartlarını Doldur
-        let sel = document.getElementById('exitCard');
-        sel.innerHTML = '<option value="">-- Çıkış Kartı Seç --</option>';
+        let sel = document.getElementById('exitCard'); sel.innerHTML = '<option value="">-- Çıkış Kartı Seç --</option>';
         for(let k in CARDS) sel.innerHTML += `<option value="${k}">${CARDS[k].t}</option>`;
-        
-        sel.addEventListener('change', function(){
-            document.getElementById('cardPrompt').innerText = this.value ? CARDS[this.value].p : "";
+        sel.addEventListener('change', function(){ document.getElementById('cardPrompt').innerText = this.value ? CARDS[this.value].p : ""; });
+    }
+
+    // --- YENİ UZAY YOLCULUĞU ÇİZİM MOTORU (V66 - Öğretmen paneliyle aynı mantık) ---
+    function renderFullJourney(containerId, bookCount) {
+        const cont = document.getElementById(containerId);
+        cont.innerHTML = '<div class="stars-bg"></div>';
+        const w = cont.offsetWidth; const h = cont.offsetHeight;
+
+        // 9 İstasyon için Sabit Koordinatlar (Kavisli Yol - Mobil için optimize)
+        const points = [
+            {x: 15, y: 80}, {x: 30, y: 50}, {x: 45, y: 20}, // Yüksel
+            {x: 60, y: 50}, {x: 75, y: 80}, {x: 85, y: 50}, // Alçal-Yüksel (Daha sıkı)
+            {x: 92, y: 20}, {x: 96, y: 50}, {x: 98, y: 80}  // Son düzlük
+        ];
+
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.style.position="absolute"; svg.style.width="100%"; svg.style.height="100%";
+        let d = `M ${w*points[0].x/100},${h*points[0].y/100}`;
+        for(let i=1; i<points.length; i++) { d += ` L ${w*points[i].x/100},${h*points[i].y/100}`; }
+        svg.innerHTML = `<path d="${d}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="4" stroke-dasharray="8,8" stroke-linecap="round" stroke-linejoin="round"/>`;
+        cont.appendChild(svg);
+
+        let currentRankIdx = 0;
+        ALL_RANKS.forEach((r, i) => {
+            if (bookCount >= r.c) currentRankIdx = i;
+            let posX = w * points[i].x / 100;
+            let posY = h * points[i].y / 100;
+            let st = document.createElement('div');
+            st.className = `station-point ${bookCount >= r.c ? 'active' : ''}`;
+            st.style.left = posX + "px"; st.style.top = posY + "px";
+            st.innerHTML = `${r.e}<div class="station-label">${r.t}<br>${r.c}</div>`;
+            cont.appendChild(st);
         });
+
+        let astroX = w * points[currentRankIdx].x / 100;
+        let astroY = h * points[currentRankIdx].y / 100;
+        let astro = document.createElement('div');
+        astro.className = "astronaut-marker";
+        astro.innerHTML = "🚀";
+        astro.style.left = astroX + "px"; astro.style.top = (astroY - 25) + "px";
+        cont.appendChild(astro);
     }
 
     // --- DEĞERLENDİRME ---
     function openRate(id) {
-        tempId = id;
-        let r = data.records.find(x => x.id === id);
-        
-        setStar(r.rating || 0);
-        document.getElementById('exitCard').value = r.cardId || "";
+        tempId = id; let r = data.records.find(x => x.id === id);
+        setStar(r.rating || 0); document.getElementById('exitCard').value = r.cardId || "";
         document.getElementById('comment').value = r.comment || "";
         document.getElementById('cardPrompt').innerText = r.cardId ? CARDS[r.cardId].p : "";
-        
         document.getElementById('rateModal').style.display = 'flex';
     }
-    
-    function setStar(n) {
-        tempRating = n;
-        let btns = document.getElementById('starGroup').children;
-        for(let i=0; i<5; i++) {
-            if(i < n) btns[i].classList.add('active');
-            else btns[i].classList.remove('active');
-        }
-    }
-    
+    function setStar(n) { tempRating = n; let btns = document.getElementById('starGroup').children; for(let i=0; i<5; i++) { if(i < n) btns[i].classList.add('active'); else btns[i].classList.remove('active'); } }
     function closeModal() { document.getElementById('rateModal').style.display='none'; }
-    
     function saveReview() {
-        if(!tempId) return;
-        let c = document.getElementById('comment').value;
-        let cid = document.getElementById('exitCard').value;
-        
-        // Yerel güncelleme
-        let r = data.records.find(x => x.id === tempId);
-        if(r) { r.comment = c; r.cardId = cid; r.rating = tempRating; }
-        init(); // Ekranı tazele
-        closeModal();
-        
-        // Sunucuya gönder
-        fetch(API, {
-            method: "POST", 
-            body: JSON.stringify({
-                action: "return", // Veya "update_comment" aynı işi yapar
-                id: tempId,
-                rating: tempRating,
-                cardId: cid,
-                comment: c
-            })
-        });
+        if(!tempId) return; let c = document.getElementById('comment').value; let cid = document.getElementById('exitCard').value;
+        let r = data.records.find(x => x.id === tempId); if(r) { r.comment = c; r.cardId = cid; r.rating = tempRating; }
+        init(); closeModal();
+        fetch(API, { method: "POST", body: JSON.stringify({ action: "return", id: tempId, rating: tempRating, cardId: cid, comment: c }) });
     }
 </script>
 </body>
