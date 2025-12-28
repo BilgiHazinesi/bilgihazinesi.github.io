@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Öğrenci Paneli</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- PREMIUM ÖĞRENCİ TEMASI --- */
+        :root {
+            --bg: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            --glass: rgba(255, 255, 255, 0.6);
+            --border: 1px solid rgba(255, 255, 255, 0.8);
+            --primary: #ff6b6b;
+            --text: #2d3436;
+        }
+        body.dark-mode {
+            --bg: linear-gradient(135deg, #2d3436 0%, #000000 74%);
+            --glass: rgba(45, 52, 54, 0.8);
+            --border: 1px solid rgba(255, 255, 255, 0.1);
+            --primary: #74b9ff;
+            --text: #dfe6e9;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; padding: 20px; background: var(--bg); color: var(--text); min-height: 100vh; background-attachment: fixed; transition:0.3s; }
+
+        .container { max-width: 500px; margin: 0 auto; display: none; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; } }
+
+        /* PANELLER */
+        .panel { background: var(--glass); border-radius: 24px; padding: 20px; margin-bottom: 20px; border: var(--border); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        
+        /* GİRİŞ */
+        #loginOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: var(--glass); padding: 40px; border-radius: 30px; text-align: center; width: 90%; max-width: 350px; border: var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        
+        input { width: 100%; padding: 15px; border-radius: 12px; border: var(--border); background: rgba(255,255,255,0.5); font-size: 1.2rem; text-align: center; margin-bottom: 15px; letter-spacing: 3px; color: var(--text); }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--primary); color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn:active { transform: scale(0.95); }
+
+        /* PROFİL & STATS */
+        .profile-header { text-align: center; padding: 10px; }
+        .rank-icon { font-size: 3.5rem; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2)); animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .stats-grid { display: flex; gap: 10px; margin-top: 15px; }
+        .stat-box { flex: 1; background: rgba(255,255,255,0.3); border-radius: 16px; padding: 10px; text-align: center; border: var(--border); }
+        .stat-val { font-size: 1.4rem; font-weight: 800; display: block; }
+        .stat-lbl { font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; }
+
+        /* UZAY YOLU */
+        .journey-wrapper { position: relative; height: 120px; background: #2d3436; border-radius: 16px; overflow: hidden; margin-top: 20px; border: 2px solid rgba(255,255,255,0.2); }
+        .stars { position: absolute; inset:0; background: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png'); opacity: 0.6; }
+        .path-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .astro { position: absolute; font-size: 2rem; top: 50%; transform: translate(-50%, -60%); transition: left 1s ease-in-out; filter: drop-shadow(0 0 10px gold); z-index: 5; }
+        
+        /* KİTAP LİSTESİ */
+        .book-card { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); transition: 0.2s; }
+        .book-card:last-child { border-bottom: none; }
+        .book-info b { display: block; font-size: 1rem; margin-bottom: 3px; }
+        .book-info span { font-size: 0.8rem; opacity: 0.7; }
+        .action-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--text); background: transparent; color: var(--text); cursor: pointer; font-size: 0.8rem; }
+        .status-reading { color: #f0932b; font-weight: bold; font-size: 0.8rem; background: rgba(240, 147, 43, 0.1); padding: 5px 10px; border-radius: 10px; }
+
+        /* MODAL */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(5px); }
+        .modal-card { background: #fff; width: 100%; max-width: 400px; border-radius: 24px; padding: 25px; text-align: center; }
+        .stars-wrapper { display: flex; justify-content: center; gap: 8px; margin: 15px 0; }
+        .star-btn { font-size: 1.8rem; cursor: pointer; background: none; border: none; color: #dfe6e9; transition: 0.2s; }
+        .star-btn.active { color: #fdcb6e; transform: scale(1.2); }
+        select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #dfe6e9; background: #f1f2f6; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <h1 style="margin:0 0 5px 0;">Hoşgeldin!</h1>
+        <p style="margin-bottom:20px; opacity:0.7;">Okuma macerana devam et</p>
+        <input type="password" id="pass" placeholder="Kodunu Gir">
+        <button class="btn" onclick="login()">GİRİŞ YAP</button>
+        <div id="loader" style="display:none; margin-top:15px; font-weight:bold;">Yükleniyor...</div>
+    </div>
+</div>
+
+<div id="app" class="container">
+    
+    <div class="panel profile-header">
+        <div class="rank-icon" id="rankIcon">🌱</div>
+        <h2 style="margin:5px 0;" id="stName">Öğrenci Adı</h2>
+        <div id="rankTitle" style="font-weight:bold; color:var(--primary); letter-spacing:1px;">BAŞLANGIÇ</div>
+        <div id="medals" style="margin:10px 0; font-size:1.4rem; letter-spacing:3px;"></div>
+        
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-val" id="totalBooks">0</span>
+                <span class="stat-lbl">Kitap</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-val" id="totalPages">0</span>
+                <span class="stat-lbl">Sayfa</span>
+            </div>
+        </div>
+
+        <div class="journey-wrapper">
+            <div class="stars"></div>
+            <svg class="path-svg">
+                <path d="M 0 60 Q 150 10, 300 60 T 600 60" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-dasharray="10,5"></path>
+            </svg>
+            <div class="astro" id="astro">🚀</div>
+            <div style="position:absolute; bottom:5px; width:100%; text-align:center; color:white; font-size:0.7rem; opacity:0.8;">Sonraki Rütbeye İlerle!</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h3 style="margin-top:0;">📚 Kitaplarım</h3>
+        <div id="bookList"></div>
+    </div>
+    
+    <div style="text-align:center;">
+        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">🌓</button>
+    </div>
+</div>
+
+<div id="rateModal" class="overlay">
+    <div class="modal-card">
+        <h3>Kitabı Değerlendir</h3>
+        <div class="stars-wrapper" id="starGroup">
+            <button class="star-btn" onclick="setStar(1)">★</button>
+            <button class="star-btn" onclick="setStar(2)">★</button>
+            <button class="star-btn" onclick="setStar(3)">★</button>
+            <button class="star-btn" onclick="setStar(4)">★</button>
+            <button class="star-btn" onclick="setStar(5)">★</button>
+        </div>
+        <select id="exitCard">
+            <option value="">-- Çıkış Kartı Seç --</option>
+        </select>
+        <p id="cardPrompt" style="font-size:0.8rem; font-style:italic; color:#636e72; margin-bottom:10px;"></p>
+        <textarea id="comment" placeholder="Yorumunu buraya yaz..." style="height:100px;"></textarea>
+        <div style="display:flex; gap:10px;">
+            <button class="btn" style="background:#b2bec3; color:#2d3436;" onclick="closeModal()">Vazgeç</button>
+            <button class="btn" onclick="saveReview()">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- API URL BURAYA (AYNI URL) ---
+    const API = "https://script.google.com/macros/s/AKfycbyhgWUBb-Aj2gwBosZMVn15tH0q5-ACUqd3lEsIn9z-1iyL4OESsehoeU8zM4Vx14IN/exec";
+
+    let data = {};
+    let tempId = null;
+    let tempRating = 0;
+
+    const RANKS = [
+        {c:0, t:"Başlangıç", i:"🌱"}, {c:5, t:"Okuma Çırağı", i:"🥉"}, {c:10, t:"Kitap Kurdu", i:"📖"},
+        {c:15, t:"Bilgi Kaşifi", i:"🚀"}, {c:20, t:"Kelime Avcısı", i:"🏹"}, {c:25, t:"Kütüphane Muhafızı", i:"👑"},
+        {c:30, t:"Edebiyat Ustası", i:"🎩"}, {c:35, t:"Bilge Okur", i:"🌍"}, {c:40, t:"EFSANE", i:"💎"}
+    ];
+    
+    const CARDS = {
+        "1": {t:"Macera Hatırası", p:"En unutulmaz sahne neydi?"},
+        "2": {t:"Öğrenen Profil", p:"Karakter hangi özelliği taşıyor?"},
+        "3": {t:"Duygu Kartı", p:"Hangi duyguları hissettin?"},
+        "4": {t:"Bağlantı Kartı", p:"Hayatınla nasıl bağ kurdun?"},
+        "5": {t:"Eleştiri Kartı", p:"Katılmadığın bir olay var mı?"},
+        "6": {t:"Soru Kartı", p:"Seni düşündüren soru neydi?"},
+        "7": {t:"Yaratıcı Son", p:"Sonunu nasıl değiştirirdin?"},
+        "8": {t:"Gelişim", p:"Hangi becerini geliştirdi?"},
+        "9": {t:"Tavsiye", p:"Tavsiye eder misin?"}
+    };
+
+    // GİRİŞ
+    function login() {
+        let p = document.getElementById('pass').value;
+        if(!p) return;
+        document.getElementById('loader').style.display = 'block';
+        fetch(API + "?action=login_student&password=" + p)
+        .then(r => r.json()).then(d => {
+            if(d.error) { alert(d.error); document.getElementById('loader').style.display='none'; }
+            else { data = d; init(); }
+        });
+    }
+
+    function init() {
+        document.getElementById('loginOverlay').style.display='none';
+        document.getElementById('app').style.display='block';
+        
+        let sName = data.studentName;
+        // Filtrele: Sadece bu öğrenciye ait kayıtlar
+        let myRecs = data.records.filter(r => r.student === sName && r.status === "İade Etti");
+        let active = data.records.find(r => r.student === sName && r.status === "Okuyor");
+        
+        // 1. İSTATİSTİKLER
+        document.getElementById('stName').innerText = sName;
+        document.getElementById('totalBooks').innerText = myRecs.length;
+        
+        let pages = 0;
+        myRecs.forEach(r => pages += parseInt(data.bookPages[r.book]) || 0);
+        document.getElementById('totalPages').innerText = pages;
+        
+        // 2. RÜTBE & MADALYA
+        let rank = RANKS[0];
+        for(let i=0; i<RANKS.length; i++) if(myRecs.length >= RANKS[i].c) rank = RANKS[i];
+        document.getElementById('rankIcon').innerText = rank.i;
+        document.getElementById('rankTitle').innerText = rank.t.toUpperCase();
+        
+        let g = Math.floor(myRecs.length / data.settings.gold);
+        let si = Math.floor(myRecs.length / data.settings.silver);
+        document.getElementById('medals').innerText = "🥇".repeat(g) + "🥈".repeat(si);
+        
+        // 3. UZAY İLERLEMESİ
+        let max = 40; // Hedef
+        let pct = Math.min(100, (myRecs.length / max) * 100);
+        document.getElementById('astro').style.left = pct + "%";
+        
+        // 4. LİSTELEME
+        let div = document.getElementById('bookList'); div.innerHTML="";
+        
+        if(active) {
+            div.innerHTML += `<div class="book-card" style="background:rgba(255,234,167,0.3); border-left:4px solid #fdcb6e;">
+                <div class="book-info"><b>${active.book}</b><span>${active.date}</span></div>
+                <div class="status-reading">Okuyorsun...</div>
+            </div>`;
+        }
+        
+        myRecs.forEach(r => {
+            let btnText = r.comment ? "Düzenle" : "Yorumla";
+            let stars = r.rating ? "⭐".repeat(r.rating) : "";
+            div.innerHTML += `<div class="book-card">
+                <div class="book-info"><b>${r.book}</b><span>${r.returnDate} ${stars}</span></div>
+                <button class="action-btn" onclick="openRate(${r.id})">${btnText}</button>
+            </div>`;
+        });
+        
+        // Modal Kartlarını Doldur
+        let sel = document.getElementById('exitCard');
+        sel.innerHTML = '<option value="">-- Çıkış Kartı Seç --</option>';
+        for(let k in CARDS) sel.innerHTML += `<option value="${k}">${CARDS[k].t}</option>`;
+        
+        sel.addEventListener('change', function(){
+            document.getElementById('cardPrompt').innerText = this.value ? CARDS[this.value].p : "";
+        });
+    }
+
+    // --- DEĞERLENDİRME ---
+    function openRate(id) {
+        tempId = id;
+        let r = data.records.find(x => x.id === id);
+        
+        setStar(r.rating || 0);
+        document.getElementById('exitCard').value = r.cardId || "";
+        document.getElementById('comment').value = r.comment || "";
+        document.getElementById('cardPrompt').innerText = r.cardId ? CARDS[r.cardId].p : "";
+        
+        document.getElementById('rateModal').style.display = 'flex';
+    }
+    
+    function setStar(n) {
+        tempRating = n;
+        let btns = document.getElementById('starGroup').children;
+        for(let i=0; i<5; i++) {
+            if(i < n) btns[i].classList.add('active');
+            else btns[i].classList.remove('active');
+        }
+    }
+    
+    function closeModal() { document.getElementById('rateModal').style.display='none'; }
+    
+    function saveReview() {
+        if(!tempId) return;
+        let c = document.getElementById('comment').value;
+        let cid = document.getElementById('exitCard').value;
+        
+        // Yerel güncelleme
+        let r = data.records.find(x => x.id === tempId);
+        if(r) { r.comment = c; r.cardId = cid; r.rating = tempRating; }
+        init(); // Ekranı tazele
+        closeModal();
+        
+        // Sunucuya gönder
+        fetch(API, {
+            method: "POST", 
+            body: JSON.stringify({
+                action: "return", // Veya "update_comment" aynı işi yapar
+                id: tempId,
+                rating: tempRating,
+                cardId: cid,
+                comment: c
+            })
+        });
+    }
+</script>
+</body>
+</html>
