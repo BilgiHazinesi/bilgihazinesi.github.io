@@ -2,765 +2,897 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Zeynal Öğretmen (V58)</title>
+    <meta name="theme-color" content="#f5f7fa">
+    <title>Zeynal Öğretmen Kütüphane (V41 - Sesli Kartlar)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* PREMIUM DESIGN SYSTEM */
+        /* --- TEMA AYARLARI --- */
         :root {
-            --bg: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            --glass: rgba(255, 255, 255, 0.45);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.6);
-            --primary: #4f46e5;
-            --primary-grad: linear-gradient(135deg, #4f46e5, #8b5cf6);
-            --text: #1e293b;
-            --input-bg: rgba(255, 255, 255, 0.7);
+            --bg-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.2); 
+            --nav-bg: rgba(255, 255, 255, 0.35); 
+            --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --text-main: #1d1d1f;
+            --text-sub: #4b5563;
+            --primary: #2563eb;
+            --input-bg: rgba(255, 255, 255, 0.6);
+            --bar-bg: rgba(255, 255, 255, 0.5);
         }
         body.dark-mode {
-            --bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --glass: rgba(30, 41, 59, 0.6);
+            --bg-image: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(0, 0, 0, 0.25);
+            --nav-bg: rgba(0, 0, 0, 0.4);
             --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-            --primary: #818cf8;
-            --text: #f1f5f9;
-            --input-bg: rgba(0, 0, 0, 0.3);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --primary: #60a5fa;
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --bar-bg: rgba(255, 255, 255, 0.1);
         }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-image: var(--bg-image);
+            background-attachment: fixed;
+            background-size: cover;
+            color: var(--text-main);
+            margin: 0; padding: 0; padding-bottom: 110px; 
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        .glass-panel {
+            background: var(--glass-bg);
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 24px;
+            padding: 20px; margin-bottom: 20px;
+            backdrop-filter: blur(4px); 
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .app-header {
+            padding: 15px 20px; position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--nav-bg);
+            border-bottom: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
+            backdrop-filter: blur(10px); 
+            padding-top: max(15px, env(safe-area-inset-top)); 
+        }
+        .app-title { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
+        .theme-btn {
+            background: rgba(255,255,255,0.1); border: var(--glass-border);
+            font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 50%;
+            transition: 0.3s;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; display: none; }
+        .section { display: none; animation: fadeIn 0.3s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
         
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; font-family: -apple-system, system-ui, BlinkMacSystemFont, sans-serif; }
-        body { margin: 0; padding: 0; min-height: 100vh; background: var(--bg); color: var(--text); padding-bottom: 90px; background-attachment: fixed; transition: 0.3s; }
-        
-        .container { max-width: 800px; margin: 0 auto; padding: 15px; display: none; }
-        .glass-panel { background: var(--glass); border: var(--glass-border); border-radius: 24px; padding: 20px; margin-bottom: 20px; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0,0,0,0.05); }
-        
-        /* HEADER */
-        .app-header { padding: 15px 20px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; background: var(--glass); border-bottom: var(--glass-border); backdrop-filter: blur(20px); border-radius: 0 0 24px 24px; padding-top: max(15px, env(safe-area-inset-top)); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        
-        /* INPUTS & BUTTONS */
-        .input-wrapper { position: relative; margin-bottom: 10px; }
-        input, select, textarea { width: 100%; padding: 14px; border-radius: 14px; border: var(--glass-border); background: var(--input-bg); font-size: 1rem; color: var(--text); transition: 0.2s; }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
-        .clear-btn { position: absolute; right: 12px; top: 14px; color: var(--text); opacity: 0.5; cursor: pointer; display: none; }
-        
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 14px; background: var(--primary-grad); color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .btn:active { transform: scale(0.98); }
-        .btn-sm { width: auto; padding: 8px 16px; font-size: 0.85rem; border-radius: 10px; }
-        .btn-outline { background: transparent; border: 1px solid var(--text); color: var(--text); box-shadow: none; opacity: 0.7; }
-        
-        /* ÖZEL LİSTE */
-        .search-results { display: none; margin-top: 10px; }
-        .result-card { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); }
-        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-weight: 600; }
-        .result-detail { font-size: 0.8rem; opacity: 0.7; display: flex; gap: 10px; }
-        
-        /* UZAY YOLU (DİKEY/KAVİSLİ) */
-        .journey-container { position: relative; width: 100%; height: 500px; background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); border-radius: 24px; overflow: hidden; margin-top: 15px; border: var(--glass-border); }
-        .stars { position: absolute; width:100%; height:100%; background: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png'); opacity:0.6; }
-        .station { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; width: 80px; text-align: center; z-index: 2; }
-        .planet { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 5px; transition: 0.3s; box-shadow: 0 0 15px rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
-        .station.reached .planet { background: #10b981; border-color: #34d399; box-shadow: 0 0 20px #10b981; color: white; }
-        .station-label { font-size: 0.7rem; color: #94a3b8; font-weight: bold; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 8px; }
-        .astronaut { position: absolute; font-size: 2.5rem; transform: translate(-50%, -50%); z-index: 5; filter: drop-shadow(0 0 10px gold); transition: all 1.5s ease-in-out; }
+        /* PROGRESS BAR */
+        .progress-container {
+            width: 100%; background: var(--bar-bg); 
+            border-radius: 15px; margin-bottom: 20px;
+            position: relative; height: 24px; overflow: hidden;
+            border: var(--glass-border);
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            width: 0%; border-radius: 15px; transition: width 1s ease-in-out;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .progress-text {
+            position: absolute; width: 100%; text-align: center;
+            font-size: 0.75rem; font-weight: 700; color: var(--text-main);
+            top: 50%; transform: translateY(-50%); text-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
 
-        /* AĞAÇ */
-        .tree-wrapper { position: relative; width: 100%; height: 350px; background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 70%, #4CAF50 70%, #4CAF50 100%); border-radius: 24px; overflow: hidden; border: var(--glass-border); margin-top: 10px; }
-        .dark-mode .tree-wrapper { background: linear-gradient(to bottom, #0f172a 0%, #0f172a 70%, #14532d 70%, #14532d 100%); }
-        .tree-fruit { position: absolute; font-size: 1.8rem; cursor: pointer; z-index: 10; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 3px 5px rgba(0,0,0,0.3)); transition: 0.2s; }
-        .tree-fruit:hover { transform: scale(1.3); z-index: 20; }
+        /* INPUTS */
+        .input-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
+        input, select, textarea {
+            width: 100%; padding: 14px; padding-right: 40px; font-size: 1rem;
+            background: var(--input-bg);
+            border: var(--glass-border);
+            border-radius: 14px; color: var(--text-main);
+            transition: 0.3s; font-family: inherit;
+        }
+        textarea { resize: none; height: 80px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: rgba(255,255,255,0.25); }
+        .clear-btn {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            color: var(--text-sub); cursor: pointer; font-size: 1.1rem;
+            display: none; z-index: 2; padding: 5px;
+        }
 
-        /* MODAL */
-        .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); padding: 20px; }
-        .modal-card { background: var(--glass); padding: 25px; border-radius: 32px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; border: var(--glass-border); box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .close-btn { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text); }
+        /* BUTTONS */
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 14px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; }
+        .btn-return { 
+            background: #f97316; color: white; border: none; 
+            padding: 8px 16px; border-radius: 10px; font-weight: 600; 
+            cursor: pointer; font-size: 0.85rem; min-width: 80px; text-align: center;
+            box-shadow: 0 2px 5px rgba(249, 115, 22, 0.4);
+        }
+        .btn-delete { background: rgba(220, 38, 38, 0.1); color: #ef4444; border: 1px solid #ef4444; padding: 4px 10px; font-size: 0.75rem; border-radius: 8px; margin-left: auto; cursor:pointer;}
+        .btn-save-small {
+            background: #10b981; color: white; border: none; padding: 8px 12px;
+            border-radius: 8px; font-size: 0.8rem; cursor: pointer; white-space: nowrap;
+        }
 
-        /* NAVBAR & TAB */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: var(--glass); border-top: var(--glass-border); backdrop-filter: blur(20px); display: flex; justify-content: space-around; align-items: center; z-index: 900; }
-        .nav-item { background: none; border: none; color: var(--text); opacity: 0.5; font-size: 0.7rem; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.3s; }
-        .nav-item.active { opacity: 1; color: var(--primary); transform: translateY(-3px); font-weight: bold; }
-        .nav-item i { font-size: 1.4rem; }
+        /* LIST & ITEMS */
+        .list-item {
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 14px 0; border-bottom: 1px solid rgba(150,150,150,0.15);
+        }
+        .list-item:last-child { border-bottom: none; }
+        .item-content { flex: 1; margin-right: 10px; overflow: hidden; } 
+        .item-content h4 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-main); }
+        .item-content p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-sub); display: flex; align-items: center; gap: 5px; }
+        .rank-info { font-size:0.75rem; color:var(--primary); margin-top:4px; font-weight:700; text-transform: uppercase; letter-spacing: 0.5px;}
+        .medal-container { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 5px; font-size: 0.9rem; line-height: 1.4; }
+
+        /* STATS */
+        .stats-summary { display: flex; gap: 10px; margin-bottom: 20px; }
+        .summary-box { flex: 1; background: var(--input-bg); border: var(--glass-border); border-radius: 16px; padding: 15px; text-align: center; }
+        .sb-title { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 5px; font-weight: 600; }
+        .sb-value { font-size: 1.1rem; color: var(--primary); font-weight: 800; }
+        .overdue-warning { color: #ef4444; font-weight: 700; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* FILTERS */
+        .filter-group { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .filter-chip { flex: 1; padding: 12px; text-align: center; white-space: nowrap; background: var(--input-bg); border: var(--glass-border); border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: 0.3s; }
+        .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* NAV */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 90px; background: var(--nav-bg); border-top: var(--glass-border); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); display: flex; justify-content: space-around; align-items: flex-start; padding-top: 15px; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; background: none; border: none; color: var(--text-sub); font-size: 0.7rem; transition: 0.3s; opacity: 0.7; flex: 1; }
+        .nav-item i { font-size: 1.5rem; margin-bottom: 5px; }
+        .nav-item.active { color: var(--primary); opacity: 1; transform: translateY(-3px); }
+        .sort-btn { background: none; border: 1px solid var(--text-sub); color: var(--text-sub); border-radius: 12px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer; }
+
+        /* OVERLAYS */
+        #loader { display: none; margin-top: 15px; font-weight: 600; color: var(--primary); }
+        .overlay-bg { position: fixed; inset: 0; z-index: 9999; background: var(--bg-image); display: none; justify-content: center; align-items: center; overflow-y: auto; padding: 20px;}
+        body.dark-mode .overlay-bg { background-color: #0f172a; }
+        .modal-card { background: var(--glass-bg); backdrop-filter: blur(30px); padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); margin: auto;}
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
-        .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-        .hidden { display: none !important; }
+        .rating-btn-group { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .rating-btn { width: 40px; height: 40px; border-radius: 50%; border: var(--glass-border); background: rgba(255,255,255,0.1); font-size: 1rem; cursor: pointer; color: var(--text-main); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .rating-btn.selected, .rating-btn:hover { background: #f59e0b; color: white; transform: scale(1.1); border-color: #f59e0b; }
         
-        .stat-card { background: rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.1); }
-        .medal-icon { font-size: 1.5rem; }
+        .card-question { font-size: 0.85rem; color: var(--primary); font-style: italic; margin: 10px 0; min-height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: 12px; }
+        
+        .mic-btn { position: absolute; right: 10px; bottom: 10px; background: var(--primary); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .mic-btn.listening { background: #ef4444; animation: pulseMic 1s infinite; }
+        @keyframes pulseMic { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        /* UZAY YOLU */
+        .journey-map-container { position: relative; width: 100%; height: 450px; background: radial-gradient(ellipse at center, #1b2735 0%, #090a0f 100%); border-radius: 24px; overflow: hidden; border: var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.5); margin-top: 20px; }
+        .stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; z-index: 0; opacity: 0.6; animation: moveStars 100s linear infinite; }
+        @keyframes moveStars { from {background-position: 0 0;} to {background-position: 0 1000px;} }
+        #journeySvg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .path-line { fill: none; stroke: rgba(255, 255, 255, 0.2); stroke-width: 3; stroke-dasharray: 10, 10; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
+        .station { position: absolute; transform: translate(-50%, -50%); width: 55px; height: 55px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.7rem; font-weight: bold; z-index: 2; transition: all 0.5s ease; backdrop-filter: blur(2px); }
+        .station i { font-size: 1.2rem; margin-bottom: 2px; }
+        .station span { font-size: 0.6rem; opacity: 0.7; text-align: center; line-height: 1; }
+        .station.reached { background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #60a5fa; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .station.current { background: radial-gradient(circle, #3b82f6 0%, #1e40af 100%); border-color: #ffffff; color: white; width: 70px; height: 70px; box-shadow: 0 0 30px #3b82f6; z-index: 3; }
+        .station.current i { font-size: 1.6rem; animation: pulseIcon 2s infinite; }
+        .astronaut { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); font-size: 2rem; filter: drop-shadow(0 0 10px #f59e0b); animation: floatAstronaut 3s ease-in-out infinite; display: none; }
+        .station.current .astronaut { display: block; }
+        @keyframes floatAstronaut { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10px); } }
+        @keyframes pulseIcon { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        /* REVIEW CARD STYLE IN DETAIL VIEW */
+        .review-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; margin-bottom: 10px; text-align: left; }
+        .rc-header { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px; color: var(--primary); font-weight: bold; }
+        .rc-type { font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 6px; color: var(--text-sub); }
+        .rc-text { font-size: 0.9rem; color: var(--text-main); line-height: 1.4; font-style: italic; }
+        .close-overlay-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-main); font-size: 1.5rem; cursor: pointer; }
+
     </style>
 </head>
 <body>
 
-<div id="loginOverlay" style="position:fixed; inset:0; z-index:9999; background:var(--bg); display:flex; justify-content:center; align-items:center;">
-    <div class="glass-panel" style="width:90%; max-width:350px; text-align:center;">
-        <h2>Kütüphane</h2>
-        <p style="opacity:0.7; margin-bottom:20px;">Öğrenci Kodu veya Şifre</p>
+<div id="loginOverlay" class="overlay-bg" style="display:flex;">
+    <div class="modal-card">
+        <h2 style="margin: 0 0 10px 0; color: var(--text-main);">Öğretmen Girişi</h2>
+        <p style="color: var(--text-sub); margin-bottom: 20px;">Zeynal Öğretmen Kitap Takibi</p>
         <div class="input-wrapper">
-            <input type="password" id="authCode" placeholder="••••••" style="text-align:center; letter-spacing: 3px;">
+            <input type="password" id="appPassword" placeholder="••••••" style="text-align:center; letter-spacing: 5px; padding-right:14px;">
         </div>
-        <button class="btn" onclick="login()">Giriş Yap</button>
-        <div id="loader" style="display:none; margin-top:10px;">Veriler Yükleniyor...</div>
+        <button class="btn btn-primary" onclick="login()">Giriş Yap</button>
+        <div id="loader">Veriler Yükleniyor...</div>
     </div>
 </div>
 
-<div class="container" id="mainContainer">
-    <div class="app-header">
-        <div>
-            <h3 style="margin:0;">Kütüphane</h3>
-            <span style="font-size:0.75rem; opacity:0.7;" id="welcomeText"></span>
+<div id="ratingOverlay" class="overlay-bg" style="background: rgba(0,0,0,0.8);">
+    <div class="modal-card" style="background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); max-width: 450px;">
+        <h3 style="margin-top:0; color:#fff;">Kitabı Değerlendir</h3>
+        
+        <p style="font-size:0.8rem; opacity:0.7; margin-bottom:5px;">1. Puanın Kaç?</p>
+        <div class="rating-btn-group" id="starGroup">
+            <button class="rating-btn" onclick="selectStar(1)">1</button>
+            <button class="rating-btn" onclick="selectStar(2)">2</button>
+            <button class="rating-btn" onclick="selectStar(3)">3</button>
+            <button class="rating-btn" onclick="selectStar(4)">4</button>
+            <button class="rating-btn" onclick="selectStar(5)">5</button>
         </div>
-        <div style="display:flex; gap:10px;">
-            <select id="classFilter" style="display:none; padding:8px; border-radius:12px; font-size:0.8rem;" onchange="refreshAllViews()">
-                <option value="all">Tüm Okul</option>
-            </select>
-            <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:none; font-size:1.2rem;">🌙</button>
-        </div>
-    </div>
 
-    <div id="tab-home" class="tab-content active">
-        <div id="teacherPanel" class="glass-panel hidden">
-            <h4 style="margin:0 0 10px 0; color:var(--primary);">Hızlı Kitap Ver & Geçmiş</h4>
-            
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <div class="input-wrapper" style="flex:1; margin:0;">
-                    <input type="text" list="studentList" id="studentInput" placeholder="Öğrenci..." oninput="handleInstantSearch(this.value)">
-                    <i class="fas fa-times clear-btn" onclick="clearInput('studentInput'); handleInstantSearch('')"></i>
-                </div>
-                <div class="input-wrapper" style="flex:1; margin:0;">
-                    <input type="text" list="bookList" id="bookInput" placeholder="Kitap...">
-                    <i class="fas fa-times clear-btn" onclick="clearInput('bookInput')"></i>
-                </div>
+        <p style="font-size:0.8rem; opacity:0.7; margin-bottom:5px;">2. Bir Çıkış Kartı Seç</p>
+        <div class="input-wrapper" style="margin-bottom:5px;">
+            <select id="exitCardSelect" onchange="updateCardPrompt()" style="background:rgba(255,255,255,0.1); color:white;">
+                <option value="">-- Kart Seçiniz --</option>
+                </select>
+        </div>
+
+        <div id="cardPromptBox" class="card-question" style="display:none;">
             </div>
-            <datalist id="studentList"></datalist>
-            <datalist id="bookList"></datalist>
-            <button class="btn" onclick="lendBook()"><i class="fas fa-check"></i> Teslim Et</button>
 
-            <div id="instantResults" class="search-results">
-                </div>
-        </div>
-
-        <div id="studentPanel" class="glass-panel hidden">
-            <div style="text-align:center; padding:10px;">
-                <div style="font-size:2rem; margin-bottom:5px;" id="stRankIcon">🌱</div>
-                <h3 style="margin:0;" id="stName">Öğrenci</h3>
-                <div style="font-size:0.9rem; opacity:0.7; margin-bottom:10px;" id="stRankTitle">Başlangıç</div>
-                
-                <div style="display:flex; justify-content:center; gap:15px; margin-bottom:15px;">
-                    <div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:12px; flex:1;">
-                        <div style="font-weight:800; font-size:1.2rem;" id="stBookCount">0</div>
-                        <div style="font-size:0.7rem; opacity:0.7;">KİTAP</div>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:12px; flex:1;">
-                        <div style="font-weight:800; font-size:1.2rem;" id="stPageCount">0</div>
-                        <div style="font-size:0.7rem; opacity:0.7;">SAYFA</div>
-                    </div>
-                </div>
-                <div id="stMedals" style="font-size:1.2rem; letter-spacing:5px;"></div>
-            </div>
-            
-            <hr style="opacity:0.1; margin:15px 0;">
-            <div class="list-header">Okuduklarım</div>
-            <div id="studentMyBooks"></div>
+        <div class="input-wrapper" id="commentWrapper" style="display:none;">
+            <textarea id="returnComment" placeholder="Cevabını buraya söyle veya yaz..." style="background:rgba(255,255,255,0.1); color:white;"></textarea>
+            <button class="mic-btn" onclick="startDictation()"><i class="fas fa-microphone"></i></button>
         </div>
         
-        <div id="generalLists">
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn" style="background:rgba(255,255,255,0.1); color:white; flex:1;" onclick="closeRatingModal()">İptal</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="submitReturn()">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<div id="bookDetailOverlay" class="overlay-bg">
+    <div class="modal-card" style="text-align:left; max-width:500px; padding-top:40px;">
+        <button class="close-overlay-btn" onclick="closeBookDetail()">&times;</button>
+        <h3 id="bdTitle" style="margin:0 0 5px 0; color:var(--primary);">Kitap Adı</h3>
+        <p id="bdStats" style="font-size:0.8rem; color:var(--text-sub); margin-bottom:20px;">0 Okuma | Ort. 0 Puan</p>
+        
+        <h4 style="margin-bottom:10px; border-bottom:1px solid var(--glass-border); padding-bottom:5px;">Öğrenci Yorumları</h4>
+        <div id="bdReviews" style="max-height:300px; overflow-y:auto;">
+            </div>
+    </div>
+</div>
+
+<div id="appContainer" style="display:none;">
+    <div class="app-header">
+        <div class="app-title">Zeynal Öğretmen Kütüphane</div>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">🌙</button>
+    </div>
+
+    <div class="container" style="display:block;">
+        <div class="glass-panel" style="padding: 15px; padding-bottom: 10px; margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem; font-weight:600; color:var(--text-sub);">
+                <span>🎯 Sınıf Hedefi</span>
+                <span id="targetText">0 / 500 Kitap</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-fill" id="progressBar" style="width: 0%;"></div>
+                <div class="progress-text" id="progressPercent">0%</div>
+            </div>
+        </div>
+
+        <div id="tab-lend" class="section active">
             <div class="glass-panel">
-                <div class="list-header">🔵 Şu An Okunanlar</div>
-                <div id="activeList"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="tab-books" class="tab-content">
-        <div class="glass-panel">
-            <div class="list-header">📚 Sınıf Kitaplığı</div>
-            <div class="input-wrapper">
-                <input type="text" id="bookSearch" placeholder="Kitap Ara..." oninput="renderBookManager()">
-                <i class="fas fa-times clear-btn" onclick="clearInput('bookSearch'); renderBookManager()"></i>
-            </div>
-            <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:5px;">
-                <button class="btn btn-sm btn-outline" onclick="sortBooks('count')">🔥 En Çok Okunan</button>
-                <button class="btn btn-sm btn-outline" onclick="sortBooks('rating')">⭐ Puan</button>
-                <button class="btn btn-sm btn-outline" onclick="sortBooks('name')">A-Z</button>
-            </div>
-            <div id="bookManagerList" style="margin-top:15px;"></div>
-        </div>
-    </div>
-
-    <div id="tab-report" class="tab-content">
-        <div class="glass-panel">
-            <div class="list-header">🚀 Uzay Yolculuğu</div>
-            <div class="input-wrapper">
-                <input type="text" list="studentList" id="reportStudentInput" placeholder="Öğrenci Seçiniz..." onchange="generateReport()">
-                <i class="fas fa-times clear-btn" onclick="clearInput('reportStudentInput')"></i>
-            </div>
-            
-            <div id="journeyContainer" class="journey-container" style="display:none;">
-                <div class="stars"></div>
-                <svg id="journeySvg" style="position:absolute; width:100%; height:100%;"><path id="journeyPath" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="8,8" /></svg>
+                <h3 style="margin:0 0 15px 0; color:var(--primary);">Hızlı İşlem</h3>
+                <div class="input-wrapper">
+                    <input type="text" list="studentList" id="studentInput" placeholder="Öğrenci Seçiniz..." oninput="handleInput(this); renderHistory()">
+                    <i class="fas fa-times-circle clear-btn" onclick="clearField('studentInput', renderHistory)"></i>
+                    <datalist id="studentList"></datalist>
                 </div>
+                <div class="input-wrapper">
+                    <input type="text" list="bookList" id="bookInput" placeholder="Kitap Seçiniz..." oninput="handleInput(this)">
+                    <i class="fas fa-times-circle clear-btn" onclick="clearField('bookInput')"></i>
+                    <datalist id="bookList"></datalist>
+                </div>
+                <button class="btn btn-primary" onclick="lendBook()">Kitabı Teslim Et</button>
+            </div>
+            <div class="glass-panel">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <h4 style="margin:0; color:var(--text-main);">Son Hareketler</h4>
+                    <span id="syncStatus" style="font-size:0.75rem; color:var(--text-sub); opacity:0.7;">Senkronize</span>
+                </div>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <div id="tab-books" class="section">
+            <div class="glass-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                   <div class="filter-group" style="margin-bottom:0; flex:1;">
+                        <div class="filter-chip active" onclick="filterBooks('all', this)">Tümü</div>
+                        <div class="filter-chip" onclick="filterBooks('out', this)">Dışarıda</div>
+                        <div class="filter-chip" onclick="filterBooks('rating', this)">Puan</div>
+                   </div>
+                   </div>
+                <div class="input-wrapper">
+                    <input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="handleInput(this); renderBookManager()">
+                    <i class="fas fa-times-circle clear-btn" onclick="clearField('bookSearch', renderBookManager)"></i>
+                </div>
+                <div id="bookManagerList"></div>
+            </div>
+        </div>
+
+        <div id="tab-report" class="section">
+            <div class="glass-panel">
+                <h3 style="margin:0 0 15px 0; color:var(--primary);">Motivasyon Raporu</h3>
+                <div class="input-wrapper">
+                    <input type="text" list="studentList" id="reportStudentInput" placeholder="Öğrenci Seçiniz..." oninput="handleInput(this)">
+                    <i class="fas fa-times-circle clear-btn" onclick="clearField('reportStudentInput')"></i>
+                </div>
+                <button class="btn btn-primary" onclick="generateReport()">Rapor Oluştur</button>
+                <div id="reportOutput" style="background:var(--input-bg); padding:15px; border-radius:12px; margin:15px 0; white-space:pre-wrap; font-size:0.9rem; color:var(--text-main); border:var(--glass-border);">...</div>
+                <button class="btn btn-primary" onclick="copyReport()"><i class="far fa-copy"></i> Kopyala</button>
+            </div>
             
-            <div id="reportText" style="display:none; margin-top:20px;">
-                <div id="whatsappMsg" style="background:rgba(0,0,0,0.05); padding:15px; border-radius:12px; font-size:0.85rem; white-space:pre-wrap;"></div>
-                <button class="btn btn-outline" style="margin-top:10px;" onclick="copyReport()">Kopyala</button>
+            <div class="glass-panel" id="journeyPanel" style="display:none; padding:0;">
+                <div class="journey-map-container" id="journeyMap">
+                    <div class="stars"></div>
+                    <svg id="journeySvg"><path id="journeyPath" class="path-line" d="" /></svg>
+                    </div>
+            </div>
+        </div>
+
+        <div id="tab-stats" class="section">
+            <div class="stats-summary">
+                <div class="summary-box">
+                    <div class="sb-title">🥇 Lider (Kitap)</div>
+                    <div class="sb-value" id="statTopReader">-</div>
+                </div>
+                <div class="summary-box">
+                    <div class="sb-title">📖 Toplam Sayfa</div>
+                    <div class="sb-value" id="statTotalPages">0</div>
+                </div>
+            </div>
+            <div class="glass-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0; color:var(--primary);">🏆 Okuma Sıralaması</h3>
+                    <button class="sort-btn" onclick="toggleStatsSort()" id="sortBtnIcon">Sırala: Kitap ⬇</button>
+                </div>
+                <div id="rankingList"></div>
             </div>
         </div>
     </div>
 
-    <div id="tab-stats" class="tab-content">
-        <div class="glass-panel">
-            <div class="list-header">🏆 Liderlik Tablosu</div>
-            <div id="statsList"></div>
-        </div>
-    </div>
-
-    <div id="tab-settings" class="tab-content">
-        <div class="glass-panel">
-            <h3 style="margin-top:0;">⚙️ Sınıf Ayarları</h3>
-            <div style="display:flex; gap:10px; margin-bottom:10px;">
-                <div style="flex:1"><label style="font-size:0.7rem;">Hedef</label><input type="number" id="setTarget"></div>
-                <div style="flex:1"><label style="font-size:0.7rem;">Gümüş</label><input type="number" id="setSilver"></div>
-                <div style="flex:1"><label style="font-size:0.7rem;">Altın</label><input type="number" id="setGold"></div>
-            </div>
-            <button class="btn btn-sm" onclick="saveSettings()">Kaydet</button>
-        </div>
-
-        <div class="glass-panel">
-            <h3 style="margin-top:0;">📚 Kitap Yönetimi</h3>
-            <div class="input-wrapper">
-                <input type="text" id="editBookSearch" placeholder="Düzenlenecek Kitabı Ara..." oninput="searchForEdit(this.value)">
-                <i class="fas fa-times clear-btn" onclick="clearInput('editBookSearch')"></i>
-            </div>
-            <div id="editBookForm" style="display:none; background:rgba(0,0,0,0.05); padding:10px; border-radius:12px;">
-                <input type="hidden" id="editOldName">
-                <input type="text" id="editNewName" placeholder="Yeni Ad">
-                <input type="number" id="editNewPage" placeholder="Sayfa">
-                <button class="btn btn-sm" onclick="submitEditBook()">Güncelle</button>
-            </div>
-            <hr style="opacity:0.2; margin:15px 0;">
-            <div class="list-header">Yeni Kitap Ekle</div>
-            <div style="display:flex; gap:5px;">
-                <input type="text" id="bName" placeholder="Kitap Adı" style="flex:2;">
-                <input type="number" id="bPage" placeholder="Sayfa" style="flex:1;">
-            </div>
-            <button class="btn btn-sm" onclick="addSingleBook()">Ekle</button>
-        </div>
-    </div>
-
-</div>
-
-<div class="bottom-nav" id="navBar" style="display:none;">
-    <button class="nav-item active" onclick="switchTab('home', this)"><i class="fas fa-home"></i>Anasayfa</button>
-    <button class="nav-item" onclick="switchTab('books', this)"><i class="fas fa-book"></i>Kitaplar</button>
-    <button class="nav-item" onclick="switchTab('report', this)"><i class="fas fa-rocket"></i>Rapor</button>
-    <button class="nav-item" onclick="switchTab('stats', this)"><i class="fas fa-chart-bar"></i>İstatistik</button>
-    <button class="nav-item" id="settingsBtn" onclick="switchTab('settings', this)" style="display:none;"><i class="fas fa-cog"></i>Ayarlar</button>
-</div>
-
-<div id="treeModal" class="overlay-bg">
-    <div class="modal-card">
-        <button class="close-btn" onclick="document.getElementById('treeModal').style.display='none'">&times;</button>
-        <h3 id="treeTitle" style="text-align:center; margin:0;"></h3>
-        <div class="tree-wrapper" id="treeWrapperBox">
-            <svg class="tree-svg-container" viewBox="0 0 500 500" preserveAspectRatio="xMidYMax meet">
-                <path d="M230,500 L230,400 Q230,250 180,200 L250,400 L270,500 Z" fill="#5D4037" />
-                <path d="M270,500 L270,400 Q270,250 320,200 L250,400 L230,500 Z" fill="#4E342E" />
-                <circle cx="250" cy="200" r="170" fill="#2E7D32" opacity="0.95" />
-                <circle cx="250" cy="200" r="150" fill="#388E3C" opacity="0.8" />
-            </svg>
-            <div id="treeFruitsContainer"></div>
-        </div>
-        <div id="fruitDetail" style="margin-top:15px; background:rgba(255,255,255,0.5); padding:10px; border-radius:10px; display:none;"></div>
-        <div id="allReviewsList" style="margin-top:15px;"></div>
-    </div>
-</div>
-
-<div id="ratingOverlay" class="overlay-bg">
-    <div class="modal-card">
-        <h3 style="text-align:center;">Değerlendir</h3>
-        <div style="display:flex; justify-content:center; gap:5px; margin:15px 0;" id="starGroup">
-            <button class="btn btn-outline" style="width:40px; border-radius:50%;" onclick="selectStar(1)">1</button>
-            <button class="btn btn-outline" style="width:40px; border-radius:50%;" onclick="selectStar(2)">2</button>
-            <button class="btn btn-outline" style="width:40px; border-radius:50%;" onclick="selectStar(3)">3</button>
-            <button class="btn btn-outline" style="width:40px; border-radius:50%;" onclick="selectStar(4)">4</button>
-            <button class="btn btn-outline" style="width:40px; border-radius:50%;" onclick="selectStar(5)">5</button>
-        </div>
-        <select id="exitCardSelect" onchange="updateCardPrompt()"><option value="">-- Çıkış Kartı --</option></select>
-        <p id="cardPrompt" style="font-size:0.8rem; font-style:italic; padding:10px; background:rgba(0,0,0,0.05); border-radius:10px;"></p>
-        <textarea id="returnComment" placeholder="Klavye mikrofonuyla konuşarak yazabilirsiniz..." style="height:100px;"></textarea>
-        <div style="display:flex; gap:10px;">
-            <button class="btn btn-danger" onclick="document.getElementById('ratingOverlay').style.display='none'">İptal</button>
-            <button class="btn" onclick="submitReturn()">Kaydet</button>
-        </div>
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('lend', this)"><i class="fas fa-home"></i><span>Giriş</span></button>
+        <button class="nav-item" onclick="switchTab('books', this)"><i class="fas fa-book"></i><span>Kitaplar</span></button>
+        <button class="nav-item" onclick="switchTab('report', this)"><i class="fas fa-file-invoice"></i><span>Rapor</span></button>
+        <button class="nav-item" onclick="switchTab('stats', this)"><i class="fas fa-chart-pie"></i><span>İstatistik</span></button>
     </div>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyAEihBh-az1spyaBYunJDbi7QNm1Vbo9YdTL0mtOh6SCLcWDneKWvDV6xlG9NHJ7LA/exec"; 
-
-    let userData = {};
-    let records = [];
+    const API_URL = "https://script.google.com/macros/s/AKfycbx3IoRsVhIzuAJzr4UzBCq6qLay0HFMOueJtm1JCmGINEanpX2ccPIdMePGYPhdFyp3/exec"; 
+    
+    // Varsayılan
+    let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
     let students = [];
     let books = [];
-    let bookPages = {};
-    let settings = { target: 500, silver: 5, gold: 10 };
+    let bookPages = {}; 
+    let records = [];
+    let userPassword = "";
     
-    // RÜTBELER
-    const RANKS = [
-        {c:0, t:"🌱 Başlangıç"}, {c:5, t:"🥉 Okuma Çırağı"}, {c:10, t:"📖 Kitap Kurdu"},
-        {c:15, t:"🚀 Bilgi Kaşifi"}, {c:20, t:"🏹 Kelime Avcısı"}, {c:25, t:"👑 Kütüphane Muhafızı"},
-        {c:30, t:"🎩 Edebiyat Ustası"}, {c:35, t:"🌍 Bilge Okur"}, {c:40, t:"💎 EFSANE"}
-    ];
-    
+    let activeBooksMap = {};
+    let lastHistoryMap = {};
+    let currentFilter = 'all';
+    let statsSortMode = 'book_desc'; 
+    let tempReturnId = null; 
+    let currentRating = 0; // Seçilen yıldız
+
+    // --- ÇIKIŞ KARTLARI TANIMLARI ---
     const EXIT_CARDS = {
-        "1": { t: "Macera Hatırası", p: "En unutulmaz sahne neydi?" },
-        "2": { t: "Öğrenen Profil", p: "Karakter hangi özelliği taşıyor?" },
-        "3": { t: "Duygu Kartı", p: "Hangi duyguları hissettin?" },
-        "4": { t: "Bağlantı Kartı", p: "Hayatınla nasıl bir bağ kurdun?" },
-        "5": { t: "Eleştiri Kartı", p: "Katılmadığın bir olay var mı?" },
-        "6": { t: "Soru Kartı", p: "Seni düşündüren soru neydi?" },
-        "7": { t: "Yaratıcı Son", p: "Sonunu nasıl değiştirirdin?" },
-        "8": { t: "Gelişim", p: "Hangi becerini geliştirdi?" },
-        "9": { t: "Tavsiye", p: "Tavsiye eder misin?" }
+        "1": { title: "Macera Hatırası", prompt: "Kitabın en unutulmaz sahnesini veya karakterini seç ve seni nasıl etkilediğini anlat." },
+        "2": { title: "Öğrenen Profil", prompt: "Kitaptaki karakter hangi IB özelliğini (araştıran, duyarlı vb.) taşıyor? Neden?" },
+        "3": { title: "Duygu Kartı", prompt: "Kitap boyunca hangi duyguları hissettin? En baskın duygu neydi?" },
+        "4": { title: "Bağlantı Kartı", prompt: "Kitaptaki olaylardan biriyle kendi hayatın arasında nasıl bir bağ kurdun?" },
+        "5": { title: "Eleştiri Kartı", prompt: "Kitapta katılmadığın bir olay veya karakter davranışı var mı? Neden?" },
+        "6": { title: "Soru Kartı", prompt: "Kitapta seni en çok meraklandıran veya düşündüren soru neydi?" },
+        "7": { title: "Yaratıcı Son", prompt: "Kitabın sonunu nasıl değiştirirdin? Kısaca yeni sonu anlat." },
+        "8": { title: "Gelişim Kartı", prompt: "Bu kitap hangi becerini (hayal gücü, bilgi vb.) geliştirdi?" },
+        "9": { title: "Tavsiye Kartı", prompt: "Bu kitabı arkadaşlarına tavsiye eder misin? Neden?" }
     };
 
+    function handleInput(input) {
+        let btn = input.nextElementSibling;
+        if(btn && btn.classList.contains('clear-btn')) {
+            btn.style.display = input.value.length > 0 ? 'block' : 'none';
+        }
+    }
+    function clearField(id, callback) {
+        let input = document.getElementById(id);
+        input.value = "";
+        handleInput(input);
+        if (callback) callback();
+    }
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        let isDark = document.body.classList.contains('dark-mode');
+        document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+    window.onload = function() {
+        if(localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').innerText = '☀️';
+        } else {
+            document.getElementById('themeIcon').innerText = '🌙';
+        }
+        
+        // Kart seçeneklerini doldur
+        let select = document.getElementById('exitCardSelect');
+        for (const [key, value] of Object.entries(EXIT_CARDS)) {
+            let opt = document.createElement('option');
+            opt.value = key;
+            opt.innerText = value.title;
+            select.appendChild(opt);
+        }
+
+        if(API_URL.includes("BURAYA")) { alert("Lütfen API Linkini düzenleyin."); return; }
+        const cached = localStorage.getItem('libraryData');
+        if (cached) { try { const data = JSON.parse(cached); processData(data); } catch(e) {} }
+    };
     function login() {
-        let code = document.getElementById('authCode').value.trim();
-        if(!code) return;
+        let pass = document.getElementById('appPassword').value;
+        if(!pass) return;
         document.getElementById('loader').style.display = 'block';
-        fetch(API_URL + "?action=login&password=" + encodeURIComponent(code))
+        fetch(API_URL + "?password=" + encodeURIComponent(pass))
         .then(res => res.json())
         .then(data => {
-            if(data.error) { alert(data.error); document.getElementById('loader').style.display = 'none'; }
-            else {
-                userData = data; userData.code = code;
-                records = data.records; students = data.students; books = data.books.list; bookPages = data.books.pages;
-                if(data.settings) settings = data.settings;
-                initApp();
+            if(data.error) {
+                alert("Hatalı Şifre!");
+                document.getElementById('loader').style.display = 'none';
+            } else {
+                userPassword = pass;
+                localStorage.setItem('libraryData', JSON.stringify(data));
+                processData(data);
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+            }
+        })
+        .catch(err => {
+            alert("Bağlantı Hatası!");
+            document.getElementById('loader').style.display = 'none';
+        });
+    }
+    function processData(data) {
+        if(data.students) students = data.students;
+        if(data.books) books = data.books;
+        if(data.bookPages) bookPages = { ...data.bookPages, ...bookPages };
+        if(data.settings) settings = { ...settings, ...data.settings }; 
+        records = (data.records || []).sort((a,b) => Number(b.id) - Number(a.id));
+        updateUI();
+    }
+    function syncData() {
+        document.getElementById('syncStatus').innerText = "Kaydediliyor...";
+        const payload = JSON.stringify({ students, books, bookPages, records, settings, auth_password: userPassword });
+        fetch(API_URL, { method: 'POST', body: payload })
+        .then(res => {
+            document.getElementById('syncStatus').innerText = "Senkronize";
+            localStorage.setItem('libraryData', JSON.stringify({ students, books, bookPages, records, settings }));
+        });
+    }
+    function updateUI() {
+        analyzeData();
+        populateDatalists();
+        renderHistory();
+        renderBookManager();
+        renderRanking();
+        updateProgressBar();
+    }
+    function normalizeStr(str) { return str ? str.toString().trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr-TR') : ""; }
+    function analyzeData() {
+        activeBooksMap = {};
+        lastHistoryMap = {};
+        records.forEach(r => {
+            let key = normalizeStr(r.book);
+            if(r.status === "Okuyor") {
+                if(!activeBooksMap[key]) activeBooksMap[key] = [];
+                activeBooksMap[key].push(r);
+            } else if (r.status === "İade Etti") {
+                if(!lastHistoryMap[key]) lastHistoryMap[key] = { student: r.student, date: r.returnDate };
             }
         });
+        let totalPagesRead = 0;
+        records.forEach(r => { if(r.status === "İade Etti") totalPagesRead += (parseInt(bookPages[r.book]) || 0); });
+        document.getElementById('statTotalPages').innerText = totalPagesRead.toLocaleString();
     }
-
-    function initApp() {
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainContainer').style.display = 'block';
-        document.getElementById('navBar').style.display = 'flex';
-        
-        // Inputlardaki X butonu ayarı
-        document.querySelectorAll('input').forEach(inp => {
-            inp.addEventListener('input', function(){
-                let btn = this.parentElement.querySelector('.clear-btn');
-                if(btn) btn.style.display = this.value.length > 0 ? 'block' : 'none';
-            });
-        });
-
-        let welcome = `${userData.role === 'admin' ? 'Yönetici' : (userData.role==='teacher'?'Öğretmen':'')} | ${userData.className || 'Genel'}`;
-        document.getElementById('welcomeText').innerText = welcome;
-        
-        // Ayarları Doldur
-        document.getElementById('setTarget').value = settings.target;
-        document.getElementById('setSilver').value = settings.silver;
-        document.getElementById('setGold').value = settings.gold;
-
-        if(userData.role === 'admin') {
-            document.getElementById('settingsBtn').style.display = 'flex';
-            document.getElementById('classFilter').style.display = 'block';
-            let classes = [...new Set(records.map(r => r.className))].filter(Boolean).sort();
-            classes.forEach(c => document.getElementById('classFilter').innerHTML += `<option value="${c}">${c}</option>`);
-            document.getElementById('teacherPanel').classList.remove('hidden');
-        } else if (userData.role === 'teacher') {
-            document.getElementById('teacherPanel').classList.remove('hidden');
-            document.getElementById('settingsBtn').style.display = 'flex'; // Öğretmen ayar yapabilir
-        } else {
-            document.getElementById('studentPanel').classList.remove('hidden');
-            document.getElementById('generalLists').classList.add('hidden'); // Öğrenci genel listeleri görmesin
-            renderStudentProfile();
-        }
-
-        let sel = document.getElementById('exitCardSelect');
-        sel.innerHTML = '<option value="">-- Çıkış Kartı Seç --</option>';
-        for(let k in EXIT_CARDS) sel.innerHTML += `<option value="${k}">${EXIT_CARDS[k].t}</option>`;
-        
-        refreshAllViews();
+    function updateProgressBar() {
+        let completed = records.filter(r => r.status === "İade Etti").length;
+        let percent = Math.min(100, Math.floor((completed / settings.classTarget) * 100));
+        document.getElementById('progressBar').style.width = percent + "%";
+        document.getElementById('progressPercent').innerText = percent + "%";
+        document.getElementById('targetText').innerText = `${completed} / ${settings.classTarget} Kitap`;
     }
-
-    function refreshAllViews() {
-        let bList = books;
-        if(userData.role === 'admin') {
-            let cls = document.getElementById('classFilter').value;
-            if(cls !== 'all') bList = books.filter(b => !b.class || b.class === cls);
-        }
-        
-        let sl = document.getElementById('studentList'); sl.innerHTML = "";
-        students.forEach(s => sl.innerHTML += `<option value="${s}">`);
-        let bl = document.getElementById('bookList'); bl.innerHTML = "";
-        bList.forEach(b => bl.innerHTML += `<option value="${b.name}">`);
-        
-        if(userData.role !== 'student') renderActiveList();
+    function switchTab(id, btn) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
     }
-
-    // --- 1. ÖĞRETMEN: ANLIK ARAMA ---
-    function handleInstantSearch(val) {
-        let resDiv = document.getElementById('instantResults');
-        if(val.length < 2) { resDiv.style.display = 'none'; return; }
-        
-        resDiv.style.display = 'block';
-        resDiv.innerHTML = "";
-        
-        // Öğrencinin tüm kayıtlarını bul
-        let studentRecs = records.filter(r => r.student.toLowerCase() === val.toLowerCase());
-        
-        if(studentRecs.length === 0) {
-            // Tam eşleşme yoksa listeyi filtrele (datalist zaten yapıyor ama biz görsel olarak gösterelim)
-            resDiv.innerHTML = "<div style='opacity:0.5; padding:10px;'>Geçmişi görmek için tam isim seçin.</div>";
-            return;
-        }
-        
-        // Tam isim eşleştiyse geçmişi dök
-        let active = studentRecs.find(r => r.status === "Okuyor");
-        let history = studentRecs.filter(r => r.status === "İade Etti");
-        
-        let html = "";
-        
-        // Aktif Kitap
-        if(active) {
-            html += `<div class="result-card" style="border-left:4px solid #facc15;">
-                <div class="result-header"><span>${active.book}</span> <button class="btn btn-sm btn-danger" onclick="openReturnModal(${active.id})">İade Al</button></div>
-                <div class="result-detail">Okuyor • ${active.date}</div>
-            </div>`;
-        }
-        
-        // Geçmiş
-        history.forEach(h => {
-            html += `<div class="result-card">
-                <div class="result-header"><span>${h.book}</span> <button class="btn btn-sm btn-outline" onclick="openReturnModal(${h.id})">Yorumla</button></div>
-                <div class="result-detail">İade: ${h.returnDate} ${h.comment?'• 🍎':''}</div>
-            </div>`;
-        });
-        
-        resDiv.innerHTML = html || "<div style='padding:10px;'>Henüz kitap kaydı yok.</div>";
+    function checkOverdue(dateStr) {
+        if(!dateStr) return false;
+        let parts = dateStr.split('.');
+        if(parts.length !== 3) return false;
+        let bookDate = new Date(parts[2], parts[1]-1, parts[0]);
+        let diffTime = Math.abs(new Date() - bookDate);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) > 15;
     }
-
-    function renderActiveList() {
-        let div = document.getElementById('activeList');
+    function renderHistory() {
+        const sVal = document.getElementById('studentInput').value.trim().toUpperCase();
+        const div = document.getElementById('historyList');
         div.innerHTML = "";
-        let list = records.filter(r => r.status === "Okuyor");
-        if(userData.role === 'admin') {
-            let cls = document.getElementById('classFilter').value;
-            if(cls !== 'all') list = list.filter(r => r.className === cls);
-        }
-        document.getElementById('activeCount').innerText = `(${list.length})`;
-        
+        let list = sVal ? records.filter(r => r.student === sVal) : records.filter(r => r.status === "Okuyor");
+        if(list.length === 0) div.innerHTML = "<p style='text-align:center; color:var(--text-sub); opacity:0.7;'>Kayıt yok.</p>";
         list.forEach(r => {
-            let safe = r.book.replace(/'/g, "\\'");
-            div.innerHTML += `<div class="list-item">
-                <div onclick="openTree('${safe}')" style="cursor:pointer; flex:1;"><b>${r.book}</b><br><small>${r.student}</small></div>
-                <button class="btn btn-sm btn-danger" onclick="openReturnModal(${r.id})">İade Al</button>
-            </div>`;
+            let isReading = r.status === "Okuyor";
+            let btnHtml = isReading ? `<button class="btn-return" onclick="returnBook(${r.id})">İade Al</button>` : `<span style="color:var(--text-sub); font-size:0.8rem;">${r.returnDate}</span>`;
+            div.innerHTML += `<div class="list-item"><div class="item-content"><h4>${r.book}</h4><p>${r.student} • ${r.date}</p></div>${btnHtml}</div>`;
         });
     }
-
-    // --- 1. ÖĞRENCİ: PROFİL ---
-    function renderStudentProfile() {
-        let s = userData.studentName;
-        let myRecs = records.filter(r => r.student === s && r.status === "İade Etti");
-        let active = records.find(r => r.student === s && r.status === "Okuyor");
-        
-        document.getElementById('stName').innerText = s;
-        document.getElementById('stBookCount').innerText = myRecs.length;
-        
-        // Sayfa sayısı
-        let pages = 0;
-        myRecs.forEach(r => { pages += parseInt(bookPages[r.book]) || 0; });
-        document.getElementById('stPageCount').innerText = pages;
-        
-        // Rütbe
-        let rank = RANKS[0];
-        for(let i=0; i<RANKS.length; i++) { if(myRecs.length >= RANKS[i].c) rank = RANKS[i]; }
-        document.getElementById('stRankTitle').innerText = rank.t;
-        
-        // Madalya
-        let goldC = Math.floor(myRecs.length / settings.gold);
-        let silvC = Math.floor((myRecs.length % settings.gold) / settings.silver);
-        let medals = "🥇".repeat(goldC) + "🥈".repeat(silvC);
-        document.getElementById('stMedals').innerText = medals || "Henüz Madalya Yok";
-        
-        // Liste
-        let div = document.getElementById('studentMyBooks');
-        div.innerHTML = "";
-        
-        if(active) {
-            div.innerHTML += `<div class="result-card" style="border-left:4px solid #facc15;">
-                <div class="result-header">${active.book} <span class="badge bg-yellow">Okuyorsun</span></div>
-            </div>`;
-        }
-        
-        myRecs.forEach(r => {
-            let btn = r.comment ? "✅" : `<button class="btn btn-sm btn-outline" onclick="openReturnModal(${r.id})">Yorumla</button>`;
-            div.innerHTML += `<div class="list-item">
-                <div style="flex:1;"><b>${r.book}</b><br><small>${r.returnDate}</small></div>
-                <div>${btn}</div>
-            </div>`;
-        });
-    }
-
-    // --- 2. KİTAPLAR (EN ÇOK OKUNAN) ---
-    let bookSort = 'name';
-    function sortBooks(m) { bookSort = m; renderBookManager(); }
-    
-    function renderBookManager() {
-        let div = document.getElementById('bookManagerList');
-        div.innerHTML = "";
-        let search = document.getElementById('bookSearch').value.toLowerCase();
-        let list = books;
-        
-        if(userData.role === 'admin') {
-            let cls = document.getElementById('classFilter').value;
-            if(cls !== 'all') list = list.filter(b => !b.class || b.class === cls);
-        }
-        if(search) list = list.filter(b => b.name.toLowerCase().includes(search));
-        
-        // İstatistik
-        let stats = {};
-        records.forEach(r => { if(r.status==="İade Etti") {
-            if(!stats[r.book]) stats[r.book] = {c:0, s:0};
-            stats[r.book].c++;
-            if(r.rating) stats[r.book].s += parseInt(r.rating);
-        }});
-        
-        let final = list.map(b => {
-            let s = stats[b.name] || {c:0, s:0};
-            return { name: b.name, count: s.c, avg: s.c ? s.s/s.c : 0 };
-        });
-        
-        if(bookSort === 'rating') final.sort((a,b) => b.avg - a.avg);
-        else if(bookSort === 'count') final.sort((a,b) => b.count - a.count);
-        else final.sort((a,b) => a.name.localeCompare(b.name));
-        
-        final.forEach(b => {
-            let safe = b.name.replace(/'/g, "\\'");
-            div.innerHTML += `<div class="list-item" onclick="openTree('${safe}')" style="cursor:pointer;">
-                <div style="flex:1;"><b>${b.name}</b><br><small style="opacity:0.7;">${b.count} Okuma • ⭐ ${b.avg.toFixed(1)}</small></div>
-                <div style="color:var(--primary); font-size:0.8rem;"><i class="fas fa-tree"></i></div>
-            </div>`;
-        });
-    }
-
-    // --- 3. UZAY YOLU (DİKEY/KAVİSLİ) ---
-    function generateReport() {
-        let s = document.getElementById('reportStudentInput').value;
-        if(!s) return;
-        let myRecs = records.filter(r => r.student === s && r.status === "İade Etti");
-        
-        document.getElementById('reportStats').style.display = 'block';
-        document.getElementById('reportStats').innerText = `${myRecs.length} Kitap`;
-        
-        // Mesaj
-        let msg = `Sayın Velimiz,\n\n✨ "Her kitap keşfedilmeyi bekleyen ayrı bir dünyadır."\n\nÖğrencimiz ${s}, bu dönem kütüphanemizden toplam ${myRecs.length} kitap okuyarak okuma yolculuğunu zenginleştirmiştir.\n\n📚 Son Okunanlar:\n`;
-        myRecs.slice(0,5).forEach(r => msg += `- ${r.book}\n`);
-        msg += `\nİlginiz için teşekkürler.\nZeynal Öğretmen`;
-        
-        let out = document.getElementById('reportOutput');
-        out.style.display='block'; out.innerText = msg;
-        
-        renderJourney(myRecs.length);
-        document.getElementById('journeyPanel').style.display = 'block';
-    }
-
-    function renderJourney(count) {
-        let cont = document.getElementById('journeyContainer');
-        let path = document.getElementById('journeyPath');
-        cont.querySelectorAll('.station, .astronaut').forEach(e => e.remove());
-        
-        // Dikey Kavisli Yol (Mobil Uyumlu)
-        let w = cont.offsetWidth;
-        // SVG Yolu: Yukarıdan aşağıya S çizer
-        let d = `M ${w*0.2} 50 C ${w*0.8} 150, ${w*0.8} 250, ${w*0.2} 350 S ${w*0.8} 450, ${w*0.5} 480`;
-        path.setAttribute('d', d);
-        
-        // Hedefler
-        const MILESTONES = [0, settings.silver, settings.gold, settings.gold+5, settings.gold+10];
-        
-        MILESTONES.forEach((m, i) => {
-            // Basit yerleşim (Yolun yaklaşık noktaları)
-            let y = 50 + (i * 100);
-            let x = (i % 2 === 0) ? w*0.2 : w*0.8;
-            
-            let st = document.createElement('div');
-            st.className = `station ${count >= m ? 'active' : 'reached'}`;
-            st.style.left = x+"px"; st.style.top = y+"px";
-            st.innerHTML = `<div class="planet"><i class="fas fa-flag"></i></div><div class="station-label">${m} Kitap</div>`;
-            
-            if(count >= m && (i === MILESTONES.length-1 || count < MILESTONES[i+1])) {
-                let astro = document.createElement('div');
-                astro.className = 'astronaut';
-                astro.innerText = "🚀";
-                astro.style.left = x+"px"; astro.style.top = (y-30)+"px";
-                cont.appendChild(astro);
-            }
-            cont.appendChild(st);
-        });
-    }
-
-    // --- 4. İSTATİSTİK ---
-    function renderStats(order) {
-        let div = document.getElementById('statsList');
-        div.innerHTML = "";
-        let counts = {};
-        
-        records.forEach(r => { 
-            if(r.status === "İade Etti") {
-                if(userData.role==='admin') {
-                    let cls = document.getElementById('classFilter').value;
-                    if(cls !== 'all' && r.className !== cls) return;
-                } else if(userData.role==='teacher') {
-                    if(r.className !== userData.className) return;
-                }
-                
-                if(!counts[r.student]) counts[r.student] = {c:0, p:0};
-                counts[r.student].c++;
-                counts[r.student].p += parseInt(bookPages[r.book]) || 0;
-            }
-        });
-        
-        let sorted = Object.keys(counts).map(k => ({n:k, ...counts[k]}));
-        if(order === 'desc') sorted.sort((a,b) => b.c - a.c); else sorted.sort((a,b) => a.c - b.c);
-        
-        sorted.forEach((s, i) => {
-            // Rütbe Bul
-            let rank = RANKS[0].t;
-            for(let j=0; j<RANKS.length; j++) if(s.c >= RANKS[j].c) rank = RANKS[j].t;
-            
-            // Madalya
-            let g = Math.floor(s.c / settings.gold);
-            let si = Math.floor((s.c % settings.gold) / settings.silver);
-            let medals = "🥇".repeat(g) + "🥈".repeat(si);
-            
-            div.innerHTML += `
-            <div class="stat-card">
-                <div style="font-size:1.2rem; font-weight:bold; color:var(--primary); width:30px;">${i+1}</div>
-                <div style="flex:1;">
-                    <div style="font-weight:700;">${s.n}</div>
-                    <div style="font-size:0.75rem; opacity:0.7;">${rank} • ${medals}</div>
-                </div>
-                <div style="text-align:right;">
-                    <div style="font-weight:800;">${s.c} Kitap</div>
-                    <div style="font-size:0.7rem; opacity:0.7;">${s.p} Sayfa</div>
-                </div>
-            </div>`;
-        });
-    }
-
-    // --- ORTAK & MODAL ---
-    let tempId = null, currentRating = 0;
-    
     function lendBook() {
-        let s = document.getElementById('studentInput').value, b = document.getElementById('bookInput').value;
-        if(!s || !b) return;
-        let payload = { action: "lend", auth_code: userData.code, id: Date.now(), date: new Date(), student: s, book: b };
-        records.unshift({id: payload.id, student: s, book: b, status: "Okuyor", className: userData.className||"Admin", date: "Bugün"});
-        handleInstantSearch(s); // Listeyi güncelle
+        const s = document.getElementById('studentInput').value.trim().toUpperCase();
+        const b = document.getElementById('bookInput').value.trim();
+        if(!s || !b) { alert("Eksik bilgi!"); return; }
+        if(!students.includes(s)) students.push(s);
+        if(!books.includes(b)) books.push(b);
+        records.unshift({ id: Date.now(), date: new Date().toLocaleDateString('tr-TR'), student: s, book: b, status: "Okuyor", returnDate: "-" });
+        records.sort((a,b) => b.id - a.id);
         document.getElementById('bookInput').value = "";
-        fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+        handleInput(document.getElementById('bookInput'));
+        updateUI(); syncData();
     }
 
-    function openReturnModal(id) {
-        tempId = id;
+    // --- YENİ İADE VE KART SİSTEMİ ---
+    function returnBook(id) {
+        tempReturnId = id;
+        currentRating = 0;
+        updateStars();
         document.getElementById('exitCardSelect').value = "";
+        document.getElementById('cardPromptBox').style.display = 'none';
+        document.getElementById('commentWrapper').style.display = 'none';
         document.getElementById('returnComment').value = "";
         document.getElementById('ratingOverlay').style.display = 'flex';
     }
 
-    function submitReturn() {
-        if(!tempId) return;
-        let rec = records.find(r => r.id === tempId);
-        if(rec) {
-            rec.status = "İade Etti";
-            rec.rating = currentRating;
-            rec.cardId = document.getElementById('exitCardSelect').value;
-            rec.comment = document.getElementById('returnComment').value;
-            rec.returnDate = new Date().toLocaleDateString("tr-TR");
-            
-            refreshAllViews();
-            let payload = { action: "return", auth_code: userData.code, id: rec.id, returnDate: rec.returnDate, rating: rec.rating, cardId: rec.cardId, comment: rec.comment };
-            fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-        }
-        document.getElementById('ratingOverlay').style.display = 'none';
+    function selectStar(n) {
+        currentRating = n;
+        updateStars();
     }
 
-    function openTree(bookName) {
-        document.getElementById('treeModal').style.display = 'flex';
-        document.getElementById('treeTitle').innerText = bookName;
-        let cont = document.getElementById('treeFruitsContainer');
-        cont.innerHTML = "";
-        let revList = document.getElementById('allReviewsList');
-        revList.innerHTML = "";
+    function updateStars() {
+        let btns = document.getElementById('starGroup').children;
+        for(let i=0; i<btns.length; i++) {
+            if(i < currentRating) btns[i].classList.add('selected');
+            else btns[i].classList.remove('selected');
+        }
+    }
+
+    function updateCardPrompt() {
+        let val = document.getElementById('exitCardSelect').value;
+        let box = document.getElementById('cardPromptBox');
+        let wrap = document.getElementById('commentWrapper');
         
-        let readers = records.filter(r => r.book === bookName && r.status === "İade Etti");
-        
-        readers.forEach((r, i) => {
-            let f = document.createElement('div');
-            f.className = 'tree-fruit';
-            f.innerText = r.comment ? "🍎" : "🍏";
-            // Spiral (Döngüsüz)
-            let angle = i * 2.4; 
-            let rad = 30 + (i*4); if(rad>140) rad=140;
-            let x = 250 + Math.cos(angle)*rad;
-            let y = 200 + Math.sin(angle)*rad;
-            f.style.left = (x-17)+"px"; f.style.top = (y-17)+"px";
+        if(val && EXIT_CARDS[val]) {
+            box.innerHTML = `<i class="fas fa-question-circle"></i> ${EXIT_CARDS[val].prompt}`;
+            box.style.display = 'flex';
+            wrap.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+            wrap.style.display = 'none';
+        }
+    }
+
+    // --- SESLİ KOMUT (Web Speech API) ---
+    function startDictation() {
+        if (window.hasOwnProperty('webkitSpeechRecognition')) {
+            let recognition = new webkitSpeechRecognition();
+            let btn = document.querySelector('.mic-btn');
             
-            f.onclick = () => {
-                let d = document.getElementById('fruitDetail');
-                d.style.display='block';
-                let st = r.rating ? "⭐".repeat(r.rating) : "";
-                d.innerHTML = `<b>${r.student}</b> ${st}<br><i>"${r.comment||'...'}"</i>`;
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = "tr-TR";
+            
+            recognition.start();
+            btn.classList.add('listening');
+
+            recognition.onresult = function(e) {
+                document.getElementById('returnComment').value = e.results[0][0].transcript;
+                recognition.stop();
+                btn.classList.remove('listening');
             };
-            cont.appendChild(f);
+
+            recognition.onerror = function(e) {
+                recognition.stop();
+                btn.classList.remove('listening');
+            };
             
-            revList.innerHTML += `<div class="result-card"><div class="result-header"><span>${r.student}</span> <span>${r.rating?"⭐"+r.rating:""}</span></div><div class="result-detail">${r.comment || 'Yorumsuz'}</div></div>`;
+            recognition.onend = function() {
+                btn.classList.remove('listening');
+            };
+        } else {
+            alert("Tarayıcınız sesli komutu desteklemiyor (Chrome önerilir).");
+        }
+    }
+
+    function closeRatingModal() {
+        document.getElementById('ratingOverlay').style.display = 'none';
+        tempReturnId = null;
+    }
+
+    function submitReturn() {
+        if (!tempReturnId) return;
+        let rec = records.find(r => r.id === tempReturnId);
+        
+        // Kart verilerini al
+        let cardId = document.getElementById('exitCardSelect').value;
+        let comment = document.getElementById('returnComment').value;
+
+        if(rec) {
+            rec.status = "İade Etti";
+            rec.returnDate = new Date().toLocaleDateString('tr-TR');
+            if(currentRating > 0) rec.rating = currentRating;
+            
+            // Yeni Verileri Ekle
+            if(cardId) {
+                rec.cardId = cardId;
+                rec.cardTitle = EXIT_CARDS[cardId].title;
+                rec.comment = comment;
+            }
+
+            updateUI(); syncData();
+        }
+        closeRatingModal();
+    }
+
+    function filterBooks(type, el) {
+        currentFilter = type;
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        renderBookManager();
+    }
+    
+    function getRawRating(bookName) {
+        let bookRecs = records.filter(r => normalizeStr(r.book) === normalizeStr(bookName) && r.rating);
+        if(bookRecs.length === 0) return 0;
+        return bookRecs.reduce((a, b) => a + parseInt(b.rating), 0) / bookRecs.length;
+    }
+
+    function renderBookManager() {
+        const search = document.getElementById('bookSearch').value.toLowerCase();
+        const div = document.getElementById('bookManagerList');
+        div.innerHTML = "";
+        let displayList = books.map((b, idx) => {
+            let key = normalizeStr(b);
+            let activeList = activeBooksMap[key] || [];
+            let lastReader = lastHistoryMap[key];
+            let status = activeList.length > 0 ? 'out' : 'in';
+            let avgScore = getRawRating(b);
+            let pageCount = bookPages[b] || 0;
+            return { name: b, status: status, activeList: activeList, lastReader: lastReader, avgScore: avgScore, pageCount: pageCount, originalIndex: idx };
+        });
+        displayList = displayList.filter(item => {
+            if(!item.name.toLowerCase().includes(search)) return false;
+            if(currentFilter === 'out' && item.status !== 'out') return false;
+            if(currentFilter === 'in' && item.status !== 'in') return false;
+            return true;
+        });
+        if(currentFilter === 'rating') displayList.sort((a,b) => b.avgScore - a.avgScore);
+        else displayList.sort((a,b) => a.status === 'out' ? -1 : 1);
+        
+        displayList.forEach((item) => {
+            let ratingHtml = item.avgScore > 0 ? ` <span style="color:#f59e0b; font-size:0.85rem;">⭐${item.avgScore.toFixed(1)}</span>` : "";
+            let pageHtml = item.pageCount > 0 ? `<span style="font-size:0.75rem; color:var(--text-sub); border:1px solid #ccc; padding:2px 6px; border-radius:8px; margin-left:5px;">${item.pageCount} Syf.</span>` : "";
+            let badge = item.status === 'out' ? `<span style="color:#ef4444; font-weight:bold; font-size:0.8rem;">Dışarıda</span>` : `<span style="color:#10b981; font-weight:bold; font-size:0.8rem;">Rafta</span>`;
+            
+            // KİTAP ADINA TIKLAYINCA DETAY AÇMA EKLENDİ
+            div.innerHTML += `
+            <div class="glass-panel" style="padding:15px; margin-bottom:10px; cursor:pointer;" onclick="openBookDetail('${item.name}')">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${item.name} ${ratingHtml} ${pageHtml}</h4>
+                    ${badge}
+                </div>
+                <div style="margin-top:5px; font-size:0.8rem; color:var(--text-sub); opacity:0.8;">Detaylar için tıkla ▶</div>
+            </div>`;
         });
     }
 
-    // --- YÖNETİM ---
-    function searchForEdit(val) {
-        let form = document.getElementById('editBookForm');
-        let book = books.find(b => b.name.toLowerCase() === val.toLowerCase());
-        if(book) {
-            form.style.display = 'block';
-            document.getElementById('editOldName').value = book.name;
-            document.getElementById('editNewName').value = book.name;
-            document.getElementById('editNewPage').value = bookPages[book.name] || 0;
-        } else {
-            form.style.display = 'none';
+    // --- KİTAP DETAY PENCERESİ FONKSİYONLARI ---
+    function openBookDetail(bookName) {
+        document.getElementById('bdTitle').innerText = bookName;
+        let bookRecs = records.filter(r => normalizeStr(r.book) === normalizeStr(bookName) && r.status === "İade Etti");
+        
+        let avg = 0;
+        if(bookRecs.length > 0) {
+            let sum = bookRecs.reduce((a, b) => a + (parseInt(b.rating)||0), 0);
+            avg = (sum / bookRecs.length).toFixed(1);
         }
-    }
-    
-    function submitEditBook() {
-        let oldN = document.getElementById('editOldName').value;
-        let newN = document.getElementById('editNewName').value;
-        let newP = document.getElementById('editNewPage').value;
-        fetch(API_URL, {method:"POST", body:JSON.stringify({action:"edit_book", oldName:oldN, newName:newN, newPage:newP})});
-        alert("Güncellendi!");
-    }
-    
-    function addSingleBook() {
-        let n=document.getElementById('bName').value, p=document.getElementById('bPage').value;
-        if(n) { fetch(API_URL,{method:"POST",body:JSON.stringify({action:"add_books",list:[{name:n,page:p,class:userData.className}]})}); alert("Eklendi"); }
+        
+        document.getElementById('bdStats').innerText = `${bookRecs.length} Okuma | Ort. ${avg} Puan`;
+        
+        let container = document.getElementById('bdReviews');
+        container.innerHTML = "";
+        
+        if(bookRecs.length === 0) {
+            container.innerHTML = "<p>Henüz yorum yapılmamış.</p>";
+        } else {
+            bookRecs.forEach(r => {
+                let starStr = r.rating ? "⭐".repeat(r.rating) : "";
+                let cardHtml = r.cardTitle ? `<span class="rc-type">${r.cardTitle}</span>` : "";
+                let commentHtml = r.comment ? `<div class="rc-text">"${r.comment}"</div>` : "";
+                
+                container.innerHTML += `
+                <div class="review-card">
+                    <div class="rc-header">
+                        <span>${r.student}</span>
+                        <span>${starStr}</span>
+                    </div>
+                    ${cardHtml}
+                    ${commentHtml}
+                    <div style="font-size:0.7rem; color:var(--text-sub); margin-top:5px; text-align:right;">${r.returnDate}</div>
+                </div>`;
+            });
+        }
+        
+        document.getElementById('bookDetailOverlay').style.display = 'flex';
     }
 
-    // YARDIMCILAR
-    function switchTab(t, b) {
-        document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
-        document.getElementById('tab-'+t).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
-        if(b) b.classList.add('active');
-        if(t==='home') refreshAllViews();
-        if(t==='books') renderBookManager();
-        if(t==='stats') renderStats('desc');
+    function closeBookDetail() {
+        document.getElementById('bookDetailOverlay').style.display = 'none';
     }
-    function clearInput(id) { document.getElementById(id).value = ""; document.getElementById(id).focus(); }
-    function selectStar(n) { currentRating = n; let b=document.getElementById('starGroup').children; for(let i=0;i<5;i++) b[i].classList.toggle('selected', i<n); }
-    function updateCardPrompt() { let v=document.getElementById('exitCardSelect').value; document.getElementById('cardPrompt').innerText= v ? EXIT_CARDS[v].p : ""; }
+
+    function deleteRecord(id) { if(confirm("Silmek istiyor musunuz?")) { records = records.filter(r => r.id !== id); updateUI(); syncData(); } }
+    function addNewBook() {
+        const val = document.getElementById('newBookInput').value.trim();
+        if(val && !books.includes(val)) { books.push(val); books.sort(); document.getElementById('newBookInput').value = ""; updateUI(); syncData(); }
+    }
+    function getMedals(count) {
+        let goldCount = Math.floor(count / settings.goldLimit);
+        let silverCount = Math.floor(count / settings.silverLimit);
+        let medals = "";
+        for(let i=0; i<goldCount; i++) medals += "🥇";
+        for(let i=0; i<silverCount; i++) medals += "🥈";
+        return medals;
+    }
+    function getRankInfo(count) {
+        if(count >= 40) return { t:"💎 EFSANE", i:"fas fa-gem" };
+        if(count >= 35) return { t:"🌍 Bilge Okur", i:"fas fa-globe-americas" };
+        if(count >= 30) return { t:"🎩 Edebiyat Ustası", i:"fas fa-hat-wizard" };
+        if(count >= 25) return { t:"👑 Kütüphane Muhafızı", i:"fas fa-crown" };
+        if(count >= 20) return { t:"🏹 Kelime Avcısı", i:"fas fa-bullseye" };
+        if(count >= 15) return { t:"🚀 Bilgi Kaşifi", i:"fas fa-rocket" };
+        if(count >= 10) return { t:"📖 Kitap Kurdu", i:"fas fa-book-open" };
+        if(count >= 5)  return { t:"🥉 Okuma Çırağı", i:"fas fa-medal" };
+        return { t:"🌱 Başlangıç", i:"fas fa-seedling" };
+    }
+    function toggleStatsSort() {
+        if(statsSortMode === 'book_desc') { statsSortMode = 'book_asc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬆"; }
+        else if (statsSortMode === 'book_asc') { statsSortMode = 'page_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Sayfa ⬇"; }
+        else { statsSortMode = 'book_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬇"; }
+        renderRanking();
+    }
+    function renderRanking() {
+        let counts = {};
+        let pageCounts = {};
+        records.forEach(r => { 
+            if(r.status === "İade Etti") {
+                counts[r.student] = (counts[r.student]||0)+1;
+                let p = parseInt(bookPages[r.book]) || 0;
+                pageCounts[r.student] = (pageCounts[r.student]||0) + p;
+            }
+        });
+        let sorted = Object.keys(counts).map(k => ({n:k, c:counts[k], p:pageCounts[k]}));
+        if(sorted.length > 0) {
+             let topReader = sorted.reduce((prev, current) => (prev.c > current.c) ? prev : current);
+             document.getElementById('statTopReader').innerText = topReader.n;
+        } else { document.getElementById('statTopReader').innerText = "-"; }
+        if(statsSortMode === 'book_desc') sorted.sort((a,b) => b.c - a.c);
+        else if(statsSortMode === 'book_asc') sorted.sort((a,b) => a.c - b.c);
+        else if(statsSortMode === 'page_desc') sorted.sort((a,b) => b.p - a.p);
+        let html = "";
+        sorted.forEach((s,i) => {
+            let rankInfo = getRankInfo(s.c);
+            let medals = getMedals(s.c);
+            let highlight = (i === 0 && statsSortMode !== 'book_asc') ? "color:#f59e0b;" : "color:var(--text-sub);";
+            let rankNum = (i === sorted.length - 1 && sorted.length > 1) ? `<span style="color:#ef4444; font-size:0.7rem;">(Son)</span>` : `${i+1}.`;
+            if (i === 0) rankNum = "👑";
+            html += `<div class="list-item"><div class="item-content"><span style="font-weight:bold; ${highlight} margin-right:10px; min-width:20px; display:inline-block;">${rankNum}</span><span style="font-weight:600;">${s.n}</span><div class="rank-info">${rankInfo.t}</div><div class="medal-container">${medals}</div></div><div style="text-align:right;"><div style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c} Kitap</div><div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">${s.p.toLocaleString()} Sayfa</div></div></div>`;
+        });
+        document.getElementById('rankingList').innerHTML = html;
+    }
+    function generateReport() {
+        const s = document.getElementById('reportStudentInput').value.trim().toUpperCase();
+        if(!s) return;
+        let myRecs = records.filter(r => r.student === s).sort((a,b) => a.id - b.id);
+        let currentlyReading = myRecs.filter(r => r.status === "Okuyor");
+        let history = myRecs.filter(r => r.status === "İade Etti");
+        let totalP = 0;
+        history.forEach(r => totalP += (parseInt(bookPages[r.book])||0));
+        let txt = `Sayın Velimiz,\n\n✨ "Her kitap keşfedilmeyi bekleyen ayrı bir dünyadır."\n\nÖğrencimiz *${s}*, bu dönem kütüphanemizden toplam *${myRecs.length}* kitap okuyarak okuma yolculuğunu zenginleştirmiştir.\nToplam Okunan Sayfa: *${totalP}*\n\n`;
+        if (currentlyReading.length > 0) {
+            txt += `🔴 *Şu An Okuduğu:* \n`;
+            currentlyReading.forEach(r => { txt += `- ${r.book} (Alış: ${r.date})\n`; });
+            txt += `\n`;
+        }
+        if (history.length > 0) {
+            txt += `📚 *Keşfettiği Dünyalar:* \n`;
+            history.forEach((r, i) => { txt += `${i+1}. ${r.book} (✅ Okudu)\n`; });
+        }
+        txt += `\nİlginiz ve desteğiniz için teşekkür ederiz.\nZeynal Öğretmen`;
+        document.getElementById('reportOutput').innerText = txt;
+        
+        renderJourneyMap(history.length);
+        document.getElementById('journeyPanel').style.display = 'block';
+    }
     function copyReport() { navigator.clipboard.writeText(document.getElementById('reportOutput').innerText); alert("Kopyalandı!"); }
-    function toggleTheme() { document.body.classList.toggle('dark-mode'); }
+    function populateDatalists() {
+        let sl = document.getElementById('studentList'); sl.innerHTML = '';
+        students.sort().forEach(s => sl.innerHTML += `<option value="${s}">`);
+        let bl = document.getElementById('bookList'); bl.innerHTML = '';
+        books.sort().forEach(b => bl.innerHTML += `<option value="${b}">`);
+    }
+
+    function renderJourneyMap(count) {
+        const container = document.getElementById('journeyMap');
+        const oldStations = container.querySelectorAll('.station');
+        oldStations.forEach(el => el.remove());
+
+        const milestones = [
+            { c: 0,  i: "fas fa-seedling",       n: "Başlangıç" },
+            { c: 5,  i: "fas fa-medal",          n: "Çırak" },
+            { c: 10, i: "fas fa-book-open",      n: "Kitap Kurdu" },
+            { c: 15, i: "fas fa-rocket",         n: "Kaşif" },
+            { c: 20, i: "fas fa-bullseye",       n: "Avcı" },
+            { c: 25, i: "fas fa-crown",          n: "Muhafız" },
+            { c: 30, i: "fas fa-hat-wizard",     n: "Usta" },
+            { c: 35, i: "fas fa-globe-americas", n: "Bilge" },
+            { c: 40, i: "fas fa-gem",            n: "EFSANE" }
+        ];
+
+        let currentMilestoneIndex = 0;
+        for (let i = 0; i < milestones.length; i++) {
+            if (count >= milestones[i].c) currentMilestoneIndex = i;
+            else break;
+        }
+
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
+        let pathD = "M"; 
+        
+        milestones.forEach((m, index) => {
+            let x = (width * 0.1) + (width * 0.8) * (index / (milestones.length - 1));
+            let y = (height / 2) + Math.sin(index * 0.8) * 80;
+
+            if(index === 0) pathD += ` ${x} ${y}`;
+            else pathD += ` L ${x} ${y}`;
+
+            let isActive = index <= currentMilestoneIndex ? 'reached' : '';
+            let isCurrent = index === currentMilestoneIndex ? 'current' : '';
+            let astronautHtml = isCurrent ? '<i class="fas fa-user-astronaut astronaut"></i>' : '';
+            
+            let stationDiv = document.createElement('div');
+            stationDiv.className = `station ${isActive} ${isCurrent}`;
+            stationDiv.style.left = `${x}px`;
+            stationDiv.style.top = `${y}px`;
+            stationDiv.innerHTML = `<i class="${m.i}"></i><span>${m.n}</span>${astronautHtml}`;
+            
+            container.appendChild(stationDiv);
+        });
+
+        document.getElementById('journeyPath').setAttribute('d', pathD);
+    }
 </script>
 </body>
 </html>
