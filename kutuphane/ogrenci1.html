@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Öğrenci Girişi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- ÖĞRENCİ TEMASI --- */
+        :root { --bg: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); --glass: rgba(255, 255, 255, 0.7); --border: 1px solid rgba(255, 255, 255, 0.8); --primary: #ff6b6b; --text: #2d3436; }
+        body { margin: 0; padding: 20px; background-image: var(--bg); background-attachment: fixed; color: var(--text); min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
+        .container { max-width: 500px; margin: 0 auto; display: none; padding-bottom: 50px; }
+        .glass-panel { background: var(--glass); border-radius: 24px; padding: 20px; margin-bottom: 20px; border: var(--border); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        
+        /* GİRİŞ */
+        #loginOverlay { position: fixed; inset: 0; z-index: 999; background-image: var(--bg); display: flex; justify-content: center; align-items: center; }
+        .login-box { background: rgba(255,255,255,0.9); padding: 30px; border-radius: 24px; text-align: center; width: 90%; max-width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        input, select, textarea { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #ccc; background: #fff; font-size: 1rem; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+        
+        /* UZAY YOLU (YUKARI) */
+        .journey-container { position: relative; width: 100%; height: 500px; background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); border-radius: 20px; overflow: hidden; margin-top: 20px; border: 2px solid rgba(255,255,255,0.2); }
+        .stars { position: absolute; inset:0; background: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png'); opacity: 0.6; }
+        .station-node { position: absolute; width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.4); transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; z-index: 5; }
+        .station-node.active { background: #3b82f6; border-color: white; box-shadow: 0 0 20px #3b82f6; }
+        .station-label { position: absolute; top: 110%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 4px; font-size: 0.6rem; white-space: nowrap; color: #fff; }
+        .astronaut { position: absolute; font-size: 2.5rem; transform: translate(-50%, -50%); z-index: 10; transition: all 1.5s ease-in-out; filter: drop-shadow(0 0 10px gold); animation: float 3s infinite; }
+        @keyframes float { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -60%); } }
+
+        /* LİSTE */
+        .book-card { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.5); border-radius: 12px; margin-bottom: 8px; text-align: left; }
+        .action-btn { padding: 6px 12px; border-radius: 8px; background: transparent; border: 1px solid #333; cursor: pointer; font-size: 0.8rem; }
+        
+        /* MODAL */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
+        .modal-card { background: #fff; width: 100%; max-width: 400px; border-radius: 24px; padding: 25px; text-align: center; }
+        .star-btn { font-size: 2rem; background: none; border: none; cursor: pointer; color: #ccc; }
+        .star-btn.active { color: #f1c40f; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2>Öğrenci Girişi</h2>
+        <input type="text" id="loginName" placeholder="Adın Soyadın (Tam Yaz)">
+        <p style="font-size:0.8rem; color:#666; margin-top:-5px;">İsmini listedeki gibi tam yazmalısın.</p>
+        
+        <input type="password" id="loginPass" placeholder="Şifren" style="text-align:center; letter-spacing:3px;">
+        <button class="btn" onclick="login()">Giriş Yap</button>
+        <div id="loader" style="display:none; margin-top:10px; color:#ff6b6b;">Kontrol ediliyor...</div>
+    </div>
+</div>
+
+<div id="app" class="container">
+    <div class="glass-panel">
+        <div style="font-size:3rem;">🌱</div>
+        <h2 style="margin:5px 0;" id="stName">Öğrenci</h2>
+        <div id="rankTitle" style="font-weight:bold; color:var(--primary);">BAŞLANGIÇ</div>
+        <div id="medals" style="font-size:1.5rem; margin:10px 0;"></div>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1; background:rgba(255,255,255,0.5); padding:10px; border-radius:10px;"><b>Kitap</b><br><span id="totalBooks">0</span></div>
+            <div style="flex:1; background:rgba(255,255,255,0.5); padding:10px; border-radius:10px;"><b>Sayfa</b><br><span id="totalPages">0</span></div>
+        </div>
+        
+        <div class="journey-container" id="journeyMap">
+            <div class="stars"></div>
+            <svg id="journeySvg" style="position:absolute; width:100%; height:100%; pointer-events:none;"></svg>
+        </div>
+    </div>
+
+    <div class="glass-panel">
+        <h3 style="margin-top:0; text-align:left;">📚 Kitaplarım</h3>
+        <div id="bookList"></div>
+    </div>
+</div>
+
+<div id="rateModal" class="overlay">
+    <div class="modal-card">
+        <h3>Değerlendir</h3>
+        <div>
+            <button class="star-btn" onclick="setStar(1)">★</button><button class="star-btn" onclick="setStar(2)">★</button><button class="star-btn" onclick="setStar(3)">★</button><button class="star-btn" onclick="setStar(4)">★</button><button class="star-btn" onclick="setStar(5)">★</button>
+        </div>
+        <select id="cardSelect" style="margin-top:10px;"><option value="">Kart Seç...</option></select>
+        <textarea id="comment" placeholder="Yorumun..." style="height:80px; margin-top:10px;"></textarea>
+        <button class="btn" style="margin-top:10px;" onclick="saveReview()">Kaydet</button>
+        <button class="btn" style="margin-top:5px; background:#ccc; color:#333;" onclick="document.getElementById('rateModal').style.display='none'">İptal</button>
+    </div>
+</div>
+
+<script>
+    // --- API LINKINI BURAYA YAPIŞTIR ---
+    const API_URL = "https://script.google.com/macros/s/AKfycbz2gfpF6gPbip0i1KsYnYwnEbx3WkNy9OyYW3rYiIGWT13sBw-EM8cR7nquKgCzscO7/exec";
+
+    let myData = {};
+    let tempId = null, tempRating = 0;
+    
+    const RANKS = [{c:0, t:"Başlangıç", e:"🌱"}, {c:5, t:"Çırak", e:"🥉"}, {c:10, t:"Kurdu", e:"📖"}, {c:15, t:"Kaşif", e:"🚀"}, {c:20, t:"Avcı", e:"🏹"}, {c:25, t:"Muhafız", e:"👑"}, {c:30, t:"Usta", e:"🎩"}, {c:35, t:"Bilge", e:"🌍"}, {c:40, t:"EFSANE", e:"💎"}];
+    const CARDS = {"1":"Macera Hatırası","2":"Öğrenen Profil","3":"Duygu Kartı","4":"Bağlantı Kartı","5":"Eleştiri Kartı","6":"Soru Kartı","7":"Yaratıcı Son","8":"Gelişim","9":"Tavsiye"};
+
+    function login() {
+        let name = document.getElementById('loginName').value.trim().toUpperCase();
+        let pass = document.getElementById('loginPass').value;
+        if(!name || !pass) return alert("Bilgileri gir.");
+        
+        document.getElementById('loader').style.display='block';
+        
+        // Backend'e özel istek atıyoruz: action=student_login
+        fetch(API_URL + "?action=student_login&name=" + encodeURIComponent(name) + "&pass=" + encodeURIComponent(pass))
+        .then(r => r.json())
+        .then(d => {
+            if(d.error) { alert(d.error); document.getElementById('loader').style.display='none'; }
+            else {
+                // Başarılı giriş, veri geldi (sadece benim verim değil, tüm data gelir ama frontend'de süzeriz veya backend süzüp gönderdi)
+                // Backend 'student_login' modunda tüm datayı gönderiyor (şifreler hariç)
+                myData = d;
+                myData.studentName = name; // Kimin girdiğini tut
+                init();
+            }
+        });
+    }
+
+    function init() {
+        document.getElementById('loginOverlay').style.display='none';
+        document.querySelector('.container').style.display='block';
+        
+        let name = myData.studentName;
+        let myRecs = myData.records.filter(r => r.student === name && r.status === "İade Etti");
+        
+        document.getElementById('stName').innerText = name;
+        document.getElementById('totalBooks').innerText = myRecs.length;
+        
+        let p = 0; 
+        if(myData.bookPages) myRecs.forEach(r => p += parseInt(myData.bookPages[r.book]) || 0);
+        document.getElementById('totalPages').innerText = p;
+        
+        let rank = RANKS[0];
+        for(let i=0; i<RANKS.length; i++) if(myRecs.length >= RANKS[i].c) rank = RANKS[i];
+        document.getElementById('rankTitle').innerText = rank.t.toUpperCase();
+        
+        // Uzay Yolu
+        setTimeout(() => renderMap(myRecs.length), 100);
+        
+        // Liste
+        let div = document.getElementById('bookList'); div.innerHTML = "";
+        let active = myData.records.find(r => r.student === name && r.status === "Okuyor");
+        
+        if(active) {
+            div.innerHTML += `<div class="book-card" style="border-left:4px solid #facc15;"><div><b>${active.book}</b><br><span>Okuyorsun...</span></div></div>`;
+        }
+        
+        myRecs.forEach(r => {
+            let btn = r.comment ? "Düzenle" : "Değerlendir";
+            let stars = r.rating ? "⭐".repeat(r.rating) : "";
+            div.innerHTML += `<div class="book-card">
+                <div><b>${r.book}</b><br><span>${r.returnDate} ${stars}</span></div>
+                <button class="action-btn" onclick="openModal(${r.id})">${btn}</button>
+            </div>`;
+        });
+        
+        let cs = document.getElementById('cardSelect');
+        for(let k in CARDS) cs.innerHTML += `<option value="${k}">${CARDS[k]}</option>`;
+    }
+
+    function renderMap(count) {
+        const cont = document.getElementById('journeyMap');
+        const svg = document.getElementById('journeySvg');
+        const points = [{x:15,y:90},{x:85,y:80},{x:15,y:65},{x:85,y:55},{x:15,y:40},{x:85,y:30},{x:15,y:20},{x:85,y:10},{x:50,y:5}];
+        
+        let w = cont.offsetWidth, h = 500;
+        let d = `M ${w*points[0].x/100} ${h*points[0].y/100}`;
+        for(let i=1; i<points.length; i++) d += ` L ${w*points[i].x/100} ${h*points[i].y/100}`;
+        
+        let path = document.createElementNS("http://www.w3.org/2000/svg","path");
+        path.setAttribute("d",d); path.setAttribute("fill","none"); path.setAttribute("stroke","rgba(255,255,255,0.3)"); path.setAttribute("stroke-width","4"); path.setAttribute("stroke-dasharray","8,8");
+        svg.appendChild(path);
+        
+        points.forEach((p, i) => {
+            let r = RANKS[i];
+            let reached = count >= r.c;
+            let node = document.createElement('div');
+            node.className = `station-node ${reached?'active':''}`;
+            node.style.left = p.x + "%"; node.style.top = p.y + "%";
+            node.innerHTML = `<div>${r.e}</div><div class="station-label">${r.t}<br>${r.c}</div>`;
+            
+            if(count >= r.c && (i===RANKS.length-1 || count < RANKS[i+1].c)) {
+                let a = document.createElement('div'); a.className="astronaut"; a.innerText="👨‍🚀";
+                a.style.left = p.x+"%"; a.style.top = (p.y-7)+"%";
+                cont.appendChild(a);
+            }
+            cont.appendChild(node);
+        });
+    }
+
+    function openModal(id) {
+        tempId = id;
+        let r = myData.records.find(x => x.id === id);
+        setStar(r.rating || 0);
+        document.getElementById('cardSelect').value = r.cardId || "";
+        document.getElementById('comment').value = r.comment || "";
+        document.getElementById('rateModal').style.display = 'flex';
+    }
+    
+    function setStar(n) {
+        tempRating = n;
+        let btns = document.getElementById('starGroup').children;
+        for(let i=0; i<5; i++) {
+            if(i < n) btns[i].classList.add('active'); else btns[i].classList.remove('active');
+        }
+    }
+    
+    function saveReview() {
+        if(!tempId) return;
+        let c = document.getElementById('comment').value;
+        let cid = document.getElementById('cardSelect').value;
+        
+        fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "return_student", // Backend'de tanımladığımız güvenli action
+                id: tempId,
+                rating: tempRating,
+                cardId: cid,
+                comment: c
+            })
+        });
+        
+        // Yerel güncelleme
+        let r = myData.records.find(x => x.id === tempId);
+        if(r) { r.rating = tempRating; r.cardId = cid; r.comment = c; }
+        
+        document.getElementById('rateModal').style.display='none';
+        init(); // Ekranı yenile
+        alert("Kaydedildi!");
+    }
+</script>
+</body>
+</html>
