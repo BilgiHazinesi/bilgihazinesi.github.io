@@ -308,8 +308,35 @@ function addSingleStudent() {
         alert("Öğrenci ve şifresi eklendi."); 
     } else { alert("İsim boş veya zaten var."); } 
 }
+// GÜNCELLENMİŞ ÖĞRENCİ SİLME FONKSİYONU
+function delSingleStudent() { 
+    let name = document.getElementById('single-student-del').value.trim().toUpperCase(); 
+    
+    if(name && students.includes(name)) { 
+        // Kullanıcıyı uyaralım çünkü bu işlem geri alınamaz
+        if(confirm("DİKKAT: " + name + " adlı öğrenciyi silmek üzeresiniz.\n\nBu işlem öğrencinin:\n- Şifresini,\n- Şu an okuduğu kitapları,\n- Geçmişteki tüm okumalarını ve YORUMLARINI silecektir.\n\nOnaylıyor musunuz?")) { 
+            
+            // 1. Listeden Sil
+            students = students.filter(s => s !== name); 
+            
+            // 2. Şifresini Sil
+            delete studentPassObj[name]; 
+            
+            // 3. KRİTİK ADIM: Kayıtlardan (Geçmiş ve Şu an) Sil
+            // Öğrenci adı eşleşen tüm kayıtları filtreleyip atıyoruz.
+            records = records.filter(r => r.student !== name);
 
-function delSingleStudent() { let name = document.getElementById('single-student-del').value.trim().toUpperCase(); if(name && students.includes(name)) { if(confirm(name + " adlı öğrenciyi silmek istiyor musunuz?")) { students = students.filter(s => s !== name); delete studentPassObj[name]; updateUI(); syncData(); document.getElementById('single-student-del').value=""; alert("Silindi."); } } else { alert("Öğrenci bulunamadı."); } }
+            // 4. Arayüzü ve Veritabanını Güncelle
+            updateUI(); 
+            syncData(); 
+            
+            document.getElementById('single-student-del').value=""; 
+            alert(name + " ve tüm verileri başarıyla silindi."); 
+        } 
+    } else { 
+        alert("Öğrenci bulunamadı."); 
+    } 
+}
 
 function renderPassManager() {
     let div = document.getElementById('studentPassList');
