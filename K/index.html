@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f5f7fa">
+    <title>Zeynal Öğretmen (V45 Final)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="loginOverlay" class="overlay-bg">
+        <div class="modal-card">
+            <h2 style="margin: 0 0 10px 0; color: var(--text-main);">Kütüphane Girişi</h2>
+            <div class="login-tabs">
+                <button class="login-tab active" onclick="setLoginMode('teacher')" id="tabTeacher">Öğretmen</button>
+                <button class="login-tab" onclick="setLoginMode('student')" id="tabStudent">Öğrenci</button>
+            </div>
+            
+            <div id="teacherLoginForm">
+                <div class="input-wrapper">
+                    <input type="password" id="appPassword" placeholder="Öğretmen Şifresi" style="text-align:center; letter-spacing: 5px;">
+                </div>
+            </div>
+
+            <div id="studentLoginForm" style="display:none;">
+                <div class="input-wrapper">
+                    <input type="text" list="studentListLogin" id="studentLoginName" placeholder="Adını Seç..." onchange="document.getElementById('studentLoginPass').focus()">
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="studentLoginPass" placeholder="Şifren" style="text-align:center;">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="login()">Giriş Yap</button>
+            <div id="loader">Veriler Yükleniyor...</div>
+        </div>
+    </div>
+
+    <div id="ratingOverlay" class="overlay-bg" style="display:none; background: rgba(0,0,0,0.8);">
+        <div class="modal-card" style="background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.2); max-width: 450px;">
+            <h3 style="margin-top:0; color:#fff;">Değerlendirme</h3>
+            <p style="font-size:0.8rem; opacity:0.7; margin-bottom:5px;">Puan & Kart</p>
+            <div class="rating-btn-group" id="starGroup">
+                <button class="rating-btn" onclick="selectStar(1)">1</button>
+                <button class="rating-btn" onclick="selectStar(2)">2</button>
+                <button class="rating-btn" onclick="selectStar(3)">3</button>
+                <button class="rating-btn" onclick="selectStar(4)">4</button>
+                <button class="rating-btn" onclick="selectStar(5)">5</button>
+            </div>
+            <div class="input-wrapper" style="margin-bottom:5px;">
+                <select id="exitCardSelect" onchange="updateCardPrompt()" style="background:rgba(255,255,255,0.1); color:white;">
+                    <option value="">-- Çıkış Kartı Seçiniz --</option>
+                </select>
+            </div>
+            <div id="cardPromptBox" class="card-question" style="display:none;"></div>
+            <div class="input-wrapper" id="commentWrapper" style="display:none;">
+                <textarea id="returnComment" placeholder="Yorumu buraya girin..." style="background:rgba(255,255,255,0.1); color:white;"></textarea>
+                <button class="mic-btn" onclick="startDictation()"><i class="fas fa-microphone"></i></button>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn" style="background:rgba(255,255,255,0.1); color:white; flex:1; margin-bottom:0;" onclick="closeRatingModal()">İptal</button>
+                <button class="btn btn-primary" style="flex:1; margin-bottom:0;" onclick="submitReturn()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bookDetailOverlay" class="overlay-bg" style="display:none;">
+        <div class="modal-card" style="text-align:left; max-width:600px; padding:0; overflow:hidden; background:var(--bg-image);">
+            <div style="padding:20px; position:relative; z-index:2;">
+                <button class="close-overlay-btn" onclick="closeBookDetail()">&times;</button>
+                <h3 id="bdTitle" style="margin:0 0 5px 0; color:var(--primary); text-align:center; font-size:1.5rem;">Kitap Adı</h3>
+                <p id="bdStats" style="font-size:0.9rem; color:var(--text-sub); margin-bottom:10px; text-align:center;">0 Meyve Toplandı</p>
+                
+                <div class="tree-wrapper">
+                    <svg class="tree-svg-container" viewBox="0 0 400 500" preserveAspectRatio="xMidYMax slice">
+                        <defs>
+                            <linearGradient id="trunkGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#4e342e;stop-opacity:1" /><stop offset="100%" style="stop-color:#8d6e63;stop-opacity:1" /></linearGradient>
+                            <radialGradient id="leafGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:#66bb6a;stop-opacity:1" /><stop offset="100%" style="stop-color:#2e7d32;stop-opacity:1" /></radialGradient>
+                        </defs>
+                        <path d="M180,500 L180,400 Q160,350 140,300 Q180,320 200,300 Q220,320 260,300 Q240,350 220,400 L220,500 Z" fill="url(#trunkGrad)" />
+                        <circle cx="200" cy="200" r="140" fill="url(#leafGrad)" opacity="0.9" /><circle cx="120" cy="250" r="80" fill="url(#leafGrad)" opacity="0.8" /><circle cx="280" cy="250" r="80" fill="url(#leafGrad)" opacity="0.8" /><circle cx="200" cy="100" r="90" fill="url(#leafGrad)" opacity="0.9" />
+                    </svg>
+                    <div id="treeFruitsContainer"></div>
+                    <div id="fruitDetailBox" class="fruit-detail-modal">
+                        <div style="font-weight:800; font-size:1.1rem; color:var(--primary); margin-bottom:5px;" id="fdStudent"></div>
+                        <div style="font-size:0.85rem; background:rgba(59,130,246,0.1); display:inline-block; padding:3px 10px; border-radius:12px; margin-bottom:10px;" id="fdCard"></div>
+                        <div style="font-style:italic; font-size:1rem; line-height:1.4;" id="fdComment"></div>
+                    </div>
+                </div>
+
+                <h4 style="margin:20px 0 10px 0; color:var(--text-main); border-bottom:2px solid var(--primary); display:inline-block;">Tüm Yorumlar</h4>
+                <div id="bdReviews" class="all-reviews-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="appContainer" style="display:none;">
+        <div class="app-header">
+            <div class="app-title" id="mainTitle">Zeynal Öğretmen</div>
+            <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">🌙</button>
+        </div>
+        
+        <div class="container" id="teacherContainer" style="display:none;">
+            <div class="glass-panel" style="padding: 15px; padding-bottom: 10px; margin-bottom: 20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem; font-weight:600; color:var(--text-sub);"><span>🎯 Sınıf Hedefi</span><span id="targetText">0 / 500 Kitap</span></div>
+                <div class="progress-container"><div class="progress-fill" id="progressBar" style="width: 0%;"></div><div class="progress-text" id="progressPercent">0%</div></div>
+            </div>
+            
+            <div id="tab-lend" class="section active">
+                <div class="glass-panel">
+                    <h3 style="margin:0 0 15px 0; color:var(--primary);">Hızlı İşlem</h3>
+                    <div class="input-wrapper"><input type="text" list="studentList" id="studentInput" placeholder="Öğrenci Seçiniz..." oninput="handleInput(this); renderHistory()"><i class="fas fa-times-circle clear-btn" onclick="clearField('studentInput', renderHistory)"></i><datalist id="studentList"></datalist></div>
+                    <div class="input-wrapper"><input type="text" list="bookList" id="bookInput" placeholder="Kitap Seçiniz..." oninput="handleInput(this)"><i class="fas fa-times-circle clear-btn" onclick="clearField('bookInput')"></i><datalist id="bookList"></datalist></div>
+                    <button class="btn btn-primary" onclick="lendBook()">Kitabı Teslim Et</button>
+                </div>
+                <div class="glass-panel">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h4 style="margin:0; color:var(--text-main);">Son Hareketler</h4><span id="syncStatus" style="font-size:0.75rem; color:var(--text-sub); opacity:0.7;">Senkronize</span></div>
+                    <div id="historyList"></div>
+                </div>
+            </div>
+
+            <div id="tab-books" class="section">
+                <div class="glass-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div class="filter-group" style="margin-bottom:0; flex:1;"><div class="filter-chip active" onclick="filterBooks('all', this)">Tümü</div><div class="filter-chip" onclick="filterBooks('out', this)">Dışarıda</div><div class="filter-chip" onclick="filterBooks('rating', this)">Puan</div></div>
+                    <button class="btn-edit-toggle" id="editToggleBtn" onclick="toggleEditMode()">✏️ Düzenle</button>
+                    </div>
+                    <div class="input-wrapper"><input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="handleInput(this); renderBookManager()"><i class="fas fa-times-circle clear-btn" onclick="clearField('bookSearch', renderBookManager)"></i></div>
+                    <div id="bookManagerList"></div>
+                </div>
+                <div class="glass-panel">
+                    <h4 style="margin:0 0 10px 0; color:var(--text-main);">Yeni Kitap Ekle</h4>
+                    <div class="input-wrapper"><input type="text" id="newBookInput" placeholder="Kitap Adı..." oninput="handleInput(this)"><i class="fas fa-times-circle clear-btn" onclick="clearField('newBookInput')"></i></div>
+                    <button class="btn btn-primary" onclick="addNewBook()">Ekle</button>
+                </div>
+            </div>
+
+            <div id="tab-report" class="section">
+                <div class="glass-panel">
+                    <h3 style="margin:0 0 15px 0; color:var(--primary);">Motivasyon Raporu</h3>
+                    <div class="input-wrapper"><input type="text" list="studentList" id="reportStudentInput" placeholder="Öğrenci Seçiniz..." oninput="handleInput(this); genReport()"><i class="fas fa-times-circle clear-btn" onclick="clearField('reportStudentInput')"></i></div>
+                    <div id="reportOutput" style="background:var(--input-bg); padding:15px; border-radius:12px; margin:15px 0; white-space:pre-wrap; font-size:0.9rem; color:var(--text-main); border:var(--glass-border);">...</div>
+                    <button class="btn btn-primary" onclick="copyReport()"><i class="far fa-copy"></i> Kopyala</button>
+                    <div class="journey-container" id="spaceJourney"><div class="stars"></div><svg class="svg-path" id="journeySvg"></svg></div>
+                </div>
+            </div>
+
+            <div id="tab-stats" class="section">
+                <div class="stats-summary"><div class="summary-box"><div class="sb-title">🥇 Lider (Kitap)</div><div class="sb-value" id="statTopReader">-</div></div><div class="summary-box"><div class="sb-title">📖 Toplam Sayfa</div><div class="sb-value" id="statTotalPages">0</div></div></div>
+                <div class="glass-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h3 style="margin:0; color:var(--primary);">🏆 Okuma Sıralaması</h3><button class="sort-btn" onclick="toggleStatsSort()" id="sortBtnIcon">Sırala: Kitap ⬇</button></div>
+                    <div id="rankingList"></div>
+                </div>
+            </div>
+
+            <div id="tab-settings" class="section">
+                <div class="glass-panel">
+                    <h3 style="margin:0 0 15px 0; color:var(--primary);">⚙️ Genel Ayarlar</h3>
+                    <label class="setting-label">Sınıf Kitap Hedefi</label><div class="input-wrapper"><input type="number" id="set-target" placeholder="Örn: 500"></div>
+                    <div class="setting-row"><div style="flex:1"><label class="setting-label">Gümüş Madalya</label><input type="number" id="set-silver" placeholder="3"></div><div style="flex:1"><label class="setting-label">Altın Madalya</label><input type="number" id="set-gold" placeholder="5"></div></div>
+                    <button class="btn btn-primary" onclick="saveSettings()">Ayarları Kaydet</button>
+                </div>
+                <div class="glass-panel">
+                    <h3 style="margin:0 0 15px 0; color:var(--primary);">👥 Öğrenci & Şifre Yönetimi</h3>
+                    <div class="input-wrapper" style="margin-bottom:5px;"><input type="text" id="single-student-add" placeholder="Yeni Öğrenci Adı..."></div>
+                    <div class="input-wrapper"><input type="text" id="single-student-pass" placeholder="Öğrenci Şifresi (İsteğe bağlı)"></div>
+                    <button class="btn btn-primary" onclick="addSingleStudent()">Öğrenciyi Kaydet</button>
+                    
+                    <div class="divider-text">Mevcut Şifreleri Düzenle</div>
+                    <div id="studentPassList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div>
+                    
+                    <div class="divider-text" style="color:#ef4444;">Silme İşlemleri</div>
+                    <div style="display:flex; gap:5px;"><input type="text" list="studentList" id="single-student-del" placeholder="Silinecek Öğrenci..." style="flex:1;"><button class="btn btn-danger" style="width:auto; margin-bottom:0;" onclick="delSingleStudent()">Sil</button></div>
+                </div>
+                <div class="glass-panel" style="border: 1px solid rgba(220, 38, 38, 0.3);"><h3 style="margin:0 0 15px 0; color:#ef4444;">⚠️ Tehlikeli Bölge</h3><button class="btn btn-danger" onclick="resetAllData()">Tüm Verileri Sıfırla</button></div>
+            </div>
+        </div>
+        
+        <div class="bottom-nav" id="teacherNav" style="display:none;">
+            <button class="nav-item active" onclick="switchTab('lend', this)"><i class="fas fa-home"></i><span>Giriş</span></button>
+            <button class="nav-item" onclick="switchTab('books', this)"><i class="fas fa-book"></i><span>Kitaplar</span></button>
+            <button class="nav-item" onclick="switchTab('report', this)"><i class="fas fa-file-invoice"></i><span>Rapor</span></button>
+            <button class="nav-item" onclick="switchTab('stats', this)"><i class="fas fa-chart-pie"></i><span>İstatistik</span></button>
+            <button class="nav-item" onclick="switchTab('settings', this)"><i class="fas fa-cog"></i><span>Ayarlar</span></button>
+        </div>
+
+        <div class="container" id="studentContainer" style="display:none;">
+            <div class="glass-panel">
+                <h3 style="color:var(--primary); margin:0;">Hoşgeldin, <span id="studentNameDisplay"></span>! 👋</h3>
+                <p style="font-size:0.9rem; color:var(--text-sub);">Okuma maceran burada.</p>
+            </div>
+            
+            <div id="tab-student-home" class="section active">
+                <div class="glass-panel">
+                    <h4 style="margin:0 0 10px 0; color:var(--text-main);">Okuduğum Kitaplar & Yorumlar</h4>
+                    <div id="studentMyBooksList"></div>
+                </div>
+                <div class="glass-panel">
+                    <h4 style="margin:0 0 10px 0; color:var(--text-main);">Benim Bilgi Ağacım 🌳</h4>
+                    <div id="studentTreeArea"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-nav" id="studentNav" style="display:none;">
+            <button class="nav-item active"><i class="fas fa-user-astronaut"></i><span>Profilim</span></button>
+            <button class="nav-item" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i><span>Çıkış</span></button>
+        </div>
+    </div>
+
+    <datalist id="studentList"></datalist>
+    <datalist id="bookList"></datalist>
+    <datalist id="studentListLogin"></datalist>
+
+    <script src="script.js"></script>
+</body>
+</html>
