@@ -1,4 +1,4 @@
-// API Adresini Buraya Yapıştır (Google Apps Script Web App URL)
+// GÜNCEL API ADRESİN (Hatasız)
 const API_URL = "https://script.google.com/macros/s/AKfycbyZ04E6UczH1FwC926Li7Ln1NoCFk7hSgg9tdm8fS7qpYQMAxAUi27Q0DtznRQmRy8-/exec";
 
 let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
@@ -6,6 +6,7 @@ let students = []; let books = []; let bookPages = {}; let records = []; let stu
 let teacherPassword = ""; let activeBooksMap = {}; let lastHistoryMap = {};
 let currentFilter = 'all'; let statsSortMode = 'book_desc'; let tempReturnId = null; let isEditMode = false; let currentRating = 0;
 let loginMode = 'teacher'; let loggedInStudent = "";
+let isDataLoaded = false; // Veri yüklendi mi kontrolü
 
 const RANKS = [{c:0, t:"🌱 Başlangıç"}, {c:5, t:"🥉 Okuma Çırağı"}, {c:10, t:"📖 Kitap Kurdu"},{c:15, t:"🚀 Bilgi Kaşifi"}, {c:20, t:"🏹 Kelime Avcısı"}, {c:25, t:"👑 Kütüphane Muhafızı"},{c:30, t:"🎩 Edebiyat Ustası"}, {c:35, t:"🌍 Bilge Okur"}, {c:40, t:"💎 EFSANE"}];
 const EXIT_CARDS = {"1":{title:"Macera Hatırası",prompt:"En unutulmaz sahne neydi?"},"2":{title:"Öğrenen Profil",prompt:"Karakter hangi özelliği taşıyor?"},"3":{title:"Duygu Kartı",prompt:"Hangi duyguları hissettin?"},"4":{title:"Bağlantı Kartı",prompt:"Nasıl bir bağ kurdun?"},"5":{title:"Eleştiri Kartı",prompt:"Katılmadığın bir olay var mı?"},"6":{title:"Soru Kartı",prompt:"Seni düşündüren soru neydi?"},"7":{title:"Yaratıcı Son",prompt:"Sonunu nasıl değiştirirdin?"},"8":{title:"Gelişim Kartı",prompt:"Hangi becerini geliştirdi?"},"9":{title:"Tavsiye Kartı",prompt:"Tavsiye eder misin?"}};
@@ -30,8 +31,12 @@ function fetchData(isFirstLoad) {
         processData(data);
         if(isFirstLoad) {
             document.getElementById('loader').style.display = 'none';
+            isDataLoaded = true; // Veri hazır
             populateDatalists();
         }
+    }).catch(err => {
+        document.getElementById('loader').innerText = "Bağlantı Hatası! Lütfen sayfayı yenileyin.";
+        console.error(err);
     });
 }
 
@@ -50,11 +55,16 @@ function setLoginMode(mode) {
     }
 }
 
-// --- GÜNCELLENDİ: Sadece Şifre ile Giriş ---
 function login() {
+    if(!isDataLoaded) {
+        alert("Veriler henüz yüklenmedi, lütfen 2-3 saniye bekleyip tekrar deneyin.");
+        return;
+    }
+
     if(loginMode === 'teacher') {
         let pass = document.getElementById('appPassword').value;
-        if(pass === teacherPassword) {
+        // String'e çevirerek kontrol et (Sayı/Yazı hatasını önler)
+        if(String(pass).trim() === String(teacherPassword).trim()) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             document.getElementById('teacherContainer').style.display = 'block';
@@ -66,8 +76,8 @@ function login() {
         let sPass = document.getElementById('studentLoginPass').value.trim();
         if(!sPass) return alert("Lütfen şifreni gir.");
 
-        // Şifreden Öğrenciyi Bulma
-        let foundStudent = Object.keys(studentPassObj).find(key => studentPassObj[key] === sPass);
+        // Şifreden Öğrenciyi Bulma (Sayı/Yazı hatasını önler)
+        let foundStudent = Object.keys(studentPassObj).find(key => String(studentPassObj[key]).trim() === String(sPass));
 
         if(foundStudent) {
             loggedInStudent = foundStudent;
@@ -106,7 +116,7 @@ function syncData() {
     });
 }
 
-// --- GÜNCELLENDİ: Yeni Öğrenci Paneli (Ağaç Yok, Harita Var) ---
+// --- ÖĞRENCİ PANELİ ---
 function renderStudentPanel() {
     // A. İstatistikleri Hesapla
     let myRecs = records.filter(r => r.student === loggedInStudent);
@@ -157,7 +167,7 @@ function renderStudentPanel() {
     });
 }
 
-// --- GÜNCELLENDİ: Esnek Uzay Haritası (Hem Öğretmen Hem Öğrenci İçin) ---
+// --- Esnek Uzay Haritası (Hem Öğretmen Hem Öğrenci İçin) ---
 function renderSpaceJourney(count, containerId, svgId) { 
     // Parametre gelmezse varsayılan (öğretmen paneli) kullan
     if(!containerId) containerId = 'spaceJourney';
@@ -332,7 +342,6 @@ function showFruitDetail(rec) {
 }
 function closeBookDetail() { document.getElementById('bookDetailOverlay').style.display = 'none'; }
 
-// --- GÜNCELLENDİ: Rapor Fonksiyonu (Parametre Eklendi) ---
 function genReport() { 
     const s = document.getElementById('reportStudentInput').value.trim().toUpperCase(); 
     if(!s) return; 
@@ -408,10 +417,8 @@ function addNewBook() { const val = document.getElementById('newBookInput').valu
 function copyReport() { navigator.clipboard.writeText(document.getElementById('reportOutput').innerText); alert("Kopyalandı!"); }
 function populateDatalists() { 
     let sl = document.getElementById('studentList'); sl.innerHTML = ''; 
-    let sLogin = document.getElementById('studentListLogin'); sLogin.innerHTML = '';
     students.sort().forEach(s => { 
         sl.innerHTML += `<option value="${s}">`;
-        sLogin.innerHTML += `<option value="${s}">`;
     }); 
     let bl = document.getElementById('bookList'); bl.innerHTML = ''; books.sort().forEach(b => bl.innerHTML += `<option value="${b}">`); 
 }
