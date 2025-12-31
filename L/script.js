@@ -1,5 +1,5 @@
 // --- ZEYNAL ÖĞRETMEN V58 (CACHE BUSTING & HATA GÖSTERİMİ) ---
-const API_URL = "https://script.google.com/macros/s/AKfycbzRBLcIQXrBvYGkQW3GOe4Yb-tXigs1CKBiahldhdtpw0_EdN733Jfgdn1zrZgSC4R5/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzFt1YQcoM5HVrYpQlq4NxdJS1GEVRtpUOTAsJ-Pns/dev";
 
 let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
 let students = []; 
