@@ -344,4 +344,80 @@ function genReport() {
     let txt = `Sayın Velimiz,\n\n✨ "Her kitap keşfedilmeyi bekleyen ayrı bir dünyadır."\n\nÖğrencimiz *${s}*, bu dönem kütüphanemizden toplam *${myRecs.length}* kitap okuyarak okuma yolculuğunu zenginleştirmiştir.\nToplam Okunan Sayfa: *${totalP}*\n\n`; 
     if (currentlyReading.length > 0) { txt += `🔴 *Şu An Okuduğu:* \n`; currentlyReading.forEach(r => { txt += `- ${r.book} (Alış: ${r.date})\n`; }); txt += `\n`; } 
     if (history.length > 0) { txt += `📚 *Keşfettiği Dünyalar:* \n`; history.forEach((r, i) => { txt += `${i+1}. ${r.book} (✅ Okudu)\n`; }); } 
-    txt += `\nİlginiz ve desteğiniz için teşekkür ederiz.\nZeynal Öğretmen`;
+    txt += `\nİlginiz ve desteğiniz için teşekkür ederiz.\nZeynal Öğretmen`; 
+    document.getElementById('reportOutput').innerText = txt; 
+    
+    // Rapor için harita çiz (Öğretmen ID'leri ile)
+    renderSpaceJourney(myRecs.length, 'spaceJourney', 'journeySvg'); 
+}
+
+function saveSettings() { let t = parseInt(document.getElementById('set-target').value); let s = parseInt(document.getElementById('set-silver').value); let g = parseInt(document.getElementById('set-gold').value); if(!t || !s || !g) { alert("Lütfen geçerli sayılar girin."); return; } settings.classTarget = t; settings.silverLimit = s; settings.goldLimit = g; updateUI(); syncData(); alert("Ayarlar kaydedildi!"); }
+
+// YENİ ŞİFRE VE ÖĞRENCİ YÖNETİMİ
+function addSingleStudent() { 
+    let name = document.getElementById('single-student-add').value.trim().toUpperCase(); 
+    let pass = document.getElementById('single-student-pass').value.trim();
+    if(name && !students.includes(name)) { 
+        students.push(name); students.sort(); 
+        studentPassObj[name] = pass; // Şifreyi kaydet
+        updateUI(); syncData(); 
+        document.getElementById('single-student-add').value=""; 
+        document.getElementById('single-student-pass').value="";
+        alert("Öğrenci ve şifresi eklendi."); 
+    } else { alert("İsim boş veya zaten var."); } 
+}
+
+function delSingleStudent() { 
+    let name = document.getElementById('single-student-del').value.trim().toUpperCase(); 
+    if(name && students.includes(name)) { 
+        if(confirm("DİKKAT: " + name + " adlı öğrenciyi silmek üzeresiniz.\n\nBu işlem öğrencinin:\n- Şifresini,\n- Şu an okuduğu kitapları,\n- Geçmişteki tüm okumalarını ve YORUMLARINI silecektir.\n\nOnaylıyor musunuz?")) { 
+            students = students.filter(s => s !== name); 
+            delete studentPassObj[name]; 
+            records = records.filter(r => r.student !== name);
+            updateUI(); 
+            syncData(); 
+            document.getElementById('single-student-del').value=""; 
+            alert(name + " ve tüm verileri başarıyla silindi."); 
+        } 
+    } else { 
+        alert("Öğrenci bulunamadı."); 
+    } 
+}
+
+function renderPassManager() {
+    let div = document.getElementById('studentPassList');
+    div.innerHTML = "";
+    students.sort().forEach(s => {
+        let pass = studentPassObj[s] || "";
+        div.innerHTML += `
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; border-bottom:1px solid rgba(0,0,0,0.1); padding:5px;">
+            <span style="font-size:0.9rem; font-weight:600;">${s}</span>
+            <input type="text" value="${pass}" placeholder="Şifre Yok" 
+                style="width:80px; padding:4px; font-size:0.8rem; text-align:center; border:1px solid #ccc; border-radius:4px;"
+                onchange="updateStudentPass('${s}', this.value)">
+        </div>`;
+    });
+}
+
+function updateStudentPass(name, newPass) {
+    studentPassObj[name] = newPass;
+    syncData();
+}
+
+function addNewBook() { const val = document.getElementById('newBookInput').value.trim(); if(val && !books.includes(val)) { books.push(val); books.sort(); document.getElementById('newBookInput').value = ""; updateUI(); syncData(); } }
+function copyReport() { navigator.clipboard.writeText(document.getElementById('reportOutput').innerText); alert("Kopyalandı!"); }
+function populateDatalists() { 
+    let sl = document.getElementById('studentList'); sl.innerHTML = ''; 
+    let sLogin = document.getElementById('studentListLogin'); sLogin.innerHTML = '';
+    students.sort().forEach(s => { 
+        sl.innerHTML += `<option value="${s}">`;
+        sLogin.innerHTML += `<option value="${s}">`;
+    }); 
+    let bl = document.getElementById('bookList'); bl.innerHTML = ''; books.sort().forEach(b => bl.innerHTML += `<option value="${b}">`); 
+}
+function resetAllData() { let p = prompt("TÜM VERİLERİ SİLMEK İÇİN ŞİFREYİ GİRİN:"); if(p === teacherPassword) { if(confirm("Emin misiniz? Tüm öğrenciler, kitaplar ve kayıtlar silinecek!")) { students = []; books = []; records = []; bookPages = {}; studentPassObj={}; settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 }; updateUI(); syncData(); alert("Sıfırlandı."); } } else { alert("Hatalı şifre!"); } }
+function getMedals(count) { let goldCount = Math.floor(count / settings.goldLimit); let silverCount = Math.floor(count / settings.silverLimit); let medals = ""; for(let i=0; i<goldCount; i++) medals += "🥇"; for(let i=0; i<silverCount; i++) medals += "🥈"; return medals; }
+function getRank(count) { if(count >= 40) return "💎 EFSANE"; if(count >= 35) return "🌍 Bilge Okur"; if(count >= 30) return "🎩 Edebiyat Ustası"; if(count >= 25) return "👑 Kütüphane Muhafızı"; if(count >= 20) return "🏹 Kelime Avcısı"; if(count >= 15) return "🚀 Bilgi Kaşifi"; if(count >= 10) return "📖 Kitap Kurdu"; if(count >= 5)  return "🥉 Okuma Çırağı"; return "🌱 Başlangıç"; }
+function toggleStatsSort() { if(statsSortMode === 'book_desc') { statsSortMode = 'book_asc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬆"; } else if (statsSortMode === 'book_asc') { statsSortMode = 'page_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Sayfa ⬇"; } else { statsSortMode = 'book_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬇"; } renderRanking(); }
+function renderRanking() { let counts = {}; let pageCounts = {}; records.forEach(r => { if(r.status === "İade Etti") { counts[r.student] = (counts[r.student]||0)+1; let p = parseInt(bookPages[r.book]) || 0; pageCounts[r.student] = (pageCounts[r.student]||0) + p; } }); let sorted = Object.keys(counts).map(k => ({n:k, c:counts[k], p:pageCounts[k]})); if(sorted.length > 0) { let topReader = sorted.reduce((prev, current) => (prev.c > current.c) ? prev : current); document.getElementById('statTopReader').innerText = topReader.n; } else { document.getElementById('statTopReader').innerText = "-"; } if(statsSortMode === 'book_desc') sorted.sort((a,b) => b.c - a.c); else if(statsSortMode === 'book_asc') sorted.sort((a,b) => a.c - b.c); else if(statsSortMode === 'page_desc') sorted.sort((a,b) => b.p - a.p); let html = ""; sorted.forEach((s,i) => { let rank = getRank(s.c); let medals = getMedals(s.c); let highlight = (i === 0 && statsSortMode !== 'book_asc') ? "color:#f59e0b;" : "color:var(--text-sub);"; let rankNum = (i === sorted.length - 1 && sorted.length > 1) ? `<span style="color:#ef4444; font-size:0.7rem;">(Son)</span>` : `${i+1}.`; if (i === 0) rankNum = "👑"; html += `<div class="list-item"><div class="item-content"><span style="font-weight:bold; ${highlight} margin-right:10px; min-width:20px; display:inline-block;">${rankNum}</span><span style="font-weight:600;">${s.n}</span><div class="rank-info">${rank}</div><div class="medal-container">${medals}</div></div><div style="text-align:right;"><div style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c} Kitap</div><div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">${s.p.toLocaleString()} Sayfa</div></div></div>`; }); document.getElementById('rankingList').innerHTML = html; }
+function deleteRecord(id) { if(confirm("Silmek istiyor musunuz?")) { records = records.filter(r => r.id !== id); updateUI(); syncData(); } }
