@@ -1,6 +1,6 @@
 // --- ZEYNAL ÖĞRETMEN: V55 (İNGİLİZCE SAYFA İSİMLERİ) ---
 // ADIM 2'DE ALDIĞIN YENİ URL'Yİ BURAYA YAPIŞTIR:
-const API_URL = "https://script.google.com/macros/s/AKfycbz34XtS_F47CQ1qdma7datJAcFOs_SxLijvuN7SlO91eL_IwT9-Qdysktklw7Q9KvO2/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwuQE2hbFbx671RMW_qdF63_-bVp4qyDCMY6uVU1V1S-LpSOoLbYdmOcJ5hBfR2F49z/exec"; 
 
 let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
 let students = []; 
