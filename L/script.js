@@ -1,6 +1,7 @@
-// --- ZEYNAL ÖĞRETMEN V58 (CACHE BUSTING & HATA GÖSTERİMİ) ---
-const API_URL = "https://script.google.com/macros/s/AKfycbzFt1YQcoM5HVrYpQlq4NxdJS1GEVRtpUOTAsJ-Pns/dev";
+// --- ZEYNAL ÖĞRETMEN V60 (HATA DÜZELTİLMİŞ FİNAL SÜRÜM) ---
+const API_URL = "https://script.google.com/macros/s/AKfycbz1ueTQMEmUVfnVr1wdwl1c1hz4xpOXVOmFTr5KLdozkHLfJDk12hSqe-dnB44W1wvu/exec";
 
+// --- GLOBAL DEĞİŞKENLER (Hata vermemesi için en başta tanımlı) ---
 let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
 let students = []; 
 let books = []; 
@@ -12,9 +13,17 @@ let loginMode = 'teacher';
 let loggedInStudent = "";
 let isDataLoaded = false;
 
+// *** İŞTE HATAYI ÇÖZEN SATIR BURASI ***
+let currentFilter = 'all'; // Bu değişken eksikti veya silinmişti.
+let statsSortMode = 'book_desc'; 
+let tempReturnId = null; 
+let isEditMode = false; 
+let currentRating = 0;
+
 const RANKS = [{c:0, t:"🌱 Başlangıç"}, {c:5, t:"🥉 Okuma Çırağı"}, {c:10, t:"📖 Kitap Kurdu"},{c:15, t:"🚀 Bilgi Kaşifi"}, {c:20, t:"🏹 Kelime Avcısı"}, {c:25, t:"👑 Kütüphane Muhafızı"},{c:30, t:"🎩 Edebiyat Ustası"}, {c:35, t:"🌍 Bilge Okur"}, {c:40, t:"💎 EFSANE"}];
 const EXIT_CARDS = {"1":{title:"Macera Hatırası",prompt:"En unutulmaz sahne neydi?"},"2":{title:"Öğrenen Profil",prompt:"Karakter hangi özelliği taşıyor?"},"3":{title:"Duygu Kartı",prompt:"Hangi duyguları hissettin?"},"4":{title:"Bağlantı Kartı",prompt:"Nasıl bir bağ kurdun?"},"5":{title:"Eleştiri Kartı",prompt:"Katılmadığın bir olay var mı?"},"6":{title:"Soru Kartı",prompt:"Seni düşündüren soru neydi?"},"7":{title:"Yaratıcı Son",prompt:"Sonunu nasıl değiştirirdin?"},"8":{title:"Gelişim Kartı",prompt:"Hangi becerini geliştirdi?"},"9":{title:"Tavsiye Kartı",prompt:"Tavsiye eder misin?"}};
 
+// --- YARDIMCI FONKSİYONLAR ---
 function handleInput(input) { let btn = input.nextElementSibling; if(btn && btn.classList.contains('clear-btn')) { btn.style.display = input.value.length > 0 ? 'block' : 'none'; } }
 function clearField(id, callback) { let input = document.getElementById(id); input.value = ""; handleInput(input); if (callback) callback(); }
 function toggleTheme() { document.body.classList.toggle('dark-mode'); let isDark = document.body.classList.contains('dark-mode'); document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙'; localStorage.setItem('theme', isDark ? 'dark' : 'light'); }
@@ -25,24 +34,27 @@ window.onload = function() {
     if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('themeIcon').innerText = '☀️'; } else { document.getElementById('themeIcon').innerText = '🌙'; }
     let select = document.getElementById('exitCardSelect'); 
     for (const [key, value] of Object.entries(EXIT_CARDS)) { let opt = document.createElement('option'); opt.value = key; opt.innerText = value.title; select.appendChild(opt); }
+    
     fetchData(true);
 };
 
 function fetchData(isFirstLoad) {
-     // Cache'i engellemek için sonuna tarih ekliyoruz
+     // Cache busting (Önbellek temizleme)
      let uniqueUrl = API_URL + "?t=" + new Date().getTime();
-     
+
      fetch(uniqueUrl).then(res => res.json()).then(data => {
-        if(data.error) return alert("Sunucu Hatası: " + data.error);
+        if(data.error) { alert("Hata: " + data.error); return; }
         
         processData(data);
+        
         if(isFirstLoad) {
             document.getElementById('loader').style.display = 'none';
             isDataLoaded = true; 
             populateDatalists();
+            console.log("Veriler yüklendi. Kitap sayısı:", books.length);
         }
     }).catch(err => {
-        document.getElementById('loader').innerText = "Bağlantı Hatası! Lütfen sayfayı yenileyin.";
+        document.getElementById('loader').innerText = "Bağlantı Hatası!";
         console.error(err);
     });
 }
@@ -51,7 +63,7 @@ function processData(data) {
     if(data.students) students = data.students;
     if(data.studentPass) studentPassObj = data.studentPass;
     
-    // Kitap verisi geldi mi kontrolü
+    // Kitapları dizi olarak garantiye al
     if(data.books && Array.isArray(data.books)) {
         books = data.books;
     } else {
@@ -198,8 +210,7 @@ function renderBookManager() {
     const div = document.getElementById('bookManagerList');
     div.innerHTML = "";
     
-    // Kitap listesi boşsa uyarı ver
-    if(books.length === 0) {
+    if(!books || books.length === 0) {
         div.innerHTML = "<div style='text-align:center; padding:20px; opacity:0.6;'>Kitap listesi boş görünüyor.<br>Sayfayı yenilemeyi deneyin.</div>";
         return;
     }
@@ -350,32 +361,4 @@ function getMedals(count) { let goldCount = Math.floor(count / settings.goldLimi
 function getRank(count) { if(count >= 40) return "💎 EFSANE"; if(count >= 35) return "🌍 Bilge Okur"; if(count >= 30) return "🎩 Edebiyat Ustası"; if(count >= 25) return "👑 Kütüphane Muhafızı"; if(count >= 20) return "🏹 Kelime Avcısı"; if(count >= 15) return "🚀 Bilgi Kaşifi"; if(count >= 10) return "📖 Kitap Kurdu"; if(count >= 5)  return "🥉 Okuma Çırağı"; return "🌱 Başlangıç"; }
 function toggleStatsSort() { if(statsSortMode === 'book_desc') { statsSortMode = 'book_asc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬆"; } else if (statsSortMode === 'book_asc') { statsSortMode = 'page_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Sayfa ⬇"; } else { statsSortMode = 'book_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬇"; } renderRanking(); }
 function renderRanking() { let counts = {}; let pageCounts = {}; records.forEach(r => { if(r.status === "İade Etti") { counts[r.student] = (counts[r.student]||0)+1; let p = parseInt(bookPages[r.book]) || 0; pageCounts[r.student] = (pageCounts[r.student]||0) + p; } }); let sorted = Object.keys(counts).map(k => ({n:k, c:counts[k], p:pageCounts[k]})); if(sorted.length > 0) { let topReader = sorted.reduce((prev, current) => (prev.c > current.c) ? prev : current); document.getElementById('statTopReader').innerText = topReader.n; } else { document.getElementById('statTopReader').innerText = "-"; } if(statsSortMode === 'book_desc') sorted.sort((a,b) => b.c - a.c); else if(statsSortMode === 'book_asc') sorted.sort((a,b) => a.c - b.c); else if(statsSortMode === 'page_desc') sorted.sort((a,b) => b.p - a.p); let html = ""; sorted.forEach((s,i) => { let rank = getRank(s.c); let medals = getMedals(s.c); let highlight = (i === 0 && statsSortMode !== 'book_asc') ? "color:#f59e0b;" : "color:var(--text-sub);"; let rankNum = (i === sorted.length - 1 && sorted.length > 1) ? `<span style="color:#ef4444; font-size:0.7rem;">(Son)</span>` : `${i+1}.`; if (i === 0) rankNum = "👑"; html += `<div class="list-item"><div class="item-content"><span style="font-weight:bold; ${highlight} margin-right:10px; min-width:20px; display:inline-block;">${rankNum}</span><span style="font-weight:600;">${s.n}</span><div class="rank-info">${rank}</div><div class="medal-container">${medals}</div></div><div style="text-align:right;"><div style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c} Kitap</div><div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">${s.p.toLocaleString()} Sayfa</div></div></div>`; }); document.getElementById('rankingList').innerHTML = html; }
-function renderStudentPanel() {
-    let myRecs = records.filter(r => r.student === loggedInStudent);
-    let completedRecs = myRecs.filter(r => r.status === "İade Etti");
-    let totalBooks = completedRecs.length;
-    let totalPages = 0;
-    completedRecs.forEach(r => totalPages += (parseInt(bookPages[r.book]) || 0));
-
-    document.getElementById('stName').innerText = loggedInStudent;
-    document.getElementById('stRank').innerText = getRank(totalBooks); 
-    document.getElementById('stMedals').innerText = getMedals(totalBooks); 
-    document.getElementById('stBookCount').innerText = totalBooks;
-    document.getElementById('stPageCount').innerText = totalPages;
-
-    renderSpaceJourney(totalBooks, 'studentSpaceJourney', 'studentJourneySvg');
-
-    const listDiv = document.getElementById('studentMyBooksList');
-    listDiv.innerHTML = "";
-    if(myRecs.length === 0) listDiv.innerHTML = "<p style='text-align:center; opacity:0.6;'>Henüz bir macera başlamadı.</p>";
-    
-    myRecs.forEach(r => {
-        let statusHtml = r.status === "Okuyor" ? `<span style="color:#2563eb; font-weight:bold;">Okuyorsun</span>` : `<span style="color:#10b981; font-weight:bold;">Teslim Ettin</span>`;
-        let actionBtn = "";
-        if(r.status === "İade Etti") {
-            actionBtn = !r.rating ? `<button class="btn-comment" onclick="studentRateBook(${r.id})">Değerlendir</button>` : `<span style="font-size:0.8rem; color:#f59e0b;">⭐ ${r.rating}</span>`;
-        }
-        listDiv.innerHTML += `<div class="list-item"><div class="item-content"><h4>${r.book}</h4><p>${r.date} • ${statusHtml}</p></div>${actionBtn}</div>`;
-    });
-}
 function deleteRecord(id) { if(confirm("Silmek istiyor musunuz?")) { records = records.filter(r => r.id !== id); updateUI(); syncData(); } }
