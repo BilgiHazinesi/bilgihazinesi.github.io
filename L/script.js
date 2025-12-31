@@ -1,5 +1,5 @@
 // --- YENİ EKLENEN GÜNCEL API ADRESİ ---
-const API_URL = "https://script.google.com/macros/s/AKfycbzPv57QTnIL3tFJSd3AV0dA-bLUaiPT4JYQl6Re8IfqSZ_ZKG3wfwbw6Yhb8wloPg0/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwAK6dSae6mhpNDF4zByJBGqeFjc-h_QTrWohgHoo3FkifInJuSxaQIg-dDn256P0xd/exec";
 
 let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
 let students = []; let books = []; let bookPages = {}; let records = []; let studentPassObj = {};
