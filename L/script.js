@@ -1,10 +1,10 @@
-// --- ZEYNAL ÖĞRETMEN: V54 (SORUNSUZ ÇALIŞAN VERSİYON) ---
-// BURAYA YENİ ALDIĞIN URL'Yİ YAPIŞTIRMAYI UNUTMA!
-const API_URL = "https://script.google.com/macros/s/AKfycbwe6-kRz95KD3W2zAK7WY3J7wILgXCGuzVX9XRz7Gr0bHX5LlChBbNY68fZDw1zmI2L/exec";
+// --- ZEYNAL ÖĞRETMEN: V55 (İNGİLİZCE SAYFA İSİMLERİ) ---
+// ADIM 2'DE ALDIĞIN YENİ URL'Yİ BURAYA YAPIŞTIR:
+const API_URL = "https://script.google.com/macros/s/AKfycbzK7qYgiVqm5EoifHpjGtqTDQSPj-V-e4vJzQVFEUOPJ6L120ifiTPMFQRi5ko_LArU/exec"; 
 
 let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
 let students = []; 
-let books = []; // ARTIK BASİT BİR DİZİ OLACAK
+let books = []; 
 let bookPages = {}; 
 let records = []; 
 let studentPassObj = {};
@@ -47,13 +47,12 @@ function fetchData(isFirstLoad) {
 function processData(data) {
     if(data.students) students = data.students;
     if(data.studentPass) studentPassObj = data.studentPass;
-    if(data.books) books = data.books; // Backend'den gelen DİZİ'yi al
+    if(data.books) books = data.books; 
     if(data.bookPages) bookPages = { ...data.bookPages, ...bookPages };
     if(data.settings) settings = { ...settings, ...data.settings };
     if(data.teacherPass) teacherPassword = data.teacherPass.toString();
     records = (data.records || []).sort((a,b) => Number(b.id) - Number(a.id));
     
-    // UI Ayarları
     if(document.getElementById('set-target')) {
         document.getElementById('set-target').value = settings.classTarget;
         document.getElementById('set-silver').value = settings.silverLimit;
@@ -311,8 +310,6 @@ function getMedals(count) { let goldCount = Math.floor(count / settings.goldLimi
 function getRank(count) { if(count >= 40) return "💎 EFSANE"; if(count >= 35) return "🌍 Bilge Okur"; if(count >= 30) return "🎩 Edebiyat Ustası"; if(count >= 25) return "👑 Kütüphane Muhafızı"; if(count >= 20) return "🏹 Kelime Avcısı"; if(count >= 15) return "🚀 Bilgi Kaşifi"; if(count >= 10) return "📖 Kitap Kurdu"; if(count >= 5)  return "🥉 Okuma Çırağı"; return "🌱 Başlangıç"; }
 function toggleStatsSort() { if(statsSortMode === 'book_desc') { statsSortMode = 'book_asc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬆"; } else if (statsSortMode === 'book_asc') { statsSortMode = 'page_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Sayfa ⬇"; } else { statsSortMode = 'book_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬇"; } renderRanking(); }
 function renderRanking() { let counts = {}; let pageCounts = {}; records.forEach(r => { if(r.status === "İade Etti") { counts[r.student] = (counts[r.student]||0)+1; let p = parseInt(bookPages[r.book]) || 0; pageCounts[r.student] = (pageCounts[r.student]||0) + p; } }); let sorted = Object.keys(counts).map(k => ({n:k, c:counts[k], p:pageCounts[k]})); if(sorted.length > 0) { let topReader = sorted.reduce((prev, current) => (prev.c > current.c) ? prev : current); document.getElementById('statTopReader').innerText = topReader.n; } else { document.getElementById('statTopReader').innerText = "-"; } if(statsSortMode === 'book_desc') sorted.sort((a,b) => b.c - a.c); else if(statsSortMode === 'book_asc') sorted.sort((a,b) => a.c - b.c); else if(statsSortMode === 'page_desc') sorted.sort((a,b) => b.p - a.p); let html = ""; sorted.forEach((s,i) => { let rank = getRank(s.c); let medals = getMedals(s.c); let highlight = (i === 0 && statsSortMode !== 'book_asc') ? "color:#f59e0b;" : "color:var(--text-sub);"; let rankNum = (i === sorted.length - 1 && sorted.length > 1) ? `<span style="color:#ef4444; font-size:0.7rem;">(Son)</span>` : `${i+1}.`; if (i === 0) rankNum = "👑"; html += `<div class="list-item"><div class="item-content"><span style="font-weight:bold; ${highlight} margin-right:10px; min-width:20px; display:inline-block;">${rankNum}</span><span style="font-weight:600;">${s.n}</span><div class="rank-info">${rank}</div><div class="medal-container">${medals}</div></div><div style="text-align:right;"><div style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c} Kitap</div><div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">${s.p.toLocaleString()} Sayfa</div></div></div>`; }); document.getElementById('rankingList').innerHTML = html; }
-function deleteRecord(id) { if(confirm("Silmek istiyor musunuz?")) { records = records.filter(r => r.id !== id); updateUI(); syncData(); } }
-
 function renderStudentPanel() {
     let myRecs = records.filter(r => r.student === loggedInStudent);
     let completedRecs = myRecs.filter(r => r.status === "İade Etti");
@@ -341,3 +338,4 @@ function renderStudentPanel() {
         listDiv.innerHTML += `<div class="list-item"><div class="item-content"><h4>${r.book}</h4><p>${r.date} • ${statusHtml}</p></div>${actionBtn}</div>`;
     });
 }
+function deleteRecord(id) { if(confirm("Silmek istiyor musunuz?")) { records = records.filter(r => r.id !== id); updateUI(); syncData(); } }
