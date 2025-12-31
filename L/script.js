@@ -11,6 +11,13 @@ let teacherPassword = "";
 let loginMode = 'teacher'; 
 let loggedInStudent = "";
 let isDataLoaded = false;
+let statsSortMode = 'book_desc';
+let currentFilter = 'all';
+let activeBooksMap = {};
+let lastHistoryMap = {};
+let isEditMode = false;
+let tempReturnId = null;
+let currentRating = 0;
 
 const RANKS = [{c:0, t:"🌱 Başlangıç"}, {c:5, t:"🥉 Okuma Çırağı"}, {c:10, t:"📖 Kitap Kurdu"},{c:15, t:"🚀 Bilgi Kaşifi"}, {c:20, t:"🏹 Kelime Avcısı"}, {c:25, t:"👑 Kütüphane Muhafızı"},{c:30, t:"🎩 Edebiyat Ustası"}, {c:35, t:"🌍 Bilge Okur"}, {c:40, t:"💎 EFSANE"}];
 const EXIT_CARDS = {"1":{title:"Macera Hatırası",prompt:"En unutulmaz sahne neydi?"},"2":{title:"Öğrenen Profil",prompt:"Karakter hangi özelliği taşıyor?"},"3":{title:"Duygu Kartı",prompt:"Hangi duyguları hissettin?"},"4":{title:"Bağlantı Kartı",prompt:"Nasıl bir bağ kurdun?"},"5":{title:"Eleştiri Kartı",prompt:"Katılmadığın bir olay var mı?"},"6":{title:"Soru Kartı",prompt:"Seni düşündüren soru neydi?"},"7":{title:"Yaratıcı Son",prompt:"Sonunu nasıl değiştirirdin?"},"8":{title:"Gelişim Kartı",prompt:"Hangi becerini geliştirdi?"},"9":{title:"Tavsiye Kartı",prompt:"Tavsiye eder misin?"}};
@@ -379,3 +386,16 @@ function renderStudentPanel() {
     });
 }
 function deleteRecord(id) { if(confirm("Silmek istiyor musunuz?")) { records = records.filter(r => r.id !== id); updateUI(); syncData(); } }
+function studentRateBook(id) { returnBook(id); }
+function checkOverdue(dateStr) {
+    if(!dateStr) return false;
+    let parts = dateStr.split(' ');
+    if(parts.length < 1) return false;
+    let dParts = parts[0].split('.');
+    if(dParts.length < 3) return false;
+    let date = new Date(dParts[2], dParts[1]-1, dParts[0]);
+    let now = new Date();
+    let diffTime = Math.abs(now - date);
+    let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 15;
+}
