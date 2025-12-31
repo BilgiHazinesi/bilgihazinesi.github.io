@@ -1,7 +1,5 @@
-// --- ZEYNAL ÖĞRETMEN V57 (YENİ API & SORUNSUZ LİSTE) ---
-
-// SENİN GÖNDERDİĞİN YENİ ADRES:
-const API_URL = "https://script.google.com/macros/s/AKfycbzhlT5cEMjWs8MsqzKZZq98VZsMltzU1zutlq96ClQD3EyAN6RtmCHVNbMcKjOmVTol/exec";
+// --- ZEYNAL ÖĞRETMEN V58 (CACHE BUSTING & HATA GÖSTERİMİ) ---
+const API_URL = "https://script.google.com/macros/s/AKfycbz1MF5XhgCjQp0TIXusCgScB3eow0XOas2w37dgZ9Ldgf5tf6B_VBlv8ZILtCHZHACe/exec";
 
 let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
 let students = []; 
@@ -17,7 +15,6 @@ let isDataLoaded = false;
 const RANKS = [{c:0, t:"🌱 Başlangıç"}, {c:5, t:"🥉 Okuma Çırağı"}, {c:10, t:"📖 Kitap Kurdu"},{c:15, t:"🚀 Bilgi Kaşifi"}, {c:20, t:"🏹 Kelime Avcısı"}, {c:25, t:"👑 Kütüphane Muhafızı"},{c:30, t:"🎩 Edebiyat Ustası"}, {c:35, t:"🌍 Bilge Okur"}, {c:40, t:"💎 EFSANE"}];
 const EXIT_CARDS = {"1":{title:"Macera Hatırası",prompt:"En unutulmaz sahne neydi?"},"2":{title:"Öğrenen Profil",prompt:"Karakter hangi özelliği taşıyor?"},"3":{title:"Duygu Kartı",prompt:"Hangi duyguları hissettin?"},"4":{title:"Bağlantı Kartı",prompt:"Nasıl bir bağ kurdun?"},"5":{title:"Eleştiri Kartı",prompt:"Katılmadığın bir olay var mı?"},"6":{title:"Soru Kartı",prompt:"Seni düşündüren soru neydi?"},"7":{title:"Yaratıcı Son",prompt:"Sonunu nasıl değiştirirdin?"},"8":{title:"Gelişim Kartı",prompt:"Hangi becerini geliştirdi?"},"9":{title:"Tavsiye Kartı",prompt:"Tavsiye eder misin?"}};
 
-// --- YARDIMCI FONKSİYONLAR ---
 function handleInput(input) { let btn = input.nextElementSibling; if(btn && btn.classList.contains('clear-btn')) { btn.style.display = input.value.length > 0 ? 'block' : 'none'; } }
 function clearField(id, callback) { let input = document.getElementById(id); input.value = ""; handleInput(input); if (callback) callback(); }
 function toggleTheme() { document.body.classList.toggle('dark-mode'); let isDark = document.body.classList.contains('dark-mode'); document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙'; localStorage.setItem('theme', isDark ? 'dark' : 'light'); }
@@ -28,28 +25,24 @@ window.onload = function() {
     if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('themeIcon').innerText = '☀️'; } else { document.getElementById('themeIcon').innerText = '🌙'; }
     let select = document.getElementById('exitCardSelect'); 
     for (const [key, value] of Object.entries(EXIT_CARDS)) { let opt = document.createElement('option'); opt.value = key; opt.innerText = value.title; select.appendChild(opt); }
-    
-    // Veriyi çekmeye başla
     fetchData(true);
 };
 
 function fetchData(isFirstLoad) {
-     fetch(API_URL).then(res => res.json()).then(data => {
-        if(data.error) {
-            alert("Hata: " + data.error);
-            return;
-        }
+     // Cache'i engellemek için sonuna tarih ekliyoruz
+     let uniqueUrl = API_URL + "?t=" + new Date().getTime();
+     
+     fetch(uniqueUrl).then(res => res.json()).then(data => {
+        if(data.error) return alert("Sunucu Hatası: " + data.error);
+        
         processData(data);
         if(isFirstLoad) {
             document.getElementById('loader').style.display = 'none';
             isDataLoaded = true; 
             populateDatalists();
-            // Konsola bilgi bas (Hata ayıklama için)
-            console.log("Yüklenen Kitaplar:", books.length);
-            console.log("Yüklenen Öğrenciler:", students.length);
         }
     }).catch(err => {
-        document.getElementById('loader').innerText = "Bağlantı Hatası!";
+        document.getElementById('loader').innerText = "Bağlantı Hatası! Lütfen sayfayı yenileyin.";
         console.error(err);
     });
 }
@@ -57,7 +50,14 @@ function fetchData(isFirstLoad) {
 function processData(data) {
     if(data.students) students = data.students;
     if(data.studentPass) studentPassObj = data.studentPass;
-    if(data.books) books = data.books; 
+    
+    // Kitap verisi geldi mi kontrolü
+    if(data.books && Array.isArray(data.books)) {
+        books = data.books;
+    } else {
+        books = [];
+    }
+    
     if(data.bookPages) bookPages = { ...data.bookPages, ...bookPages };
     if(data.settings) settings = { ...settings, ...data.settings };
     if(data.teacherPass) teacherPassword = data.teacherPass.toString();
@@ -110,7 +110,6 @@ function login() {
         } else { alert("Hatalı Şifre!"); }
     } else {
         let sPass = document.getElementById('studentLoginPass').value.trim();
-        // Şifre kontrolü: Object içinde value olarak ara (String karşılaştırma)
         let foundStudent = Object.keys(studentPassObj).find(key => String(studentPassObj[key]).trim() === String(sPass));
         
         if(foundStudent) {
@@ -198,7 +197,13 @@ function renderBookManager() {
     const search = document.getElementById('bookSearch').value.toLowerCase();
     const div = document.getElementById('bookManagerList');
     div.innerHTML = "";
-    // Basit Liste Modeli: Books artık sadece bir dizi
+    
+    // Kitap listesi boşsa uyarı ver
+    if(books.length === 0) {
+        div.innerHTML = "<div style='text-align:center; padding:20px; opacity:0.6;'>Kitap listesi boş görünüyor.<br>Sayfayı yenilemeyi deneyin.</div>";
+        return;
+    }
+
     let displayList = books.map((b, idx) => {
         let key = normalizeStr(b);
         let activeList = activeBooksMap[key] || [];
