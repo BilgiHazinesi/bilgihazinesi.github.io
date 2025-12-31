@@ -1,6 +1,7 @@
-// --- ZEYNAL ÖĞRETMEN: V55 (İNGİLİZCE SAYFA İSİMLERİ) ---
-// ADIM 2'DE ALDIĞIN YENİ URL'Yİ BURAYA YAPIŞTIR:
-const API_URL = "https://script.google.com/macros/s/AKfycbwuQE2hbFbx671RMW_qdF63_-bVp4qyDCMY6uVU1V1S-LpSOoLbYdmOcJ5hBfR2F49z/exec"; 
+// --- ZEYNAL ÖĞRETMEN V57 (YENİ API & SORUNSUZ LİSTE) ---
+
+// SENİN GÖNDERDİĞİN YENİ ADRES:
+const API_URL = "https://script.google.com/macros/s/AKfycbzhlT5cEMjWs8MsqzKZZq98VZsMltzU1zutlq96ClQD3EyAN6RtmCHVNbMcKjOmVTol/exec";
 
 let settings = { classTarget: 500, silverLimit: 3, goldLimit: 5 };
 let students = []; 
@@ -27,16 +28,25 @@ window.onload = function() {
     if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('themeIcon').innerText = '☀️'; } else { document.getElementById('themeIcon').innerText = '🌙'; }
     let select = document.getElementById('exitCardSelect'); 
     for (const [key, value] of Object.entries(EXIT_CARDS)) { let opt = document.createElement('option'); opt.value = key; opt.innerText = value.title; select.appendChild(opt); }
+    
+    // Veriyi çekmeye başla
     fetchData(true);
 };
 
 function fetchData(isFirstLoad) {
      fetch(API_URL).then(res => res.json()).then(data => {
+        if(data.error) {
+            alert("Hata: " + data.error);
+            return;
+        }
         processData(data);
         if(isFirstLoad) {
             document.getElementById('loader').style.display = 'none';
             isDataLoaded = true; 
             populateDatalists();
+            // Konsola bilgi bas (Hata ayıklama için)
+            console.log("Yüklenen Kitaplar:", books.length);
+            console.log("Yüklenen Öğrenciler:", students.length);
         }
     }).catch(err => {
         document.getElementById('loader').innerText = "Bağlantı Hatası!";
@@ -87,7 +97,8 @@ function setLoginMode(mode) {
 }
 
 function login() {
-    if(!isDataLoaded) return alert("Veriler yükleniyor...");
+    if(!isDataLoaded) return alert("Veriler yükleniyor, lütfen bekleyin...");
+    
     if(loginMode === 'teacher') {
         let pass = document.getElementById('appPassword').value;
         if(String(pass).trim() === String(teacherPassword).trim()) {
@@ -99,7 +110,9 @@ function login() {
         } else { alert("Hatalı Şifre!"); }
     } else {
         let sPass = document.getElementById('studentLoginPass').value.trim();
+        // Şifre kontrolü: Object içinde value olarak ara (String karşılaştırma)
         let foundStudent = Object.keys(studentPassObj).find(key => String(studentPassObj[key]).trim() === String(sPass));
+        
         if(foundStudent) {
             loggedInStudent = foundStudent;
             document.getElementById('loginOverlay').style.display = 'none';
@@ -185,6 +198,7 @@ function renderBookManager() {
     const search = document.getElementById('bookSearch').value.toLowerCase();
     const div = document.getElementById('bookManagerList');
     div.innerHTML = "";
+    // Basit Liste Modeli: Books artık sadece bir dizi
     let displayList = books.map((b, idx) => {
         let key = normalizeStr(b);
         let activeList = activeBooksMap[key] || [];
@@ -194,17 +208,38 @@ function renderBookManager() {
         let pageCount = bookPages[b] || 0;
         return { name: b, status: status, activeList: activeList, lastReader: lastReader, avgScore: avgScore, pageCount: pageCount, originalIndex: idx };
     });
-    displayList = displayList.filter(item => { if(!item.name.toLowerCase().includes(search)) return false; if(currentFilter === 'out' && item.status !== 'out') return false; if(currentFilter === 'in' && item.status !== 'in') return false; return true; });
-    if(currentFilter === 'rating') displayList.sort((a,b) => b.avgScore - a.avgScore); else displayList.sort((a,b) => a.status === 'out' ? -1 : 1);
+
+    displayList = displayList.filter(item => { 
+        if(!item.name.toLowerCase().includes(search)) return false; 
+        if(currentFilter === 'out' && item.status !== 'out') return false; 
+        if(currentFilter === 'in' && item.status !== 'in') return false; 
+        return true; 
+    });
+
+    if(currentFilter === 'rating') displayList.sort((a,b) => b.avgScore - a.avgScore); 
+    else displayList.sort((a,b) => a.status === 'out' ? -1 : 1);
+
     displayList.forEach((item) => {
         let contentHtml = ""; let badge = "";
-        if(isEditMode) { contentHtml = `<div style="display:flex; flex-direction:column; gap:5px; width:100%;"><label style="font-size:0.75rem; color:var(--text-sub);">Kitap Adı:</label><input type="text" class="edit-input" id="edit-name-${item.originalIndex}" value="${item.name}"><div style="display:flex; gap:10px;"><div style="flex:1;"><label style="font-size:0.75rem; color:var(--text-sub);">Sayfa Sayısı:</label><input type="number" class="edit-input" id="edit-page-${item.originalIndex}" value="${item.pageCount}"></div><button class="btn-save-small" style="align-self:end; height:36px; margin-bottom:5px;" onclick="saveBookEdits(${item.originalIndex})">Kaydet</button></div></div>`; } 
-        else {
+        if(isEditMode) { 
+            contentHtml = `<div style="display:flex; flex-direction:column; gap:5px; width:100%;"><label style="font-size:0.75rem; color:var(--text-sub);">Kitap Adı:</label><input type="text" class="edit-input" id="edit-name-${item.originalIndex}" value="${item.name}"><div style="display:flex; gap:10px;"><div style="flex:1;"><label style="font-size:0.75rem; color:var(--text-sub);">Sayfa Sayısı:</label><input type="number" class="edit-input" id="edit-page-${item.originalIndex}" value="${item.pageCount}"></div><button class="btn-save-small" style="align-self:end; height:36px; margin-bottom:5px;" onclick="saveBookEdits(${item.originalIndex})">Kaydet</button></div></div>`; 
+        } else {
             let ratingHtml = item.avgScore > 0 ? ` <span style="color:#f59e0b; font-size:0.85rem;">⭐${item.avgScore.toFixed(1)}</span>` : "";
             let pageHtml = item.pageCount > 0 ? `<span style="font-size:0.75rem; color:var(--text-sub); border:1px solid #ccc; padding:2px 6px; border-radius:8px; margin-left:5px;">${item.pageCount} Syf.</span>` : "";
             let details = "";
-            if(item.status === 'out') { badge = `<span class="status-badge bg-red" style="color:#ef4444; font-weight:bold; font-size:0.8rem;">Dışarıda</span>`; item.activeList.forEach(r => { let dateColor = "#ef4444"; details += `<div style="font-size:0.85rem; margin-top:5px; display:flex; justify-content:space-between; align-items:center;"><span style="color:${dateColor}">🔴 <b>${r.student}</b> (${r.date})</span><button class="btn-delete" onclick="deleteRecord(${r.id})">Sil</button></div>`; }); } 
-            else { badge = `<span class="status-badge bg-green" style="color:#10b981; font-weight:bold; font-size:0.8rem;">Rafta</span>`; if(item.lastReader) details = `<span style="font-size:0.8rem; color:var(--text-sub);">Son: ${item.lastReader.student} (${item.lastReader.date})</span>`; else details = `<span style="font-size:0.8rem; color:var(--text-sub); opacity:0.7;">Hiç okunmadı</span>`; }
+            if(item.status === 'out') { 
+                badge = `<span class="status-badge bg-red" style="color:#ef4444; font-weight:bold; font-size:0.8rem;">Dışarıda</span>`; 
+                item.activeList.forEach(r => { 
+                    let isOverdue = checkOverdue(r.date); 
+                    let warning = isOverdue ? `<span class="overdue-warning">⚠️ 15 Gün!</span>` : ""; 
+                    let dateColor = isOverdue ? "#ef4444" : "inherit"; 
+                    details += `<div style="font-size:0.85rem; margin-top:5px; display:flex; justify-content:space-between; align-items:center;"><span style="color:${dateColor}">🔴 <b>${r.student}</b> (${r.date}) ${warning}</span><button class="btn-delete" onclick="deleteRecord(${r.id})">Sil</button></div>`; 
+                }); 
+            } else { 
+                badge = `<span class="status-badge bg-green" style="color:#10b981; font-weight:bold; font-size:0.8rem;">Rafta</span>`; 
+                if(item.lastReader) details = `<span style="font-size:0.8rem; color:var(--text-sub);">Son: ${item.lastReader.student} (${item.lastReader.date})</span>`; 
+                else details = `<span style="font-size:0.8rem; color:var(--text-sub); opacity:0.7;">Hiç okunmadı</span>`; 
+            }
             contentHtml = `<div style="display:flex; justify-content:space-between; align-items:center;"><h4 style="margin:0; font-size:1rem; color:var(--text-main);">${item.name} ${ratingHtml} ${pageHtml}</h4>${badge}</div><div style="margin-top:5px;">${details}</div>`;
         }
         div.innerHTML += `<div class="glass-panel" style="padding:15px; margin-bottom:10px; cursor:pointer;" onclick="openBookDetail('${item.name}')">${contentHtml}<div style="font-size:0.75rem; opacity:0.7; margin-top:5px;">Bilgi Ağacı İçin Tıkla 🌳</div></div>`;
