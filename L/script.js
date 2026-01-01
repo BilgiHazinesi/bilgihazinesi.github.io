@@ -1,4 +1,4 @@
-// --- ZEYNAL ÖĞRETMEN V61 (TANI VE KONTROL SÜRÜMÜ) ---
+// --- ZEYNAL ÖĞRETMEN V61 (FİNAL - DÜZELTİLMİŞ) ---
 const API_URL = "https://script.google.com/macros/s/AKfycbz1ueTQMEmUVfnVr1wdwl1c1hz4xpOXVOmFTr5KLdozkHLfJDk12hSqe-dnB44W1wvu/exec";
 
 // Global Değişkenler
@@ -30,6 +30,7 @@ window.onload = function() {
     // Kart seçeneklerini doldur
     let select = document.getElementById('exitCardSelect'); 
     if(select) {
+        select.innerHTML = '<option value="">Bir Kart Seç...</option>'; // Varsayılan boş seçenek
         for (const [key, value] of Object.entries(EXIT_CARDS)) { let opt = document.createElement('option'); opt.value = key; opt.innerText = value.title; select.appendChild(opt); }
     }
 
@@ -39,7 +40,6 @@ window.onload = function() {
 
 // --- Veri Çekme ---
 function fetchData(isFirstLoad) {
-     // Cache temizleme (Verinin güncel gelmesi için)
      let uniqueUrl = API_URL + "?t=" + new Date().getTime();
 
      fetch(uniqueUrl).then(res => res.json()).then(data => {
@@ -51,11 +51,7 @@ function fetchData(isFirstLoad) {
             document.getElementById('loader').style.display = 'none';
             isDataLoaded = true; 
             populateDatalists();
-            // KONTROL UYARISI (Eğer veri 0 ise uyarır)
-            if(books.length === 0) console.warn("UYARI: Kitap listesi boş geldi!");
-            if(students.length === 0) console.warn("UYARI: Öğrenci listesi boş geldi!");
-            
-            updateUI(); // Arayüzü güncelle
+            updateUI(); 
         }
     }).catch(err => {
         document.getElementById('loader').innerText = "Bağlantı Hatası! Lütfen sayfayı yenileyin.";
@@ -64,7 +60,6 @@ function fetchData(isFirstLoad) {
 }
 
 function processData(data) {
-    // Veri güvenliği: Gelen verinin doğru türde olduğundan emin ol
     students = Array.isArray(data.students) ? data.students : [];
     books = Array.isArray(data.books) ? data.books : [];
     records = Array.isArray(data.records) ? data.records : [];
@@ -75,10 +70,8 @@ function processData(data) {
     if(data.settings) settings = { ...settings, ...data.settings };
     if(data.teacherPass) teacherPassword = data.teacherPass.toString();
     
-    // Kayıtları ID'ye göre sırala
     records.sort((a,b) => Number(b.id) - Number(a.id));
     
-    // Hedef ayarlarını güncelle
     let targetInput = document.getElementById('set-target');
     if(targetInput) {
         targetInput.value = settings.classTarget;
@@ -87,7 +80,7 @@ function processData(data) {
     }
 }
 
-// --- Arayüz Güncelleme (Merkez) ---
+// --- Arayüz Güncelleme ---
 function updateUI() { 
     try {
         analyzeData(); 
@@ -96,28 +89,50 @@ function updateUI() {
         renderBookManager(); 
         renderRanking(); 
         updateProgressBar(); 
-        renderPassManager();
+        if(document.getElementById('studentPassList')) renderPassManager();
     } catch(e) {
         console.error("Arayüz güncellenirken hata oluştu:", e);
-        // Hata olsa bile çalışmaya devam etmesi için try-catch
     }
 }
 
-// --- Kitap Listeleme (HATA BURADA OLABİLİR - GÜÇLENDİRİLDİ) ---
+// --- EKSİK OLAN FONKSİYON EKLENDİ ---
+function studentRateBook(id) {
+    tempReturnId = id;
+    let rec = records.find(r => r.id === id);
+    
+    if(rec) {
+        currentRating = rec.rating || 0;
+        document.getElementById('exitCardSelect').value = rec.cardId || "";
+        document.getElementById('returnComment').value = rec.comment || "";
+    } else {
+        currentRating = 0;
+        document.getElementById('exitCardSelect').value = "";
+        document.getElementById('returnComment').value = "";
+    }
+    
+    updateStars();
+    updateCardPrompt();
+    document.getElementById('ratingOverlay').style.display = 'flex';
+}
+
+function returnBook(id) { 
+    // Öğretmen tarafı için de aynı fonksiyonu kullanabiliriz
+    studentRateBook(id); 
+}
+
 function renderBookManager() {
     const div = document.getElementById('bookManagerList');
-    if(!div) return; // Element yoksa çık
+    if(!div) return; 
     
     div.innerHTML = "";
     const searchInput = document.getElementById('bookSearch');
     const search = searchInput ? searchInput.value.toLowerCase() : "";
 
     if(books.length === 0) {
-        div.innerHTML = "<div style='text-align:center; padding:20px; opacity:0.6;'>Kitap listesi boş.<br>Lütfen E-Tablo'da 'Books' sayfasını kontrol edin.</div>";
+        div.innerHTML = "<div style='text-align:center; padding:20px; opacity:0.6;'>Kitap listesi boş.</div>";
         return;
     }
 
-    // Listeyi hazırla
     let displayList = books.map((b, idx) => {
         let key = normalizeStr(b);
         let activeList = activeBooksMap[key] || [];
@@ -128,7 +143,6 @@ function renderBookManager() {
         return { name: b, status: status, activeList: activeList, lastReader: lastReader, avgScore: avgScore, pageCount: pageCount, originalIndex: idx };
     });
 
-    // Filtreleme
     displayList = displayList.filter(item => { 
         if(!item.name) return false;
         if(!item.name.toLowerCase().includes(search)) return false; 
@@ -137,11 +151,9 @@ function renderBookManager() {
         return true; 
     });
 
-    // Sıralama
     if(currentFilter === 'rating') displayList.sort((a,b) => b.avgScore - a.avgScore); 
     else displayList.sort((a,b) => a.status === 'out' ? -1 : 1);
 
-    // Ekrana Basma
     displayList.forEach((item) => {
         let contentHtml = ""; let badge = "";
         
@@ -182,10 +194,6 @@ function renderBookManager() {
     });
 }
 
-// --- Yardımcı İşlevler ---
-let activeBooksMap = {}; 
-let lastHistoryMap = {}; 
-
 function analyzeData() { 
     activeBooksMap = {}; 
     lastHistoryMap = {}; 
@@ -210,7 +218,6 @@ function normalizeStr(str) { return str ? str.toString().trim().replace(/\s+/g, 
 function checkOverdue(dateStr) { if(!dateStr) return false; let parts = dateStr.split('.'); if(parts.length !== 3) return false; let bookDate = new Date(parts[2], parts[1]-1, parts[0]); let diffTime = Math.abs(new Date() - bookDate); return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) > 15; }
 function getRawRating(bookName) { let bookRecs = records.filter(r => normalizeStr(r.book) === normalizeStr(bookName) && r.rating); if(bookRecs.length === 0) return 0; return bookRecs.reduce((a, b) => a + parseInt(b.rating), 0) / bookRecs.length; }
 
-// --- Diğer Fonksiyonlar (Eskisiyle aynı yapıda ama güvenli) ---
 function handleInput(input) { let btn = input.nextElementSibling; if(btn && btn.classList.contains('clear-btn')) { btn.style.display = input.value.length > 0 ? 'block' : 'none'; } }
 function clearField(id, callback) { let input = document.getElementById(id); input.value = ""; handleInput(input); if (callback) callback(); }
 function toggleTheme() { document.body.classList.toggle('dark-mode'); let isDark = document.body.classList.contains('dark-mode'); document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙'; localStorage.setItem('theme', isDark ? 'dark' : 'light'); }
@@ -310,10 +317,10 @@ function updateProgressBar() {
 }
 
 function switchTab(id, btn) { document.querySelectorAll('.section').forEach(el => el.classList.remove('active')); document.getElementById('tab-' + id).classList.add('active'); document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); btn.classList.add('active'); }
-function returnBook(id) { tempReturnId = id; let rec = records.find(r => r.id === id); if(rec) { currentRating = rec.rating || 0; document.getElementById('exitCardSelect').value = rec.cardId || ""; document.getElementById('returnComment').value = rec.comment || ""; } else { currentRating = 0; document.getElementById('exitCardSelect').value = ""; document.getElementById('returnComment').value = ""; } updateStars(); updateCardPrompt(); document.getElementById('ratingOverlay').style.display = 'flex'; }
+
 function selectStar(n) { currentRating = n; updateStars(); }
 function updateStars() { let btns = document.getElementById('starGroup').children; for(let i=0; i<btns.length; i++) { if(i < currentRating) btns[i].classList.add('selected'); else btns[i].classList.remove('selected'); } }
-function updateCardPrompt() { let val = document.getElementById('exitCardSelect').value; let box = document.getElementById('cardPromptBox'); let wrap = document.getElementById('commentWrapper'); if(val && EXIT_CARDS[val]) { box.innerHTML = `<i class="fas fa-question-circle"></i> ${EXIT_CARDS[val].prompt}`; box.style.display = 'flex'; wrap.style.display = 'block'; } else { box.style.display = 'none'; wrap.style.display = 'none'; } }
+function updateCardPrompt() { let val = document.getElementById('exitCardSelect').value; let box = document.getElementById('cardPromptBox'); let wrap = document.getElementById('commentWrapper'); if(val && EXIT_CARDS[val]) { box.innerHTML = `<i class="fas fa-question-circle"></i> ${EXIT_CARDS[val].prompt}`; box.style.display = 'flex'; wrap.style.display = 'block'; } else { box.style.display = 'none'; wrap.style.display = 'block'; } }
 function closeRatingModal() { document.getElementById('ratingOverlay').style.display = 'none'; tempReturnId = null; }
 
 function submitReturn() {
@@ -326,6 +333,7 @@ function submitReturn() {
         if(!rec.returnDate || rec.returnDate === "-") rec.returnDate = getLocalTime();
         if(currentRating > 0) rec.rating = currentRating;
         if(cardId) { rec.cardId = cardId; rec.cardTitle = EXIT_CARDS[cardId].title; rec.comment = comment; }
+        rec.comment = comment; // Her durumda yorumu kaydet
         if(loginMode === 'student') renderStudentPanel(); else updateUI();
         syncData();
     }
@@ -458,8 +466,10 @@ function renderStudentPanel() {
         let statusHtml = r.status === "Okuyor" ? `<span style="color:#2563eb; font-weight:bold;">Okuyorsun</span>` : `<span style="color:#10b981; font-weight:bold;">Teslim Ettin</span>`;
         let actionBtn = "";
         if(r.status === "İade Etti") {
+            // BUTON ARTIK ÇALIŞACAK
             actionBtn = !r.rating ? `<button class="btn-comment" onclick="studentRateBook(${r.id})">Değerlendir</button>` : `<span style="font-size:0.8rem; color:#f59e0b;">⭐ ${r.rating}</span>`;
         }
         listDiv.innerHTML += `<div class="list-item"><div class="item-content"><h4>${r.book}</h4><p>${r.date} • ${statusHtml}</p></div>${actionBtn}</div>`;
     });
 }
+function deleteRecord(id) { if(confirm("Silmek istiyor musunuz?")) { records = records.filter(r => r.id !== id); updateUI(); syncData(); } }
