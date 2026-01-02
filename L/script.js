@@ -103,7 +103,7 @@ function studentRateBook(id) {
     if(rec) {
         currentRating = rec.rating || 0;
         document.getElementById('exitCardSelect').value = rec.cardId || "";
-        document.getElementById('returnComment').value = rec.comment || "";
+        document.getElementById('returnComment').value = rec.comment || rec.yorum || rec.aciklama || rec.desc || rec.note || "";
     } else {
         currentRating = 0;
         document.getElementById('exitCardSelect').value = "";
@@ -332,8 +332,16 @@ function submitReturn() {
         rec.status = "İade Etti";
         if(!rec.returnDate || rec.returnDate === "-") rec.returnDate = getLocalTime();
         if(currentRating > 0) rec.rating = currentRating;
-        if(cardId) { rec.cardId = cardId; rec.cardTitle = EXIT_CARDS[cardId].title; rec.comment = comment; }
-        rec.comment = comment; // Her durumda yorumu kaydet
+
+        // Backend sütun adlarından biri tutabilir diye hepsini kaydediyoruz
+        rec.comment = comment;
+        rec.yorum = comment;
+        rec.aciklama = comment;
+        rec.desc = comment;
+        rec.note = comment;
+
+        if(cardId) { rec.cardId = cardId; rec.cardTitle = EXIT_CARDS[cardId].title; }
+
         if(loginMode === 'student') renderStudentPanel(); else updateUI();
         syncData();
     }
@@ -351,7 +359,8 @@ function openBookDetail(bookName) {
     let fruitsContainer = document.getElementById('treeFruitsContainer');
     fruitsContainer.innerHTML = "";
     bookRecs.forEach((r, i) => {
-        let icon = r.comment ? "🍎" : "🍏";
+        let commVal = r.comment || r.yorum || r.aciklama || r.desc || r.note;
+        let icon = commVal ? "🍎" : "🍏";
         let fruit = document.createElement('div');
         fruit.className = 'tree-fruit';
         fruit.innerText = icon;
@@ -366,7 +375,8 @@ function openBookDetail(bookName) {
     bookRecs.sort((a,b) => b.id - a.id).forEach(r => {
         let starStr = r.rating ? "⭐".repeat(r.rating) : "";
         let cardHtml = r.cardTitle ? `<span class="rc-badge">${r.cardTitle}</span>` : "";
-        let commentHtml = r.comment ? `<div class="rc-text">"${r.comment}"</div>` : "<div class='rc-text' style='opacity:0.5'>(Yorumsuz)</div>";
+        let commVal = r.comment || r.yorum || r.aciklama || r.desc || r.note;
+        let commentHtml = commVal ? `<div class="rc-text">"${commVal}"</div>` : "<div class='rc-text' style='opacity:0.5'>(Yorumsuz)</div>";
         listContainer.innerHTML += `<div class="review-card"><div class="rc-header"><span>${r.student}</span><span>${starStr}</span></div>${cardHtml}${commentHtml}<div style="font-size:0.7rem; color:var(--text-sub); text-align:right;">${r.returnDate}</div></div>`;
     });
     document.getElementById('fruitDetailBox').style.display = 'none';
@@ -378,7 +388,8 @@ function showFruitDetail(rec) {
     let starStr = rec.rating ? "⭐".repeat(rec.rating) : "";
     document.getElementById('fdStudent').innerText = `${rec.student} ${starStr}`;
     document.getElementById('fdCard').innerText = rec.cardTitle || "Standart Okuma";
-    document.getElementById('fdComment').innerText = rec.comment ? `"${rec.comment}"` : "(Yorum yok)";
+    let commVal = rec.comment || rec.yorum || rec.aciklama || rec.desc || rec.note;
+    document.getElementById('fdComment').innerText = commVal ? `"${commVal}"` : "(Yorum yok)";
     box.style.display = 'block';
 }
 function closeBookDetail() { document.getElementById('bookDetailOverlay').style.display = 'none'; }
