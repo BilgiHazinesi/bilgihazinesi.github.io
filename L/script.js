@@ -340,6 +340,9 @@ function submitReturn() {
         rec.desc = comment;
         rec.note = comment;
 
+        // Google Sheet Başlıkları ile tam eşleşen anahtarlar
+        rec.Yorum = comment;
+
         // Yeni eklenen olası alan adları (Genişletilmiş)
         rec.cevap = comment;
         rec.yanit = comment;
@@ -359,6 +362,10 @@ function submitReturn() {
             rec.kartBaslik = EXIT_CARDS[cardId].title;
             rec.card = EXIT_CARDS[cardId].title;
             rec.kart = EXIT_CARDS[cardId].title;
+
+            // Google Sheet Başlıkları ile tam eşleşen anahtarlar
+            rec.Kart = EXIT_CARDS[cardId].title;
+            rec["Kart Başlığı"] = EXIT_CARDS[cardId].title;
         }
 
         if(loginMode === 'student') renderStudentPanel(); else updateUI();
