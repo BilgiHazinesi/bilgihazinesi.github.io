@@ -103,7 +103,7 @@ function studentRateBook(id) {
     if(rec) {
         currentRating = rec.rating || 0;
         document.getElementById('exitCardSelect').value = rec.cardId || "";
-        document.getElementById('returnComment').value = rec.comment || rec.yorum || rec.aciklama || rec.desc || rec.note || "";
+        document.getElementById('returnComment').value = rec.comment || rec.yorum || rec.aciklama || rec.desc || rec.note || rec.cevap || rec.yanit || rec.text || rec.message || rec.degerlendirme || rec.review || rec.kartCevabi || rec.cardAnswer || "";
     } else {
         currentRating = 0;
         document.getElementById('exitCardSelect').value = "";
@@ -340,7 +340,26 @@ function submitReturn() {
         rec.desc = comment;
         rec.note = comment;
 
-        if(cardId) { rec.cardId = cardId; rec.cardTitle = EXIT_CARDS[cardId].title; }
+        // Yeni eklenen olası alan adları (Genişletilmiş)
+        rec.cevap = comment;
+        rec.yanit = comment;
+        rec.text = comment;
+        rec.message = comment;
+        rec.degerlendirme = comment;
+        rec.review = comment;
+        rec.kartCevabi = comment;
+        rec.cardAnswer = comment;
+
+        if(cardId) {
+            rec.cardId = cardId;
+            rec.cardTitle = EXIT_CARDS[cardId].title;
+
+            // Kart bilgileri için de alternatif isimler
+            rec.kartId = cardId;
+            rec.kartBaslik = EXIT_CARDS[cardId].title;
+            rec.card = EXIT_CARDS[cardId].title;
+            rec.kart = EXIT_CARDS[cardId].title;
+        }
 
         if(loginMode === 'student') renderStudentPanel(); else updateUI();
         syncData();
@@ -359,7 +378,7 @@ function openBookDetail(bookName) {
     let fruitsContainer = document.getElementById('treeFruitsContainer');
     fruitsContainer.innerHTML = "";
     bookRecs.forEach((r, i) => {
-        let commVal = r.comment || r.yorum || r.aciklama || r.desc || r.note;
+        let commVal = r.comment || r.yorum || r.aciklama || r.desc || r.note || r.cevap || r.yanit || r.text || r.message || r.degerlendirme || r.review || r.kartCevabi || r.cardAnswer;
         let icon = commVal ? "🍎" : "🍏";
         let fruit = document.createElement('div');
         fruit.className = 'tree-fruit';
@@ -375,7 +394,7 @@ function openBookDetail(bookName) {
     bookRecs.sort((a,b) => b.id - a.id).forEach(r => {
         let starStr = r.rating ? "⭐".repeat(r.rating) : "";
         let cardHtml = r.cardTitle ? `<span class="rc-badge">${r.cardTitle}</span>` : "";
-        let commVal = r.comment || r.yorum || r.aciklama || r.desc || r.note;
+        let commVal = r.comment || r.yorum || r.aciklama || r.desc || r.note || r.cevap || r.yanit || r.text || r.message || r.degerlendirme || r.review || r.kartCevabi || r.cardAnswer;
         let commentHtml = commVal ? `<div class="rc-text">"${commVal}"</div>` : "<div class='rc-text' style='opacity:0.5'>(Yorumsuz)</div>";
         listContainer.innerHTML += `<div class="review-card"><div class="rc-header"><span>${r.student}</span><span>${starStr}</span></div>${cardHtml}${commentHtml}<div style="font-size:0.7rem; color:var(--text-sub); text-align:right;">${r.returnDate}</div></div>`;
     });
@@ -388,7 +407,7 @@ function showFruitDetail(rec) {
     let starStr = rec.rating ? "⭐".repeat(rec.rating) : "";
     document.getElementById('fdStudent').innerText = `${rec.student} ${starStr}`;
     document.getElementById('fdCard').innerText = rec.cardTitle || "Standart Okuma";
-    let commVal = rec.comment || rec.yorum || rec.aciklama || rec.desc || rec.note;
+    let commVal = rec.comment || rec.yorum || rec.aciklama || rec.desc || rec.note || rec.cevap || rec.yanit || rec.text || rec.message || rec.degerlendirme || rec.review || rec.kartCevabi || rec.cardAnswer;
     document.getElementById('fdComment').innerText = commVal ? `"${commVal}"` : "(Yorum yok)";
     box.style.display = 'block';
 }
