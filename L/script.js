@@ -1,4 +1,4 @@
-// --- ZEYNAL ÖĞRETMEN V61 (FİNAL - DÜZELTİLMİŞ) ---
+// --- ZEYNAL ÖĞRETMEN V62 (FİNAL - ID FIX & ROBUST) ---
 const API_URL = "https://script.google.com/macros/s/AKfycbz1ueTQMEmUVfnVr1wdwl1c1hz4xpOXVOmFTr5KLdozkHLfJDk12hSqe-dnB44W1wvu/exec";
 
 // Global Değişkenler
@@ -24,13 +24,13 @@ const EXIT_CARDS = {"1":{title:"Macera Hatırası",prompt:"En unutulmaz sahne ne
 
 // --- Başlangıç ---
 window.onload = function() {
-    console.log("Sistem başlatılıyor...");
+    console.log("Sistem başlatılıyor... V62");
     if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('themeIcon').innerText = '☀️'; } else { document.getElementById('themeIcon').innerText = '🌙'; }
     
     // Kart seçeneklerini doldur
     let select = document.getElementById('exitCardSelect'); 
     if(select) {
-        select.innerHTML = '<option value="">Bir Kart Seç...</option>'; // Varsayılan boş seçenek
+        select.innerHTML = '<option value="">Bir Kart Seç...</option>'; 
         for (const [key, value] of Object.entries(EXIT_CARDS)) { let opt = document.createElement('option'); opt.value = key; opt.innerText = value.title; select.appendChild(opt); }
     }
 
@@ -62,7 +62,12 @@ function fetchData(isFirstLoad) {
 function processData(data) {
     students = Array.isArray(data.students) ? data.students : [];
     books = Array.isArray(data.books) ? data.books : [];
-    records = Array.isArray(data.records) ? data.records : [];
+    
+    // --- KRİTİK DÜZELTME: Tüm ID'leri String yapıyoruz ---
+    records = Array.isArray(data.records) ? data.records.map(r => {
+        r.id = String(r.id); // ID'yi kesinlikle metne çevir
+        return r;
+    }) : [];
     
     studentPassObj = data.studentPass || {};
     bookPages = data.bookPages || {};
@@ -70,7 +75,8 @@ function processData(data) {
     if(data.settings) settings = { ...settings, ...data.settings };
     if(data.teacherPass) teacherPassword = data.teacherPass.toString();
     
-    records.sort((a,b) => Number(b.id) - Number(a.id));
+    // ID'ye göre yeniden eskiye sırala (Sayısal sıralama için parseFloat kullanıyoruz ama saklarken String)
+    records.sort((a,b) => parseFloat(b.id) - parseFloat(a.id));
     
     let targetInput = document.getElementById('set-target');
     if(targetInput) {
@@ -95,16 +101,19 @@ function updateUI() {
     }
 }
 
-// --- EKSİK OLAN FONKSİYON EKLENDİ ---
+// --- DÜZELTİLMİŞ DEĞERLENDİRME FONKSİYONLARI ---
 function studentRateBook(id) {
-    tempReturnId = id;
-    let rec = records.find(r => r.id === id);
+    // Gelen ID'yi String yap, çünkü veritabanında String tutuyoruz
+    tempReturnId = String(id);
+    let rec = records.find(r => r.id === tempReturnId);
     
     if(rec) {
         currentRating = rec.rating || 0;
         document.getElementById('exitCardSelect').value = rec.cardId || "";
         document.getElementById('returnComment').value = rec.comment || "";
     } else {
+        console.error("Kayıt bulunamadı ID:", tempReturnId);
+        // Hata olsa bile modalı sıfırlayıp açalım ki kullanıcı takılmasın (ama işlem yapamaz)
         currentRating = 0;
         document.getElementById('exitCardSelect').value = "";
         document.getElementById('returnComment').value = "";
@@ -116,10 +125,42 @@ function studentRateBook(id) {
 }
 
 function returnBook(id) { 
-    // Öğretmen tarafı için de aynı fonksiyonu kullanabiliriz
     studentRateBook(id); 
 }
 
+function submitReturn() {
+    if (!tempReturnId) return;
+
+    // String karşılaştırması ile kaydı bul
+    let rec = records.find(r => r.id === String(tempReturnId));
+    
+    if(!rec) {
+        alert("Hata: Kayıt bulunamadı. Lütfen sayfayı yenileyin.");
+        closeRatingModal();
+        return;
+    }
+
+    let cardId = document.getElementById('exitCardSelect').value;
+    let comment = document.getElementById('returnComment').value;
+
+    rec.status = "İade Etti";
+    if(!rec.returnDate || rec.returnDate === "-") rec.returnDate = getLocalTime();
+    
+    if(currentRating > 0) rec.rating = currentRating;
+    
+    if(cardId) { 
+        rec.cardId = cardId; 
+        rec.cardTitle = EXIT_CARDS[cardId].title; 
+    }
+    // Yorum her zaman güncellenir
+    rec.comment = comment;
+
+    if(loginMode === 'student') renderStudentPanel(); else updateUI();
+    syncData();
+    closeRatingModal();
+}
+
+// --- Diğer Standart Fonksiyonlar ---
 function renderBookManager() {
     const div = document.getElementById('bookManagerList');
     if(!div) return; 
@@ -181,7 +222,8 @@ function renderBookManager() {
                     let isOverdue = checkOverdue(r.date); 
                     let warning = isOverdue ? `<span class="overdue-warning">⚠️ 15 Gün!</span>` : ""; 
                     let dateColor = isOverdue ? "#ef4444" : "inherit"; 
-                    details += `<div style="font-size:0.85rem; margin-top:5px; display:flex; justify-content:space-between; align-items:center;"><span style="color:${dateColor}">🔴 <b>${r.student}</b> (${r.date}) ${warning}</span><button class="btn-delete" onclick="deleteRecord(${r.id})">Sil</button></div>`; 
+                    // deleteRecord çağrılırken de ID gönderiliyor
+                    details += `<div style="font-size:0.85rem; margin-top:5px; display:flex; justify-content:space-between; align-items:center;"><span style="color:${dateColor}">🔴 <b>${r.student}</b> (${r.date}) ${warning}</span><button class="btn-delete" onclick="deleteRecord('${r.id}')">Sil</button></div>`; 
                 }); 
             } else { 
                 badge = `<span class="status-badge bg-green" style="color:#10b981; font-weight:bold; font-size:0.8rem;">Rafta</span>`; 
@@ -275,7 +317,8 @@ function lendBook() {
     if(!s || !b) { alert("Eksik bilgi!"); return; } 
     if(!students.includes(s)) { students.push(s); students.sort(); } 
     if(!books.includes(b)) books.push(b); 
-    records.unshift({ id: Date.now(), date: getLocalTime(), student: s, book: b, status: "Okuyor", returnDate: "-" }); 
+    // ID oluştururken String olarak kaydedelim
+    records.unshift({ id: String(Date.now()), date: getLocalTime(), student: s, book: b, status: "Okuyor", returnDate: "-" }); 
     document.getElementById('bookInput').value = ""; 
     handleInput(document.getElementById('bookInput')); 
     updateUI(); 
@@ -296,9 +339,10 @@ function renderHistory() {
     list.forEach(r => { 
         let actionBtn = ""; 
         if (r.status === "Okuyor") { 
-            actionBtn = `<button class="btn-return" onclick="returnBook(${r.id})">İade Al</button>`; 
+            // ID'yi tırnak içinde gönderiyoruz ('${r.id}')
+            actionBtn = `<button class="btn-return" onclick="returnBook('${r.id}')">İade Al</button>`; 
         } else { 
-            if(sVal) actionBtn = `<button class="btn-comment" onclick="returnBook(${r.id})"><i class="fas fa-edit"></i> Yorumla</button>`; 
+            if(sVal) actionBtn = `<button class="btn-comment" onclick="returnBook('${r.id}')"><i class="fas fa-edit"></i> Yorumla</button>`; 
             else actionBtn = `<span style="font-size:0.8rem;">${r.returnDate}</span>`; 
         } 
         div.innerHTML += `<div class="list-item"><div class="item-content"><h4>${r.book}</h4><p>${r.student} • ${r.date}</p></div>${actionBtn}</div>`; 
@@ -323,23 +367,6 @@ function updateStars() { let btns = document.getElementById('starGroup').childre
 function updateCardPrompt() { let val = document.getElementById('exitCardSelect').value; let box = document.getElementById('cardPromptBox'); let wrap = document.getElementById('commentWrapper'); if(val && EXIT_CARDS[val]) { box.innerHTML = `<i class="fas fa-question-circle"></i> ${EXIT_CARDS[val].prompt}`; box.style.display = 'flex'; wrap.style.display = 'block'; } else { box.style.display = 'none'; wrap.style.display = 'block'; } }
 function closeRatingModal() { document.getElementById('ratingOverlay').style.display = 'none'; tempReturnId = null; }
 
-function submitReturn() {
-    if (!tempReturnId) return;
-    let rec = records.find(r => r.id === tempReturnId);
-    let cardId = document.getElementById('exitCardSelect').value;
-    let comment = document.getElementById('returnComment').value;
-    if(rec) {
-        rec.status = "İade Etti";
-        if(!rec.returnDate || rec.returnDate === "-") rec.returnDate = getLocalTime();
-        if(currentRating > 0) rec.rating = currentRating;
-        if(cardId) { rec.cardId = cardId; rec.cardTitle = EXIT_CARDS[cardId].title; rec.comment = comment; }
-        rec.comment = comment; // Her durumda yorumu kaydet
-        if(loginMode === 'student') renderStudentPanel(); else updateUI();
-        syncData();
-    }
-    closeRatingModal();
-}
-
 function toggleEditMode() { isEditMode = !isEditMode; document.getElementById('editToggleBtn').classList.toggle('active'); document.getElementById('editToggleBtn').innerText = isEditMode ? '✅ Bitir' : '✏️ Düzenle'; renderBookManager(); }
 function saveBookEdits(index) { let oldName = books[index]; let nameInput = document.getElementById(`edit-name-${index}`); let pageInput = document.getElementById(`edit-page-${index}`); if (!nameInput || !pageInput) return; let newName = nameInput.value.trim(); let newPage = parseInt(pageInput.value) || 0; if(!newName) return alert("Kitap adı boş olamaz."); if(newName !== oldName) { books[index] = newName; if(bookPages[oldName]) delete bookPages[oldName]; records.forEach(r => { if(r.book === oldName) r.book = newName; }); } bookPages[newName] = newPage; alert("Kaydedildi!"); books.sort(); renderBookManager(); updateUI(); syncData(); }
 function filterBooks(type, el) { currentFilter = type; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); renderBookManager(); }
@@ -363,7 +390,7 @@ function openBookDetail(bookName) {
     let listContainer = document.getElementById('bdReviews');
     listContainer.innerHTML = "";
     if(bookRecs.length === 0) listContainer.innerHTML = "<div style='text-align:center; padding:10px; color:#ccc;'>Henüz yorum yok.</div>";
-    bookRecs.sort((a,b) => b.id - a.id).forEach(r => {
+    bookRecs.sort((a,b) => parseFloat(b.id) - parseFloat(a.id)).forEach(r => {
         let starStr = r.rating ? "⭐".repeat(r.rating) : "";
         let cardHtml = r.cardTitle ? `<span class="rc-badge">${r.cardTitle}</span>` : "";
         let commentHtml = r.comment ? `<div class="rc-text">"${r.comment}"</div>` : "<div class='rc-text' style='opacity:0.5'>(Yorumsuz)</div>";
@@ -386,7 +413,7 @@ function closeBookDetail() { document.getElementById('bookDetailOverlay').style.
 function genReport() { 
     const s = document.getElementById('reportStudentInput').value.trim().toUpperCase(); 
     if(!s) return; 
-    let myRecs = records.filter(r => r.student === s).sort((a,b) => a.id - b.id); 
+    let myRecs = records.filter(r => r.student === s).sort((a,b) => parseFloat(a.id) - parseFloat(b.id)); 
     let currentlyReading = myRecs.filter(r => r.status === "Okuyor"); 
     let history = myRecs.filter(r => r.status === "İade Etti"); 
     let totalP = 0; 
@@ -443,6 +470,7 @@ function getMedals(count) { let goldCount = Math.floor(count / settings.goldLimi
 function getRank(count) { if(count >= 40) return "💎 EFSANE"; if(count >= 35) return "🌍 Bilge Okur"; if(count >= 30) return "🎩 Edebiyat Ustası"; if(count >= 25) return "👑 Kütüphane Muhafızı"; if(count >= 20) return "🏹 Kelime Avcısı"; if(count >= 15) return "🚀 Bilgi Kaşifi"; if(count >= 10) return "📖 Kitap Kurdu"; if(count >= 5)  return "🥉 Okuma Çırağı"; return "🌱 Başlangıç"; }
 function toggleStatsSort() { if(statsSortMode === 'book_desc') { statsSortMode = 'book_asc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬆"; } else if (statsSortMode === 'book_asc') { statsSortMode = 'page_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Sayfa ⬇"; } else { statsSortMode = 'book_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬇"; } renderRanking(); }
 function renderRanking() { let counts = {}; let pageCounts = {}; records.forEach(r => { if(r.status === "İade Etti") { counts[r.student] = (counts[r.student]||0)+1; let p = parseInt(bookPages[r.book]) || 0; pageCounts[r.student] = (pageCounts[r.student]||0) + p; } }); let sorted = Object.keys(counts).map(k => ({n:k, c:counts[k], p:pageCounts[k]})); if(sorted.length > 0) { let topReader = sorted.reduce((prev, current) => (prev.c > current.c) ? prev : current); document.getElementById('statTopReader').innerText = topReader.n; } else { document.getElementById('statTopReader').innerText = "-"; } if(statsSortMode === 'book_desc') sorted.sort((a,b) => b.c - a.c); else if(statsSortMode === 'book_asc') sorted.sort((a,b) => a.c - b.c); else if(statsSortMode === 'page_desc') sorted.sort((a,b) => b.p - a.p); let html = ""; sorted.forEach((s,i) => { let rank = getRank(s.c); let medals = getMedals(s.c); let highlight = (i === 0 && statsSortMode !== 'book_asc') ? "color:#f59e0b;" : "color:var(--text-sub);"; let rankNum = (i === sorted.length - 1 && sorted.length > 1) ? `<span style="color:#ef4444; font-size:0.7rem;">(Son)</span>` : `${i+1}.`; if (i === 0) rankNum = "👑"; html += `<div class="list-item"><div class="item-content"><span style="font-weight:bold; ${highlight} margin-right:10px; min-width:20px; display:inline-block;">${rankNum}</span><span style="font-weight:600;">${s.n}</span><div class="rank-info">${rank}</div><div class="medal-container">${medals}</div></div><div style="text-align:right;"><div style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c} Kitap</div><div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">${s.p.toLocaleString()} Sayfa</div></div></div>`; }); document.getElementById('rankingList').innerHTML = html; }
+
 function renderStudentPanel() {
     let myRecs = records.filter(r => r.student === loggedInStudent);
     let completedRecs = myRecs.filter(r => r.status === "İade Etti");
@@ -462,14 +490,25 @@ function renderStudentPanel() {
     listDiv.innerHTML = "";
     if(myRecs.length === 0) listDiv.innerHTML = "<p style='text-align:center; opacity:0.6;'>Henüz bir macera başlamadı.</p>";
     
+    // Sort logic düzeltildi (String ID sıralama)
+    myRecs.sort((a,b) => parseFloat(b.id) - parseFloat(a.id));
+
     myRecs.forEach(r => {
         let statusHtml = r.status === "Okuyor" ? `<span style="color:#2563eb; font-weight:bold;">Okuyorsun</span>` : `<span style="color:#10b981; font-weight:bold;">Teslim Ettin</span>`;
         let actionBtn = "";
         if(r.status === "İade Etti") {
-            // BUTON ARTIK ÇALIŞACAK
-            actionBtn = !r.rating ? `<button class="btn-comment" onclick="studentRateBook(${r.id})">Değerlendir</button>` : `<span style="font-size:0.8rem; color:#f59e0b;">⭐ ${r.rating}</span>`;
+            // ID'yi tırnak içinde gönderiyoruz ('${r.id}')
+            actionBtn = !r.rating ? `<button class="btn-comment" onclick="studentRateBook('${r.id}')">Değerlendir</button>` : `<span style="font-size:0.8rem; color:#f59e0b;">⭐ ${r.rating}</span>`;
         }
         listDiv.innerHTML += `<div class="list-item"><div class="item-content"><h4>${r.book}</h4><p>${r.date} • ${statusHtml}</p></div>${actionBtn}</div>`;
     });
 }
-function deleteRecord(id) { if(confirm("Silmek istiyor musunuz?")) { records = records.filter(r => r.id !== id); updateUI(); syncData(); } }
+
+function deleteRecord(id) { 
+    // ID karşılaştırması güvenli hale getirildi
+    if(confirm("Silmek istiyor musunuz?")) { 
+        records = records.filter(r => String(r.id) !== String(id)); 
+        updateUI(); 
+        syncData(); 
+    } 
+}
