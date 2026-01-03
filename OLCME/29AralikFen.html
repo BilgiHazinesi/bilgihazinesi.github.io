@@ -3,21 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>29 Aralık Fen (Final)</title>
+<title>29 Aralık Fen (Bulut + Rapor)</title>
 <style>
     :root { --primary: #27ae60; --dark: #2c3e50; --bg: #f4f7f6; --danger: #e74c3c; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
     
-    /* ÜST PANEL */
+    /* GİRİŞ EKRANI */
+    #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--dark); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+    .class-btn { width: 200px; padding: 15px; margin: 10px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; background: white; color: var(--dark); transition: 0.2s; }
+    .class-btn:active { transform: scale(0.95); }
+    .loading-spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: none; margin-top: 20px;}
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* HEADER */
     header { background: var(--dark); color: white; padding: 10px 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     h1 { margin: 0; font-size: 1rem; font-weight: 600; }
     
     .btn-group { display: flex; gap: 5px; }
     .btn-mini { padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; border: none; color: white; cursor: pointer; font-weight: bold; }
-    .btn-edit { background: #3498db; }
     .btn-report { background: #f1c40f; color: #333; }
-    .btn-backup { background: #e67e22; }
+    .btn-sync { background: #3498db; }
 
     /* ARAMA */
     .search-box { margin-bottom: 8px; position: relative; }
@@ -28,7 +34,7 @@
     .search-input::placeholder { color: rgba(255,255,255,0.6); }
     .search-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); opacity: 0.6; font-size: 0.8rem; }
 
-    /* ÖĞRENCİ LİSTESİ */
+    /* LİSTE */
     .student-bar { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; -webkit-overflow-scrolling: touch; scrollbar-width: none; min-height: 40px; }
     .student-bar::-webkit-scrollbar { display: none; }
     .student-chip { 
@@ -48,7 +54,7 @@
     .q-max { background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.75rem; color:#7f8c8d; font-weight:bold; }
     .q-desc { font-size: 0.85rem; color: #666; margin-bottom: 10px; display: block; font-style: italic; }
 
-    /* BUTONLAR (GÖRSEL GELİŞTİRİLMİŞ) */
+    /* BUTONLAR */
     .btn-row { display: flex; gap: 8px; }
     .score-btn { 
         flex: 1; background: #f8f9fa; border: 2px solid #e0e0e0; padding: 12px 5px; border-radius: 8px; 
@@ -62,13 +68,11 @@
     }
     .score-btn.selected::before { content: "✓ "; margin-right: 4px; font-weight: 900; }
 
-    /* SAYAÇ & KLAVYE GİRİŞİ */
+    /* SAYAÇ */
     .counter-wrapper { display: flex; align-items: center; justify-content: space-between; background: #f1f2f6; padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; }
     .card.filled .counter-wrapper { border-color: #2ecc71; background: #e8f8f5; }
-    
     .counter-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: white; font-size: 1.4rem; font-weight: bold; color: var(--dark); box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition:0.2s; }
     .counter-btn:active { transform: scale(0.9); }
-
     .counter-input { 
         width: 70px; text-align: center; font-size: 1.3rem; font-weight: bold; 
         border: 2px solid #ccc; border-radius: 6px; padding: 5px; color: var(--dark); background: white;
@@ -81,16 +85,15 @@
     .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #ddd; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 90; box-sizing: border-box; }
     .btn-save { border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; font-size: 1rem; background: var(--dark); }
 
-    /* MODAL */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
-    .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
-    textarea { width: 100%; height: 200px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: inherit; box-sizing: border-box; }
-
-    /* RAPOR */
+    /* RAPOR VE MODAL */
     #report-screen { display: none; padding: 20px; background: white; min-height: 100vh; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 0.9rem; }
     th { background: #eee; }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
+    .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; }
+    textarea { width: 100%; height: 200px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: inherit; box-sizing: border-box; }
 
     @media print {
         body * { visibility: hidden; }
@@ -102,38 +105,49 @@
 </head>
 <body>
 
-<header id="main-header">
-    <div class="header-top">
-        <h1>🧪 29 Aralık Fen (Düzeltilmiş)</h1>
-        <div class="btn-group">
-            <button class="btn-mini btn-edit" onclick="openEditModal()">✏️ Liste</button>
-            <button class="btn-mini btn-report" onclick="showReport()">📊 Rapor</button>
-            <button class="btn-mini btn-backup" onclick="downloadData()">💾 Yedek</button>
-            <button class="btn-mini" style="background:#8e44ad" onclick="document.getElementById('fileInput').click()">📂 Yükle</button>
-        </div>
-    </div>
-    <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" class="search-input" placeholder="Öğrenci ara..." oninput="filterStudents()">
-    </div>
-    <div class="student-bar" id="studentList"></div>
-</header>
-
-<div class="container" id="rubricArea">
-    <div style="text-align:center; margin-top:60px; color:#95a5a6;">
-        <div style="font-size:40px; margin-bottom:10px;">👆</div>
-        <h3>Öğrenci Seçiniz</h3>
-    </div>
+<div id="login-screen">
+    <h2 style="margin-bottom:30px">Sınıf Seçiniz</h2>
+    <button class="class-btn" onclick="loadClass('A')">A Sınıfı</button>
+    <button class="class-btn" onclick="loadClass('B')">B Sınıfı</button>
+    <button class="class-btn" onclick="loadClass('C')">C Sınıfı</button>
+    <button class="class-btn" onclick="loadClass('D')">D Sınıfı</button>
+    <div id="spinner" class="loading-spinner"></div>
+    <p id="status-text" style="margin-top:10px; font-size:0.9rem; color:#ccc;"></p>
 </div>
 
-<div class="bottom-bar" id="footer" style="display:none">
-    <div style="font-size:1.1rem; font-weight:800; color:#2c3e50">Toplam: <span id="totalScore" style="color:#27ae60">0</span> / 100</div>
-    <button class="btn-save" onclick="finishStudent()">Kaydet & Sonraki ▶</button>
+<div id="app-content" style="display:none">
+    <header id="main-header">
+        <div class="header-top">
+            <h1>🧪 29 Aralık Fen (<span id="activeClassDisplay"></span>)</h1>
+            <div class="btn-group">
+                <button class="btn-mini btn-edit" onclick="openEditModal()">✏️ Liste</button>
+                <button class="btn-mini btn-report" onclick="showReport()">📊 Rapor</button>
+                <button class="btn-mini btn-sync" id="syncBtn" onclick="syncToCloud()">☁️ Kaydet</button>
+            </div>
+        </div>
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="Öğrenci ara..." oninput="filterStudents()">
+        </div>
+        <div class="student-bar" id="studentList"></div>
+    </header>
+
+    <div class="container" id="rubricArea">
+        <div style="text-align:center; margin-top:60px; color:#95a5a6;">
+            <div style="font-size:40px; margin-bottom:10px;">👆</div>
+            <h3>Öğrenci Seçiniz</h3>
+        </div>
+    </div>
+
+    <div class="bottom-bar" id="footer" style="display:none">
+        <div style="font-size:1.1rem; font-weight:800; color:#2c3e50">Toplam: <span id="totalScore" style="color:#27ae60">0</span> / 100</div>
+        <button class="btn-save" onclick="finishStudent()">Kaydet & Sonraki ▶</button>
+    </div>
 </div>
 
 <div id="report-screen">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>Fen Bilimleri Puan Listesi</h2>
+        <h2 id="report-title">Fen Bilimleri Puan Listesi</h2>
         <button class="btn-mini btn-edit no-print" onclick="closeReport()">Kapat</button>
     </div>
     <table id="score-table">
@@ -149,75 +163,102 @@
         <h3>Öğrenci Listesi</h3>
         <textarea id="studentInput" placeholder="İsimleri alt alta yapıştırın..."></textarea>
         <div style="margin-top:10px; display:flex; gap:10px;">
-            <button class="btn-mini btn-edit" onclick="saveStudents()">Kaydet</button>
+            <button class="btn-mini btn-edit" onclick="saveStudentsLocal()">Geçici Kaydet</button>
             <button class="btn-mini" style="background:#95a5a6" onclick="document.getElementById('editModal').style.display='none'">İptal</button>
         </div>
+        <p style="font-size:0.7rem; color:red; margin-top:5px;">Not: Listeyi kalıcı yapmak için ana ekrandan "☁️ Kaydet" butonuna basmalısınız.</p>
     </div>
 </div>
 
-<input type="file" id="fileInput" style="display:none" onchange="uploadData(this)">
-
 <script>
-    // --- VERİLER ---
-    let students = JSON.parse(localStorage.getItem('my_students_final_list')) || [
-        "HAKAN AKDENİZ", "HÜSEYİN ÇAĞAN GÜRGAH", "AHMET ARIN AĞTÜRK", "DENİZ GÜNEY", "İDİL DEMİRCİ", 
-        "DURU AYKANAT", "DENİZ KİMYON", "KADİR BERKTAŞ", "DOĞA BORA", "AHMET CEVDET KORKMAZ", 
-        "GÜLNİHAL KARAKAŞ", "NİL TİRYAKİ", "MASAL DEFNE TEL", "EYLÜL AFAT", "ELİF ADA KEKEÇ", 
-        "EYLÜL MUTAF", "İPEK MİMAROĞLU", "YEKTA URAS DEMİRER", "HAMZA KAAN ÇEVEN", "BEYZA DAĞDELEN", 
-        "NAZ KARABAĞLI", "AYNUR BUDAK", "DURU BÜKÜN", "WAFA MAKANSSI"
-    ];
+    // --- LÜTFEN GOOGLE SCRIPT LINKINI BURAYA YAPIŞTIRIN ---
+    const GOOGLE_SCRIPT_URL = "BURAYA_GOOGLE_SCRIPT_LINKINI_YAPISTIR"; 
 
-    // 16 MADDELİK FİNAL YAPI (Q2 DÜZELTİLDİ)
+    let activeClass = ""; 
+    let students = [];
+    let db = {};
+    let currentStudent = null;
+
+    // 16 MADDELİK FİNAL YAPI
     const questions = [
-        // Soru 1: Madenler (3 parça)
         { id: 'q1', title: '1a. Bakır', max: 3, type: 'toggle', desc: 'Turuncu renkli, kablolarda kullanılır' },
         { id: 'q2', title: '1b. Krom', max: 3, type: 'toggle', desc: 'Paslanmaz, musluklarda kullanılır' },
         { id: 'q3', title: '1c. Mermer', max: 3, type: 'toggle', desc: 'Zemin döşemesi, mutfak tezgahı' },
-
-        // Soru 2: Taş Deneyi (4 AYRI KART - İsteğiniz Üzerine)
         { id: 'q4', title: '2a. Kütle', max: 2, type: 'toggle', desc: 'Kütleler eşittir (2p)' },
         { id: 'q5', title: '2b. 1. Taş Hacmi', max: 2, type: 'toggle', desc: '160 mL (2p)' },
         { id: 'q6', title: '2c. 2. Taş Hacmi', max: 2, type: 'toggle', desc: '340 mL (2p)' },
         { id: 'q7', title: '2d. Yorum', max: 4, type: 'toggle', desc: 'Şekil/Kapladığı yer farkı (4p)' },
-
-        // Soru 3: Tablo
         { id: 'q8', title: '3. Madde Özellikleri', max: 13, type: 'counter', mult: 1, desc: 'Tablo işaretleme (Her doğru 1p)' },
-
-        // Soru 4: Menü (3 Parçalı Tek Kart)
         { id: 'q9', title: '4. Dengeli Beslenme', max: 10, type: 'multi', parts:[{l:'Öğün(1p)',v:1}, {l:'Menü(4p)',v:4}, {l:'Açıklama(5p)',v:5}], desc: 'Öğün, içerik ve denge açıklaması' },
-
-        // Soru 5: Boşluk Doldurma
         { id: 'q10', title: '5. Boşluk Doldurma', max: 14, type: 'counter', mult: 2, desc: 'Her doğru 2 puan (Toplam 7 kelime)' },
-
-        // Soru 6: Kuvvet
         { id: 'q11', title: '6. Kuvvetin Etkileri', max: 12, type: 'counter', mult: 3, desc: 'Yön, Şekil, Hızlandırma, Yavaşlatma (x3p)' },
-
-        // Soru 7: Dünya Hareketleri
         { id: 'q12', title: '7. Hareket Örnekleri', max: 8, type: 'counter', mult: 2, desc: 'Dönme/Dolanma örnekleri (x2p)' },
-
-        // Soru 8: Mıknatıs ve Yaylar (İKİYE AYRILDI)
         { id: 'q13', title: '8a. 1. Yay (Uzama)', max: 5, type: 'multi', parts:[{l:'Uzar(2p)',v:2},{l:'Neden(3p)',v:3}], desc: 'Zıt kutuplar çeker, yay uzar' },
         { id: 'q14', title: '8b. 2. Yay (Kısalma)', max: 5, type: 'multi', parts:[{l:'Kısalır(2p)',v:2},{l:'Neden(3p)',v:3}], desc: 'Aynı kutuplar iter, yay kısalır' },
-
-        // Soru 9: Dünya Sonuçları
         { id: 'q15', title: '9. Hareket Sonuçları', max: 10, type: 'counter', mult: 2, desc: 'Gece-gündüz, Mevsimler vb. (x2p)' },
-
-        // Soru 10: Fosil
         { id: 'q16', title: '10. Fosil Oluşumu', max: 4, type: 'counter', mult: 1, desc: 'Sıralama (Her adım 1p)' }
     ];
 
-    let db = JSON.parse(localStorage.getItem('fen_db_final_fix2')) || {};
-    let currentStudent = null;
+    // --- BULUT VE VERİ ---
+    function loadClass(className) {
+        activeClass = className;
+        document.getElementById('spinner').style.display = 'block';
+        document.getElementById('status-text').innerText = className + " Sınıfı verileri çekiliyor...";
+        
+        fetch(GOOGLE_SCRIPT_URL + "?sinif=" + className)
+        .then(response => response.json())
+        .then(data => {
+            if(data && data.students) {
+                students = data.students;
+                db = data.scores || {};
+            } else {
+                students = []; db = {};
+            }
+            startApp();
+        })
+        .catch(err => {
+            alert("Veri çekilemedi! İnternet bağlantınızı kontrol edin.");
+            document.getElementById('spinner').style.display = 'none';
+        });
+    }
 
-    function init() { renderStudentList(); }
+    function syncToCloud() {
+        const btn = document.getElementById('syncBtn');
+        btn.innerText = "⏳ Kaydediliyor...";
+        btn.disabled = true;
+
+        const payload = { sinif: activeClass, data: { students: students, scores: db } };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(response => {
+            btn.innerText = "☁️ Kaydet";
+            btn.disabled = false;
+            if(response.status === 'success') alert("✅ Başarıyla Kaydedildi!");
+            else alert("Hata: " + response.msg);
+        })
+        .catch(err => {
+            btn.innerText = "☁️ Kaydet"; btn.disabled = false;
+            alert("Kaydetme başarısız! İnternetinizi kontrol edin.");
+        });
+    }
+
+    function startApp() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        document.getElementById('activeClassDisplay').innerText = activeClass + " Şubesi";
+        renderStudentList();
+    }
 
     function renderStudentList(filterText = "") {
         const list = document.getElementById('studentList');
         list.innerHTML = '';
-        if(students.length === 0) { list.innerHTML = '<span style="color:white; padding:10px;">Liste boş.</span>'; return; }
+        if(students.length === 0) { list.innerHTML = '<span style="color:white; padding:10px;">Liste boş. "✏️ Liste" butonuna basın.</span>'; return; }
         
         const filtered = students.filter(s => s.toLocaleLowerCase('tr').includes(filterText.toLocaleLowerCase('tr')));
-
         filtered.forEach(name => {
             const el = document.createElement('div');
             el.className = `student-chip ${db[name] ? 'done' : ''}`;
@@ -226,15 +267,12 @@
             const parts = name.split(" ");
             let shortName = parts[0] + (parts.length > 1 ? " " + parts[1][0] + "." : "");
             el.innerText = shortName;
-            
             el.onclick = () => selectStudent(name);
             list.appendChild(el);
         });
     }
 
-    function filterStudents() {
-        renderStudentList(document.getElementById('searchInput').value);
-    }
+    function filterStudents() { renderStudentList(document.getElementById('searchInput').value); }
 
     function selectStudent(name) {
         currentStudent = name;
@@ -294,7 +332,6 @@
                     <div style="font-size:0.75rem; color:#7f8c8d; text-align:right">Adet<br>x${q.mult}p</div>
                 </div>`;
             }
-
             card.innerHTML = html;
             container.appendChild(card);
         });
@@ -304,7 +341,7 @@
     function toggleScore(id, max) {
         if(!db[currentStudent]) db[currentStudent] = {};
         db[currentStudent][id] = (db[currentStudent][id] === max) ? 0 : max;
-        save();
+        saveLocal();
     }
 
     function togglePart(id, idx, val) {
@@ -312,7 +349,7 @@
         if(!db[currentStudent][id]) db[currentStudent][id] = {};
         const curr = db[currentStudent][id][idx] || 0;
         db[currentStudent][id][idx] = (curr === 0) ? val : 0;
-        save();
+        saveLocal();
     }
 
     function updCnt(id, change, mult, maxCount) {
@@ -332,11 +369,10 @@
         db[currentStudent][id] = c * mult;
         const inp = document.getElementById(`inp_${id}`);
         if(inp) inp.value = c;
-        save();
+        saveLocal();
     }
 
-    function save() {
-        localStorage.setItem('fen_db_final_fix2', JSON.stringify(db));
+    function saveLocal() {
         calculateTotal();
         renderRubric();
     }
@@ -359,27 +395,32 @@
         renderStudentList(document.getElementById('searchInput').value);
         const idx = students.indexOf(currentStudent);
         if(idx < students.length - 1) selectStudent(students[idx+1]);
-        else alert("Liste sonu.");
+        else alert("Liste sonu. Lütfen '☁️ Kaydet' butonuna basmayı unutmayın.");
     }
 
     function openEditModal() {
         document.getElementById('studentInput').value = students.join('\n');
         document.getElementById('editModal').style.display = 'flex';
     }
-    function saveStudents() {
+    
+    function saveStudentsLocal() {
         const val = document.getElementById('studentInput').value;
         const lines = val.split('\n').map(x=>x.trim()).filter(x=>x);
-        if(lines.length>0) {
+        if(lines.length > 0) {
             students = lines;
-            localStorage.setItem('my_students_final_list', JSON.stringify(students));
             document.getElementById('editModal').style.display = 'none';
             document.getElementById('searchInput').value = "";
             renderStudentList();
+            alert("Liste güncellendi! Kalıcı olması için '☁️ Kaydet' butonuna basın.");
         }
     }
 
+    // --- GÜNCELLENEN RAPOR FONKSİYONU ---
     function showReport() {
         const body = document.getElementById('report-body');
+        // BAŞLIĞI GÜNCELLEME
+        document.getElementById('report-title').innerText = "Fen Bilimleri Puan Listesi (" + activeClass + " Şubesi)";
+        
         body.innerHTML = '';
         students.forEach((s, i) => {
             let t = 0;
@@ -390,41 +431,15 @@
             });
             body.innerHTML += `<tr><td>${i+1}</td><td>${s}</td><td style="text-align:center; font-weight:bold">${t}</td></tr>`;
         });
-        document.getElementById('main-header').style.display='none';
-        document.getElementById('rubricArea').style.display='none';
-        document.getElementById('footer').style.display='none';
+        document.getElementById('app-content').style.display='none';
         document.getElementById('report-screen').style.display='block';
     }
+    
     function closeReport() {
         document.getElementById('report-screen').style.display='none';
-        document.getElementById('main-header').style.display='block';
-        document.getElementById('rubricArea').style.display='block';
-        if(currentStudent) document.getElementById('footer').style.display='flex';
+        document.getElementById('app-content').style.display='block';
     }
 
-    function downloadData() {
-        const a = document.createElement('a');
-        const data = {students, scores:db};
-        a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data));
-        a.download = 'Fen_Final_Yedek.json';
-        a.click();
-    }
-    document.getElementById('fileInput').onchange = (e) => {
-        const r = new FileReader();
-        r.onload = (evt) => {
-            try {
-                const d = JSON.parse(evt.target.result);
-                if(d.students && d.scores) {
-                    students = d.students; db = d.scores;
-                    save(); renderStudentList();
-                    alert("Yüklendi.");
-                }
-            } catch(err){alert("Hata");}
-        };
-        r.readAsText(e.target.files[0]);
-    };
-
-    init();
 </script>
 </body>
 </html>
