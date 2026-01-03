@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>29 Aralık Fen (Gelişim Odaklı)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sticky-header { position: sticky; top: 0; z-index: 50; background-color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+
+        #searchResults { max-height: 300px; overflow-y: auto; }
+        .search-item:hover { background-color: #eff6ff; color: #2563eb; }
+
+        /* Login Screen Styles */
+        #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #2c3e50; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .class-btn { width: 200px; padding: 15px; margin: 10px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; background: white; color: #2c3e50; transition: 0.2s; }
+        .class-btn:hover { background: #ecf0f1; transform: scale(1.05); }
+        .loading-spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: none; margin-top: 20px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Rubric Specific Styles */
+        .btn-option { transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-option:active { transform: scale(0.95); }
+        .btn-option.selected { transform: scale(1.05); font-weight: bold; box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3); border: 2px solid white; }
+
+        .counter-btn { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s; }
+        .counter-btn:active { transform: scale(0.9); }
+
+        @media (max-width: 640px) {
+            .question-text { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body class="pb-24" onclick="closeSearchOutside(event)">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <h2 class="text-3xl font-bold mb-8">Sınıf Seçiniz</h2>
+        <button class="class-btn" onclick="loadClass('A')">A Sınıfı</button>
+        <button class="class-btn" onclick="loadClass('B')">B Sınıfı</button>
+        <button class="class-btn" onclick="loadClass('C')">C Sınıfı</button>
+        <button class="class-btn" onclick="loadClass('D')">D Sınıfı</button>
+        <div id="spinner" class="loading-spinner"></div>
+        <p id="status-text" class="mt-4 text-gray-300 text-sm"></p>
+    </div>
+
+    <!-- APP CONTENT -->
+    <div id="app-content" style="display:none;">
+        <div class="sticky-header p-3 border-b border-gray-200">
+            <div class="max-w-5xl mx-auto flex flex-col md:flex-row gap-3 items-center justify-between">
+
+                <div class="w-full md:w-1/2 relative">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" id="searchInput"
+                            class="w-full pl-10 p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-800 font-bold placeholder-gray-400 outline-none transition-colors"
+                            placeholder="Öğrenci adı yazın..."
+                            oninput="filterStudents()"
+                            onfocus="filterStudents()"
+                            autocomplete="off">
+
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" onclick="clearSearch()">
+                            <i class="fas fa-times text-gray-400 hover:text-gray-600"></i>
+                        </div>
+                    </div>
+
+                    <div id="dropdownContainer" class="hidden absolute w-full bg-white mt-1 rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                        <ul id="searchResults" class="divide-y divide-gray-100"></ul>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 w-full md:w-auto overflow-x-auto justify-end pt-2 md:pt-0">
+                    <span id="activeClassDisplay" class="bg-indigo-100 text-indigo-800 px-3 py-2 rounded-lg text-sm font-bold flex items-center"></span>
+                    <button onclick="openEditModal()" class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg shadow text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-edit"></i> <span class="hidden sm:inline">Liste</span>
+                    </button>
+                    <button onclick="downloadClassPDF()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg shadow text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-file-pdf"></i> <span class="hidden sm:inline">Rapor</span>
+                    </button>
+                    <button onclick="syncToCloud()" id="syncBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-lg shadow text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-cloud-upload-alt"></i> <span class="hidden sm:inline">Kaydet</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-5xl mx-auto p-4" id="mainContent" style="display:none;">
+
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 gap-4">
+                <div class="text-center sm:text-left">
+                    <h2 id="studentNameDisplay" class="text-2xl font-bold text-gray-800 tracking-tight"></h2>
+                    <span class="text-sm text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">29 Aralık Fen Değerlendirme</span>
+                </div>
+
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="downloadStudentCard()" class="flex-1 sm:flex-none bg-purple-600 text-white px-4 py-2.5 rounded-xl shadow hover:bg-purple-700 transition flex items-center justify-center font-medium">
+                        <i class="fas fa-file-contract mr-2"></i> Karne
+                    </button>
+                    <button onclick="openWhatsappModal()" class="flex-1 sm:flex-none bg-green-500 text-white px-4 py-2.5 rounded-xl shadow hover:bg-green-600 transition flex items-center justify-center font-medium">
+                        <i class="fab fa-whatsapp mr-2"></i> Mesaj
+                    </button>
+                </div>
+            </div>
+
+            <div id="questionsContainer" class="space-y-4"></div>
+
+            <div style="height: 60px;"></div>
+        </div>
+
+        <div id="startMessage" class="flex flex-col items-center justify-center min-h-[60vh] text-gray-400">
+            <div class="bg-white p-8 rounded-full shadow-sm mb-4 animate-bounce">
+                <i class="fas fa-search text-6xl text-blue-200"></i>
+            </div>
+            <p class="text-xl font-medium text-gray-600">Öğrenci bulmak için yukarıya ismini yazın.</p>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[60]">
+        <div class="bg-white p-6 rounded-xl w-11/12 max-w-md shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Öğrenci Listesi</h3>
+            <textarea id="studentInput" class="w-full h-40 p-3 border rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="İsimleri alt alta yapıştırın..."></textarea>
+            <div class="mt-4 flex gap-3">
+                <button onclick="saveStudentsLocal()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700">Geçici Kaydet</button>
+                <button onclick="document.getElementById('editModal').classList.add('hidden'); document.getElementById('editModal').classList.remove('flex')" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">İptal</button>
+            </div>
+            <p class="text-xs text-red-500 mt-2">Not: Listeyi kalıcı yapmak için ana ekrandan "Kaydet" butonuna basmalısınız.</p>
+        </div>
+    </div>
+
+    <!-- WhatsApp Modal -->
+    <div id="waModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[60]">
+        <div class="bg-white p-6 rounded-xl w-11/12 max-w-md shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Veli Bilgilendirme Mesajı</h3>
+            <textarea id="waText" class="w-full h-40 p-3 border rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-green-500 outline-none resize-none" readonly></textarea>
+            <div class="mt-4 flex gap-3">
+                <button onclick="copyWa()" class="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium hover:bg-green-600">Kopyala</button>
+                <button onclick="document.getElementById('waModal').classList.add('hidden'); document.getElementById('waModal').classList.remove('flex')" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGFreI0RG9kigA6LYfdFrDwkw4QNxEpqCbMSnFnRQLpH1KX-CuUKZ5knIV1fgEQTfT7Q/exec";
+
+        let activeClass = "";
+        let students = [];
+        let db = {};
+        let currentStudent = null;
+
+        // QUESTIONS DATA
+        const questions = [
+            { id: 'q1', title: '1a. Madenler (Bakır)', max: 3, type: 'toggle', desc: 'Turuncu renkli, kablolarda kullanılır' },
+            { id: 'q2', title: '1b. Madenler (Krom)', max: 3, type: 'toggle', desc: 'Paslanmaz, musluklarda kullanılır' },
+            { id: 'q3', title: '1c. Madenler (Mermer)', max: 3, type: 'toggle', desc: 'Zemin döşemesi, mutfak tezgahı' },
+            { id: 'q4', title: '2a. Kütle Ölçümü', max: 2, type: 'toggle', desc: 'Kütleler eşittir' },
+            { id: 'q5', title: '2b. 1. Taş Hacmi', max: 2, type: 'toggle', desc: '160 mL' },
+            { id: 'q6', title: '2c. 2. Taş Hacmi', max: 2, type: 'toggle', desc: '340 mL' },
+            { id: 'q7', title: '2d. Deney Yorumu', max: 4, type: 'toggle', desc: 'Şekil/Kapladığı yer farkı' },
+            { id: 'q8', title: '3. Madde Özellikleri', max: 13, type: 'counter', mult: 1, desc: 'Tablo işaretleme' },
+            { id: 'q9', title: '4. Dengeli Beslenme', max: 10, type: 'multi', parts:[{l:'Öğün',v:1}, {l:'Menü',v:4}, {l:'Açıklama',v:5}], desc: 'Öğün, içerik ve denge açıklaması' },
+            { id: 'q10', title: '5. Boşluk Doldurma', max: 14, type: 'counter', mult: 2, desc: 'Boşluk doldurma' },
+            { id: 'q11', title: '6. Kuvvetin Etkileri', max: 12, type: 'counter', mult: 3, desc: 'Yön, Şekil, Hızlandırma, Yavaşlatma' },
+            { id: 'q12', title: '7. Hareket Örnekleri', max: 8, type: 'counter', mult: 2, desc: 'Dönme/Dolanma örnekleri' },
+            { id: 'q13', title: '8a. 1. Yay (Uzama)', max: 5, type: 'multi', parts:[{l:'Uzar',v:2},{l:'Neden',v:3}], desc: 'Zıt kutuplar çeker, yay uzar' },
+            { id: 'q14', title: '8b. 2. Yay (Kısalma)', max: 5, type: 'multi', parts:[{l:'Kısalır',v:2},{l:'Neden',v:3}], desc: 'Aynı kutuplar iter, yay kısalır' },
+            { id: 'q15', title: '9. Hareket Sonuçları', max: 10, type: 'counter', mult: 2, desc: 'Gece-gündüz, Mevsimler vb.' },
+            { id: 'q16', title: '10. Fosil Oluşumu', max: 4, type: 'counter', mult: 1, desc: 'Sıralama' }
+        ];
+
+        // --- APP STARTUP ---
+        function loadClass(className) {
+            activeClass = className;
+            document.getElementById('spinner').style.display = 'block';
+            document.getElementById('status-text').innerText = "Veriler çekiliyor...";
+
+            fetch(GOOGLE_SCRIPT_URL + "?sinif=" + className)
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'error') {
+                    alert(data.msg);
+                    document.getElementById('spinner').style.display = 'none';
+                    return;
+                }
+                students = data.students || [];
+                db = data.scores || {};
+                startApp();
+            })
+            .catch(err => {
+                alert("Bağlantı hatası!");
+                document.getElementById('spinner').style.display = 'none';
+            });
+        }
+
+        function startApp() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            document.getElementById('activeClassDisplay').innerText = activeClass + " Şubesi";
+            // Pre-load student list for search but don't show full list initially
+        }
+
+        // --- SEARCH & NAVIGATION ---
+        function filterStudents() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLocaleUpperCase('tr');
+            const dropdown = document.getElementById('dropdownContainer');
+            const list = document.getElementById('searchResults');
+
+            list.innerHTML = "";
+            if (filter.length === 0) { dropdown.classList.add('hidden'); return; }
+
+            const matches = students.filter(s => s.toLocaleUpperCase('tr').includes(filter));
+
+            if (matches.length > 0) {
+                dropdown.classList.remove('hidden');
+                matches.forEach(student => {
+                    const li = document.createElement('li');
+                    li.className = "search-item px-4 py-3 cursor-pointer text-gray-700 font-medium transition-colors border-b border-gray-50 last:border-0 flex justify-between";
+
+                    const isDone = db[student] && Object.keys(db[student]).length > 0;
+                    li.innerHTML = `<span>${student}</span> ${isDone ? '<i class="fas fa-check-circle text-green-500"></i>' : ''}`;
+
+                    li.onclick = () => selectStudent(student);
+                    list.appendChild(li);
+                });
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function selectStudent(name) {
+            currentStudent = name;
+            document.getElementById('searchInput').value = name;
+            document.getElementById('dropdownContainer').classList.add('hidden');
+            loadStudentUI();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = "";
+            currentStudent = null;
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('startMessage').style.display = 'flex';
+            document.getElementById('dropdownContainer').classList.add('hidden');
+        }
+
+        function closeSearchOutside(event) {
+            const dropdown = document.getElementById('dropdownContainer');
+            const input = document.getElementById('searchInput');
+            if (!dropdown.contains(event.target) && event.target !== input) {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        // --- RENDER UI ---
+        function loadStudentUI() {
+            if(!currentStudent) return;
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('startMessage').style.display = 'none';
+            document.getElementById('studentNameDisplay').textContent = currentStudent;
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = "";
+            const data = db[currentStudent] || {};
+
+            questions.forEach(q => {
+                const card = document.createElement('div');
+                let isFilled = false;
+                if(q.type==='toggle' && data[q.id]===q.max) isFilled=true;
+                if(q.type==='counter' && data[q.id]>0) isFilled=true;
+                if(q.type==='multi' && data[q.id] && Object.values(data[q.id]).some(x=>x>0)) isFilled=true;
+
+                card.className = `bg-white p-4 rounded-xl shadow-sm border border-gray-100 transition duration-200 ${isFilled ? 'border-l-4 border-l-green-500 bg-green-50/30' : ''}`;
+
+                let contentHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="font-bold text-gray-800">${q.title}</h3>
+                            <p class="text-sm text-gray-500">${q.desc}</p>
+                        </div>
+                        <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded">Max: ${q.max}p</span>
+                    </div>
+                    <div class="mt-3">
+                `;
+
+                // TOGGLE TYPE
+                if(q.type === 'toggle') {
+                    const isSel = data[q.id] === q.max;
+                    contentHTML += `
+                        <button onclick="toggleScore('${q.id}', ${q.max})"
+                            class="w-full py-3 rounded-lg font-bold transition-all ${isSel ? 'bg-green-500 text-white shadow-md transform scale-[1.02]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}">
+                            ${isSel ? '<i class="fas fa-check mr-2"></i> Tam Puan' : 'Tam Puan (' + q.max + ')'}
+                        </button>
+                    `;
+                }
+
+                // MULTI TYPE
+                if(q.type === 'multi') {
+                    contentHTML += `<div class="flex flex-wrap gap-2">`;
+                    const sub = data[q.id] || {};
+                    q.parts.forEach((p, idx) => {
+                        const isFull = sub[idx] === p.v;
+                        contentHTML += `
+                            <button onclick="togglePart('${q.id}', ${idx}, ${p.v})"
+                                class="flex-1 py-2 px-1 rounded-lg font-semibold text-sm transition-all ${isFull ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}">
+                                ${p.l}
+                            </button>
+                        `;
+                    });
+                    contentHTML += `</div>`;
+                }
+
+                // COUNTER TYPE
+                if(q.type === 'counter') {
+                    const count = (data[q.id] || 0) / q.mult;
+                    const maxCount = q.max / q.mult;
+                    contentHTML += `
+                        <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg border border-gray-200">
+                            <button onclick="updCnt('${q.id}', -1, ${q.mult}, ${maxCount})" class="counter-btn bg-white text-red-500 shadow hover:bg-red-50"><i class="fas fa-minus"></i></button>
+                            <div class="flex flex-col items-center">
+                                <input type="number" id="inp_${q.id}" value="${count}"
+                                    class="w-16 text-center text-xl font-bold bg-transparent border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none"
+                                    onchange="manualCnt('${q.id}', this.value, ${q.mult}, ${maxCount})">
+                                <span class="text-xs text-gray-400 mt-1">x${q.mult} puan</span>
+                            </div>
+                            <button onclick="updCnt('${q.id}', 1, ${q.mult}, ${maxCount})" class="counter-btn bg-white text-green-500 shadow hover:bg-green-50"><i class="fas fa-plus"></i></button>
+                        </div>
+                    `;
+                }
+
+                contentHTML += `</div>`;
+                card.innerHTML = contentHTML;
+                container.appendChild(card);
+            });
+        }
+
+        // --- LOGIC ---
+        function toggleScore(id, max) {
+            if(!db[currentStudent]) db[currentStudent] = {};
+            db[currentStudent][id] = (db[currentStudent][id] === max) ? 0 : max;
+            renderQuestions();
+        }
+
+        function togglePart(id, idx, val) {
+            if(!db[currentStudent]) db[currentStudent] = {};
+            if(!db[currentStudent][id]) db[currentStudent][id] = {};
+            const curr = db[currentStudent][id][idx] || 0;
+            db[currentStudent][id][idx] = (curr === 0) ? val : 0;
+            renderQuestions();
+        }
+
+        function updCnt(id, change, mult, maxCount) {
+            if(!db[currentStudent]) db[currentStudent] = {};
+            let c = (db[currentStudent][id] || 0) / mult;
+            c += change;
+            if(c < 0) c = 0; if(c > maxCount) c = maxCount;
+            manualCnt(id, c, mult, maxCount);
+        }
+
+        function manualCnt(id, val, mult, maxCount) {
+            if(!db[currentStudent]) db[currentStudent] = {};
+            let c = parseInt(val);
+            if(isNaN(c) || c < 0) c = 0;
+            if(c > maxCount) c = maxCount;
+            db[currentStudent][id] = c * mult;
+            renderQuestions();
+        }
+
+        // --- CLOUD SYNC ---
+        function syncToCloud() {
+            const btn = document.getElementById('syncBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kaydediliyor...';
+            btn.disabled = true;
+
+            const payload = { sinif: activeClass, data: { students: students, scores: db } };
+
+            fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(res => res.json())
+            .then(response => {
+                btn.innerHTML = originalText; btn.disabled = false;
+                if(response.status === 'success') alert("✅ Buluta Kaydedildi!");
+                else alert("⚠️ Hata: " + response.msg);
+            })
+            .catch(err => {
+                btn.innerHTML = originalText; btn.disabled = false;
+                alert("Hata oluştu! İnternet bağlantınızı kontrol edin.");
+            });
+        }
+
+        // --- FEATURES (WhatsApp & PDF) ---
+        function openWhatsappModal() {
+            const d = db[currentStudent] || {};
+            let missingTopics = [];
+
+            questions.forEach(q => {
+                let score = 0;
+                if(q.type === 'multi') Object.values(d[q.id]||{}).forEach(v => score += v);
+                else score = (d[q.id]||0);
+
+                if(score < q.max) {
+                    let topic = q.title.replace(/^\d+[a-z]?\.\s*/, '');
+                    missingTopics.push(topic);
+                }
+            });
+
+            let msg = `Sayın Velim,\n`;
+            msg += `29 Aralık Pazar günü yapılan Fen Bilimleri değerlendirme sonuçlarına göre öğrencim ${currentStudent}, `;
+
+            if (missingTopics.length > 0) {
+                msg += `${missingTopics.join(', ')} konularında tekrar çalışmaları yaparak kendini geliştirebilir.\n\n`;
+                msg += `Öğrencim, konu tekrarları ve konularla ilgili dikkatli ve anlayarak sorular çözerek başarı grafiğini yükseltebilir. Bu konuda sizlerden de destek bekliyorum.\n`;
+            } else {
+                msg += `tüm kazanımları başarıyla tamamlamıştır. Gayretli çalışmalarından dolayı tebrik ederim.\n`;
+            }
+
+            msg += `\nSaygılarımla,\nSınıf Öğretmeni`;
+
+            document.getElementById('waText').value = msg;
+            document.getElementById('waModal').classList.remove('hidden');
+            document.getElementById('waModal').classList.add('flex');
+        }
+
+        function copyWa() {
+            const copyText = document.getElementById("waText");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            alert("Mesaj kopyalandı!");
+        }
+
+        // EDIT LIST
+        function openEditModal() {
+            document.getElementById('studentInput').value = students.join('\n');
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        }
+
+        function saveStudentsLocal() {
+            const val = document.getElementById('studentInput').value;
+            const lines = val.split('\n').map(x=>x.trim()).filter(x=>x);
+            if(lines.length > 0) {
+                students = lines;
+                document.getElementById('editModal').classList.add('hidden');
+                document.getElementById('editModal').classList.remove('flex');
+                document.getElementById('searchInput').value = "";
+                alert("Liste geçici olarak güncellendi. Kalıcı olması için 'Kaydet' butonunu kullanın.");
+            }
+        }
+
+        // PDF GENERATION (Using jsPDF)
+        async function getFontBase64() {
+            const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
+            const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+            return btoa(new Uint8Array(fontBytes).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+        }
+
+        async function downloadStudentCard() {
+            if(!currentStudent) return;
+
+            try {
+                const base64Font = await getFontBase64();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                doc.addFileToVFS("Roboto.ttf", base64Font);
+                doc.addFont("Roboto.ttf", "Roboto", "normal");
+                doc.setFont("Roboto");
+
+                // Header
+                doc.setFillColor(41, 128, 185);
+                doc.rect(0, 0, 210, 40, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(22);
+                doc.text("FEN BİLİMLERİ KARNESİ", 105, 20, null, null, 'center');
+                doc.setFontSize(12);
+                doc.text("29 Aralık Değerlendirme Etkinliği", 105, 30, null, null, 'center');
+
+                // Info
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(14);
+                doc.text("Öğrenci: " + currentStudent, 14, 55);
+                doc.setFontSize(10);
+                doc.text("Sınıf: 4/" + activeClass, 14, 62);
+                doc.text("Tarih: " + new Date().toLocaleDateString('tr-TR'), 180, 55, null, null, 'right');
+
+                // Table
+                const tableBody = questions.map(q => {
+                    const d = db[currentStudent] || {};
+                    let score = 0;
+                    if(q.type === 'multi') Object.values(d[q.id]||{}).forEach(v => score += v);
+                    else score = (d[q.id]||0);
+
+                    let status = "";
+                    if(score === q.max) status = "Tam";
+                    else if(score === 0) status = "Gelişmeli";
+                    else status = "Kısmen";
+
+                    return [q.title, q.desc, status];
+                });
+
+                doc.autoTable({
+                    head: [['Konu / Soru', 'Açıklama', 'Durum']],
+                    body: tableBody,
+                    startY: 70,
+                    styles: { font: "Roboto", fontSize: 9, cellPadding: 3 },
+                    columnStyles: {
+                        0: { fontStyle: 'bold', cellWidth: 50 },
+                        2: { fontStyle: 'bold', cellWidth: 30, halign: 'center' }
+                    },
+                    headStyles: { fillColor: [52, 73, 94] },
+                    alternateRowStyles: { fillColor: [240, 240, 240] },
+                    didParseCell: function(data) {
+                        if (data.section === 'body' && data.column.index === 2) {
+                            if (data.cell.raw === 'Tam') data.cell.styles.textColor = [39, 174, 96];
+                            if (data.cell.raw === 'Kısmen') data.cell.styles.textColor = [243, 156, 18];
+                            if (data.cell.raw === 'Gelişmeli') data.cell.styles.textColor = [192, 57, 43];
+                        }
+                    }
+                });
+
+                // Footer Comment
+                const finalY = doc.lastAutoTable.finalY + 15;
+                doc.setFontSize(12);
+                doc.setTextColor(44, 62, 80);
+                doc.text("Öğretmen Görüşü:", 14, finalY);
+
+                doc.setFontSize(10);
+                doc.setTextColor(80, 80, 80);
+
+                // Regenerate comment logic for PDF
+                const d = db[currentStudent] || {};
+                let missingTopics = [];
+                questions.forEach(q => {
+                    let score = 0;
+                    if(q.type === 'multi') Object.values(d[q.id]||{}).forEach(v => score += v);
+                    else score = (d[q.id]||0);
+                    if(score < q.max) missingTopics.push(q.title.replace(/^\d+[a-z]?\.\s*/, ''));
+                });
+
+                let comment = "";
+                if(missingTopics.length === 0) {
+                    comment = "Öğrencimiz konuları mükemmel düzeyde kavramıştır. Gayretli çalışmalarından dolayı tebrik ederim.";
+                } else if(missingTopics.length <= 3) {
+                    comment = `Genel durumu iyidir ancak ${missingTopics.join(', ')} konularında tekrar çalışmaları yaparak kendini geliştirebilir.`;
+                } else {
+                    comment = `Öğrencimizin ${missingTopics.slice(0,4).join(', ')} ve diğer eksik olduğu konularda yoğun desteğe ve tekrara ihtiyacı vardır.`;
+                }
+
+                const splitText = doc.splitTextToSize(comment, 180);
+                doc.text(splitText, 14, finalY + 7);
+
+                doc.save(currentStudent + "_Fen_Karne.pdf");
+
+            } catch (error) { alert("Hata: " + error); }
+        }
+
+        async function downloadClassPDF() {
+            try {
+                const base64Font = await getFontBase64();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+
+                doc.addFileToVFS("Roboto.ttf", base64Font);
+                doc.addFont("Roboto.ttf", "Roboto", "normal");
+                doc.setFont("Roboto");
+
+                doc.setFontSize(14);
+                doc.text(`29 Aralık Fen Değerlendirme Sonuçları (${activeClass} Şubesi)`, 14, 15);
+
+                const head = [['No', 'Öğrenci', 'Toplam Puan']];
+                const body = students.map((s, i) => {
+                    const d = db[s] || {};
+                    let total = 0;
+                    questions.forEach(q => {
+                        if(q.type==='multi') { Object.values(d[q.id]||{}).forEach(v=>total+=v); }
+                        else { total += (d[q.id]||0); }
+                    });
+                    return [i+1, s, total];
+                });
+
+                doc.autoTable({
+                    head: head,
+                    body: body,
+                    startY: 25,
+                    styles: { font: "Roboto", fontSize: 10, halign: 'center' },
+                    columnStyles: { 1: { halign: 'left', fontStyle: 'bold' } },
+                    theme: 'grid'
+                });
+                doc.save(`Sinif_Listesi_${activeClass}.pdf`);
+            } catch (error) { alert("PDF hatası: " + error); }
+        }
+
+    </script>
+</body>
+</html>
