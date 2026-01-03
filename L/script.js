@@ -1,4 +1,4 @@
-// --- ZEYNAL ÖĞRETMEN V62 (FİNAL - ID FIX & ROBUST) ---
+// --- ZEYNAL ÖĞRETMEN V63 (EDIT MODE ADDED) ---
 const API_URL = "https://script.google.com/macros/s/AKfycbz1ueTQMEmUVfnVr1wdwl1c1hz4xpOXVOmFTr5KLdozkHLfJDk12hSqe-dnB44W1wvu/exec";
 
 // Global Değişkenler
@@ -24,17 +24,15 @@ const EXIT_CARDS = {"1":{title:"Macera Hatırası",prompt:"En unutulmaz sahne ne
 
 // --- Başlangıç ---
 window.onload = function() {
-    console.log("Sistem başlatılıyor... V62");
+    console.log("Sistem başlatılıyor... V63");
     if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('themeIcon').innerText = '☀️'; } else { document.getElementById('themeIcon').innerText = '🌙'; }
     
-    // Kart seçeneklerini doldur
     let select = document.getElementById('exitCardSelect'); 
     if(select) {
         select.innerHTML = '<option value="">Bir Kart Seç...</option>'; 
         for (const [key, value] of Object.entries(EXIT_CARDS)) { let opt = document.createElement('option'); opt.value = key; opt.innerText = value.title; select.appendChild(opt); }
     }
 
-    // Veriyi Çek
     fetchData(true);
 };
 
@@ -44,9 +42,7 @@ function fetchData(isFirstLoad) {
 
      fetch(uniqueUrl).then(res => res.json()).then(data => {
         if(data.error) { alert("Sunucu Hatası: " + data.error); return; }
-        
         processData(data);
-        
         if(isFirstLoad) {
             document.getElementById('loader').style.display = 'none';
             isDataLoaded = true; 
@@ -63,9 +59,9 @@ function processData(data) {
     students = Array.isArray(data.students) ? data.students : [];
     books = Array.isArray(data.books) ? data.books : [];
     
-    // --- KRİTİK DÜZELTME: Tüm ID'leri String yapıyoruz ---
+    // ID FIX: String Convert
     records = Array.isArray(data.records) ? data.records.map(r => {
-        r.id = String(r.id); // ID'yi kesinlikle metne çevir
+        r.id = String(r.id); 
         return r;
     }) : [];
     
@@ -75,7 +71,6 @@ function processData(data) {
     if(data.settings) settings = { ...settings, ...data.settings };
     if(data.teacherPass) teacherPassword = data.teacherPass.toString();
     
-    // ID'ye göre yeniden eskiye sırala (Sayısal sıralama için parseFloat kullanıyoruz ama saklarken String)
     records.sort((a,b) => parseFloat(b.id) - parseFloat(a.id));
     
     let targetInput = document.getElementById('set-target');
@@ -101,9 +96,8 @@ function updateUI() {
     }
 }
 
-// --- DÜZELTİLMİŞ DEĞERLENDİRME FONKSİYONLARI ---
+// --- DEĞERLENDİRME & DÜZENLEME ---
 function studentRateBook(id) {
-    // Gelen ID'yi String yap, çünkü veritabanında String tutuyoruz
     tempReturnId = String(id);
     let rec = records.find(r => r.id === tempReturnId);
     
@@ -113,7 +107,6 @@ function studentRateBook(id) {
         document.getElementById('returnComment').value = rec.comment || "";
     } else {
         console.error("Kayıt bulunamadı ID:", tempReturnId);
-        // Hata olsa bile modalı sıfırlayıp açalım ki kullanıcı takılmasın (ama işlem yapamaz)
         currentRating = 0;
         document.getElementById('exitCardSelect').value = "";
         document.getElementById('returnComment').value = "";
@@ -131,7 +124,6 @@ function returnBook(id) {
 function submitReturn() {
     if (!tempReturnId) return;
 
-    // String karşılaştırması ile kaydı bul
     let rec = records.find(r => r.id === String(tempReturnId));
     
     if(!rec) {
@@ -152,7 +144,6 @@ function submitReturn() {
         rec.cardId = cardId; 
         rec.cardTitle = EXIT_CARDS[cardId].title; 
     }
-    // Yorum her zaman güncellenir
     rec.comment = comment;
 
     if(loginMode === 'student') renderStudentPanel(); else updateUI();
@@ -160,11 +151,10 @@ function submitReturn() {
     closeRatingModal();
 }
 
-// --- Diğer Standart Fonksiyonlar ---
+// --- RENDER FUNCTIONS ---
 function renderBookManager() {
     const div = document.getElementById('bookManagerList');
     if(!div) return; 
-    
     div.innerHTML = "";
     const searchInput = document.getElementById('bookSearch');
     const search = searchInput ? searchInput.value.toLowerCase() : "";
@@ -222,7 +212,6 @@ function renderBookManager() {
                     let isOverdue = checkOverdue(r.date); 
                     let warning = isOverdue ? `<span class="overdue-warning">⚠️ 15 Gün!</span>` : ""; 
                     let dateColor = isOverdue ? "#ef4444" : "inherit"; 
-                    // deleteRecord çağrılırken de ID gönderiliyor
                     details += `<div style="font-size:0.85rem; margin-top:5px; display:flex; justify-content:space-between; align-items:center;"><span style="color:${dateColor}">🔴 <b>${r.student}</b> (${r.date}) ${warning}</span><button class="btn-delete" onclick="deleteRecord('${r.id}')">Sil</button></div>`; 
                 }); 
             } else { 
@@ -317,7 +306,6 @@ function lendBook() {
     if(!s || !b) { alert("Eksik bilgi!"); return; } 
     if(!students.includes(s)) { students.push(s); students.sort(); } 
     if(!books.includes(b)) books.push(b); 
-    // ID oluştururken String olarak kaydedelim
     records.unshift({ id: String(Date.now()), date: getLocalTime(), student: s, book: b, status: "Okuyor", returnDate: "-" }); 
     document.getElementById('bookInput').value = ""; 
     handleInput(document.getElementById('bookInput')); 
@@ -339,7 +327,6 @@ function renderHistory() {
     list.forEach(r => { 
         let actionBtn = ""; 
         if (r.status === "Okuyor") { 
-            // ID'yi tırnak içinde gönderiyoruz ('${r.id}')
             actionBtn = `<button class="btn-return" onclick="returnBook('${r.id}')">İade Al</button>`; 
         } else { 
             if(sVal) actionBtn = `<button class="btn-comment" onclick="returnBook('${r.id}')"><i class="fas fa-edit"></i> Yorumla</button>`; 
@@ -490,22 +477,30 @@ function renderStudentPanel() {
     listDiv.innerHTML = "";
     if(myRecs.length === 0) listDiv.innerHTML = "<p style='text-align:center; opacity:0.6;'>Henüz bir macera başlamadı.</p>";
     
-    // Sort logic düzeltildi (String ID sıralama)
     myRecs.sort((a,b) => parseFloat(b.id) - parseFloat(a.id));
 
     myRecs.forEach(r => {
         let statusHtml = r.status === "Okuyor" ? `<span style="color:#2563eb; font-weight:bold;">Okuyorsun</span>` : `<span style="color:#10b981; font-weight:bold;">Teslim Ettin</span>`;
         let actionBtn = "";
+        
         if(r.status === "İade Etti") {
-            // ID'yi tırnak içinde gönderiyoruz ('${r.id}')
-            actionBtn = !r.rating ? `<button class="btn-comment" onclick="studentRateBook('${r.id}')">Değerlendir</button>` : `<span style="font-size:0.8rem; color:#f59e0b;">⭐ ${r.rating}</span>`;
+            if(!r.rating) {
+                // Henüz değerlendirilmemiş
+                actionBtn = `<button class="btn-comment" onclick="studentRateBook('${r.id}')">Değerlendir</button>`;
+            } else {
+                // Değerlendirilmiş -> Puanı göster + DÜZENLEME BUTONU
+                actionBtn = `
+                <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                    <span style="font-size:0.9rem; color:#f59e0b; font-weight:bold;">⭐ ${r.rating}</span>
+                    <button class="btn-edit-small" onclick="studentRateBook('${r.id}')" style="font-size:0.7rem; padding:2px 8px; margin-top:3px; background:rgba(0,0,0,0.05); border:1px solid #ccc; border-radius:4px; cursor:pointer;">✏️ Düzenle</button>
+                </div>`;
+            }
         }
         listDiv.innerHTML += `<div class="list-item"><div class="item-content"><h4>${r.book}</h4><p>${r.date} • ${statusHtml}</p></div>${actionBtn}</div>`;
     });
 }
 
 function deleteRecord(id) { 
-    // ID karşılaştırması güvenli hale getirildi
     if(confirm("Silmek istiyor musunuz?")) { 
         records = records.filter(r => String(r.id) !== String(id)); 
         updateUI(); 
