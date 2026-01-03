@@ -1,4 +1,4 @@
-// --- ZEYNAL ÖĞRETMEN V63 (EDIT MODE ADDED) ---
+// --- ZEYNAL ÖĞRETMEN V64 (GREEN EDIT BUTTON & SCORE VISIBLE) ---
 const API_URL = "https://script.google.com/macros/s/AKfycbz1ueTQMEmUVfnVr1wdwl1c1hz4xpOXVOmFTr5KLdozkHLfJDk12hSqe-dnB44W1wvu/exec";
 
 // Global Değişkenler
@@ -24,7 +24,7 @@ const EXIT_CARDS = {"1":{title:"Macera Hatırası",prompt:"En unutulmaz sahne ne
 
 // --- Başlangıç ---
 window.onload = function() {
-    console.log("Sistem başlatılıyor... V63");
+    console.log("Sistem başlatılıyor... V64");
     if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('themeIcon').innerText = '☀️'; } else { document.getElementById('themeIcon').innerText = '🌙'; }
     
     let select = document.getElementById('exitCardSelect'); 
@@ -59,7 +59,6 @@ function processData(data) {
     students = Array.isArray(data.students) ? data.students : [];
     books = Array.isArray(data.books) ? data.books : [];
     
-    // ID FIX: String Convert
     records = Array.isArray(data.records) ? data.records.map(r => {
         r.id = String(r.id); 
         return r;
@@ -458,6 +457,7 @@ function getRank(count) { if(count >= 40) return "💎 EFSANE"; if(count >= 35) 
 function toggleStatsSort() { if(statsSortMode === 'book_desc') { statsSortMode = 'book_asc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬆"; } else if (statsSortMode === 'book_asc') { statsSortMode = 'page_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Sayfa ⬇"; } else { statsSortMode = 'book_desc'; document.getElementById('sortBtnIcon').innerText = "Sırala: Kitap ⬇"; } renderRanking(); }
 function renderRanking() { let counts = {}; let pageCounts = {}; records.forEach(r => { if(r.status === "İade Etti") { counts[r.student] = (counts[r.student]||0)+1; let p = parseInt(bookPages[r.book]) || 0; pageCounts[r.student] = (pageCounts[r.student]||0) + p; } }); let sorted = Object.keys(counts).map(k => ({n:k, c:counts[k], p:pageCounts[k]})); if(sorted.length > 0) { let topReader = sorted.reduce((prev, current) => (prev.c > current.c) ? prev : current); document.getElementById('statTopReader').innerText = topReader.n; } else { document.getElementById('statTopReader').innerText = "-"; } if(statsSortMode === 'book_desc') sorted.sort((a,b) => b.c - a.c); else if(statsSortMode === 'book_asc') sorted.sort((a,b) => a.c - b.c); else if(statsSortMode === 'page_desc') sorted.sort((a,b) => b.p - a.p); let html = ""; sorted.forEach((s,i) => { let rank = getRank(s.c); let medals = getMedals(s.c); let highlight = (i === 0 && statsSortMode !== 'book_asc') ? "color:#f59e0b;" : "color:var(--text-sub);"; let rankNum = (i === sorted.length - 1 && sorted.length > 1) ? `<span style="color:#ef4444; font-size:0.7rem;">(Son)</span>` : `${i+1}.`; if (i === 0) rankNum = "👑"; html += `<div class="list-item"><div class="item-content"><span style="font-weight:bold; ${highlight} margin-right:10px; min-width:20px; display:inline-block;">${rankNum}</span><span style="font-weight:600;">${s.n}</span><div class="rank-info">${rank}</div><div class="medal-container">${medals}</div></div><div style="text-align:right;"><div style="font-weight:800; color:var(--primary); font-size:1.1rem;">${s.c} Kitap</div><div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">${s.p.toLocaleString()} Sayfa</div></div></div>`; }); document.getElementById('rankingList').innerHTML = html; }
 
+// --- YENİLENEN PANEL FONKSİYONU ---
 function renderStudentPanel() {
     let myRecs = records.filter(r => r.student === loggedInStudent);
     let completedRecs = myRecs.filter(r => r.status === "İade Etti");
@@ -485,14 +485,27 @@ function renderStudentPanel() {
         
         if(r.status === "İade Etti") {
             if(!r.rating) {
-                // Henüz değerlendirilmemiş
+                // Henüz değerlendirilmemiş -> Standart Buton
                 actionBtn = `<button class="btn-comment" onclick="studentRateBook('${r.id}')">Değerlendir</button>`;
             } else {
-                // Değerlendirilmiş -> Puanı göster + DÜZENLEME BUTONU
+                // Değerlendirilmiş -> PUAN GÖSTER + YEŞİL BUTON
+                // Not: Inline CSS kullanıyorum ki stil dosyasını değiştirmek zorunda kalma.
                 actionBtn = `
-                <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                    <span style="font-size:0.9rem; color:#f59e0b; font-weight:bold;">⭐ ${r.rating}</span>
-                    <button class="btn-edit-small" onclick="studentRateBook('${r.id}')" style="font-size:0.7rem; padding:2px 8px; margin-top:3px; background:rgba(0,0,0,0.05); border:1px solid #ccc; border-radius:4px; cursor:pointer;">✏️ Düzenle</button>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px;">
+                    <span style="font-size:0.9rem; color:#f59e0b; font-weight:bold; margin-right:2px;">Puanın: ${r.rating}/5 ⭐</span>
+                    <button onclick="studentRateBook('${r.id}')" style="
+                        background-color: #10b981; 
+                        color: white; 
+                        border: none; 
+                        padding: 5px 12px; 
+                        border-radius: 15px; 
+                        font-size: 0.8rem; 
+                        cursor: pointer; 
+                        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
+                        display:flex; align-items:center; gap:5px;
+                    ">
+                        <i class="fas fa-check"></i> Düzenle
+                    </button>
                 </div>`;
             }
         }
