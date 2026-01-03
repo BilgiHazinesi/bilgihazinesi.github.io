@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>29 Aralık Fen (Bulut + Rapor)</title>
+<title>29 Aralık Fen (Yönetimli Sistem)</title>
 <style>
     :root { --primary: #27ae60; --dark: #2c3e50; --bg: #f4f7f6; --danger: #e74c3c; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
@@ -22,6 +22,7 @@
     
     .btn-group { display: flex; gap: 5px; }
     .btn-mini { padding: 6px 10px; font-size: 0.75rem; border-radius: 4px; border: none; color: white; cursor: pointer; font-weight: bold; }
+    .btn-edit { background: #3498db; }
     .btn-report { background: #f1c40f; color: #333; }
     .btn-sync { background: #3498db; }
 
@@ -171,8 +172,8 @@
 </div>
 
 <script>
-    // --- LÜTFEN GOOGLE SCRIPT LINKINI BURAYA YAPIŞTIRIN ---
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAAqXPZ10pQntmEpbLCIqq6dsh_ZMK-jbOjU2t-LTqI0D2zBdNq7d9pQwG31XrZFVnYA/exec"; 
+    // --- BURAYA GOOGLE APPS SCRIPT LINKINI YAPIŞTIRIN ---
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGFreI0RG9kigA6LYfdFrDwkw4QNxEpqCbMSnFnRQLpH1KX-CuUKZ5knIV1fgEQTfT7Q/exec"; 
 
     let activeClass = ""; 
     let students = [];
@@ -199,7 +200,7 @@
         { id: 'q16', title: '10. Fosil Oluşumu', max: 4, type: 'counter', mult: 1, desc: 'Sıralama (Her adım 1p)' }
     ];
 
-    // --- BULUT VE VERİ ---
+    // --- BULUT VE VERİ İŞLEMLERİ ---
     function loadClass(className) {
         activeClass = className;
         document.getElementById('spinner').style.display = 'block';
@@ -208,6 +209,14 @@
         fetch(GOOGLE_SCRIPT_URL + "?sinif=" + className)
         .then(response => response.json())
         .then(data => {
+            // E1 Kontrolü: Eğer sunucu "error" dönerse (hayir), kullanıcıyı uyar
+            if(data.status === 'error') {
+                alert(data.msg); // "Sistem E1 ayarı nedeniyle kapalı" mesajı
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('status-text').innerText = "";
+                return; // Uygulamayı açma
+            }
+
             if(data && data.students) {
                 students = data.students;
                 db = data.scores || {};
@@ -237,8 +246,13 @@
         .then(response => {
             btn.innerText = "☁️ Kaydet";
             btn.disabled = false;
-            if(response.status === 'success') alert("✅ Başarıyla Kaydedildi!");
-            else alert("Hata: " + response.msg);
+            
+            // Başarılı mı yoksa E1 engeli mi var?
+            if(response.status === 'success') {
+                alert("✅ Başarıyla Kaydedildi!");
+            } else {
+                alert("⚠️ Hata: " + response.msg); // "Salt okunur" veya "Kapalı" mesajı
+            }
         })
         .catch(err => {
             btn.innerText = "☁️ Kaydet"; btn.disabled = false;
@@ -415,10 +429,10 @@
         }
     }
 
-    // --- GÜNCELLENEN RAPOR FONKSİYONU ---
+    // --- RAPOR ---
     function showReport() {
         const body = document.getElementById('report-body');
-        // BAŞLIĞI GÜNCELLEME
+        // Başlığı güncelle
         document.getElementById('report-title').innerText = "Fen Bilimleri Puan Listesi (" + activeClass + " Şubesi)";
         
         body.innerHTML = '';
@@ -443,4 +457,3 @@
 </script>
 </body>
 </html>
-
