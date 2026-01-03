@@ -73,6 +73,7 @@
     }
     .bottom-info { display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: #555; border-bottom: 1px solid #eee; padding-bottom: 8px;}
     .bottom-actions { display: flex; gap: 10px; }
+    
     .btn-save { flex: 2; padding: 12px; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; font-size: 1rem; background: var(--dark); border: none; }
     .btn-extra { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; color: white; cursor: pointer; font-size: 0.9rem; border: none; display: flex; align-items: center; justify-content: center; gap: 5px; }
     .btn-karne { background: #8e44ad; }
@@ -81,9 +82,9 @@
     /* MODAL */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
     .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
-    textarea { width: 100%; height: 180px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: inherit; box-sizing: border-box; font-size: 0.9rem; line-height: 1.4; }
+    textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: inherit; box-sizing: border-box; font-size:0.9rem; line-height:1.4; }
 
-    /* RAPOR VE KARNE */
+    /* RAPOR VE KARNE CSS */
     #report-screen { display: none; padding: 20px; background: white; min-height: 100vh; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 0.9rem; }
@@ -97,8 +98,8 @@
     .ir-table th { background: #eee; text-align: left; padding: 8px; border: 1px solid #000; }
     .ir-table td { padding: 8px; border: 1px solid #000; }
     .ir-status { text-align: center; font-weight: bold; width: 100px; }
-    .ir-footer { margin-top: 30px; border: 1px dashed #999; padding: 15px; font-size: 12px; }
-    .ir-sign { margin-top: 50px; text-align: right; font-weight: bold; }
+    .ir-footer { margin-top: 30px; border: 1px dashed #999; padding: 15px; font-size: 12px; line-height:1.5; text-align:justify; }
+    .ir-sign { margin-top: 50px; text-align: right; font-weight: bold; margin-right: 20px; }
 
     @media print {
         body > * { display: none !important; }
@@ -217,7 +218,7 @@
         <span id="ir-comment"></span>
     </div>
     <div class="ir-sign">
-        Zeynal ABİDİN<br>
+        <br>
         Sınıf Öğretmeni
     </div>
 </div>
@@ -369,11 +370,10 @@
     function updCnt(id, change, mult, maxCount) { if(!db[currentStudent]) db[currentStudent] = {}; let c = (db[currentStudent][id] || 0) / mult; c += change; if(c < 0) c = 0; if(c > maxCount) c = maxCount; manualCnt(id, c, mult, maxCount); }
     function manualCnt(id, val, mult, maxCount) { if(!db[currentStudent]) db[currentStudent] = {}; let c = parseInt(val); if(isNaN(c) || c < 0) c = 0; if(c > maxCount) c = maxCount; db[currentStudent][id] = c * mult; document.getElementById(`inp_${id}`).value = c; saveLocal(); }
     
-    function saveLocal() { renderRubric(); } // Sadece görsel güncelle
+    function saveLocal() { renderRubric(); }
 
     function saveAndStay() {
         sortAndRenderList();
-        // alert("Puanlar yerel hafızaya alındı."); 
     }
 
     function syncToCloud() {
@@ -401,16 +401,15 @@
             if(q.type === 'multi') Object.values(d[q.id]||{}).forEach(v => score += v);
             else score = (d[q.id]||0);
 
-            // Tam puan değilse listeye ekle
             if(score < q.max) {
-                // Başlıktaki "1a. " gibi kısımları temizleyelim
+                // Başlıktaki soru numarasını temizle (1a. vb)
                 let topic = q.title.replace(/^\d+[a-z]?\.\s*/, '');
                 missingTopics.push(topic);
             }
         });
 
         let msg = `Sayın Velim,\n`;
-        msg += `29 Aralık Pazartesi günü yapılan Fen Bilimleri değerlendirme sonuçlarına göre öğrencim ${currentStudent}, `;
+        msg += `8 Aralık Pazartesi günü yapılan 2. değerlendirme sonuçlarına göre öğrencim ${currentStudent}, `;
 
         if (missingTopics.length > 0) {
             msg += `${missingTopics.join(', ')} konularında tekrar çalışmaları yaparak kendini geliştirebilir.\n\n`;
@@ -433,26 +432,32 @@
         alert("Mesaj kopyalandı!");
     }
 
-    // --- BİREYSEL KARNE (PUANLI) ---
+    // --- BİREYSEL KARNE (PUAN GİZLENDİ / İMZA DÜZELDİ) ---
     function printIndividualReport() {
         const d = db[currentStudent] || {};
         const tbody = document.getElementById('ir-tbody');
         tbody.innerHTML = '';
         
-        let totalScore = 0;
         let missingTopics = [];
+        let totalScore = 0;
 
         questions.forEach(q => {
             let score = 0;
             if(q.type === 'multi') { Object.values(d[q.id]||{}).forEach(v=>score+=v); }
             else { score = (d[q.id]||0); }
-            totalScore += score;
+            totalScore += score; // Skoru sadece eksik/tam tespiti için tutuyoruz
 
             let status = "";
             let color = "black";
             if(score === q.max) { status = "Tam"; color = "green"; }
-            else if(score === 0) { status = "Gelişmeli"; color = "red"; missingTopics.push(q.desc); }
-            else { status = "Kısmen"; color = "orange"; missingTopics.push(q.desc); }
+            else if(score === 0) { 
+                status = "Gelişmeli"; color = "red"; 
+                missingTopics.push(q.title.replace(/^\d+[a-z]?\.\s*/, '')); 
+            }
+            else { 
+                status = "Kısmen"; color = "orange"; 
+                missingTopics.push(q.title.replace(/^\d+[a-z]?\.\s*/, '')); 
+            }
 
             tbody.innerHTML += `
                 <tr>
@@ -462,11 +467,17 @@
                 </tr>`;
         });
 
-        // Karne Yorumu (Burada puan görülebilir, resmi belge)
-        let comment = `Sayın Velim,\n8 Aralık değerlendirmesi sonucunda öğrencimiz ${currentStudent}, toplam 100 üzerinden ${totalScore} puan almıştır.\n\n`;
-        if(totalScore > 85) comment += "Öğrencimiz konuları mükemmel düzeyde kavramıştır. Başarılarının devamını dilerim.";
-        else if(totalScore > 65) comment += "Genel durumu iyidir ancak eksik olduğu konularda tekrar yapması faydalı olacaktır.";
-        else comment += "Öğrencimizin konu eksiği bulunmaktadır, desteklenmesi gerekmektedir.";
+        // PUANSIZ YORUM
+        let comment = `Sayın Velim,\n8 Aralık değerlendirmesi sonucunda öğrencimiz ${currentStudent} ile ilgili gözlemlerim şöyledir:\n\n`;
+        
+        if(missingTopics.length === 0) {
+            comment += "Öğrencimiz konuları mükemmel düzeyde kavramıştır. Gayretli çalışmalarından dolayı tebrik ederim.";
+        } else if(missingTopics.length <= 3) {
+            comment += `Genel durumu iyidir ancak ${missingTopics.join(', ')} konularında tekrar çalışmaları yaparak kendini geliştirebilir.\n\n`;
+            comment += `Bu konularda evde yapacağınız tekrarlar faydalı olacaktır.`;
+        } else {
+            comment += `Öğrencimizin ${missingTopics.slice(0,4).join(', ')} ve diğer eksik olduğu konularda yoğun desteğe ve tekrara ihtiyacı vardır.`;
+        }
 
         document.getElementById('ir-name').innerText = currentStudent;
         document.getElementById('ir-class-suffix').innerText = activeClass;
