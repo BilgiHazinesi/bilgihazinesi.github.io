@@ -1,7 +1,7 @@
 /* script.js */
 
 // *** BURAYA KENDİ WEB APP URL'NİZİ YAPIŞTIRIN ***
-const API_URL = "https://script.google.com/macros/s/AKfycbyl5OYGBfFjH63zdmsJUq_AWX9l25rrH_mOwdD7XW5w-Hzm59-e8jrwr0GN4KlLGTXY/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbynzJXHFL9EfVKsKF_kgWrVfZQSTB0_Cb5IxPImUxl_evbMQYIAtzYn16upKCFstwt7/exec"; 
 
 let currentUser = {};
 let currentExamData = [];
