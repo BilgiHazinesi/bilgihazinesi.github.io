@@ -1,228 +1,200 @@
-/* script.js */
-
-// *** BURAYA KENDİ WEB APP URL'NİZİ YAPIŞTIRIN ***
-const API_URL = "https://script.google.com/macros/s/AKfycbwBsKbx_SQUt97g0PyFo1nSKMoBMDm0l84XKFmZbeq3Dr3vhlZ_6iY3hjcpZs9shESR/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbw_AIVl4bxqeRfT7LWpkUey-1nTuYJ_UwKMTSu7r2Mhwy8EWfp_WOrDSgHOI4lWdYXG/exec"; 
 
 let currentUser = {};
-let currentExamData = [];
-let teacherExamData = []; 
-let studentAnswersData = {};
+let teacherData = { exams: [], students: [], results: [] };
+let activeExamData = [], tempExamBuilder = [], studentAnswers = {};
+let currentChart = null;
 
-// Uyarı kutusu
-function showAlert(msg, type="success") {
-    const box = document.getElementById("alertBox");
-    box.innerHTML = msg;
-    box.className = ""; // Reset class
-    box.style.backgroundColor = type === "error" ? "#e74c3c" : "#2ecc71";
-    box.classList.remove("hidden");
-    setTimeout(() => box.classList.add("hidden"), 3000);
-}
-
-async function sendRequest(data) {
+async function apiRequest(data) {
     try {
+        document.body.style.cursor = "wait";
         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(data) });
+        document.body.style.cursor = "default";
         return await res.json();
-    } catch (e) { return {status:"error", msg:"Bağlantı Hatası"}; }
+    } catch (e) { alert("Bağlantı Hatası: " + e); return {status: "error"}; }
 }
 
-// --- OPTİK FORM RENDER MOTORU (YENİLENMİŞ CSS İLE) ---
-function createOpticalRow(qNum, selectedOption, isClickable, callbackFunc) {
-    // Bu fonksiyonu manuel string birleştirme ile yapıyoruz (performans için)
-    return ""; 
+function openTab(id) {
+    document.querySelectorAll('.tab-content, .tab-link').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.currentTarget.classList.add('active');
 }
 
-// --- ÖĞRETMEN FORM RENDER ---
-function renderTeacherForm() {
-    const container = document.getElementById("teacherOpticalFormArea");
-    container.innerHTML = "";
-
-    teacherExamData.forEach((section, secIndex) => {
-        let html = `<div class="optical-section">
-            <div class="section-header">${section.lesson} (${section.count} Soru)</div>`;
-        
-        for(let i=0; i<section.count; i++) {
-            const options = ["A", "B", "C", "D"];
-            html += `<div class="question-row"><div class="q-number">${i+1}</div><div class="options-wrapper">`;
-            
-            options.forEach(opt => {
-                let activeClass = (section.answers[i] === opt) ? "selected" : "";
-                // Tıklama olayı
-                html += `<div class="opt-circle ${activeClass}" onclick="handleTeacherClick(${secIndex}, ${i}, '${opt}')">${opt}</div>`;
-            });
-            html += `</div></div>`;
-        }
-        html += `</div>`;
-        container.innerHTML += html;
-    });
-}
-
-function handleTeacherClick(secIndex, qIndex, opt) {
-    teacherExamData[secIndex].answers[qIndex] = opt;
-    renderTeacherForm(); // Yeniden çiz
-}
-
-function addLessonSection() {
-    const name = document.getElementById("lessonNameInput").value;
-    const count = parseInt(document.getElementById("lessonQCountInput").value);
-    if(!name || !count) return showAlert("Bilgileri giriniz.", "error");
-
-    teacherExamData.push({ lesson: name, count: count, answers: new Array(count).fill("") });
-    renderTeacherForm();
-    
-    document.getElementById("lessonNameInput").value = "";
-    document.getElementById("lessonQCountInput").value = "";
-}
-
-async function saveExamToSystem() {
-    if(teacherExamData.length === 0) return showAlert("Ders eklemediniz!", "error");
-    
-    let keysFormat = teacherExamData.map(sec => {
-        const keyString = sec.answers.join("");
-        if(keyString.length < sec.count) return null; 
-        return `${sec.lesson}:${keyString}`;
-    });
-
-    if(keysFormat.includes(null)) return showAlert("Tüm soruların cevabını seçmelisiniz!", "error");
-
-    const res = await sendRequest({ 
-        action: "addExam", 
-        id: document.getElementById("newExamId").value, 
-        name: document.getElementById("newExamName").value, 
-        keysFormat: keysFormat.join("|"), 
-        showScore: document.getElementById("newShowScore").value 
-    });
-
-    if(res.status === "success") {
-        showAlert("Sınav Kaydedildi!");
-        teacherExamData = []; renderTeacherForm();
-        document.getElementById("newExamId").value = "";
-    } else { showAlert(res.msg, "error"); }
-}
-
-// --- ÖĞRENCİ FORM RENDER ---
-async function loadStudentOpticalForm() {
-    const examId = document.getElementById("examSelector").value;
-    const container = document.getElementById("studentOpticalFormArea");
-    const btnWrapper = document.getElementById("btnSubmitWrapper");
-    
-    container.innerHTML = "";
-    studentAnswersData = {};
-
-    if(!examId) { btnWrapper.classList.add("hidden"); return; }
-
-    // Sınav verisini bul
-    const exam = currentExamData.find(e => e.id == examId);
-    
-    exam.sections.forEach(section => {
-        studentAnswersData[section.name] = new Array(section.qCount).fill("");
-        
-        let html = `<div class="optical-section">
-            <div class="section-header">${section.name}</div>`;
-        
-        for(let i=0; i<section.qCount; i++) {
-            const options = ["A", "B", "C", "D"];
-            const safeName = section.name.replace(/\s/g, ''); 
-            
-            html += `<div class="question-row"><div class="q-number">${i+1}</div><div class="options-wrapper">`;
-            options.forEach(opt => {
-                const btnId = `btn-${safeName}-${i}-${opt}`;
-                html += `<div id="${btnId}" class="opt-circle" onclick="handleStudentClick('${section.name}', ${i}, '${opt}', '${safeName}')">${opt}</div>`;
-            });
-            html += `</div></div>`;
-        }
-        html += `</div>`;
-        container.innerHTML += html;
-    });
-
-    btnWrapper.classList.remove("hidden");
-}
-
-function handleStudentClick(lessonName, qIndex, opt, safeName) {
-    // Veriyi kaydet
-    studentAnswersData[lessonName][qIndex] = opt;
-
-    // Görseli güncelle (DOM manipülasyonu - Hız için tüm formu render etmiyoruz)
-    const options = ["A", "B", "C", "D"];
-    options.forEach(o => {
-        const btn = document.getElementById(`btn-${safeName}-${qIndex}-${o}`);
-        if(o === opt) btn.classList.add("selected");
-        else btn.classList.remove("selected");
-    });
-}
-
-async function submitExam() {
-    let finalAnswers = {};
-    let isMissing = false;
-
-    for (const [lesson, arr] of Object.entries(studentAnswersData)) {
-        if(arr.includes("")) isMissing = true;
-        finalAnswers[lesson] = arr.join("");
-    }
-
-    if(isMissing && !confirm("Bazı sorular boş. Göndermek istiyor musun?")) return;
-
-    showAlert("Cevaplar gönderiliyor...");
-    
-    const res = await sendRequest({
-        action: "submitExam",
-        studentName: currentUser.name,
-        examId: document.getElementById("examSelector").value,
-        answers: finalAnswers
-    });
-
-    if(res.status === "success") {
-        document.getElementById("studentOpticalFormArea").innerHTML = `<div class="card" style="text-align:center; color:green;"><h2>✅ Tamamlandı!</h2><p>Cevapların başarıyla alındı.</p></div>`;
-        document.getElementById("btnSubmitWrapper").classList.add("hidden");
-        if(res.score !== null) alert("Puanın: " + res.score.toFixed(2));
-    } else {
-        showAlert(res.msg, "error");
-    }
-}
-
-// --- GİRİŞ / ÇIKIŞ ---
 async function login() {
-    const code = document.getElementById("userCode").value;
-    if(!code) return showAlert("Kod girin", "error");
-    
-    showAlert("Giriş yapılıyor...");
-    const res = await sendRequest({ action: "login", password: code });
-    
+    const code = document.getElementById("loginCode").value;
+    if(!code) return alert("Kod girin");
+    const res = await apiRequest({ action: "login", password: code });
     if(res.status === "success") {
-        currentUser = { name: res.name, role: res.role };
-        document.getElementById("loginSection").classList.add("hidden");
-        document.getElementById("alertBox").classList.add("hidden");
-
+        currentUser = res;
+        document.getElementById("loginScreen").classList.remove("active");
         if(res.role === "Ogretmen") {
-            document.getElementById("teacherPanel").classList.remove("hidden");
+            document.getElementById("teacherPanel").classList.add("active");
+            loadTeacherDashboard();
         } else {
-            document.getElementById("studentPanel").classList.remove("hidden");
-            document.getElementById("welcomeText").innerText = "Merhaba, " + res.name.split(" ")[0];
-            loadExams();
+            document.getElementById("studentPanel").classList.add("active");
+            document.getElementById("stuNameDisplay").innerText = res.name;
+            loadStudentDashboard();
         }
-    } else { showAlert(res.msg, "error"); }
+    } else { alert(res.msg); }
 }
 
-async function loadExams() {
-    const res = await sendRequest({ action: "getExamDetails" });
-    if(res.status === "success") {
-        currentExamData = res.exams;
-        const sel = document.getElementById("examSelector");
-        sel.innerHTML = '<option value="">Seçiniz...</option>';
-        res.exams.forEach(ex => {
-            let opt = document.createElement("option");
-            opt.value = ex.id;
-            opt.innerText = ex.name;
-            sel.appendChild(opt);
-        });
+// --- ÖĞRETMEN FONKSİYONLARI ---
+async function loadTeacherDashboard() {
+    const res = await apiRequest({ action: "getTeacherData" });
+    if(res.status === "success") { teacherData = res; renderExamList(); renderStudentList(); }
+}
+
+function renderExamList() {
+    const list = document.getElementById("examListContainer");
+    const filter = document.getElementById("searchExam").value.toLowerCase();
+    list.innerHTML = "";
+    
+    // Sınavları ters sırala (en yeni en üstte)
+    teacherData.exams.slice().reverse().forEach(ex => {
+        if(ex.name.toLowerCase().includes(filter)) {
+            let isActive = ex.status.toLowerCase() === "aktif";
+            list.innerHTML += `
+                <div class="exam-item ${isActive ? "active" : "passive"}">
+                    <div style="flex:1;">
+                        <strong>${ex.name}</strong><br>
+                        <small style="color:#666;">Kod: ${ex.id}</small>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-action" style="background:${isActive?"#e74c3c":"#2ecc71"}; color:white;" onclick="toggleStatus('${ex.id}')">${isActive?"Durdur":"Başlat"}</button>
+                        <button class="btn-action" onclick="analyzeExam('${ex.id}')"><i class="fas fa-chart-pie"></i></button>
+                        <button class="btn-action" style="color:#8e44ad; border-color:#8e44ad;" onclick="openTelegramModal('${ex.id}')"><i class="fab fa-telegram-plane"></i></button>
+                    </div>
+                </div>`;
+        }
+    });
+}
+function filterExams() { renderExamList(); }
+
+async function toggleStatus(id) {
+    const res = await apiRequest({ action: "toggleExamStatus", examId: id });
+    if(res.status === "success") { 
+        teacherData.exams.find(e => e.id == id).status = res.newStatus; renderExamList(); 
     }
 }
 
-async function getReport() {
-    const id = document.getElementById("reportId").value;
-    if(!id) return showAlert("Sınav kodu girin", "error");
-    showAlert("Analiz isteniyor...");
-    await sendRequest({ action: "sendReport", examId: id });
-    showAlert("Rapor Telegram'a gönderildi!");
+function renderStudentList() {
+    const list = document.getElementById("studentListContainer");
+    const filter = document.getElementById("searchStudent").value.toLowerCase();
+    list.innerHTML = "";
+    teacherData.students.forEach(stu => {
+        if(stu.toLowerCase().includes(filter)) {
+            list.innerHTML += `<div class="student-item" onclick="analyzeStudent('${stu}')"><span>${stu}</span><i class="fas fa-chevron-right"></i></div>`;
+        }
+    });
+}
+function filterStudents() { renderStudentList(); }
+
+// --- ANALİZ VE GRAFİKLER ---
+function analyzeExam(id) {
+    let results = teacherData.results.filter(r => r.examId == id);
+    if(results.length === 0) return alert("Henüz veri yok.");
+    
+    let labels = [], data = [], lessonStats = {};
+    results.forEach(r => {
+        try { JSON.parse(r.answers).forEach(d => {
+            if(!lessonStats[d.lesson]) lessonStats[d.lesson] = {correct:0, total:0};
+            lessonStats[d.lesson].correct += d.correct; lessonStats[d.lesson].total += d.total;
+        }); } catch(e){}
+    });
+    for(let l in lessonStats) { labels.push(l); data.push(Math.round((lessonStats[l].correct/lessonStats[l].total)*100)); }
+    
+    showModal(`<h3>${id} Sınıf Başarısı</h3>`, `<canvas id="chartArea"></canvas>`);
+    drawChart('chartArea', 'bar', labels, data, 'Başarı Yüzdesi (%)');
 }
 
+function analyzeStudent(name) {
+    let results = teacherData.results.filter(r => r.student == name);
+    if(results.length === 0) return alert("Bu öğrencinin sınav kaydı yok.");
+    showModal(`<h3>${name} Gelişim Grafiği</h3>`, `<canvas id="chartArea"></canvas>`);
+    drawChart('chartArea', 'line', results.map(r=>r.examId), results.map(r=>r.score), 'Puan');
+}
+
+function openTelegramModal(id) {
+    let results = teacherData.results.filter(r => r.examId == id);
+    if(results.length === 0) return alert("Veri yok.");
+    let html = `
+    <div style="text-align:center;">
+        <h4>Telegram Rapor</h4>
+        <button class="btn-primary" onclick="sendClassReport('${id}')">Tüm Sınıfı Gönder</button>
+        <hr>
+        <p>Veya Öğrenci Seç:</p>
+        <select id="stuSelect" style="margin-bottom:10px;">${results.map(r=>`<option value="${r.student}">${r.student}</option>`).join('')}</select>
+        <button class="btn-success" onclick="sendStudentReport('${id}')">Seçili Öğrenciyi Gönder</button>
+    </div>`;
+    showModal("", html);
+}
+
+async function sendClassReport(id) { await apiRequest({action:"sendClassReport", examId:id}); alert("Yollandı!"); closeModal(); }
+async function sendStudentReport(id) { await apiRequest({action:"sendStudentReport", examId:id, studentName:document.getElementById("stuSelect").value}); alert("Yollandı!"); }
+
+// --- YENİ SINAV OLUŞTURMA ---
+function addLesson() {
+    let n = document.getElementById("lName").value, c = document.getElementById("lCount").value;
+    if(n && c) { tempExamBuilder.push({name:n, count:parseInt(c)}); renderPreview(); }
+}
+function renderPreview() {
+    document.getElementById("previewArea").innerHTML = tempExamBuilder.map((l,i)=>`<div style="display:flex; justify-content:space-between; background:white; padding:5px; margin:2px;"><span>${l.name} (${l.count} soru)</span><span onclick="tempExamBuilder.splice(${i},1);renderPreview()" style="color:red;cursor:pointer;">Sil</span></div>`).join('');
+}
+async function saveExam() {
+    if(tempExamBuilder.length==0) return alert("En az bir ders ekleyin.");
+    let k = tempExamBuilder.map(l=>`${l.name}:${"A".repeat(l.count)}`).join("|");
+    await apiRequest({action:"addExam", id:document.getElementById("newExamId").value, name:document.getElementById("newExamName").value, keysFormat:k, showScore:document.getElementById("newShowScore").value});
+    alert("Sınav Oluşturuldu!"); location.reload();
+}
+
+// --- ÖĞRENCİ FONKSİYONLARI ---
+async function loadStudentDashboard() {
+    const res = await apiRequest({ action: "getStudentDashboard", studentName: currentUser.name });
+    if(res.status === "success") {
+        activeExamData = res.active;
+        let div = document.getElementById("activeExamList"); 
+        div.innerHTML = "";
+        if(res.active.length === 0) div.innerHTML = "<p>Aktif sınav yok.</p>";
+        res.active.forEach(ex => div.innerHTML += `<div class="card"><h4>${ex.name}</h4><button class="btn-success" onclick="startExam('${ex.id}')">Sınava Başla</button></div>`);
+        
+        if(res.history.length > 0) {
+            drawChart('studentHistoryChart', 'bar', res.history.map(h=>h.examId), res.history.map(h=>h.score), 'Puanlarım');
+        }
+    }
+}
+function startExam(id) {
+    let ex = activeExamData.find(e => e.id == id);
+    document.getElementById("activeExamList").classList.add("hidden");
+    document.getElementById("examSolvingArea").classList.remove("hidden");
+    document.getElementById("solvingExamTitle").innerText = ex.name;
+    document.getElementById("solvingExamTitle").dataset.id = id;
+    let area = document.getElementById("opticalFormArea"); area.innerHTML = ""; studentAnswers = {};
+    ex.sections.forEach(sec => {
+        studentAnswers[sec.name] = new Array(sec.qCount).fill("");
+        let html = `<h5>${sec.name}</h5>`;
+        for(let i=0; i<sec.qCount; i++) {
+            html += `<div class="opt-row"><span>${i+1}</span><div>${['A','B','C','D'].map(o=>`<div class="opt-circle" onclick="selectOpt(this,'${sec.name}',${i},'${o}')">${o}</div>`).join('')}</div></div>`;
+        }
+        area.innerHTML += `<div class="card">${html}</div>`;
+    });
+}
+function selectOpt(el, l, i, o) {
+    el.parentNode.querySelectorAll('.opt-circle').forEach(e=>e.classList.remove('selected'));
+    el.classList.add('selected'); studentAnswers[l][i] = o;
+}
+async function submitExam() {
+    if(!confirm("Sınavı bitirmek istiyor musun?")) return;
+    let ans = {}; for(let l in studentAnswers) ans[l] = studentAnswers[l].join("");
+    const res = await apiRequest({ action:"submitExam", studentName:currentUser.name, examId:document.getElementById("solvingExamTitle").dataset.id, answers:ans });
+    if(res.status == "success") { alert("Sınav Bitti! Puanın kaydedildi."); location.reload(); }
+}
+
+// --- YARDIMCILAR ---
+function showModal(h, b) { document.getElementById("modalHeader").innerHTML=h; document.getElementById("modalBody").innerHTML=b; document.getElementById("detailModal").style.display="block"; }
+function closeModal() { document.getElementById("detailModal").style.display="none"; }
 function logout() { location.reload(); }
+function drawChart(id, t, l, d, n) {
+    if(currentChart) currentChart.destroy();
+    let ctx = document.getElementById(id);
+    if(ctx) currentChart = new Chart(ctx, { type:t, data:{labels:l, datasets:[{label:n, data:d, backgroundColor:'#4a90e2', borderColor:'#4a90e2'}]} });
+}
