@@ -1,11 +1,11 @@
-const API_URL = "https://script.google.com/macros/s/AKfycby1f_Gn79ocp1L7SgcgTiAYubM8DtQtGly_dPA1uQKK_yEebM43F8zwaXsvHGhnR3xV/exec"; 
+const API_URL = "BURAYA_LINKI_YAPISTIRIN"; 
 
 let currentUser = {};
 let teacherData = { exams: [], students: [], results: [] };
 let activeExamData = [], builderData = [], studentAnswers = {};
-let editingExamKey = []; // Sınav anahtarını düzenlerken kullanılır
+let editMode = null; // "examKey" veya "studentAns"
+let editingId = null;
 
-// --- API ---
 function setLoading(s) { document.getElementById("loader").classList.toggle("hidden", !s); }
 async function api(data) {
     try {
@@ -17,28 +17,9 @@ async function api(data) {
     } catch(e) { setLoading(false); alert("Bağlantı Hatası"); return {status:"error"}; }
 }
 
-// --- NAVİGASYON ---
 function navTo(pageId) {
     document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
     document.getElementById(pageId).classList.remove('hidden');
-    // Scrollu sıfırla
-    document.querySelector('.app-content').scrollTop = 0;
-}
-
-function updateTab(role, activeTabId) {
-    const bar = document.getElementById("tabBar");
-    if(role === "teacher") {
-        bar.innerHTML = `
-            <button class="tab-item ${activeTabId=='page-t-home'?'active':''}" onclick="navTo('page-t-home');updateTab('teacher','page-t-home')"><i class="fas fa-home"></i><span>Özet</span></button>
-            <button class="tab-item ${activeTabId=='page-t-exams'?'active':''}" onclick="navTo('page-t-exams');updateTab('teacher','page-t-exams')"><i class="fas fa-list"></i><span>Sınavlar</span></button>
-            <button class="tab-item ${activeTabId=='page-t-students'?'active':''}" onclick="navTo('page-t-students');updateTab('teacher','page-t-students')"><i class="fas fa-users"></i><span>Öğrenci</span></button>
-        `;
-    } else {
-        bar.innerHTML = `
-            <button class="tab-item ${activeTabId=='page-s-home'?'active':''}" onclick="navTo('page-s-home');updateTab('student','page-s-home')"><i class="fas fa-pen"></i><span>Sınavlar</span></button>
-            <button class="tab-item ${activeTabId=='page-s-history'?'active':''}" onclick="navTo('page-s-history');updateTab('student','page-s-history')"><i class="fas fa-chart-pie"></i><span>Karnem</span></button>
-        `;
-    }
 }
 
 // --- GİRİŞ ---
@@ -50,19 +31,33 @@ async function login() {
         currentUser = res;
         document.getElementById("loginScreen").classList.remove("active");
         document.getElementById("mainApp").classList.remove("hidden");
-        document.getElementById("headerName").innerText = res.name;
-        document.getElementById("headerRole").innerText = res.role;
+        document.getElementById("userName").innerText = res.name;
+        document.getElementById("userRole").innerText = res.role;
         
         if(res.role === "Ogretmen") {
+            setupNav("teacher");
             loadTeacherData();
-            updateTab("teacher", "page-t-home");
             navTo("page-t-home");
         } else {
+            setupNav("student");
             loadStudentData();
-            updateTab("student", "page-s-home");
             navTo("page-s-home");
         }
     } else { alert(res.msg); }
+}
+
+function setupNav(role) {
+    const nav = document.getElementById("tabBar");
+    if(role === "teacher") {
+        nav.innerHTML = `
+            <button class="nav-item active" onclick="navTo('page-t-home')"><i class="fas fa-home"></i><span>Özet</span></button>
+            <button class="nav-item" onclick="navTo('page-t-exams')"><i class="fas fa-list"></i><span>Sınav</span></button>
+            <button class="nav-item" onclick="navTo('page-t-students')"><i class="fas fa-users"></i><span>Öğrenci</span></button>`;
+    } else {
+        nav.innerHTML = `
+            <button class="nav-item active" onclick="navTo('page-s-home')"><i class="fas fa-pen"></i><span>Sınavlar</span></button>
+            <button class="nav-item" onclick="navTo('page-s-history')"><i class="fas fa-chart-pie"></i><span>Karnem</span></button>`;
+    }
 }
 function logout() { location.reload(); }
 
@@ -73,38 +68,37 @@ async function loadTeacherData() {
         teacherData = res;
         document.getElementById("stCount").innerText = res.students.length;
         document.getElementById("exCount").innerText = res.exams.length;
-        renderTeacherLists();
+        renderLists();
     }
 }
 
-function renderTeacherLists() {
+function renderLists() {
     // Sınav Listesi
-    const exList = document.getElementById("examList");
-    exList.innerHTML = "";
+    const el = document.getElementById("examList");
+    el.innerHTML = "";
     teacherData.exams.slice().reverse().forEach(ex => {
-        let isActive = ex.status.toLowerCase() === "aktif";
-        exList.innerHTML += `
-        <div class="list-row">
-            <div class="row-info">
-                <div>${ex.name}</div>
-                <small style="color:${isActive?'#34C759':'#FF3B30'}">${isActive?'Yayında':'Gizli'}</small>
-            </div>
-            <div class="row-actions">
-                <button class="icon-btn" onclick="toggleStatus('${ex.id}')"><i class="fas ${isActive?'fa-pause':'fa-play'}"></i></button>
-                <button class="icon-btn" onclick="openKeyEditor('${ex.id}')"><i class="fas fa-key"></i></button>
-                <button class="icon-btn" onclick="openAnalysis('${ex.id}')"><i class="fas fa-chart-bar"></i></button>
+        let active = ex.status.toLowerCase() == "aktif";
+        el.innerHTML += `
+        <div class="list-item">
+            <div class="item-info"><div>${ex.name}</div><small style="color:${active?'green':'red'}">${active?'Yayında':'Gizli'}</small></div>
+            <div class="item-actions">
+                <button onclick="toggleStatus('${ex.id}')"><i class="fas ${active?'fa-pause':'fa-play'}"></i></button>
+                <button onclick="openEditor('examKey', '${ex.id}')"><i class="fas fa-key"></i></button>
+                <button onclick="sendReport('${ex.id}')" style="color:#8e44ad"><i class="fab fa-telegram-plane"></i></button>
             </div>
         </div>`;
     });
 
     // Öğrenci Listesi
-    const stList = document.getElementById("studentList");
-    stList.innerHTML = "";
+    const sl = document.getElementById("studentList");
+    sl.innerHTML = "";
     teacherData.students.forEach(st => {
-        stList.innerHTML += `
-        <div class="list-row">
-            <div class="row-info"><div>${st}</div></div>
-            <button class="icon-btn" onclick="alert('Detaylar eklenebilir')"><i class="fas fa-chevron-right"></i></button>
+        sl.innerHTML += `
+        <div class="list-item">
+            <div class="item-info"><div>${st}</div></div>
+            <div class="item-actions">
+                <button onclick="alert('Detaylar eklenebilir')"><i class="fas fa-chart-bar"></i></button>
+            </div>
         </div>`;
     });
 }
@@ -114,40 +108,80 @@ async function toggleStatus(id) {
     loadTeacherData();
 }
 
-// --- SINAV OLUŞTURUCU ---
-function addBuilderLesson() {
-    let name = document.getElementById("lName").value;
-    let count = parseInt(document.getElementById("lCount").value);
-    if(name && count) {
-        builderData.push({name: name, count: count, key: new Array(count).fill(null)});
-        document.getElementById("lName").value=""; document.getElementById("lCount").value="";
-        renderBuilder("builderContainer", builderData, true);
+async function sendReport(id) {
+    if(!confirm("Sınıf raporu Telegram'a gönderilsin mi?")) return;
+    await api({ action: "sendClassReport", examId: id });
+    alert("Gönderildi!");
+}
+
+// --- EDİTÖR (Soru İptali / Cevap Değiştirme) ---
+function openEditor(mode, id) {
+    editMode = mode;
+    editingId = id;
+    document.getElementById("editorModal").classList.remove("hidden");
+    
+    if(mode === 'examKey') {
+        let ex = teacherData.exams.find(e => e.id == id);
+        document.getElementById("editorTitle").innerText = "Anahtarı Düzenle (* = İptal)";
+        // Mevcut anahtarı parse et
+        builderData = [];
+        if(ex.key.includes(":")) {
+            ex.key.split("|").forEach(p => {
+                let parts = p.split(":");
+                builderData.push({ name: parts[0], count: parts[1].length, key: parts[1].split("") });
+            });
+        }
+        renderBuilder("editorBody", true); // true = edit modunda (İptal butonu göster)
     }
 }
 
-// Ortak Builder Render Fonksiyonu (Hem yeni sınav hem düzenleme için)
-function renderBuilder(containerId, dataArray, isEditable) {
+function closeEditor() { document.getElementById("editorModal").classList.add("hidden"); }
+
+async function saveEditor() {
+    if(editMode === 'examKey') {
+        let newKey = builderData.map(l => `${l.name}:${l.key.join("")}`).join("|");
+        await api({ action: "updateExamKey", examId: editingId, newKey: newKey });
+        alert("Anahtar Güncellendi!");
+        closeEditor();
+        loadTeacherData();
+    }
+}
+
+// Ortak Builder (Oluşturma ve Düzenleme İçin)
+function renderBuilder(containerId, isEdit) {
     const area = document.getElementById(containerId);
     area.innerHTML = "";
-    dataArray.forEach((l, lIdx) => {
+    builderData.forEach((l, lIdx) => {
         let rows = "";
         for(let i=0; i<l.count; i++) {
-            rows += `<div class="b-row"><span>${i+1}</span><div class="b-opts">${['A','B','C','D'].map(o=>`<div class="bubble ${l.key[i]==o?'selected':''}" onclick="setKey('${containerId}', ${lIdx},${i},'${o}')">${o}</div>`).join('')} 
-            ${isEditable ? `<div class="bubble ${l.key[i]=='*'?'selected':''}" style="color:red" onclick="setKey('${containerId}', ${lIdx},${i},'*')">*</div>` : ''}
-            </div></div>`;
+            rows += `
+            <div class="b-row">
+                <span>${i+1}</span>
+                <div class="b-opts">
+                    ${['A','B','C','D'].map(o => `<div class="bubble ${l.key[i]==o?'selected':''}" onclick="setKey('${containerId}',${lIdx},${i},'${o}')">${o}</div>`).join('')}
+                    ${isEdit ? `<div class="bubble ${l.key[i]=='*'?'selected':''}" style="color:red" onclick="setKey('${containerId}',${lIdx},${i},'*')">*</div>` : ''}
+                </div>
+            </div>`;
         }
         area.innerHTML += `<div class="builder-item"><div class="b-header"><span>${l.name}</span></div>${rows}</div>`;
     });
 }
 
-// Cevap Seçimi
+// Global Erişim İçin
 window.setKey = function(containerId, lIdx, qIdx, opt) {
-    if(containerId === "builderContainer") {
-        builderData[lIdx].key[qIdx] = opt;
-        renderBuilder(containerId, builderData, true);
-    } else if(containerId === "editorBody") {
-        editingExamKey[lIdx].key[qIdx] = opt;
-        renderBuilder(containerId, editingExamKey, true);
+    builderData[lIdx].key[qIdx] = opt;
+    renderBuilder(containerId, containerId === "editorBody");
+}
+
+// --- SINAV OLUŞTURMA ---
+function addBuilderLesson() {
+    let name = document.getElementById("lName").value;
+    let count = parseInt(document.getElementById("lCount").value);
+    if(name && count) {
+        builderData.push({name: name, count: count, key: new Array(count).fill(null)});
+        document.getElementById("lName").value=""; 
+        document.getElementById("lCount").value="";
+        renderBuilder("builderContainer", false);
     }
 }
 
@@ -161,36 +195,7 @@ async function saveNewExam() {
         keysFormat: keys,
         showScore: document.getElementById("newShow").value
     });
-    alert("Kaydedildi"); builderData=[]; loadTeacherData(); navTo("page-t-home");
-}
-
-// --- DÜZENLEYİCİ (SORU İPTALİ / CEVAP ANAHTARI) ---
-function openKeyEditor(id) {
-    let ex = teacherData.exams.find(e => e.id == id);
-    // Anahtarı parse et
-    editingExamKey = [];
-    if(ex.key.includes(":")) {
-        ex.key.split("|").forEach(part => {
-            let p = part.split(":");
-            editingExamKey.push({ name: p[0], count: p[1].length, key: p[1].split("") });
-        });
-    }
-    
-    document.getElementById("editorTitle").innerText = ex.name + " Anahtarı";
-    document.getElementById("editorModal").classList.remove("hidden");
-    // Kaydet butonu için ID'yi sakla
-    document.getElementById("editorModal").dataset.examId = id;
-    renderBuilder("editorBody", editingExamKey, true);
-}
-
-function closeEditor() { document.getElementById("editorModal").classList.add("hidden"); }
-
-async function saveEditor() {
-    let id = document.getElementById("editorModal").dataset.examId;
-    let newKeyStr = editingExamKey.map(l => `${l.name}:${l.key.join("")}`).join("|");
-    
-    await api({ action: "updateExamKey", examId: id, newKey: newKeyStr });
-    alert("Güncellendi!"); closeEditor(); loadTeacherData();
+    alert("Kaydedildi!"); builderData=[]; loadTeacherData(); navTo("page-t-home");
 }
 
 // --- ÖĞRENCİ ---
@@ -198,32 +203,29 @@ async function loadStudentData() {
     const res = await api({ action: "getStudentDashboard", studentName: currentUser.name });
     if(res.status === "success") {
         activeExamData = res.active;
-        const div = document.getElementById("activeExams");
-        div.innerHTML = "";
-        if(res.active.length == 0) div.innerHTML = "<p style='text-align:center; color:#999'>Aktif sınav yok.</p>";
-        
+        const div = document.getElementById("activeExams"); div.innerHTML = "";
+        if(res.active.length == 0) div.innerHTML = "<p style='text-align:center;color:#999'>Aktif sınav yok.</p>";
         res.active.forEach(ex => {
             div.innerHTML += `
-            <div class="list-row">
-                <div class="row-info"><div>${ex.name}</div></div>
-                <button class="btn-main" style="width:auto; padding:8px 20px;" onclick="openStudentExam('${ex.id}')">BAŞLA</button>
+            <div class="list-item">
+                <div class="item-info"><div>${ex.name}</div></div>
+                <button class="btn-sm" onclick="openStudentExam('${ex.id}')">BAŞLA</button>
             </div>`;
         });
-        
-        // Geçmiş
-        document.getElementById("historyList").innerHTML = res.history.map(h => 
-            `<div class="list-row"><div class="row-info"><div>${h.examId}</div></div><div style="font-weight:bold">${h.score==-1?'?':Math.round(h.score)}</div></div>`
-        ).join('');
+        // Geçmiş listesi burada render edilebilir...
     }
 }
 
 function openStudentExam(id) {
-    let ex = activeExamData.find(e => e.id == id);
+    // ID karşılaştırması için stringe çevir (HATA ÇÖZÜMÜ BURADA)
+    let ex = activeExamData.find(e => String(e.id) === String(id));
+    if(!ex) return alert("Sınav verisi yüklenemedi. Sayfayı yenileyin.");
+    
     document.getElementById("examOverlay").classList.remove("hidden");
     document.getElementById("examTitleOverlay").innerText = ex.name;
     document.getElementById("examOverlay").dataset.id = id;
     
-    studentAnswers = {}; // Sıfırla
+    studentAnswers = {}; 
     const area = document.getElementById("opticalArea"); area.innerHTML = "";
     
     ex.sections.forEach(sec => {
@@ -232,13 +234,13 @@ function openStudentExam(id) {
         for(let i=0; i<sec.qCount; i++) {
             rows += `
             <div class="opt-row">
-                <span style="width:20px; font-weight:bold; color:#888">${i+1}</span>
-                <div class="opt-grid">
+                <span style="width:20px; font-weight:bold">${i+1}</span>
+                <div style="display:flex; gap:10px;">
                     ${['A','B','C','D'].map(o => `<div class="opt-big" onclick="stuSel(this, '${sec.name}', ${i}, '${o}')">${o}</div>`).join('')}
                 </div>
             </div>`;
         }
-        area.innerHTML += `<div class="q-card"><div class="q-title">${sec.name}</div>${rows}</div>`;
+        area.innerHTML += `<div class="card" style="margin-bottom:10px;"><h4>${sec.name}</h4>${rows}</div>`;
     });
 }
 
@@ -249,16 +251,15 @@ function stuSel(el, lesson, idx, opt) {
 }
 
 async function submitExamNow() {
-    if(!confirm("Bitirmek istiyor musun?")) return;
-    let ans = {}; 
+    if(!confirm("Bitiriyor musun?")) return;
+    let ans = {};
     for(let l in studentAnswers) ans[l] = studentAnswers[l].join("");
     
     let id = document.getElementById("examOverlay").dataset.id;
     await api({ action: "submitExam", studentName: currentUser.name, examId: id, answers: ans });
-    alert("Sınav Gönderildi!");
-    closeExamOverlay();
+    alert("Kaydedildi!");
+    document.getElementById("examOverlay").classList.add("hidden");
     loadStudentData();
 }
 
 function closeExamOverlay() { document.getElementById("examOverlay").classList.add("hidden"); }
-function openAnalysis(id) { alert("Telegram'a rapor göndermek için backend'deki sendClassReport fonksiyonu kullanılabilir."); }
