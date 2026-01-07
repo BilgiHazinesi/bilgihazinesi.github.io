@@ -2,130 +2,115 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eğitim Asistanı V5</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sınıf Asistanı</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <div id="loadingOverlay" class="loading-overlay hidden">
-        <div class="spinner"></div>
-        <p id="loadingText">İşleniyor...</p>
-    </div>
+    <div id="loader" class="loader-overlay hidden"><div class="spinner"></div></div>
 
-    <div id="loginScreen" class="full-screen-overlay active">
-        <div class="login-card">
-            <div class="brand-logo"><i class="fas fa-rocket"></i></div>
+    <div id="loginScreen" class="app-screen active" style="z-index: 2000; background: white;">
+        <div class="login-container">
+            <div class="logo-circle"><i class="fas fa-shapes"></i></div>
             <h2>Eğitim Asistanı</h2>
-            <p>Hızlı & Güvenli Giriş</p>
-            <div class="input-wrapper">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="loginCode" placeholder="Giriş Kodu" inputmode="numeric">
-            </div>
-            <button class="btn-primary" onclick="login()">GİRİŞ YAP</button>
+            <p>Lütfen giriş kodunuzu yazın</p>
+            <input type="password" id="loginCode" inputmode="numeric" placeholder="Giriş Kodu">
+            <button onclick="login()" class="btn-main">GİRİŞ YAP</button>
         </div>
     </div>
 
-    <div id="mainApp" class="app-container hidden">
-        <header class="top-bar">
-            <div class="user-info">
-                <div class="avatar" id="userAvatar">U</div>
-                <div>
-                    <span class="user-name" id="userNameDisplay">Kullanıcı</span>
-                    <span class="user-role" id="userRoleDisplay">Rol</span>
-                </div>
+    <div id="mainApp" class="hidden">
+        
+        <div class="app-header">
+            <div class="user-details">
+                <span id="headerName">Kullanıcı</span>
+                <small id="headerRole">Rol</small>
             </div>
-            <button class="btn-icon" onclick="logout()"><i class="fas fa-power-off"></i></button>
-        </header>
+            <button onclick="logout()"><i class="fas fa-power-off"></i></button>
+        </div>
 
-        <main class="content-wrapper">
+        <div class="app-content">
             
-            <div id="t-dashboard" class="page-section hidden">
-                <div class="section-title">Genel Bakış</div>
-                <div class="stats-row">
-                    <div class="stat-box blue">
-                        <h3>Öğrenci</h3><span id="statStu">0</span>
-                    </div>
-                    <div class="stat-box purple">
-                        <h3>Sınav</h3><span id="statExam">0</span>
-                    </div>
+            <div id="page-t-home" class="page-section hidden">
+                <div class="dashboard-cards">
+                    <div class="d-card c1"><h3>Öğrenci</h3><span id="stCount">0</span></div>
+                    <div class="d-card c2"><h3>Sınav</h3><span id="exCount">0</span></div>
                 </div>
-                <div class="quick-actions">
-                    <button onclick="openTab('t-create')"><i class="fas fa-plus"></i> Sınav Ekle</button>
-                    <button onclick="openTab('t-exams')"><i class="fas fa-list"></i> Yönet</button>
-                    <button onclick="openTab('t-students')"><i class="fas fa-users"></i> Öğrenciler</button>
+                <h4 class="section-head">Hızlı İşlemler</h4>
+                <div class="quick-grid">
+                    <button onclick="navTo('page-t-create')"><i class="fas fa-plus"></i> Sınav Ekle</button>
+                    <button onclick="navTo('page-t-exams')"><i class="fas fa-list"></i> Sınavlar</button>
+                    <button onclick="navTo('page-t-students')"><i class="fas fa-users"></i> Öğrenciler</button>
                 </div>
             </div>
 
-            <div id="t-create" class="page-section hidden">
-                <div class="card">
-                    <h3>Yeni Sınav Sihirbazı</h3>
-                    <div class="form-grid">
-                        <input type="text" id="newExamId" placeholder="Sınav Kodu (Örn: TR-01)">
-                        <input type="text" id="newExamName" placeholder="Sınav Adı">
+            <div id="page-t-create" class="page-section hidden">
+                <h4 class="section-head">Sınav Oluştur</h4>
+                <div class="form-box">
+                    <input type="text" id="newId" placeholder="Sınav Kodu (MAT1)">
+                    <input type="text" id="newName" placeholder="Sınav Adı">
+                    <div class="adder-row">
+                        <input type="text" id="lName" placeholder="Ders" style="flex:2">
+                        <input type="number" id="lCount" placeholder="Soru" style="flex:1">
+                        <button onclick="addBuilderLesson()">+</button>
                     </div>
-                    <div class="lesson-adder-area">
-                        <div class="adder-inputs">
-                            <input type="text" id="lName" placeholder="Ders (Mat, Fen..)">
-                            <input type="number" id="lCount" placeholder="Soru Sayısı">
-                            <button onclick="addLessonToBuilder()">EKLE</button>
-                        </div>
-                    </div>
-                    <div id="builderArea" class="builder-container"></div>
-                    <select id="newShowScore" style="margin-top:15px;">
-                        <option value="Hayir">Sonuç Gizli</option>
-                        <option value="Evet">Sonuç Açık</option>
-                    </select>
-                    <button class="btn-primary full-width" onclick="saveExamToSystem()" style="margin-top:10px;">KAYDET</button>
+                    <div id="builderContainer"></div>
+                    
+                    <select id="newShow"><option value="Hayir">Sonuç Gizli</option><option value="Evet">Sonuç Açık</option></select>
+                    <button onclick="saveNewExam()" class="btn-main">KAYDET</button>
                 </div>
             </div>
 
-            <div id="t-exams" class="page-section hidden">
-                <input type="text" id="searchExam" placeholder="Sınav Ara..." onkeyup="filterExams()" class="search-bar">
-                <div id="examListContainer" class="list-container"></div>
+            <div id="page-t-exams" class="page-section hidden">
+                <h4 class="section-head">Sınav Listesi</h4>
+                <div id="examList" class="list-wrapper"></div>
             </div>
 
-            <div id="t-students" class="page-section hidden">
-                <input type="text" id="searchStudent" placeholder="Öğrenci Ara..." onkeyup="filterStudents()" class="search-bar">
-                <div id="studentListContainer" class="list-container"></div>
+            <div id="page-t-students" class="page-section hidden">
+                <h4 class="section-head">Öğrenci Listesi</h4>
+                <div id="studentList" class="list-wrapper"></div>
             </div>
 
-            <div id="s-active" class="page-section hidden">
-                <div class="section-title">Aktif Sınavlar</div>
-                <div id="activeExamList" class="cards-grid"></div>
-                
-                <div id="examSolvingArea" class="full-screen-overlay hidden" style="background:white; overflow-y:auto;">
-                    <div class="solve-header">
-                        <button onclick="closeExam()" class="btn-text">Vazgeç</button>
-                        <h3 id="solvingExamTitle">Sınav</h3>
-                    </div>
-                    <div id="opticalFormArea" class="optical-container"></div>
-                    <div class="solve-footer">
-                        <button onclick="submitStudentExam()" class="btn-success full-width">SINAVI GÖNDER</button>
-                    </div>
-                </div>
+            <div id="page-s-home" class="page-section hidden">
+                <h4 class="section-head">Aktif Sınavlar</h4>
+                <div id="activeExams" class="card-grid"></div>
             </div>
 
-            <div id="s-history" class="page-section hidden">
-                <div class="section-title">Karnem</div>
-                <div class="card"><canvas id="studentHistoryChart"></canvas></div>
-                <div id="historyList" class="list-container" style="margin-top:20px;"></div>
+            <div id="page-s-history" class="page-section hidden">
+                <h4 class="section-head">Karnem</h4>
+                <div class="chart-holder"><canvas id="historyChart"></canvas></div>
+                <div id="historyList" class="list-wrapper"></div>
             </div>
 
-        </main>
+        </div>
 
-        <nav class="bottom-nav" id="bottomNav"></nav>
+        <div class="app-tabbar" id="tabBar">
+            </div>
+
     </div>
 
-    <div id="detailModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <div id="modalHeader"></div>
-            <div id="modalBody"></div>
+    <div id="examOverlay" class="fullscreen-modal hidden">
+        <div class="modal-header">
+            <button onclick="closeExamOverlay()"><i class="fas fa-arrow-left"></i> Vazgeç</button>
+            <span id="examTitleOverlay">Sınav</span>
+            <div style="width:30px;"></div>
         </div>
+        <div class="modal-body" id="opticalArea"></div>
+        <div class="modal-footer">
+            <button onclick="submitExamNow()" class="btn-main">SINAVI BİTİR</button>
+        </div>
+    </div>
+
+    <div id="editorModal" class="fullscreen-modal hidden">
+        <div class="modal-header">
+            <button onclick="closeEditor()"><i class="fas fa-times"></i></button>
+            <span id="editorTitle">Düzenle</span>
+            <button onclick="saveEditor()" style="color:var(--primary); font-weight:bold;">Kaydet</button>
+        </div>
+        <div class="modal-body" id="editorBody"></div>
     </div>
 
     <script src="script.js"></script>
