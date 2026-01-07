@@ -1,4 +1,4 @@
-const API_URL = "BURAYA_LINKI_YAPISTIRIN"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbztvq1g1d-YIgKsvb04tU6UECaVLo9VRCVE85dZxKSj6dsTTYLGRt4HR2_dcGXVv3Z1/exec"; 
 
 let currentUser = {};
 let teacherData = { exams: [], students: [], results: [] };
