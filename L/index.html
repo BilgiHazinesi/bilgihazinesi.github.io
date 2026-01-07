@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analiz Sistemi</title>
+    <title>Sınıf Yönetim Paneli</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
     <div id="loginScreen" class="screen active">
         <div class="login-card">
-            <i class="fas fa-school" style="font-size:3rem; color:#4a90e2;"></i>
-            <h2>Öğrenci Analiz</h2>
+            <i class="fas fa-chart-line" style="font-size:3rem; color:#4a90e2; margin-bottom:10px;"></i>
+            <h2>Öğrenci & Öğretmen Girişi</h2>
+            <p>Size verilen kodu giriniz.</p>
             <input type="password" id="loginCode" placeholder="Giriş Kodunuz" inputmode="numeric">
             <button onclick="login()">Giriş Yap</button>
         </div>
@@ -23,35 +25,46 @@
             <h3>Yönetim Paneli</h3>
             <button onclick="logout()"><i class="fas fa-power-off"></i></button>
         </div>
+        
         <div class="tab-menu">
             <button class="tab-link active" onclick="openTab('t-exams')">Sınavlar</button>
             <button class="tab-link" onclick="openTab('t-students')">Öğrenciler</button>
-            <button class="tab-link" onclick="openTab('t-create')">Yeni Ekle</button>
+            <button class="tab-link" onclick="openTab('t-create')">Sınav Ekle</button>
         </div>
+
         <div class="content-area">
             <div id="t-exams" class="tab-content active">
                 <input type="text" id="searchExam" placeholder="Sınav Ara..." onkeyup="filterExams()">
                 <div id="examListContainer"></div>
             </div>
+
             <div id="t-students" class="tab-content">
                 <input type="text" id="searchStudent" placeholder="Öğrenci Ara..." onkeyup="filterStudents()">
                 <div id="studentListContainer"></div>
             </div>
-            <div id="t-create" class="tab-content">
+            
+             <div id="t-create" class="tab-content">
                 <div class="card">
-                     <h4>Sınav Oluştur</h4>
-                     <input type="text" id="newExamId" placeholder="Kod (Örn: MAT1)">
-                     <input type="text" id="newExamName" placeholder="Başlık">
-                     <div style="background:#f0f8ff; padding:10px; border-radius:5px; margin-bottom:10px;">
+                     <h4><i class="fas fa-plus"></i> Yeni Sınav Oluştur</h4>
+                     <input type="text" id="newExamId" placeholder="Sınav Kodu (Örn: MAT-1)">
+                     <input type="text" id="newExamName" placeholder="Sınav Başlığı">
+                     
+                     <div style="background:#f0f8ff; padding:10px; border-radius:5px; margin-bottom:10px; border:1px solid #cce5ff;">
+                         <label style="font-weight:bold;">Ders Ekle:</label>
                          <div style="display:flex; gap:5px;">
-                             <input type="text" id="lName" placeholder="Ders">
-                             <input type="number" id="lCount" placeholder="Soru Sayısı">
-                             <button class="btn-sm" onclick="addLesson()">+</button>
+                             <input type="text" id="lName" placeholder="Ders Adı" style="margin:0;">
+                             <input type="number" id="lCount" placeholder="Soru Sayısı" style="margin:0;">
+                             <button class="btn-sm" onclick="addLesson()">EKLE</button>
                          </div>
-                         <div id="previewArea"></div>
+                         <div id="previewArea" style="margin-top:10px;"></div>
                      </div>
-                     <select id="newShowScore"><option value="Hayir">Sonuç Gizli</option><option value="Evet">Sonuç Açık</option></select>
-                     <button onclick="saveExam()" class="btn-primary">Kaydet</button>
+                     
+                     <label>Sonuçlar Görünsün mü?</label>
+                     <select id="newShowScore">
+                         <option value="Hayir">Hayır (Gizli)</option>
+                         <option value="Evet">Evet (Öğrenci Görsün)</option>
+                     </select>
+                     <button onclick="saveExam()" class="btn-primary" style="margin-top:10px;">Kaydet ve Yayınla</button>
                 </div>
             </div>
         </div>
@@ -63,21 +76,23 @@
             <button onclick="logout()"><i class="fas fa-power-off"></i></button>
         </div>
         <div class="tab-menu">
-            <button class="tab-link active" onclick="openTab('s-active')">Sınavlar</button>
+            <button class="tab-link active" onclick="openTab('s-active')">Aktif Sınavlar</button>
             <button class="tab-link" onclick="openTab('s-history')">Karnem</button>
         </div>
         <div class="content-area">
             <div id="s-active" class="tab-content active">
                 <div id="activeExamList"></div>
                 <div id="examSolvingArea" class="hidden">
-                    <button onclick="closeExam()" class="back-btn">Vazgeç</button>
-                    <h4 id="solvingExamTitle"></h4>
+                    <button onclick="closeExam()" class="back-btn"><i class="fas fa-arrow-left"></i> Vazgeç</button>
+                    <h4 id="solvingExamTitle" style="text-align:center; margin:10px 0;"></h4>
                     <div id="opticalFormArea"></div>
                     <button onclick="submitExam()" class="btn-success sticky-btn">Sınavı Bitir</button>
                 </div>
             </div>
             <div id="s-history" class="tab-content">
-                <canvas id="studentHistoryChart"></canvas>
+                <div class="card">
+                    <canvas id="studentHistoryChart"></canvas>
+                </div>
                 <div id="historyList" style="margin-top:20px;"></div>
             </div>
         </div>
@@ -90,6 +105,7 @@
             <div id="modalBody"></div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
