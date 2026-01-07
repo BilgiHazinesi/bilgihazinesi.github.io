@@ -1,11 +1,13 @@
-/* RESET & TEMEL AYARLAR */
+/* --- GENEL AYARLAR --- */
 :root {
-    --primary-color: #3498db;
-    --success-color: #2ecc71;
-    --danger-color: #e74c3c;
-    --bg-color: #f4f7f6;
-    --card-bg: #ffffff;
-    --text-color: #333;
+    --primary: #4a90e2;   /* Ana Renk (Mavi) */
+    --secondary: #8e44ad; /* İkincil Renk (Mor - Telegram) */
+    --success: #2ecc71;   /* Onay (Yeşil) */
+    --danger: #e74c3c;    /* Uyarı (Kırmızı) */
+    --bg: #f4f6f9;        /* Arkaplan */
+    --white: #ffffff;
+    --text: #2c3e50;
+    --border: #dfe6e9;
 }
 
 * {
@@ -14,173 +16,317 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
     margin: 0;
-    padding: 0;
-    color: var(--text-color);
-    font-size: 16px; /* Okunabilirlik için ideal boyut */
+    padding-bottom: 80px; /* Alt kısımdaki butonlar için boşluk */
 }
 
-/* UYGULAMA BAŞLIĞI */
-.app-header {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 15px;
+/* --- EKRAN YÖNETİMİ --- */
+.screen {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* --- GİRİŞ EKRANI --- */
+.login-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--white);
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
     text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+/* --- ÜST BAŞLIK (HEADER) --- */
+.app-header {
+    background: var(--primary);
+    color: var(--white);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.app-header h1 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+.app-header h3 { margin: 0; font-size: 1.2rem; }
+.app-header button {
+    background: transparent;
+    border: none;
+    color: var(--white);
+    font-size: 1.3rem;
+    cursor: pointer;
+}
 
-/* ANA KONTEYNER */
-.container {
-    width: 100%;
-    max-width: 800px; /* Masaüstünde çok yayılmasın */
-    margin: 0 auto;
+/* --- SEKME (TAB) MENÜSÜ --- */
+.tab-menu {
+    display: flex;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 55px; /* Header'ın hemen altına yapışır */
+    z-index: 90;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.tab-link {
+    flex: 1;
     padding: 15px;
-    padding-bottom: 80px; /* Alttaki butonlar için boşluk */
+    background: none;
+    border: none;
+    font-weight: 600;
+    color: #7f8c8d;
+    cursor: pointer;
+    transition: 0.3s;
+    border-bottom: 3px solid transparent;
 }
 
-/* KART YAPISI */
+.tab-link.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background-color: #f8fbff;
+}
+
+.tab-content {
+    display: none;
+    padding: 15px;
+    max-width: 800px; /* Tablet/PC'de çok yayılmasın */
+    margin: 0 auto;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* --- KART VE LİSTE ELEMANLARI --- */
 .card {
-    background: var(--card-bg);
-    border-radius: 12px;
+    background: var(--white);
     padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    border: 1px solid var(--border);
 }
 
-.hidden { display: none !important; }
+.exam-item, .student-item {
+    background: var(--white);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid #bdc3c7; /* Varsayılan Gri */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    transition: transform 0.2s;
+}
 
-/* FORMLAR VE INPUTLAR */
+.exam-item:active, .student-item:active {
+    transform: scale(0.98);
+}
+
+/* Durum Renkleri */
+.exam-item.active { border-left-color: var(--success); } /* Yeşil */
+.exam-item.passive { border-left-color: var(--danger); } /* Kırmızı */
+
+/* --- FORM ELEMANLARI --- */
 input, select {
     width: 100%;
-    padding: 14px;
-    margin-bottom: 12px;
-    border: 1px solid #ddd;
+    padding: 12px;
+    margin: 8px 0 15px 0;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    font-size: 16px; /* Mobilde zoom yapmayı engeller */
-    background: #fafafa;
-    transition: border 0.3s;
+    background-color: #fafafa;
+    font-size: 16px; /* Mobilde zoom'u engeller */
 }
 
 input:focus, select:focus {
-    border-color: var(--primary-color);
     outline: none;
-    background: #fff;
+    border-color: var(--primary);
+    background-color: var(--white);
 }
 
-/* BUTONLAR (App Tarzı) */
+/* --- BUTONLAR --- */
 button {
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-primary {
     width: 100%;
-    padding: 15px;
+    padding: 12px;
+    background-color: var(--primary);
+    color: white;
     border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.1s, opacity 0.2s;
-    background-color: var(--primary-color);
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.btn-success {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--success);
     color: white;
-    margin-bottom: 10px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
 }
 
-button:active { transform: scale(0.98); } /* Tıklama hissi */
-.btn-secondary { background-color: #6c757d; }
-.btn-danger { background-color: var(--danger-color); }
-.btn-success { background-color: var(--success-color); }
-
-/* OPTİK FORM DÜZENİ (MOBİL UYUMLU) */
-.optical-section {
-    margin-bottom: 20px;
-    background: #fff;
-    border-radius: 10px;
-    border: 1px solid #eee;
-    overflow: hidden;
-}
-
-.section-header {
-    background: #eef2f5;
+.btn-sm {
     padding: 10px 15px;
-    font-weight: bold;
-    color: #555;
-    border-bottom: 1px solid #ddd;
-}
-
-.question-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Mobilde yayılmasını sağlar */
-    padding: 12px 15px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.question-row:last-child { border-bottom: none; }
-
-.q-number {
-    width: 25px;
-    font-weight: bold;
-    color: #7f8c8d;
-}
-
-.options-wrapper {
-    display: flex;
-    gap: 12px; /* Şıklar arası boşluk */
-}
-
-/* YUVARLAK ŞIKLAR (MOBİL İÇİN BÜYÜK) */
-.opt-circle {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: 2px solid #e0e0e0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    color: #999;
-    font-size: 18px;
-    cursor: pointer;
-    background: white;
-    transition: all 0.2s;
-}
-
-/* SEÇİLİ DURUM */
-.opt-circle.selected {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: var(--primary);
     color: white;
-    box-shadow: 0 2px 5px rgba(52, 152, 219, 0.4);
-    transform: scale(1.1);
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
 }
 
-/* ÖĞRETMEN EKLEME ALANI (Responsive) */
-.add-lesson-group {
-    display: flex;
-    gap: 10px;
+.btn-action {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: white;
+    color: #555;
+    margin-left: 5px;
+    font-size: 0.9rem;
 }
 
-@media (max-width: 480px) {
-    .add-lesson-group {
-        flex-direction: column; /* Mobilde alt alta döner */
-    }
-    .container { padding: 10px; }
-    .opt-circle { width: 38px; height: 38px; font-size: 16px; } /* Çok küçük ekranlar için hafif küçült */
-    .options-wrapper { gap: 8px; }
+.back-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 8px 15px;
+    border-radius: 20px;
+    color: #666;
+    margin-bottom: 15px;
+    display: inline-block;
 }
 
-/* SABİT ALT BUTON (Sticky Footer Action) */
-.sticky-action {
+/* Alt Sabit Buton (Sınavı Bitir) */
+.sticky-btn {
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
     max-width: 600px;
-    z-index: 999;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+    z-index: 150;
 }
+
+/* --- OPTİK FORM TASARIMI --- */
+.opt-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.opt-row:last-child { border-bottom: none; }
+
+.opt-row span {
+    font-weight: bold;
+    color: #7f8c8d;
+    width: 30px;
+}
+
+.opt-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: #95a5a6;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.opt-circle.selected {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(74, 144, 226, 0.3);
+}
+
+/* --- MODAL (AÇILIR PENCERE) --- */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Karartma */
+    z-index: 200;
+    backdrop-filter: blur(3px); /* Arkası bulanıklaşır */
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 25px;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.close-modal:hover { color: #333; }
+
+/* --- YARDIMCI SINIFLAR --- */
+.hidden { display: none !important; }
+
+/* Rozetler */
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: white;
+    font-weight: bold;
+}
+.badge.active { background-color: var(--success); }
+.badge.passive { background-color: var(--danger); }
