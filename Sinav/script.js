@@ -1,4 +1,4 @@
-const API_URL = "BURAYA_YENI_WEB_APP_URL_YAPISTIRIN"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwigrFoHtZpRTXT06CeLIlZpQB1o3DNSDLLH3heFN7irvpTLsHeRPSqcC3r-YSd_-df/exec"; 
 
 let currentUser = {};
 let teacherData = { exams: [], students: [], results: [] };
