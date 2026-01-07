@@ -3,75 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sınıf Analiz</title>
+    <title>Eğitim Yönetim Sistemi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <div class="app-header">
-        <h1>🎓 Analiz Sistemi</h1>
+    <div id="loginScreen" class="login-wrapper active">
+        <div class="login-box">
+            <div class="logo-area">
+                <i class="fas fa-graduation-cap"></i>
+                <h1>Eğitim Asistanı</h1>
+                <p>Öğrenci Analiz & Takip Sistemi</p>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-key"></i>
+                <input type="password" id="loginCode" placeholder="Giriş Kodunuzu Yazın" inputmode="numeric">
+            </div>
+            <button class="btn-login" onclick="login()">Giriş Yap <i class="fas fa-arrow-right"></i></button>
+        </div>
     </div>
 
-    <div class="container">
-        <div id="alertBox" class="hidden" style="padding:15px; margin-bottom:15px; border-radius:8px; text-align:center; color:white; font-weight:bold;"></div>
-
-        <div id="loginSection" class="card">
-            <h2 style="text-align:center; color:#333;">Giriş Yap</h2>
-            <p style="text-align:center; color:#777; font-size:0.9em; margin-bottom:20px;">Öğrenci veya Öğretmen kodunuzu girin.</p>
-            
-            <input type="password" id="userCode" placeholder="Giriş Kodu (Örn: 1023)" inputmode="numeric">
-            <button onclick="login()">Giriş Yap</button>
-        </div>
-
-        <div id="teacherPanel" class="hidden">
-            <div class="card">
-                <h3>📝 Sınav Oluştur</h3>
-                <input type="text" id="newExamId" placeholder="Sınav Kodu (MAT-1)">
-                <input type="text" id="newExamName" placeholder="Sınav Başlığı">
-                
-                <div style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px dashed #ccc; margin:15px 0;">
-                    <label style="font-weight:bold; color:#555;">Ders Ekle:</label>
-                    <div class="add-lesson-group">
-                        <input type="text" id="lessonNameInput" placeholder="Ders (Örn: Fen)">
-                        <input type="number" id="lessonQCountInput" placeholder="Soru Sayısı" inputmode="numeric">
-                    </div>
-                    <button class="btn-success" onclick="addLessonSection()">+ Dersi Ekle</button>
+    <div id="mainApp" class="app-container hidden">
+        
+        <nav class="sidebar">
+            <div class="brand">
+                <i class="fas fa-layer-group"></i> <span>Panel</span>
+            </div>
+            <div class="menu-items">
+                <div id="menuTeacher" class="hidden">
+                    <button class="nav-btn active" onclick="openTab('t-dashboard')"><i class="fas fa-home"></i> <span>Özet</span></button>
+                    <button class="nav-btn" onclick="openTab('t-exams')"><i class="fas fa-file-alt"></i> <span>Sınavlar</span></button>
+                    <button class="nav-btn" onclick="openTab('t-students')"><i class="fas fa-users"></i> <span>Öğrenciler</span></button>
+                    <button class="nav-btn" onclick="openTab('t-create')"><i class="fas fa-plus-circle"></i> <span>Yeni Sınav</span></button>
                 </div>
+                <div id="menuStudent" class="hidden">
+                    <button class="nav-btn active" onclick="openTab('s-active')"><i class="fas fa-pen-fancy"></i> <span>Sınavlar</span></button>
+                    <button class="nav-btn" onclick="openTab('s-history')"><i class="fas fa-chart-line"></i> <span>Karnem</span></button>
+                </div>
+            </div>
+            <div class="user-profile">
+                <div class="user-info">
+                    <span id="userNameDisplay">Kullanıcı</span>
+                    <small id="userRoleDisplay">Rol</small>
+                </div>
+                <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </nav>
 
-                <div id="teacherOpticalFormArea"></div>
-
-                <label style="margin-top:15px; display:block;">Sonuç Görünürlüğü:</label>
-                <select id="newShowScore">
-                    <option value="Hayir">Gizli Tut</option>
-                    <option value="Evet">Öğrenci Görsün</option>
-                </select>
-
-                <button onclick="saveExamToSystem()" style="margin-top:20px;">💾 Sınavı Kaydet</button>
+        <main class="content">
+            
+            <div id="t-dashboard" class="page-section hidden">
+                <h2>Hoşgeldiniz Hocam 👋</h2>
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                        <div class="stat-info">
+                            <h3>Toplam Öğrenci</h3>
+                            <span id="statStudentCount">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card purple">
+                        <div class="stat-icon"><i class="fas fa-file-signature"></i></div>
+                        <div class="stat-info">
+                            <h3>Toplam Sınav</h3>
+                            <span id="statExamCount">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-info">
+                            <h3>Aktif Sınav</h3>
+                            <span id="statActiveCount">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <h3>📢 Son Eklenen Sınavlar</h3>
+                    <table class="modern-table">
+                        <thead><tr><th>Sınav Adı</th><th>Tarih</th><th>Durum</th></tr></thead>
+                        <tbody id="dashboardExamTable"></tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="card">
-                <h3>📊 Rapor Al</h3>
-                <input type="text" id="reportId" placeholder="Sınav Kodu">
-                <button class="btn-secondary" onclick="getReport()">Telegram Raporu İste</button>
+            <div id="t-exams" class="page-section hidden">
+                <div class="header-flex">
+                    <h2>Sınav Yönetimi</h2>
+                    <input type="text" id="searchExam" placeholder="Sınav Ara..." onkeyup="filterExams()" class="search-input">
+                </div>
+                <div id="examListContainer" class="grid-list"></div>
             </div>
 
-            <button class="btn-danger" onclick="logout()">Çıkış Yap</button>
-        </div>
-
-        <div id="studentPanel" class="hidden">
-            <div class="card" style="text-align:center; padding-bottom:0;">
-                <h2 id="welcomeText" style="margin:0;">Hoşgeldin</h2>
-                <p style="color:#777; font-size:0.9em;">Başlamak için bir sınav seç.</p>
-                <select id="examSelector" onchange="loadStudentOpticalForm()" style="margin-top:10px;"></select>
+            <div id="t-students" class="page-section hidden">
+                <div class="header-flex">
+                    <h2>Öğrenci Listesi</h2>
+                    <input type="text" id="searchStudent" placeholder="Öğrenci Ara..." onkeyup="filterStudents()" class="search-input">
+                </div>
+                <div id="studentListContainer" class="list-view"></div>
             </div>
 
-            <div id="studentOpticalFormArea" style="padding-bottom: 60px;"></div>
+            <div id="t-create" class="page-section hidden">
+                <h2>Yeni Sınav Oluştur</h2>
+                <div class="form-card">
+                    <div class="form-group">
+                        <label>Sınav Kodu</label>
+                        <input type="text" id="newExamId" placeholder="Örn: TR-MAT-1">
+                    </div>
+                    <div class="form-group">
+                        <label>Sınav Başlığı</label>
+                        <input type="text" id="newExamName" placeholder="Örn: Genel Tarama Testi">
+                    </div>
+                    
+                    <div class="lesson-builder-area">
+                        <label>Dersler ve Soru Sayıları</label>
+                        <div class="builder-inputs">
+                            <input type="text" id="lName" placeholder="Ders Adı (Örn: Fen)">
+                            <input type="number" id="lCount" placeholder="Soru Sayısı">
+                            <button onclick="addLesson()" class="btn-icon"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="previewArea" class="tags-container"></div>
+                    </div>
 
-            <div id="btnSubmitWrapper" class="hidden sticky-action">
-                <button onclick="submitExam()" class="btn-success" style="box-shadow: 0 4px 10px rgba(46, 204, 113, 0.4);">✅ SINAVI BİTİR</button>
+                    <div class="form-group">
+                        <label>Sonuç Görünürlüğü</label>
+                        <select id="newShowScore">
+                            <option value="Hayir">Gizli Tut (Ben Açıklayacağım)</option>
+                            <option value="Evet">Açık (Öğrenci Anında Görsün)</option>
+                        </select>
+                    </div>
+                    <button onclick="saveExam()" class="btn-primary full">Sınavı Kaydet ve Yayınla</button>
+                </div>
             </div>
 
-            <div style="height: 20px;"></div> <button class="btn-danger" onclick="logout()" style="opacity:0.8;">Çıkış</button>
+            <div id="s-active" class="page-section hidden">
+                <h2>Aktif Sınavlar</h2>
+                <div id="activeExamList" class="grid-list"></div>
+                
+                <div id="examSolvingArea" class="hidden">
+                    <div class="solving-header">
+                        <button onclick="closeExam()" class="btn-back"><i class="fas fa-arrow-left"></i> Çık</button>
+                        <h3 id="solvingExamTitle">Sınav</h3>
+                    </div>
+                    <div id="opticalFormArea"></div>
+                    <button onclick="submitExam()" class="btn-submit-exam">SINAVI TAMAMLA</button>
+                </div>
+            </div>
+
+            <div id="s-history" class="page-section hidden">
+                <h2>Başarı Karnem</h2>
+                <div class="chart-container">
+                    <canvas id="studentHistoryChart"></canvas>
+                </div>
+                <div id="historyList" class="history-list"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="modalHeader"></div>
+            <div id="modalBody"></div>
         </div>
     </div>
 
