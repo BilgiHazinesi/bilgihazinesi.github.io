@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycby64Ilou3jHX4cTMlSkfj6zFb6FyZy6LqSpQTLM9v8JB5iyPpbiBKbfAQZciogVvxo/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbw_AIVl4bxqeRfT7LWpkUey-1nTuYJ_UwKMTSu7r2Mhwy8EWfp_WOrDSgHOI4lWdYXG/exec"; 
 
 let currentUser = {};
 let teacherData = { exams: [], students: [], results: [] };
@@ -38,7 +38,7 @@ async function login() {
     } else { alert(res.msg); }
 }
 
-// --- ÖĞRETMEN ---
+// --- ÖĞRETMEN FONKSİYONLARI ---
 async function loadTeacherDashboard() {
     const res = await apiRequest({ action: "getTeacherData" });
     if(res.status === "success") { teacherData = res; renderExamList(); renderStudentList(); }
@@ -48,12 +48,17 @@ function renderExamList() {
     const list = document.getElementById("examListContainer");
     const filter = document.getElementById("searchExam").value.toLowerCase();
     list.innerHTML = "";
+    
+    // Sınavları ters sırala (en yeni en üstte)
     teacherData.exams.slice().reverse().forEach(ex => {
         if(ex.name.toLowerCase().includes(filter)) {
             let isActive = ex.status.toLowerCase() === "aktif";
             list.innerHTML += `
                 <div class="exam-item ${isActive ? "active" : "passive"}">
-                    <div style="flex:1;"><strong>${ex.name}</strong><br><small>${ex.id}</small></div>
+                    <div style="flex:1;">
+                        <strong>${ex.name}</strong><br>
+                        <small style="color:#666;">Kod: ${ex.id}</small>
+                    </div>
                     <div style="display:flex; gap:5px;">
                         <button class="btn-action" style="background:${isActive?"#e74c3c":"#2ecc71"}; color:white;" onclick="toggleStatus('${ex.id}')">${isActive?"Durdur":"Başlat"}</button>
                         <button class="btn-action" onclick="analyzeExam('${ex.id}')"><i class="fas fa-chart-pie"></i></button>
@@ -84,10 +89,11 @@ function renderStudentList() {
 }
 function filterStudents() { renderStudentList(); }
 
-// --- ANALİZ ---
+// --- ANALİZ VE GRAFİKLER ---
 function analyzeExam(id) {
     let results = teacherData.results.filter(r => r.examId == id);
-    if(results.length === 0) return alert("Veri yok.");
+    if(results.length === 0) return alert("Henüz veri yok.");
+    
     let labels = [], data = [], lessonStats = {};
     results.forEach(r => {
         try { JSON.parse(r.answers).forEach(d => {
@@ -97,51 +103,63 @@ function analyzeExam(id) {
     });
     for(let l in lessonStats) { labels.push(l); data.push(Math.round((lessonStats[l].correct/lessonStats[l].total)*100)); }
     
-    showModal(`<h3>${id} Analizi</h3>`, `<canvas id="chartArea"></canvas>`);
-    drawChart('chartArea', 'bar', labels, data, 'Başarı %');
+    showModal(`<h3>${id} Sınıf Başarısı</h3>`, `<canvas id="chartArea"></canvas>`);
+    drawChart('chartArea', 'bar', labels, data, 'Başarı Yüzdesi (%)');
 }
 
 function analyzeStudent(name) {
     let results = teacherData.results.filter(r => r.student == name);
-    if(results.length === 0) return alert("Kayıt yok.");
-    showModal(`<h3>${name}</h3>`, `<canvas id="chartArea"></canvas>`);
+    if(results.length === 0) return alert("Bu öğrencinin sınav kaydı yok.");
+    showModal(`<h3>${name} Gelişim Grafiği</h3>`, `<canvas id="chartArea"></canvas>`);
     drawChart('chartArea', 'line', results.map(r=>r.examId), results.map(r=>r.score), 'Puan');
 }
 
 function openTelegramModal(id) {
     let results = teacherData.results.filter(r => r.examId == id);
     if(results.length === 0) return alert("Veri yok.");
-    let html = `<div style="text-align:center;"><h4>Telegram Rapor</h4><button class="btn-primary" onclick="sendClassReport('${id}')">Tüm Sınıfı Gönder</button><hr>
-    <select id="stuSelect">${results.map(r=>`<option value="${r.student}">${r.student}</option>`).join('')}</select>
-    <button class="btn-success" onclick="sendStudentReport('${id}')" style="margin-top:5px;">Öğrenciyi Gönder</button></div>`;
+    let html = `
+    <div style="text-align:center;">
+        <h4>Telegram Rapor</h4>
+        <button class="btn-primary" onclick="sendClassReport('${id}')">Tüm Sınıfı Gönder</button>
+        <hr>
+        <p>Veya Öğrenci Seç:</p>
+        <select id="stuSelect" style="margin-bottom:10px;">${results.map(r=>`<option value="${r.student}">${r.student}</option>`).join('')}</select>
+        <button class="btn-success" onclick="sendStudentReport('${id}')">Seçili Öğrenciyi Gönder</button>
+    </div>`;
     showModal("", html);
 }
-async function sendClassReport(id) { await apiRequest({action:"sendClassReport", examId:id}); alert("Yollandı"); closeModal(); }
-async function sendStudentReport(id) { await apiRequest({action:"sendStudentReport", examId:id, studentName:document.getElementById("stuSelect").value}); alert("Yollandı"); }
 
-// --- SINAV OLUŞTURUCU ---
+async function sendClassReport(id) { await apiRequest({action:"sendClassReport", examId:id}); alert("Yollandı!"); closeModal(); }
+async function sendStudentReport(id) { await apiRequest({action:"sendStudentReport", examId:id, studentName:document.getElementById("stuSelect").value}); alert("Yollandı!"); }
+
+// --- YENİ SINAV OLUŞTURMA ---
 function addLesson() {
     let n = document.getElementById("lName").value, c = document.getElementById("lCount").value;
     if(n && c) { tempExamBuilder.push({name:n, count:parseInt(c)}); renderPreview(); }
 }
 function renderPreview() {
-    document.getElementById("previewArea").innerHTML = tempExamBuilder.map((l,i)=>`<div>${l.name} (${l.count}) <span onclick="tempExamBuilder.splice(${i},1);renderPreview()" style="color:red;cursor:pointer;">x</span></div>`).join('');
+    document.getElementById("previewArea").innerHTML = tempExamBuilder.map((l,i)=>`<div style="display:flex; justify-content:space-between; background:white; padding:5px; margin:2px;"><span>${l.name} (${l.count} soru)</span><span onclick="tempExamBuilder.splice(${i},1);renderPreview()" style="color:red;cursor:pointer;">Sil</span></div>`).join('');
 }
 async function saveExam() {
-    if(tempExamBuilder.length==0) return alert("Ders ekle");
+    if(tempExamBuilder.length==0) return alert("En az bir ders ekleyin.");
     let k = tempExamBuilder.map(l=>`${l.name}:${"A".repeat(l.count)}`).join("|");
     await apiRequest({action:"addExam", id:document.getElementById("newExamId").value, name:document.getElementById("newExamName").value, keysFormat:k, showScore:document.getElementById("newShowScore").value});
-    alert("Kaydedildi"); loadTeacherDashboard();
+    alert("Sınav Oluşturuldu!"); location.reload();
 }
 
-// --- ÖĞRENCİ ---
+// --- ÖĞRENCİ FONKSİYONLARI ---
 async function loadStudentDashboard() {
     const res = await apiRequest({ action: "getStudentDashboard", studentName: currentUser.name });
     if(res.status === "success") {
         activeExamData = res.active;
-        let div = document.getElementById("activeExamList"); div.innerHTML = "";
-        res.active.forEach(ex => div.innerHTML += `<div class="card"><h4>${ex.name}</h4><button class="btn-success" onclick="startExam('${ex.id}')">Başla</button></div>`);
-        drawChart('studentHistoryChart', 'bar', res.history.map(h=>h.examId), res.history.map(h=>h.score), 'Puanım');
+        let div = document.getElementById("activeExamList"); 
+        div.innerHTML = "";
+        if(res.active.length === 0) div.innerHTML = "<p>Aktif sınav yok.</p>";
+        res.active.forEach(ex => div.innerHTML += `<div class="card"><h4>${ex.name}</h4><button class="btn-success" onclick="startExam('${ex.id}')">Sınava Başla</button></div>`);
+        
+        if(res.history.length > 0) {
+            drawChart('studentHistoryChart', 'bar', res.history.map(h=>h.examId), res.history.map(h=>h.score), 'Puanlarım');
+        }
     }
 }
 function startExam(id) {
@@ -165,10 +183,10 @@ function selectOpt(el, l, i, o) {
     el.classList.add('selected'); studentAnswers[l][i] = o;
 }
 async function submitExam() {
-    if(!confirm("Bitir?")) return;
+    if(!confirm("Sınavı bitirmek istiyor musun?")) return;
     let ans = {}; for(let l in studentAnswers) ans[l] = studentAnswers[l].join("");
     const res = await apiRequest({ action:"submitExam", studentName:currentUser.name, examId:document.getElementById("solvingExamTitle").dataset.id, answers:ans });
-    if(res.status == "success") { alert("Bitti!"); location.reload(); }
+    if(res.status == "success") { alert("Sınav Bitti! Puanın kaydedildi."); location.reload(); }
 }
 
 // --- YARDIMCILAR ---
@@ -177,5 +195,6 @@ function closeModal() { document.getElementById("detailModal").style.display="no
 function logout() { location.reload(); }
 function drawChart(id, t, l, d, n) {
     if(currentChart) currentChart.destroy();
-    currentChart = new Chart(document.getElementById(id), { type:t, data:{labels:l, datasets:[{label:n, data:d, backgroundColor:'#4a90e2'}]} });
+    let ctx = document.getElementById(id);
+    if(ctx) currentChart = new Chart(ctx, { type:t, data:{labels:l, datasets:[{label:n, data:d, backgroundColor:'#4a90e2', borderColor:'#4a90e2'}]} });
 }
