@@ -1,28 +1,43 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbwigrFoHtZpRTXT06CeLIlZpQB1o3DNSDLLH3heFN7irvpTLsHeRPSqcC3r-YSd_-df/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycby1f_Gn79ocp1L7SgcgTiAYubM8DtQtGly_dPA1uQKK_yEebM43F8zwaXsvHGhnR3xV/exec"; 
 
 let currentUser = {};
 let teacherData = { exams: [], students: [], results: [] };
 let activeExamData = [], builderData = [], studentAnswers = {};
-let currentChart = null;
+let editingExamKey = []; // Sınav anahtarını düzenlerken kullanılır
 
 // --- API ---
-function setLoading(state) {
-    const overlay = document.getElementById("loadingOverlay");
-    if(state) overlay.classList.remove("hidden");
-    else overlay.classList.add("hidden");
-}
-
-async function apiRequest(data) {
+function setLoading(s) { document.getElementById("loader").classList.toggle("hidden", !s); }
+async function api(data) {
     try {
         setLoading(true);
         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(data) });
         const json = await res.json();
         setLoading(false);
         return json;
-    } catch (e) { 
-        setLoading(false); 
-        alert("Bağlantı Hatası! İnternetinizi kontrol edin."); 
-        return {status: "error"}; 
+    } catch(e) { setLoading(false); alert("Bağlantı Hatası"); return {status:"error"}; }
+}
+
+// --- NAVİGASYON ---
+function navTo(pageId) {
+    document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
+    document.getElementById(pageId).classList.remove('hidden');
+    // Scrollu sıfırla
+    document.querySelector('.app-content').scrollTop = 0;
+}
+
+function updateTab(role, activeTabId) {
+    const bar = document.getElementById("tabBar");
+    if(role === "teacher") {
+        bar.innerHTML = `
+            <button class="tab-item ${activeTabId=='page-t-home'?'active':''}" onclick="navTo('page-t-home');updateTab('teacher','page-t-home')"><i class="fas fa-home"></i><span>Özet</span></button>
+            <button class="tab-item ${activeTabId=='page-t-exams'?'active':''}" onclick="navTo('page-t-exams');updateTab('teacher','page-t-exams')"><i class="fas fa-list"></i><span>Sınavlar</span></button>
+            <button class="tab-item ${activeTabId=='page-t-students'?'active':''}" onclick="navTo('page-t-students');updateTab('teacher','page-t-students')"><i class="fas fa-users"></i><span>Öğrenci</span></button>
+        `;
+    } else {
+        bar.innerHTML = `
+            <button class="tab-item ${activeTabId=='page-s-home'?'active':''}" onclick="navTo('page-s-home');updateTab('student','page-s-home')"><i class="fas fa-pen"></i><span>Sınavlar</span></button>
+            <button class="tab-item ${activeTabId=='page-s-history'?'active':''}" onclick="navTo('page-s-history');updateTab('student','page-s-history')"><i class="fas fa-chart-pie"></i><span>Karnem</span></button>
+        `;
     }
 }
 
@@ -30,207 +45,220 @@ async function apiRequest(data) {
 async function login() {
     const code = document.getElementById("loginCode").value;
     if(!code) return alert("Kod girin");
-    const res = await apiRequest({ action: "login", password: code });
+    const res = await api({ action: "login", password: code });
     if(res.status === "success") {
         currentUser = res;
         document.getElementById("loginScreen").classList.remove("active");
         document.getElementById("mainApp").classList.remove("hidden");
-        document.getElementById("userNameDisplay").innerText = res.name;
-        document.getElementById("userRoleDisplay").innerText = res.role;
-        document.getElementById("userAvatar").innerText = res.name.charAt(0);
-
+        document.getElementById("headerName").innerText = res.name;
+        document.getElementById("headerRole").innerText = res.role;
+        
         if(res.role === "Ogretmen") {
-            setupBottomNav("teacher");
-            loadTeacherDashboard();
-            openTab('t-dashboard');
+            loadTeacherData();
+            updateTab("teacher", "page-t-home");
+            navTo("page-t-home");
         } else {
-            setupBottomNav("student");
-            loadStudentDashboard();
-            openTab('s-active');
+            loadStudentData();
+            updateTab("student", "page-s-home");
+            navTo("page-s-home");
         }
     } else { alert(res.msg); }
 }
-
-function setupBottomNav(role) {
-    const nav = document.getElementById("bottomNav");
-    if(role === "teacher") {
-        nav.innerHTML = `
-            <button class="nav-item active" onclick="openTab('t-dashboard')"><i class="fas fa-home"></i>Özet</button>
-            <button class="nav-item" onclick="openTab('t-exams')"><i class="fas fa-list"></i>Sınav</button>
-            <button class="nav-item" onclick="openTab('t-create')"><i class="fas fa-plus-circle"></i>Ekle</button>
-            <button class="nav-item" onclick="openTab('t-students')"><i class="fas fa-users"></i>Öğrenci</button>`;
-    } else {
-        nav.innerHTML = `
-            <button class="nav-item active" onclick="openTab('s-active')"><i class="fas fa-pen"></i>Sınavlar</button>
-            <button class="nav-item" onclick="openTab('s-history')"><i class="fas fa-chart-bar"></i>Karnem</button>`;
-    }
-}
-
-function openTab(id) {
-    document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-}
-
 function logout() { location.reload(); }
 
 // --- ÖĞRETMEN ---
-async function loadTeacherDashboard() {
-    const res = await apiRequest({ action: "getTeacherData" });
+async function loadTeacherData() {
+    const res = await api({ action: "getTeacherData" });
     if(res.status === "success") {
         teacherData = res;
-        document.getElementById("statStu").innerText = teacherData.students.length;
-        document.getElementById("statExam").innerText = teacherData.exams.length;
-        renderExamList(); renderStudentList();
+        document.getElementById("stCount").innerText = res.students.length;
+        document.getElementById("exCount").innerText = res.exams.length;
+        renderTeacherLists();
     }
 }
 
-function renderExamList() {
-    const div = document.getElementById("examListContainer");
-    const filter = document.getElementById("searchExam").value.toLowerCase();
-    div.innerHTML = "";
+function renderTeacherLists() {
+    // Sınav Listesi
+    const exList = document.getElementById("examList");
+    exList.innerHTML = "";
     teacherData.exams.slice().reverse().forEach(ex => {
-        if(ex.name.toLowerCase().includes(filter)) {
-            let isActive = ex.status.toLowerCase() === "aktif";
-            div.innerHTML += `
-            <div class="list-item ${isActive?'active':'passive'}">
-                <div>
-                    <div style="font-weight:600">${ex.name}</div>
-                    <small style="color:#666">${ex.id}</small>
-                </div>
-                <div class="item-actions">
-                    <button class="btn-action" onclick="toggleStatus('${ex.id}')">${isActive?'<i class="fas fa-pause"></i>':'<i class="fas fa-play"></i>'}</button>
-                    <button class="btn-action" style="color:#8e44ad" onclick="openTelegramModal('${ex.id}')"><i class="fab fa-telegram-plane"></i></button>
-                    <button class="btn-action" onclick="analyzeExam('${ex.id}')"><i class="fas fa-chart-pie"></i></button>
-                </div>
-            </div>`;
-        }
+        let isActive = ex.status.toLowerCase() === "aktif";
+        exList.innerHTML += `
+        <div class="list-row">
+            <div class="row-info">
+                <div>${ex.name}</div>
+                <small style="color:${isActive?'#34C759':'#FF3B30'}">${isActive?'Yayında':'Gizli'}</small>
+            </div>
+            <div class="row-actions">
+                <button class="icon-btn" onclick="toggleStatus('${ex.id}')"><i class="fas ${isActive?'fa-pause':'fa-play'}"></i></button>
+                <button class="icon-btn" onclick="openKeyEditor('${ex.id}')"><i class="fas fa-key"></i></button>
+                <button class="icon-btn" onclick="openAnalysis('${ex.id}')"><i class="fas fa-chart-bar"></i></button>
+            </div>
+        </div>`;
+    });
+
+    // Öğrenci Listesi
+    const stList = document.getElementById("studentList");
+    stList.innerHTML = "";
+    teacherData.students.forEach(st => {
+        stList.innerHTML += `
+        <div class="list-row">
+            <div class="row-info"><div>${st}</div></div>
+            <button class="icon-btn" onclick="alert('Detaylar eklenebilir')"><i class="fas fa-chevron-right"></i></button>
+        </div>`;
     });
 }
-function filterExams() { renderExamList(); }
 
 async function toggleStatus(id) {
-    const res = await apiRequest({ action: "toggleExamStatus", examId: id });
-    if(res.status === "success") { teacherData.exams.find(e=>e.id==id).status = res.newStatus; renderExamList(); }
+    await api({ action: "toggleExamStatus", examId: id });
+    loadTeacherData();
 }
 
-function renderStudentList() {
-    const div = document.getElementById("studentListContainer");
-    const filter = document.getElementById("searchStudent").value.toLowerCase();
-    div.innerHTML = "";
-    teacherData.students.forEach(stu => {
-        if(stu.toLowerCase().includes(filter)) div.innerHTML += `<div class="list-item" onclick="analyzeStudent('${stu}')"><span>${stu}</span><i class="fas fa-chevron-right"></i></div>`;
-    });
-}
-function filterStudents() { renderStudentList(); }
-
-// --- OLUŞTURUCU ---
-function addLessonToBuilder() {
+// --- SINAV OLUŞTURUCU ---
+function addBuilderLesson() {
     let name = document.getElementById("lName").value;
     let count = parseInt(document.getElementById("lCount").value);
     if(name && count) {
         builderData.push({name: name, count: count, key: new Array(count).fill(null)});
         document.getElementById("lName").value=""; document.getElementById("lCount").value="";
-        renderBuilder();
+        renderBuilder("builderContainer", builderData, true);
     }
 }
-function renderBuilder() {
-    const area = document.getElementById("builderArea"); area.innerHTML = "";
-    builderData.forEach((l, lIdx) => {
+
+// Ortak Builder Render Fonksiyonu (Hem yeni sınav hem düzenleme için)
+function renderBuilder(containerId, dataArray, isEditable) {
+    const area = document.getElementById(containerId);
+    area.innerHTML = "";
+    dataArray.forEach((l, lIdx) => {
         let rows = "";
         for(let i=0; i<l.count; i++) {
-            rows += `<div class="builder-row"><span>${i+1}</span><div class="bubbles">${['A','B','C','D'].map(o => `<div class="bubble ${l.key[i]==o?'selected':''}" onclick="setKey(${lIdx},${i},'${o}')">${o}</div>`).join('')}</div></div>`;
+            rows += `<div class="b-row"><span>${i+1}</span><div class="b-opts">${['A','B','C','D'].map(o=>`<div class="bubble ${l.key[i]==o?'selected':''}" onclick="setKey('${containerId}', ${lIdx},${i},'${o}')">${o}</div>`).join('')} 
+            ${isEditable ? `<div class="bubble ${l.key[i]=='*'?'selected':''}" style="color:red" onclick="setKey('${containerId}', ${lIdx},${i},'*')">*</div>` : ''}
+            </div></div>`;
         }
-        area.innerHTML += `<div class="builder-item"><div class="builder-header"><span>${l.name}</span><i class="fas fa-trash" onclick="delLesson(${lIdx})"></i></div>${rows}</div>`;
+        area.innerHTML += `<div class="builder-item"><div class="b-header"><span>${l.name}</span></div>${rows}</div>`;
     });
 }
-function setKey(lIdx, qIdx, opt) { builderData[lIdx].key[qIdx] = opt; renderBuilder(); }
-function delLesson(idx) { builderData.splice(idx,1); renderBuilder(); }
 
-async function saveExamToSystem() {
-    if(builderData.length == 0) return alert("Ders ekleyin.");
-    for(let l of builderData) if(l.key.includes(null)) return alert(l.name + " dersinde eksik cevap var!");
-    
+// Cevap Seçimi
+window.setKey = function(containerId, lIdx, qIdx, opt) {
+    if(containerId === "builderContainer") {
+        builderData[lIdx].key[qIdx] = opt;
+        renderBuilder(containerId, builderData, true);
+    } else if(containerId === "editorBody") {
+        editingExamKey[lIdx].key[qIdx] = opt;
+        renderBuilder(containerId, editingExamKey, true);
+    }
+}
+
+async function saveNewExam() {
+    if(builderData.length == 0) return alert("Ders ekle!");
     let keys = builderData.map(l => `${l.name}:${l.key.join("")}`).join("|");
-    await apiRequest({
+    await api({
         action: "addExam",
-        id: document.getElementById("newExamId").value,
-        name: document.getElementById("newExamName").value,
+        id: document.getElementById("newId").value,
+        name: document.getElementById("newName").value,
         keysFormat: keys,
-        showScore: document.getElementById("newShowScore").value
+        showScore: document.getElementById("newShow").value
     });
-    alert("Sınav Yayınlandı!"); location.reload();
+    alert("Kaydedildi"); builderData=[]; loadTeacherData(); navTo("page-t-home");
+}
+
+// --- DÜZENLEYİCİ (SORU İPTALİ / CEVAP ANAHTARI) ---
+function openKeyEditor(id) {
+    let ex = teacherData.exams.find(e => e.id == id);
+    // Anahtarı parse et
+    editingExamKey = [];
+    if(ex.key.includes(":")) {
+        ex.key.split("|").forEach(part => {
+            let p = part.split(":");
+            editingExamKey.push({ name: p[0], count: p[1].length, key: p[1].split("") });
+        });
+    }
+    
+    document.getElementById("editorTitle").innerText = ex.name + " Anahtarı";
+    document.getElementById("editorModal").classList.remove("hidden");
+    // Kaydet butonu için ID'yi sakla
+    document.getElementById("editorModal").dataset.examId = id;
+    renderBuilder("editorBody", editingExamKey, true);
+}
+
+function closeEditor() { document.getElementById("editorModal").classList.add("hidden"); }
+
+async function saveEditor() {
+    let id = document.getElementById("editorModal").dataset.examId;
+    let newKeyStr = editingExamKey.map(l => `${l.name}:${l.key.join("")}`).join("|");
+    
+    await api({ action: "updateExamKey", examId: id, newKey: newKeyStr });
+    alert("Güncellendi!"); closeEditor(); loadTeacherData();
 }
 
 // --- ÖĞRENCİ ---
-async function loadStudentDashboard() {
-    const res = await apiRequest({ action: "getStudentDashboard", studentName: currentUser.name });
+async function loadStudentData() {
+    const res = await api({ action: "getStudentDashboard", studentName: currentUser.name });
     if(res.status === "success") {
         activeExamData = res.active;
-        const div = document.getElementById("activeExamList"); div.innerHTML = "";
-        if(res.active.length == 0) div.innerHTML = "<p style='text-align:center;color:#999'>Aktif sınav yok.</p>";
+        const div = document.getElementById("activeExams");
+        div.innerHTML = "";
+        if(res.active.length == 0) div.innerHTML = "<p style='text-align:center; color:#999'>Aktif sınav yok.</p>";
+        
         res.active.forEach(ex => {
-            div.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><b>${ex.name}</b><button class="btn-primary" style="width:auto; padding:8px 15px;" onclick="startExam('${ex.id}')">BAŞLA</button></div>`;
+            div.innerHTML += `
+            <div class="list-row">
+                <div class="row-info"><div>${ex.name}</div></div>
+                <button class="btn-main" style="width:auto; padding:8px 20px;" onclick="openStudentExam('${ex.id}')">BAŞLA</button>
+            </div>`;
         });
-        document.getElementById("historyList").innerHTML = res.history.map(h=>`<div class="list-item"><span>${h.examId}</span><b>${h.score==-1?'?':Math.round(h.score)}</b></div>`).join('');
-        if(res.history.length>0) drawChart(res.history.map(h=>h.examId), res.history.map(h=>h.score));
+        
+        // Geçmiş
+        document.getElementById("historyList").innerHTML = res.history.map(h => 
+            `<div class="list-row"><div class="row-info"><div>${h.examId}</div></div><div style="font-weight:bold">${h.score==-1?'?':Math.round(h.score)}</div></div>`
+        ).join('');
     }
 }
-function startExam(id) {
+
+function openStudentExam(id) {
     let ex = activeExamData.find(e => e.id == id);
-    document.getElementById("examSolvingArea").classList.remove("hidden");
-    document.getElementById("solvingExamTitle").innerText = ex.name;
-    document.getElementById("solvingExamTitle").dataset.id = id;
-    const area = document.getElementById("opticalFormArea"); area.innerHTML = ""; studentAnswers = {};
+    document.getElementById("examOverlay").classList.remove("hidden");
+    document.getElementById("examTitleOverlay").innerText = ex.name;
+    document.getElementById("examOverlay").dataset.id = id;
+    
+    studentAnswers = {}; // Sıfırla
+    const area = document.getElementById("opticalArea"); area.innerHTML = "";
+    
     ex.sections.forEach(sec => {
         studentAnswers[sec.name] = new Array(sec.qCount).fill("");
         let rows = "";
-        for(let i=0; i<sec.qCount; i++) rows += `<div class="opt-row"><span>${i+1}</span><div class="bubbles">${['A','B','C','D'].map(o=>`<div class="opt-circle" onclick="selOpt(this,'${sec.name}',${i},'${o}')">${o}</div>`).join('')}</div></div>`;
-        area.innerHTML += `<div class="card"><h4>${sec.name}</h4>${rows}</div>`;
+        for(let i=0; i<sec.qCount; i++) {
+            rows += `
+            <div class="opt-row">
+                <span style="width:20px; font-weight:bold; color:#888">${i+1}</span>
+                <div class="opt-grid">
+                    ${['A','B','C','D'].map(o => `<div class="opt-big" onclick="stuSel(this, '${sec.name}', ${i}, '${o}')">${o}</div>`).join('')}
+                </div>
+            </div>`;
+        }
+        area.innerHTML += `<div class="q-card"><div class="q-title">${sec.name}</div>${rows}</div>`;
     });
 }
-function selOpt(el, l, i, o) {
-    el.parentNode.querySelectorAll('.opt-circle').forEach(b => b.classList.remove('selected'));
-    el.classList.add('selected'); studentAnswers[l][i] = o;
-}
-async function submitStudentExam() {
-    if(!confirm("Bitir?")) return;
-    let ans = {}; for(let l in studentAnswers) ans[l] = studentAnswers[l].join("");
-    const res = await apiRequest({ action:"submitExam", studentName:currentUser.name, examId:document.getElementById("solvingExamTitle").dataset.id, answers:ans });
-    if(res.status == "success") { alert("Kaydedildi!"); location.reload(); }
+
+function stuSel(el, lesson, idx, opt) {
+    el.parentNode.querySelectorAll('.opt-big').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    studentAnswers[lesson][idx] = opt;
 }
 
-// --- TELEGRAM & ANALİZ ---
-function openTelegramModal(id) {
-    let results = teacherData.results.filter(r => r.examId == id);
-    if(results.length == 0) return alert("Veri yok.");
-    let html = `<div style="text-align:center;">
-    <button class="btn-primary" onclick="sendClassReport('${id}')">Tüm Sınıfı Raporla</button>
-    <hr>
-    <select id="tStuSelect" style="width:100%; padding:10px; margin-bottom:10px;">${results.map(r=>`<option value="${r.student}">${r.student}</option>`).join('')}</select>
-    <button class="btn-success" onclick="sendStudentReport('${id}')">Öğrenciyi Raporla</button></div>`;
-    showModal("Telegram Rapor", html);
+async function submitExamNow() {
+    if(!confirm("Bitirmek istiyor musun?")) return;
+    let ans = {}; 
+    for(let l in studentAnswers) ans[l] = studentAnswers[l].join("");
+    
+    let id = document.getElementById("examOverlay").dataset.id;
+    await api({ action: "submitExam", studentName: currentUser.name, examId: id, answers: ans });
+    alert("Sınav Gönderildi!");
+    closeExamOverlay();
+    loadStudentData();
 }
-async function sendClassReport(id) { await apiRequest({action:"sendClassReport", examId:id}); alert("Yollandı"); closeModal(); }
-async function sendStudentReport(id) { await apiRequest({action:"sendStudentReport", examId:id, studentName:document.getElementById("tStuSelect").value}); alert("Yollandı"); closeModal(); }
 
-function analyzeExam(id) {
-    let results = teacherData.results.filter(r => r.examId == id);
-    if(results.length == 0) return alert("Veri yok.");
-    let lessonStats = {};
-    results.forEach(r => { try { JSON.parse(r.answers).forEach(d => { if(!lessonStats[d.lesson]) lessonStats[d.lesson]={c:0,t:0}; lessonStats[d.lesson].c+=d.correct; lessonStats[d.lesson].t+=d.total; }); } catch(e){} });
-    let l=Object.keys(lessonStats), d=l.map(k=>Math.round((lessonStats[k].c/lessonStats[k].t)*100));
-    showModal(id, '<div style="height:250px"><canvas id="chart"></canvas></div>');
-    new Chart(document.getElementById("chart"), {type:'bar', data:{labels:l, datasets:[{label:'Başarı %', data:d, backgroundColor:'#3b82f6'}]}, options:{responsive:true, maintainAspectRatio:false}});
-}
-function analyzeStudent(name) {
-    let r = teacherData.results.filter(x => x.student == name);
-    if(r.length == 0) return alert("Veri yok");
-    showModal(name, '<div style="height:250px"><canvas id="chart"></canvas></div>');
-    new Chart(document.getElementById("chart"), {type:'line', data:{labels:r.map(x=>x.examId), datasets:[{label:'Puan', data:r.map(x=>x.score), borderColor:'#3b82f6'}]}, options:{responsive:true, maintainAspectRatio:false}});
-}
-function drawChart(l, d) { new Chart(document.getElementById("studentHistoryChart"), {type:'line', data:{labels:l, datasets:[{label:'Puan', data:d, borderColor:'#3b82f6'}]}}); }
-
-function showModal(h, b) { document.getElementById("modalHeader").innerHTML=h; document.getElementById("modalBody").innerHTML=b; document.getElementById("detailModal").style.display="grid"; }
-function closeModal() { document.getElementById("detailModal").style.display="none"; }
-function closeExam() { document.getElementById("examSolvingArea").classList.add("hidden"); document.getElementById("activeExamList").classList.remove("hidden"); }
+function closeExamOverlay() { document.getElementById("examOverlay").classList.add("hidden"); }
+function openAnalysis(id) { alert("Telegram'a rapor göndermek için backend'deki sendClassReport fonksiyonu kullanılabilir."); }
