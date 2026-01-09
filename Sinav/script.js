@@ -1,5 +1,5 @@
 // *** BURAYA YENİ APPS SCRIPT LİNKİNİZİ YAPIŞTIRIN ***
-const API_URL = "https://script.google.com/macros/s/AKfycbzo1aq13o3ebRYJrWidh0sPAH0jMliWbuwZRr8-I3ckHohgmktVJcatB5xAq1THT8qu/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxgtvrVn1gcPzpvdbt3rbJJN7iMu457Axf4LXrdcyQ4vH9dDD9DWbChSr7-zQBgBz8p/exec"; 
 
 let currentUser = {};
 let teacherData = { exams: [], students: [], results: [] };
