@@ -1,4 +1,4 @@
-// *** BURAYA YENİ APPS SCRIPT LİNKİNİZİ YAPIŞTIRIN ***
+// *** GÜNCEL VE ÇALIŞAN API LINKINIZ ***
 const API_URL = "https://script.google.com/macros/s/AKfycbyDVlMuYaZ3-lM_NzPg4bW1DS9lqu1xOt2Pu8-sNXKw1fMnymE_C3VLtjjGNJKmVShN/exec"; 
 
 let currentUser = {};
@@ -6,44 +6,62 @@ let teacherData = { exams: [], students: [], results: [] };
 let activeExamData = [], builderData = [], studentAnswers = {};
 let editingExamKey = [], editingId = null, editMode = null;
 
-// --- API ---
-function setLoading(s) { document.getElementById("loader").classList.toggle("hidden", !s); }
+// --- API İSTEKÇİSİ (Hata Korumalı) ---
+function setLoading(state) { 
+    const loader = document.getElementById("loader");
+    if(loader) loader.classList.toggle("hidden", !state); 
+}
+
 async function api(data) {
     try {
         setLoading(true);
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(data) });
+        const res = await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify(data)
+            // mode: 'no-cors' SAKIN EKLEMEYİN, HATA VERİRİR
+        });
+        
         const json = await res.json();
         setLoading(false);
-        // Hata kontrolü
+
+        // Sunucudan gelen özel hata mesajı var mı?
         if(json.status === "error") {
-            alert("Sunucu Hatası: " + json.msg);
+            alert("Hata: " + json.msg);
             return {status: "error"};
         }
         return json;
+
     } catch(e) { 
         setLoading(false); 
-        alert("Bağlantı Kurulamadı! İnternetinizi kontrol edin."); 
-        return {status: "error", msg: "Connection Error"}; 
+        console.error("API Hatası:", e);
+        // Kullanıcıya daha net bir mesaj göster
+        alert("Bağlantı hatası oluştu. Lütfen internetinizi kontrol edip tekrar deneyin.\n(Detay: " + e.message + ")"); 
+        return {status: "error"}; 
     }
 }
 
 // --- NAVİGASYON ---
 function navTo(pageId) {
     document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
-    document.getElementById(pageId).classList.remove('hidden');
+    const target = document.getElementById(pageId);
+    if(target) target.classList.remove('hidden');
 }
 
 // --- GİRİŞ ---
 async function login() {
-    const code = document.getElementById("loginCode").value;
-    if(!code) return alert("Kod girin");
+    const codeInput = document.getElementById("loginCode");
+    const code = codeInput.value.trim();
+    
+    if(!code) return alert("Lütfen giriş kodunuzu yazın.");
+    
     const res = await api({ action: "login", password: code });
+    
     if(res.status === "success") {
         currentUser = res;
         document.getElementById("loginScreen").classList.remove("active");
         document.getElementById("mainApp").classList.remove("hidden");
-        document.getElementById("headerName").innerText = res.name;
-        document.getElementById("headerRole").innerText = res.role;
+        document.getElementById("userName").innerText = res.name;
+        document.getElementById("userRole").innerText = res.role;
         
         if(res.role === "Ogretmen") {
             setupNav("teacher");
@@ -54,7 +72,10 @@ async function login() {
             loadStudentData();
             navTo("page-s-home");
         }
-    } else { alert(res.msg || "Giriş başarısız"); }
+    } else { 
+        // Hata mesajını alert ile göster (Düzeltildi)
+        alert(res.msg || "Giriş başarısız oldu. Kodunuzu kontrol edin."); 
+    }
 }
 
 function setupNav(role) {
@@ -132,6 +153,11 @@ window.setKey = function(cid, l, q, o) {
 }
 async function saveNewExam() {
     if(builderData.length==0) return alert("Ders ekle!");
+    // Eksik cevap kontrolü
+    for(let l of builderData) {
+        if(l.key.includes(null)) return alert(l.name + " dersinde cevap anahtarı eksik!");
+    }
+
     let keys = builderData.map(l => `${l.name}:${l.key.join("")}`).join("|");
     await api({ action:"addExam", id:document.getElementById("newId").value, name:document.getElementById("newName").value, keysFormat:keys, showScore:document.getElementById("newShow").value });
     alert("Kaydedildi"); builderData=[]; loadTeacherData(); navTo("page-t-home");
@@ -142,7 +168,7 @@ function openEditor(mode, id) {
     editMode=mode; editingId=id;
     document.getElementById("editorModal").classList.remove("hidden");
     if(mode=='examKey') {
-        let ex = teacherData.exams.find(e=>e.id==id);
+        let ex = teacherData.exams.find(e=>String(e.id)===String(id));
         editingExamKey=[];
         if(ex.key.includes(":")) ex.key.split("|").forEach(p=>{ let x=p.split(":"); editingExamKey.push({name:x[0], count:x[1].length, key:x[1].split("")}); });
         renderBuilder("editorBody", editingExamKey, true);
@@ -172,9 +198,9 @@ async function loadStudentData() {
 }
 
 function openStudentExam(id) {
-    // ID Karşılaştırma Düzeltmesi (String'e çevir)
+    // String karşılaştırması yaparak ID hatasını önle
     let ex = activeExamData.find(e => String(e.id) === String(id));
-    if(!ex) return alert("Sınav verisi alınamadı. Sayfayı yenileyin.");
+    if(!ex) return alert("Sınav verisi alınamadı. Lütfen sayfayı yenileyip tekrar deneyin.");
     
     document.getElementById("examOverlay").classList.remove("hidden");
     document.getElementById("examTitleOverlay").innerText = ex.name;
@@ -196,7 +222,12 @@ function stuSel(el, l, i, o) {
 }
 async function submitExamNow() {
     if(!confirm("Bitirmek istiyor musun?")) return;
-    let ans = {}; for(let l in studentAnswers) ans[l] = studentAnswers[l].join("");
+    let ans = {}; 
+    
+    // Boş cevap kontrolü
+    // (İsteğe bağlı: Boş bırakmaya izin veriyorsak bu kısmı atlayabiliriz)
+    
+    for(let l in studentAnswers) ans[l] = studentAnswers[l].join("");
     let id = document.getElementById("examOverlay").dataset.id;
     await api({ action:"submitExam", studentName:currentUser.name, examId:id, answers:ans });
     alert("Kaydedildi!"); document.getElementById("examOverlay").classList.add("hidden"); loadStudentData();
