@@ -1,390 +1,209 @@
-// *** SİZİN GÖNDERDİĞİNİZ LİNK (Doğrudan Yapıştırdım) ***
-const API_URL = "https://script.google.com/macros/s/AKfycbzmwhocZqn8636BVpbmafR29gbup_i3l3avbrkYlUEGXthbCSi-_hCO2IzCZaCIksBH/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzqz6cCg7FeAzBz1S1yMXhsEjLBxTDQF4EG5gfLkQa9rd-p9HZn2_Vq4a7JfZl_4wSi/exec"; 
 
-// Değişkenler
-let currentUser = {}, teacherData = {}, studentData = {}, activeExam = null, builderData = [], editKeyData = [], editingId = null;
-let stuAnswers = {}, passTarget = "";
+let user={}, tData={}, sData={}, build=[], curEx=null, ans={};
 
-// --- CORE (ÇEKİRDEK) ---
-function showLoad(s) { document.getElementById("globalLoader").classList.toggle("hidden", !s); }
+function load(s){ document.getElementById("loader").classList.toggle("hidden",!s); }
+async function api(a,d={}){
+    d.action=a;
+    try{ load(1); let r=await fetch(API_URL,{method:'POST',body:JSON.stringify(d)}); let j=await r.json(); load(0);
+    if(j.status=="fail"||j.status=="error"){ alert(j.msg); return null; } return j; }catch(e){load(0);alert("Hata");return null;}
+}
 
-async function api(act, data = {}) {
-    data.action = act;
-    try {
-        showLoad(true);
-        // POST isteği at
-        const req = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-        const res = await req.json();
-        showLoad(false);
-
-        if (res.status === "fail" || res.status === "error") {
-            alert(res.msg);
-            return null;
-        }
-        return res;
-    } catch (e) {
-        showLoad(false);
-        console.error(e);
-        alert("Bağlantı Hatası! İnternetinizi kontrol edin.");
-        return null;
+// --- GIRIS ---
+async function login(){
+    let p=document.getElementById("passIn").value; if(!p)return alert("Kod girin");
+    let r=await api("login",{password:p});
+    if(r){
+        user=r; document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("appScreen").classList.remove("hidden");
+        document.getElementById("uName").innerText=r.name; document.getElementById("uRole").innerText=r.role;
+        if(r.role=="Ogretmen"){ document.getElementById("navTeacher").classList.remove("hidden"); initTeacher(); }
+        else{ document.getElementById("navStudent").classList.remove("hidden"); initStudent(); }
     }
 }
 
-// --- GİRİŞ (HATA KORUMALI) ---
-async function attemptLogin() {
-    try {
-        // ID Güvenliği: Eğer element yoksa hata verip durur, loader kapanmazdı. Şimdi kontrol ediyoruz.
-        const inputEl = document.getElementById("userPassInput");
-        if(!inputEl) { alert("Hata: Giriş kutusu bulunamadı. Sayfayı yenileyin."); return; }
-        
-        const code = inputEl.value.trim();
-        if (!code) return alert("Lütfen giriş kodunu yazın.");
+function go(id){ document.querySelectorAll(".tab").forEach(e=>e.classList.add("hidden")); document.getElementById(id).classList.remove("hidden");
+document.querySelectorAll("nav button").forEach(b=>b.classList.remove("act")); event.currentTarget.classList.add("act"); }
 
-        const res = await api("login", { password: code });
-
-        if (res) {
-            currentUser = res;
-            document.getElementById("loginScreen").classList.add("hidden");
-            document.getElementById("mainApp").classList.remove("hidden");
-            document.getElementById("headerName").innerText = res.name;
-            document.getElementById("headerRole").innerText = res.role;
-
-            if (res.role === "Ogretmen") {
-                setupTabs("teacher");
-                loadTeacherDashboard();
-            } else {
-                setupTabs("student");
-                loadStudentDashboard();
-            }
-        }
-    } catch (err) {
-        showLoad(false);
-        alert("Giriş sırasında bir hata oluştu: " + err.message);
-    }
+// --- OGRETMEN ---
+async function initTeacher(){
+    let r=await api("getAnalysisData");
+    if(r){ tData=r; renderDash(); renderStudents(); fillAnSelect(); }
 }
 
-function appLogout() { location.reload(); }
-
-// --- NAVİGASYON ---
-function navTo(pageId) {
-    document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
-    document.getElementById(pageId).classList.remove('hidden');
-}
-
-function setupTabs(role) {
-    const bar = document.getElementById("mainTabBar");
-    if (role === "teacher") {
-        bar.innerHTML = `
-            <button class="tab-item active" onclick="navTo('page-t-home')"><i class="fas fa-home"></i><span>Özet</span></button>
-            <button class="tab-item" onclick="navTo('page-t-analysis')"><i class="fas fa-chart-pie"></i><span>Analiz</span></button>
-            <button class="tab-item" onclick="navTo('page-t-create')"><i class="fas fa-plus-circle"></i><span>Ekle</span></button>
-            <button class="tab-item" onclick="navTo('page-t-students')"><i class="fas fa-users"></i><span>Öğrenci</span></button>
-        `;
-        navTo('page-t-home');
-    } else {
-        bar.innerHTML = `
-            <button class="tab-item active" onclick="navTo('page-s-home')"><i class="fas fa-pen"></i><span>Sınavlar</span></button>
-            <button class="tab-item" onclick="navTo('page-s-history')"><i class="fas fa-chart-line"></i><span>Karnem</span></button>
-        `;
-        navTo('page-s-home');
-    }
-}
-
-// --- ÖĞRETMEN FONKSİYONLARI ---
-async function loadTeacherDashboard() {
-    const res = await api("getTeacherData");
-    if (res) {
-        teacherData = res;
-        document.getElementById("countStu").innerText = res.students.length;
-        document.getElementById("countExam").innerText = res.exams.length;
-        renderManageExamList();
-        renderManageStudentList();
-        fillAnalysisSelect();
-    }
-}
-
-function renderManageExamList() {
-    let h = "";
-    teacherData.exams.slice().reverse().forEach(ex => {
-        let act = ex.status == "Aktif";
-        let sco = ex.showScore == "Evet";
-        let rnk = ex.showRank == "Evet";
-        let ret = ex.allowRetake == "Evet";
-        
-        h += `<div class="list-item">
-            <div class="item-info"><div>${ex.name}</div><small>${ex.id}</small></div>
-            <div class="item-actions">
-                <button onclick="changeSet('${ex.id}','status')" style="color:${act?'green':'red'}"><i class="fas ${act?'fa-toggle-on':'fa-toggle-off'}"></i></button>
-                <button onclick="changeSet('${ex.id}','score')" style="color:${sco?'blue':'gray'}"><i class="fas ${sco?'fa-eye':'fa-eye-slash'}"></i></button>
-                <button onclick="changeSet('${ex.id}','rank')" style="color:${rnk?'orange':'gray'}"><i class="fas ${rnk?'fa-list-ol':'fa-ban'}"></i></button>
-                <button onclick="changeSet('${ex.id}','retake')" style="color:${ret?'purple':'gray'}"><i class="fas ${ret?'fa-redo':'fa-times'}"></i></button>
-                <button onclick="openEditor('examKey','${ex.id}')"><i class="fas fa-key"></i></button>
-            </div>
-        </div>`;
+function renderDash(){
+    document.getElementById("cStu").innerText=tData.studentListFull.length;
+    document.getElementById("cExam").innerText=tData.exams.length;
+    let h="";
+    tData.exams.slice().reverse().forEach(e=>{
+        let act=e.status=="Aktif";
+        h+=`<div class="item"><div><b>${e.name}</b><small>${e.id}</small></div>
+        <div class="actions">
+            <button onclick="setEx('${e.id}','status')" style="color:${act?'green':'red'}"><i class="fas fa-power-off"></i></button>
+            <button onclick="setEx('${e.id}','score')"><i class="fas ${e.showScore=='Evet'?'fa-eye':'fa-eye-slash'}"></i></button>
+        </div></div>`;
     });
-    document.getElementById("manageExamList").innerHTML = h;
+    document.getElementById("examList").innerHTML=h;
 }
 
-function renderManageStudentList() {
-    let h = "";
-    teacherData.students.forEach(s => {
-        h += `<div class="list-item">
-            <div class="item-info"><div>${s.name}</div><small>Şifre: ${s.pass}</small></div>
-            <div class="item-actions">
-                <button onclick="openPassChange('${s.name}')"><i class="fas fa-pen"></i></button>
-                <button onclick="openStuDetail('${s.name}')"><i class="fas fa-file-alt"></i></button>
-            </div>
-        </div>`;
-    });
-    document.getElementById("manageStudentList").innerHTML = h;
+// ANALIZ MOTORU & MATRIX TABLO
+function fillAnSelect(){
+    let s=document.getElementById("anSelect"); s.innerHTML="<option>Sınav Seçiniz...</option>";
+    tData.exams.slice().reverse().forEach(e=>s.innerHTML+=`<option value="${e.id}">${e.name}</option>`);
 }
+function runAnalysis(){
+    let id=document.getElementById("anSelect").value;
+    if(id.length<2) return document.getElementById("anResult").classList.add("hidden");
+    document.getElementById("anResult").classList.remove("hidden");
 
-async function changeSet(id, type) { await api("toggleSetting", {examId:id, type:type}); loadTeacherDashboard(); }
-
-// --- ANALİZ & TELEGRAM ---
-function fillAnalysisSelect() {
-    const s = document.getElementById("analysisSelect");
-    s.innerHTML = "<option>Sınav Seçiniz...</option>";
-    teacherData.exams.slice().reverse().forEach(e => s.innerHTML += `<option value="${e.id}">${e.name}</option>`);
-}
-
-function loadAnalysisData() {
-    const id = document.getElementById("analysisSelect").value;
-    const area = document.getElementById("analysisArea");
-    if (!id || id.length < 2) { area.classList.add("hidden"); return; }
-    area.classList.remove("hidden");
-
-    const results = teacherData.results.filter(r => r.examId === id);
-    const nets = results.map(r => r.net);
-
-    if (nets.length === 0) {
-        document.getElementById("statAvg").innerText = "-";
-        document.getElementById("statMax").innerText = "-";
-        document.getElementById("rankList").innerHTML = "<p style='text-align:center;color:#999'>Henüz katılım yok.</p>";
-        return;
-    }
-
-    const avg = (nets.reduce((a, b) => a + b, 0) / nets.length).toFixed(2);
-    document.getElementById("statAvg").innerText = avg;
-    document.getElementById("statMax").innerText = Math.max(...nets);
-
-    let h = "";
-    results.sort((a, b) => b.net - a.net).forEach((r, i) => {
-        h += `<div class="list-item">
-            <div style="display:flex;gap:10px;align-items:center">
-                <div class="opt-big" style="background:#2563eb;color:white;border:none;font-size:12px;width:30px;height:30px;">${i+1}</div>
-                <div>${r.student}</div>
-            </div>
-            <div style="display:flex;gap:10px;align-items:center">
-                <b>${r.net} Net</b>
-                <button class="btn-telegram" onclick="sendTelegram('${r.student}','${r.examId}')"><i class="fab fa-telegram-plane"></i></button>
-            </div>
-        </div>`;
-    });
-    document.getElementById("rankList").innerHTML = h;
-
-    // Grafik
-    const ctx = document.getElementById('examChart').getContext('2d');
-    if (window.myChart) window.myChart.destroy();
-    window.myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: results.map(r => r.student.split(' ')[0]),
-            datasets: [{ label: 'Net', data: nets, backgroundColor: '#2563eb', borderRadius: 5 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
-
-async function sendTelegram(name, id) {
-    if(!confirm(name + " raporu Telegram'a gönderilsin mi?")) return;
-    await api("sendManualReport", {studentName:name, examId:id});
-    alert("Gönderildi!");
-}
-
-// --- ŞİFRE & DETAY ---
-function openPassChange(name) {
-    passTarget = name;
-    document.getElementById("passTargetName").innerText = name;
-    document.getElementById("newPassVal").value = "";
-    document.getElementById("modalPass").classList.remove("hidden");
-}
-async function doChangePass() {
-    let p = document.getElementById("newPassVal").value;
-    if(!p) return alert("Şifre yazın");
-    await api("updateStudentPass", {studentName:passTarget, newPass:p});
-    alert("Değişti"); closeAllModals(); loadTeacherDashboard();
-}
-function openStuDetail(name) {
-    let list = teacherData.results.filter(r => r.student === name);
-    let h = "";
-    list.forEach(r => {
-        let exName = teacherData.exams.find(e => e.id == r.examId)?.name || r.examId;
-        h += `<div class="list-item"><div>${exName}</div><b>${r.net} Net</b></div>`;
-    });
-    document.getElementById("detailTitle").innerText = name;
-    document.getElementById("detailBody").innerHTML = h || "<p>Kayıt yok</p>";
-    document.getElementById("modalStuDetail").classList.remove("hidden");
-}
-
-// --- ÖĞRENCİ ---
-async function loadStudentDashboard() {
-    const res = await api("getStudentData", {name:currentUser.name});
-    if (res) {
-        studentData = res;
-        document.getElementById("studentActiveExams").innerHTML = res.active.map(e => 
-            `<div class="list-item"><div>${e.name}</div><button class="btn-icon-bg" style="font-size:14px; width:auto; padding:0 15px;" onclick="openExamRun('${e.id}')">GİR</button></div>`
-        ).join('');
-        
-        document.getElementById("studentHistoryList").innerHTML = res.history.map((h, i) => 
-            `<div class="list-item" onclick="openStudentReport(${i})">
-                <div>${h.examName}</div>
-                <div style="text-align:right"><b>${h.net == null ? 'Bekliyor' : h.net + ' Net'}</b><br><small>${h.rank ? 'Sıra: ' + h.rank : ''}</small></div>
-            </div>`
-        ).join('');
-
-        // Borsa Grafiği
-        let labels = res.history.map(h => h.date.substr(0, 5));
-        let data = res.history.map(h => h.net || 0);
-        new Chart(document.getElementById("studentTrendChart"), {
-            type: 'line',
-            data: { labels: labels, datasets: [{ label: 'Net Başarısı', data: data, borderColor: '#10b981', tension: 0.3, fill: true, backgroundColor: 'rgba(16,185,129,0.1)' }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-}
-
-function openStudentReport(idx) {
-    let h = studentData.history[idx];
-    if (!h.details) return alert("Detaylar kapalı.");
+    let ex=tData.exams.find(e=>e.id==id);
+    let res=tData.results.filter(r=>r.examId==id);
     
-    let html = `<div class="card" style="text-align:center">
-        <h1 style="color:#2563eb">${h.net}</h1><p>NET</p>
-        ${h.rank ? `<div style="background:#fff3cd;padding:5px;border-radius:5px;color:#856404;margin-top:5px">🏆 Sınıf ${h.rank}.si</div>` : ''}
-    </div>`;
+    // 1. ISTATISTIKLER
+    if(res.length==0){ document.getElementById("matrixTable").innerHTML="Katılım yok"; return; }
+    let nets=res.map(r=>r.net);
+    document.getElementById("sAvg").innerText=(nets.reduce((a,b)=>a+b,0)/nets.length).toFixed(2);
+    document.getElementById("sMax").innerText=Math.max(...nets);
 
-    if (h.correctKey && h.details.stats) {
-        let keyMap = {}; 
-        h.correctKey.split("|").forEach(x => { let p = x.split(":"); keyMap[p[0]] = p[1]; });
+    // 2. GIRMEYENLERI BUL
+    let enteredNames=res.map(r=>r.student);
+    let absents=tData.allStudents.filter(n=>!enteredNames.includes(n));
+    document.getElementById("sAbsence").innerText=absents.length;
+    if(absents.length>0){
+        document.getElementById("absentListContainer").classList.remove("hidden");
+        document.getElementById("absentList").innerHTML=absents.map(n=>`<span class="absent-badge">${n}</span>`).join('');
+    } else { document.getElementById("absentListContainer").classList.add("hidden"); }
 
-        h.details.stats.forEach(s => {
-            let keyStr = keyMap[s.lesson] || "";
-            let userStr = (h.details.raw && h.details.raw[s.lesson]) ? h.details.raw[s.lesson] : "";
-            let bubbles = "";
-            
-            for (let i = 0; i < s.total; i++) {
-                let u = userStr[i] || "";
-                let k = keyStr[i];
-                let cls = (u == k || k == "*") ? "ans-c" : (u == "" ? "ans-e" : "ans-w");
-                bubbles += `<div class="bubble ${cls}">${u || '-'}</div>`;
+    // 3. ZOR SORULARI BUL
+    let qStats={};
+    let keyMap={}; // { "Mat": ["A","B"...] }
+    let flatKey=[];
+    if(ex.key.includes(":")) ex.key.split("|").forEach(x=>{
+        let p=x.split(":"); let keys=p[1].split("");
+        keyMap[p[0]]=keys;
+        keys.forEach((k,i) => flatKey.push({l:p[0], q:i+1, k:k}));
+    });
+    
+    res.forEach(r=>{
+        let raw=r.answers.raw||{};
+        for(let l in keyMap){
+            let k=keyMap[l], a=raw[l]||"";
+            for(let i=0; i<k.length; i++){
+                let qn=l+" S"+(i+1);
+                if(!qStats[qn])qStats[qn]=0;
+                if(a[i]!=k[i] && k[i]!="*") qStats[qn]++;
             }
-            html += `<div class="card" style="margin-bottom:10px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><b>${s.lesson}</b><small>${s.correct}D ${s.wrong}Y ${s.net}N</small></div>
-                <div class="ans-box">${bubbles}</div>
-            </div>`;
+        }
+    });
+    let hardQ=Object.entries(qStats).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    document.getElementById("hardestQuestions").innerHTML=hardQ.map(q=>`<div><b>${q[0]}</b>: %${Math.round((q[1]/res.length)*100)} Yanlış</div>`).join('');
+
+    // 4. MATRIX TABLO OLUŞTURMA + TELEGRAM BUTONU
+    let table = document.getElementById("matrixTable");
+    let thead = "<thead><tr><th>Öğrenci</th><th>Net</th><th>Tel</th>"; // Telegram başlığı eklendi
+    flatKey.forEach(k => thead += `<th>${k.l.substr(0,1)}${k.q}<br><small>${k.k}</small></th>`);
+    thead += "</tr></thead>";
+    
+    let tbody = "<tbody>";
+    res.sort((a,b)=>b.net-a.net).forEach(r => {
+        tbody += `<tr><td>${r.student}</td><td><b>${r.net}</b></td>
+        <td><button onclick="sendTel('${r.student}','${r.examId}')" class="btn-tel"><i class="fab fa-telegram-plane"></i></button></td>`;
+        
+        let raw = r.answers.raw || {};
+        flatKey.forEach(fk => {
+            let userL = raw[fk.l] || "";
+            let userAns = userL[fk.q-1] || "";
+            let cls = "cell-e"; 
+            if(userAns !== "") {
+                if(userAns == fk.k || fk.k == "*") cls = "cell-c"; 
+                else cls = "cell-w";
+            }
+            tbody += `<td class="${cls}">${userAns || '-'}</td>`;
         });
-    }
-    document.getElementById("reportBody").innerHTML = html;
+        tbody += "</tr>";
+    });
+    tbody += "</tbody>";
+    table.innerHTML = thead + tbody;
+}
+
+// TELEGRAM GONDER
+async function sendTel(name, eid){
+    if(!confirm(name+" için rapor gönderilsin mi?")) return;
+    await api("sendManualReport",{studentName:name, examId:eid});
+    alert("Gonderildi");
+}
+
+// --- OGRENCI ---
+async function initStudent(){
+    let r=await api("getStudentData",{name:user.name});
+    if(r){ sData=r; renderSExams(); renderSHist(); }
+}
+function renderSExams(){
+    document.getElementById("sExamList").innerHTML=sData.active.map(e=>`<div class="item"><b>${e.name}</b><button onclick="startEx('${e.id}')" class="btn-main" style="width:auto;padding:5px 15px">GİR</button></div>`).join('');
+}
+function renderSHist(){
+    document.getElementById("sHistList").innerHTML=sData.history.map((h,i)=>`<div class="item" onclick="openSRep(${i})"><div>${h.examName}</div><b>${h.net!=null?h.net+' Net':'...'}</b></div>`).join('');
+    let l=sData.history.map(h=>h.date.substr(0,5)), d=sData.history.map(h=>h.net||0);
+    new Chart(document.getElementById("sChart"),{type:'line',data:{labels:l,datasets:[{label:'Net',data:d,borderColor:'#3b82f6',fill:true}]}});
+}
+function openSRep(i){
+    let h=sData.history[i];
+    if(!h.details) return alert("Detaylar kapalı");
+    showReportHTML(h.details, h.net, h.fullKey);
+}
+
+// --- ORTAK ---
+function showReportHTML(ansData, net, fullKey){
+    let h=`<div class="card" style="text-align:center"><h1>${net} NET</h1></div>`;
+    let keyMap={}; if(fullKey) fullKey.split("|").forEach(x=>{let p=x.split(":"); keyMap[p[0]]=p[1]});
+    if(ansData.stats) ansData.stats.forEach(s=>{
+        let balls="", k=keyMap[s.lesson]||"", u=ansData.raw[s.lesson]||"";
+        for(let i=0;i<s.total;i++){
+            let cl= (u[i]==k[i]||k[i]=="*")?"bg-g":(u[i]==""?"bg-e":"bg-r");
+            balls+=`<span class="ans-res ${cl}">${u[i]||'-'}</span>`;
+        }
+        h+=`<div class="card"><b>${s.lesson}</b><br><small>${s.correct}D ${s.wrong}Y</small><div style="margin-top:5px">${balls}</div></div>`;
+    });
+    document.getElementById("repBody").innerHTML=h;
     document.getElementById("modalReport").classList.remove("hidden");
 }
 
-function openExamRun(id) {
-    activeExam = studentData.active.find(e => String(e.id) === String(id));
-    stuAnswers = {};
-    document.getElementById("runTitle").innerText = activeExam.name;
-    let h = "";
-    
-    activeExam.sections.forEach(sec => {
-        stuAnswers[sec.name] = new Array(sec.qCount).fill("");
-        let rows = "";
-        for (let i = 0; i < sec.qCount; i++) {
-            rows += `<div class="opt-row"><span>${i + 1}</span><div class="opt-grid">${['A', 'B', 'C', 'D'].map(o => `<div class="opt-big" onclick="selectAnswer(this,'${sec.name}',${i},'${o}')">${o}</div>`).join('')}</div></div>`;
-        }
-        h += `<div class="card"><b>${sec.name}</b>${rows}</div>`;
+function startEx(id){
+    curEx=sData.active.find(e=>e.id==id); ans={};
+    let h=""; curEx.sections.forEach(s=>{
+        ans[s.name]=new Array(s.qCount).fill("");
+        let r=""; for(let i=0;i<s.qCount;i++) r+=`<div class="opt-row"><span>${i+1}</span><div style="display:flex;gap:5px">${['A','B','C','D'].map(o=>`<div class="bubble" onclick="sel(this,'${s.name}',${i},'${o}')">${o}</div>`).join('')}</div></div>`;
+        h+=`<div class="card"><b>${s.name}</b>${r}</div>`;
     });
-    
-    document.getElementById("runBody").innerHTML = h;
-    document.getElementById("modalExamRun").classList.remove("hidden");
+    document.getElementById("runBody").innerHTML=h;
+    document.getElementById("modalExam").classList.remove("hidden");
+}
+function sel(e,l,i,o){ e.parentNode.querySelectorAll(".bubble").forEach(b=>b.classList.remove("selected")); e.classList.add("selected"); ans[l][i]=o; }
+async function finishExam(){
+    if(!confirm("Bitir?"))return; let a={}; for(let k in ans)a[k]=ans[k].join("");
+    await api("submitExam",{studentName:user.name,examId:curEx.id,answers:a});
+    alert("Bitti"); closeModal('modalExam'); initStudent();
 }
 
-function selectAnswer(el, lesson, qIdx, opt) {
-    el.parentNode.querySelectorAll('.opt-big').forEach(b => b.classList.remove('selected'));
-    el.classList.add('selected');
-    stuAnswers[lesson][qIdx] = opt;
+function addPart(){ let n=document.getElementById("bName").value, c=document.getElementById("bCount").value; if(n&&c){build.push({name:n,count:parseInt(c),key:new Array(parseInt(c)).fill(null)}); renderBuild();} }
+function renderBuild(){ 
+    let h=""; build.forEach((l,i)=>{ 
+        let r=""; for(let j=0;j<l.count;j++) r+=`<div class="opt-row"><span>${j+1}</span><div style="display:flex;gap:5px">${['A','B','C','D'].map(o=>`<div class="bubble ${l.key[j]==o?'selected':''}" onclick="bk(${i},${j},'${o}')">${o}</div>`).join('')}</div></div>`; 
+        h+=`<div class="card"><b>${l.name}</b>${r}</div>`; 
+    }); document.getElementById("bCont").innerHTML=h; 
+}
+window.bk=function(i,j,o){ build[i].key[j]=o; renderBuild(); }
+async function saveExam(){
+    if(build.length==0)return alert("Ders ekle");
+    let k=build.map(l=>`${l.name}:${l.key.join("")}`).join("|");
+    await api("manageExam",{subAction:"add",id:document.getElementById("nId").value,name:document.getElementById("nName").value,key:k,showScore:document.getElementById("chkScore").checked?"Evet":"Hayir",showRank:document.getElementById("chkRank").checked?"Evet":"Hayir",allowRetake:document.getElementById("chkRetake").checked?"Evet":"Hayir"});
+    alert("Eklendi"); closeModal('modalCreate'); initTeacher();
 }
 
-async function finishExam() {
-    if (!confirm("Sınavı bitirmek istiyor musunuz?")) return;
-    let ans = {};
-    for (let l in stuAnswers) ans[l] = stuAnswers[l].join("");
-    
-    await api("submitExam", {studentName:currentUser.name, examId:activeExam.id, answers:ans});
-    alert("Kaydedildi ve Raporlandı!");
-    closeAllModals(); loadStudentDashboard();
-}
-
-// --- BUILDER ---
-function addLessonToBuilder() {
-    let n = document.getElementById("lName").value;
-    let c = parseInt(document.getElementById("lCount").value);
-    if (n && c) {
-        builderData.push({ name: n, count: c, key: new Array(c).fill(null) });
-        document.getElementById("lName").value = ""; document.getElementById("lCount").value = "";
-        renderBuilder('builderArea', builderData, false);
-    }
-}
-function renderBuilder(contId, data, isEdit) {
-    const c = document.getElementById(contId); c.innerHTML = "";
-    data.forEach((l, i) => {
-        let r = "";
-        for (let j = 0; j < l.count; j++) {
-            r += `<div class="opt-row"><span>${j + 1}</span><div class="opt-grid">${['A', 'B', 'C', 'D'].map(o => `<div class="bubble ${l.key[j] == o ? 'selected' : ''}" onclick="setKey('${contId}',${i},${j},'${o}')">${o}</div>`).join('')}${isEdit ? `<div class="bubble ${l.key[j] == '*' ? 'selected' : ''}" style="color:red" onclick="setKey('${contId}',${i},${j},'*')">*</div>` : ''}</div></div>`;
-        }
-        c.innerHTML += `<div class="list-item" style="display:block"><b>${l.name}</b>${r}</div>`;
-    });
-}
-window.setKey = function(contId, lIdx, qIdx, opt) {
-    if (contId == "builderArea") builderData[lIdx].key[qIdx] = opt;
-    else editKeyData[lIdx].key[qIdx] = opt;
-    renderBuilder(contId, contId == "builderArea" ? builderData : editKeyData, contId == "editorBody");
-}
-async function sendNewExam() {
-    if (builderData.length == 0) return alert("Ders ekle");
-    // Boş anahtar kontrolü
-    for(let l of builderData) if(l.key.includes(null)) return alert(l.name + " dersinde cevap anahtarı eksik!");
-
-    let k = builderData.map(l => `${l.name}:${l.key.join("")}`).join("|");
-    await api("addExam", {
-        id: document.getElementById("newId").value, name: document.getElementById("newName").value, keysFormat: k,
-        showScore: document.getElementById("setScore").checked ? "Evet" : "Hayir",
-        showRank: document.getElementById("setRank").checked ? "Evet" : "Hayir",
-        allowRetake: document.getElementById("setRetake").checked ? "Evet" : "Hayir"
-    });
-    alert("Eklendi"); builderData = []; closeAllModals(); loadTeacherDashboard();
-}
-
-// --- EDITOR ---
-function openEditor(m, id) {
-    editingId = id; editMode = m;
-    if (m == 'examKey') {
-        let ex = teacherData.exams.find(e => String(e.id) === String(id));
-        editKeyData = [];
-        if (ex.key.includes(":")) ex.key.split("|").forEach(p => { let x = p.split(":"); editKeyData.push({ name: x[0], count: x[1].length, key: x[1].split("") }) });
-        renderBuilder("editorBody", editKeyData, true);
-        document.getElementById("modalEditor").classList.remove("hidden");
-    }
-}
-async function doSaveKey() {
-    let k = editKeyData.map(l => `${l.name}:${l.key.join("")}`).join("|");
-    await api("regradeExam", {examId:editingId, newKey:k});
-    alert("Güncellendi"); closeAllModals(); loadTeacherDashboard();
-}
-
-function filterStudentList() {
-    let t = document.getElementById("filterInput").value.toLowerCase();
-    Array.from(document.getElementById("manageStudentList").children).forEach(c => c.style.display = c.innerText.toLowerCase().includes(t) ? 'flex' : 'none');
-}
-function closeAllModals() { document.querySelectorAll('.modal, .fullscreen-modal').forEach(e => e.classList.add('hidden')); }
+function renderStudents(){ document.getElementById("studentList").innerHTML=tData.studentListFull.map(s=>`<div class="item"><div><b>${s.name}</b><small>${s.pass}</small></div><button class="btn-icon-bg" onclick="passOpen('${s.name}')"><i class="fas fa-key"></i></button></div>`).join(''); }
+async function setEx(id,t){ await api("toggleSetting",{examId:id,type:t}); initTeacher(); }
+function passOpen(n){ passTarget=n; document.getElementById("passName").innerText=n; document.getElementById("modalPass").classList.remove("hidden"); }
+async function doPass(){ await api("updateStudentPass",{studentName:passTarget,newPass:document.getElementById("newPass").value}); alert("Tamam"); closeModal('modalPass'); initTeacher(); }
+function filterStu(){ let t=document.getElementById("stuSearch").value.toLowerCase(); Array.from(document.getElementById("studentList").children).forEach(e=>e.style.display=e.innerText.toLowerCase().includes(t)?'flex':'none'); }
+function showModal(id){ document.getElementById(id).classList.remove("hidden"); }
+function closeModal(id){ document.getElementById(id).classList.add("hidden"); }
