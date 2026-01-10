@@ -1,4 +1,4 @@
-// *** SİZİN VERDİĞİNİZ YENİ LİNK ***
+// *** SİZİN VERDİĞİNİZ YENİ LİNK deneme ***
 const API_URL = "https://script.google.com/macros/s/AKfycbzmwhocZqn8636BVpbmafR29gbup_i3l3avbrkYlUEGXthbCSi-_hCO2IzCZaCIksBH/exec"; 
 
 let currentUser={}, teacherData={}, studentData={}, builderData=[], activeExamData=[], studentAnswers={}, editKeyData=[], editingId=null, editMode=null;
