@@ -3,161 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eğitim Asistanı Pro</title>
+    <title>Eğitim Yönetim Sistemi</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 font-[Inter] antialiased select-none">
 
-    <div id="loader" class="loader"><div class="spin"></div></div>
-
-    <div id="loginScreen" class="app-screen active">
-        <div class="login-card">
-            <div class="logo-circle"><i class="fas fa-paper-plane"></i></div>
-            <h2>Eğitim Asistanı</h2>
-            <p>V16 Telegram Entegrasyonlu</p>
-            <input type="password" id="loginCode" placeholder="Giriş Kodu" inputmode="numeric" class="login-input">
-            <button onclick="login()" class="btn-main">SİSTEME GİR</button>
-        </div>
+    <!-- LOADER -->
+    <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm hidden">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     </div>
 
-    <div id="mainApp" class="hidden">
-        
-        <div class="app-header">
-            <div class="user-info">
-                <span id="userName">...</span>
-                <small id="userRole">...</small>
+    <!-- LOGIN SCREEN -->
+    <section id="login-view" class="min-h-screen flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-sm bg-white p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <div class="h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-graduation-cap text-3xl text-blue-600"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900">Eğitim Asistanı</h1>
+                <p class="text-gray-500 text-sm mt-2">Lütfen giriş kodunuzu giriniz</p>
             </div>
-            <button onclick="logout()" class="btn-icon"><i class="fas fa-power-off"></i></button>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <input type="password" id="login-code" placeholder="Giriş Kodu"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-center text-lg tracking-widest" required>
+                </div>
+                <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-lg shadow-blue-500/30">
+                    Giriş Yap
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-xs text-gray-400">© 2026 Eğitim Yönetim Sistemi</p>
+            </div>
         </div>
+    </section>
 
-        <div class="app-content">
-            
-            <div id="page-t-home" class="page-section hidden">
-                <div class="dashboard-cards">
-                    <div class="d-card"><h3>Öğrenci</h3><span id="stCount">0</span></div>
-                    <div class="d-card"><h3>Sınav</h3><span id="exCount">0</span></div>
+    <!-- APP CONTAINER (Hidden by default) -->
+    <div id="app-container" class="hidden min-h-screen flex flex-col pb-20">
+
+        <!-- HEADER -->
+        <header class="bg-white sticky top-0 z-30 shadow-sm px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm" id="user-avatar">
+                    <!-- Initials -->
                 </div>
-                <h4 class="section-head">Hızlı Menü</h4>
-                <div class="quick-grid">
-                    <button onclick="navTo('page-t-create')"><i class="fas fa-plus"></i> Ekle</button>
-                    <button onclick="navTo('page-t-exams')"><i class="fas fa-cog"></i> Yönet</button>
-                    <button onclick="navTo('page-t-students')"><i class="fas fa-users"></i> Liste</button>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900" id="user-name">Kullanıcı</h2>
+                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full" id="user-role">Rol</span>
+                </div>
+            </div>
+            <button id="logout-btn" class="text-gray-400 hover:text-red-500 transition-colors">
+                <i class="fa-solid fa-right-from-bracket text-lg"></i>
+            </button>
+        </header>
+
+        <!-- STUDENT VIEWS -->
+        <main id="student-views" class="flex-1 p-4 hidden">
+            <!-- Tab: Exams -->
+            <div id="student-exams-tab" class="space-y-4">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Aktif Sınavlar</h3>
+                <div id="active-exams-list" class="space-y-3">
+                    <!-- Dynamic Exam Cards -->
                 </div>
             </div>
 
-            <div id="page-t-analysis" class="page-section hidden">
-                <h4 class="section-head">Sınav Analiz Merkezi</h4>
-                <select id="analysisSelect" class="app-input" onchange="loadAnalysis()"><option>Sınav Seçiniz...</option></select>
-                
-                <div id="analysisResult" class="hidden">
-                    <div class="card chart-box"><canvas id="examChart"></canvas></div>
-                    
-                    <div class="stats-grid">
-                        <div class="d-card"><h3>Ort. Net</h3><span id="anAvg">0</span></div>
-                        <div class="d-card"><h3>En Yüksek</h3><span id="anMax">0</span></div>
+            <!-- Tab: Results -->
+            <div id="student-results-tab" class="hidden space-y-4">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Sınav Karnem</h3>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <canvas id="student-progress-chart"></canvas>
+                </div>
+                <div id="past-results-list" class="space-y-3">
+                    <!-- Dynamic Result Cards -->
+                </div>
+            </div>
+        </main>
+
+        <!-- TEACHER VIEWS -->
+        <main id="teacher-views" class="flex-1 p-4 hidden">
+            <!-- Tab: Summary -->
+            <div id="teacher-summary-tab" class="space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-500 text-white p-4 rounded-xl shadow-lg shadow-blue-500/20">
+                        <div class="text-3xl font-bold" id="stat-total-students">0</div>
+                        <div class="text-xs opacity-80">Toplam Öğrenci</div>
                     </div>
+                    <div class="bg-purple-500 text-white p-4 rounded-xl shadow-lg shadow-purple-500/20">
+                        <div class="text-3xl font-bold" id="stat-active-exams">0</div>
+                        <div class="text-xs opacity-80">Aktif Sınav</div>
+                    </div>
+                </div>
 
-                    <h4 class="section-head">Öğrenci Listesi & Raporlama</h4>
-                    <div id="participantsList" class="list-wrapper"></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <h4 class="font-bold text-gray-700 mb-4">Genel Başarı Analizi</h4>
+                    <canvas id="teacher-main-chart"></canvas>
                 </div>
             </div>
 
-            <div id="page-t-create" class="page-section hidden">
-                <div class="card">
-                    <h3>Yeni Sınav</h3>
-                    <input type="text" id="newId" placeholder="Kod (Örn: DENEME-1)" class="app-input">
-                    <input type="text" id="newName" placeholder="Başlık" class="app-input">
-                    
-                    <div class="adder-row">
-                        <input type="text" id="lName" placeholder="Ders" style="flex:2" class="app-input">
-                        <input type="number" id="lCount" placeholder="Soru" style="flex:1" class="app-input">
-                        <button onclick="addBuilderLesson()" class="btn-icon-bg">+</button>
+            <!-- Tab: Matrix/Analysis -->
+            <div id="teacher-analysis-tab" class="hidden space-y-4">
+                <h3 class="text-lg font-bold text-gray-800">Detaylı Analiz</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                        <span class="font-semibold text-sm">Soru Bazlı Analiz</span>
+                        <select id="analysis-exam-select" class="text-xs border-none bg-transparent font-bold text-blue-600 focus:ring-0">
+                            <option>Tüm Sınavlar</option>
+                        </select>
                     </div>
-                    
-                    <div id="builderContainer"></div>
-                    
-                    <div class="settings-box">
-                        <label><input type="checkbox" id="chkScore" checked> Sonuç Göster</label>
-                        <label><input type="checkbox" id="chkRank"> Sıralama Göster</label>
-                        <label><input type="checkbox" id="chkRetake"> Tekrar İzni</label>
+                    <div class="p-4" id="matrix-container">
+                        <!-- Matrix Table will go here -->
+                        <p class="text-center text-gray-400 text-sm py-4">Sınav seçiniz...</p>
                     </div>
-
-                    <button onclick="saveNewExam()" class="btn-main" style="margin-top:15px;">OLUŞTUR</button>
                 </div>
             </div>
 
-            <div id="page-t-exams" class="page-section hidden">
-                <div id="examList" class="list-wrapper"></div>
+            <!-- Tab: Add Exam -->
+            <div id="teacher-add-tab" class="hidden space-y-4">
+                <h3 class="text-lg font-bold text-gray-800">Yeni Sınav Oluştur</h3>
+                <form id="add-exam-form" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Sınav Adı</label>
+                        <input type="text" name="name" class="w-full p-3 bg-gray-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-100" placeholder="Örn: Matematik Deneme 1" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Sınav ID (Benzersiz)</label>
+                        <input type="text" name="id" class="w-full p-3 bg-gray-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-100" placeholder="Örn: MAT01" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Cevap Anahtarı</label>
+                        <textarea name="key" rows="3" class="w-full p-3 bg-gray-50 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-100 font-mono" placeholder="Ders:AAAAA; Ders2:BBBBB..." required></textarea>
+                        <p class="text-[10px] text-gray-400 mt-1">Format: DersAdı:CEVAPLAR;Ders2:CEVAPLAR</p>
+                    </div>
+                    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow-lg shadow-green-500/20 transition-all">
+                        <i class="fa-solid fa-plus mr-2"></i>Sınavı Kaydet
+                    </button>
+                </form>
             </div>
 
-            <div id="page-t-students" class="page-section hidden">
-                <input type="text" id="searchStudent" placeholder="Öğrenci Ara..." onkeyup="filterStudents()" class="app-input">
-                <div id="studentList" class="list-wrapper"></div>
+            <!-- Tab: Management -->
+            <div id="teacher-manage-tab" class="hidden space-y-4">
+                <h3 class="text-lg font-bold text-gray-800">Yönetim</h3>
+                <div id="exam-management-list" class="space-y-2">
+                    <!-- Manage Exams List -->
+                </div>
+            </div>
+        </main>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-safe z-40">
+            <!-- Student Nav -->
+            <div id="student-nav" class="flex justify-around items-center h-16 hidden">
+                <button class="nav-item active flex-1 flex flex-col items-center justify-center space-y-1 text-blue-600" data-target="student-exams-tab">
+                    <i class="fa-solid fa-pen-to-square text-xl"></i>
+                    <span class="text-[10px] font-medium">Sınavlar</span>
+                </button>
+                <button class="nav-item flex-1 flex flex-col items-center justify-center space-y-1 text-gray-400" data-target="student-results-tab">
+                    <i class="fa-solid fa-chart-pie text-xl"></i>
+                    <span class="text-[10px] font-medium">Karnem</span>
+                </button>
             </div>
 
-            <div id="page-s-home" class="page-section hidden">
-                <h4 class="section-head">Sınavlarım</h4>
-                <div id="activeExams" class="list-wrapper"></div>
+            <!-- Teacher Nav -->
+            <div id="teacher-nav" class="flex justify-around items-center h-16 hidden">
+                <button class="nav-item active flex-1 flex flex-col items-center justify-center space-y-1 text-blue-600" data-target="teacher-summary-tab">
+                    <i class="fa-solid fa-chart-line text-lg"></i>
+                    <span class="text-[10px] font-medium">Özet</span>
+                </button>
+                <button class="nav-item flex-1 flex flex-col items-center justify-center space-y-1 text-gray-400" data-target="teacher-analysis-tab">
+                    <i class="fa-solid fa-table-cells text-lg"></i>
+                    <span class="text-[10px] font-medium">Analiz</span>
+                </button>
+                <button class="nav-item flex-1 flex flex-col items-center justify-center space-y-1 text-gray-400" data-target="teacher-add-tab">
+                    <i class="fa-solid fa-circle-plus text-2xl text-blue-500 -mt-4 shadow-lg bg-white rounded-full p-2 border border-gray-50"></i>
+                    <span class="text-[10px] font-medium">Ekle</span>
+                </button>
+                <button class="nav-item flex-1 flex flex-col items-center justify-center space-y-1 text-gray-400" data-target="teacher-manage-tab">
+                    <i class="fa-solid fa-list-check text-lg"></i>
+                    <span class="text-[10px] font-medium">Yönet</span>
+                </button>
             </div>
+        </nav>
+    </div>
 
-            <div id="page-s-history" class="page-section hidden">
-                <h4 class="section-head">Net Gelişimim</h4>
-                <div class="card chart-box"><canvas id="studentTrendChart"></canvas></div>
-                <h4 class="section-head">Sonuçlar</h4>
-                <div id="historyList" class="list-wrapper"></div>
+    <!-- EXAM TAKING MODAL (Full Screen) -->
+    <div id="exam-modal" class="fixed inset-0 z-50 bg-white hidden flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-100 bg-white">
+            <div>
+                <h2 class="font-bold text-gray-800" id="exam-modal-title">Matematik Sınavı</h2>
+                <span class="text-xs text-blue-600 font-mono" id="exam-timer">00:00</span>
             </div>
-
+            <button id="close-exam-btn" class="bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-500 h-8 w-8 rounded-full flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
 
-        <div class="app-tabbar" id="tabBar"></div>
-    </div>
+        <div class="flex-1 overflow-y-auto p-4 bg-gray-50" id="exam-questions-container">
+            <!-- Questions injected here -->
+            <div class="text-center mt-10 text-gray-400">Sorular Yükleniyor...</div>
+        </div>
 
-    <div id="passModal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Şifre Değiştir</h3>
-            <p id="passStuName"></p>
-            <input type="text" id="newPassInput" class="app-input" placeholder="Yeni Şifre">
-            <button onclick="saveNewPass()" class="btn-main">KAYDET</button>
-            <button onclick="closeModal('passModal')" class="btn-text" style="margin-top:10px; width:100%">İptal</button>
+        <div class="p-4 bg-white border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <button id="submit-exam-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30">
+                Sınavı Tamamla ve Gönder
+            </button>
         </div>
     </div>
-
-    <div id="confirmModal" class="modal hidden" style="z-index: 4000;">
-        <div class="modal-content" style="max-width: 300px; text-align: center;">
-            <div style="margin-bottom:15px;"><i class="fas fa-question-circle" style="color:var(--orange); font-size:40px;"></i></div>
-            <h3 style="margin:0 0 10px 0;">Emin misiniz?</h3>
-            <p id="confirmMsg" style="color:#64748b; margin-bottom:20px;"></p>
-            <div style="display:flex; gap:10px;">
-                <button id="confirmYes" class="btn-main" style="background:var(--green)">EVET</button>
-                <button onclick="closeModal('confirmModal')" class="btn-main" style="background:#94a3b8">HAYIR</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="studentDetailModal" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeModal('studentDetailModal')">X</button><span id="stuDetailName"></span><div></div></div>
-        <div class="modal-body" id="stuDetailBody"></div>
-    </div>
-
-    <div id="reportModal" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeModal('reportModal')"><i class="fas fa-chevron-left"></i></button><span>Karne</span><div></div></div>
-        <div class="modal-body" id="reportBody" style="background:#f9fafb;"></div>
-    </div>
-
-    <div id="examOverlay" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeModal('examOverlay')">Çık</button><span>Sınav</span><div></div></div>
-        <div class="modal-body" id="opticalArea"></div>
-        <div class="modal-footer"><button onclick="submitExamNow()" class="btn-main">BİTİR VE GÖNDER</button></div>
-    </div>
-
-    <div id="editorModal" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeModal('editorModal')">X</button><span>Anahtar Düzenle</span><button onclick="saveEditor()" style="color:blue">Kaydet</button></div>
-        <div class="modal-body" id="editorBody"></div>
-    </div>
-
-    <div id="toast-container"></div>
 
     <script src="script.js"></script>
 </body>

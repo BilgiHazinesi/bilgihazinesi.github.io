@@ -1,363 +1,634 @@
-// *** SİZİN VERDİĞİNİZ YENİ LİNK ***
-const API_URL = "https://script.google.com/macros/s/AKfycbxmv_yHwiPgIyUZcWRxRmDJ0TSYN-qX4yaqKUjK6q58171Lf6sSTz9E4g1Cwjtk0S5a/exec"; 
+// CONFIGURATION
+const API_URL = "https://script.google.com/macros/s/AKfycb.../exec"; // PLACEHOLDER: USER MUST UPDATE AFTER DEPLOY
+// MOCK API FLAG: Set to true for local testing without GAS deployment
+const USE_MOCK_API = true;
 
-let currentUser={}, teacherData={}, studentData={}, builderData=[], activeExamData=[], studentAnswers={}, editKeyData=[], editingId=null, editMode=null;
+// STATE
+let currentUser = null;
+let currentRole = null; // 'Öğrenci' or 'Öğretmen'
+let currentData = null;
+let activeTab = null;
 
-// --- TOAST ---
-function showToast(msg, type='info') {
-    const c = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.innerHTML = `<span>${msg}</span>`;
-    c.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
-}
+// DOM ELEMENTS
+const dom = {
+    loader: document.getElementById('loader'),
+    loginView: document.getElementById('login-view'),
+    appContainer: document.getElementById('app-container'),
+    loginForm: document.getElementById('login-form'),
+    studentViews: document.getElementById('student-views'),
+    teacherViews: document.getElementById('teacher-views'),
+    studentNav: document.getElementById('student-nav'),
+    teacherNav: document.getElementById('teacher-nav'),
+    userAvatar: document.getElementById('user-avatar'),
+    userName: document.getElementById('user-name'),
+    userRole: document.getElementById('user-role'),
+    examModal: document.getElementById('exam-modal'),
+    examQuestions: document.getElementById('exam-questions-container'),
+    closeExamBtn: document.getElementById('close-exam-btn'),
+    submitExamBtn: document.getElementById('submit-exam-btn'),
+};
 
-// --- API ---
-function setLoading(s) { document.getElementById("loader").classList.toggle("hidden", !s); }
-async function api(act, data={}) {
-    data.action = act;
-    try {
-        setLoading(true);
-        let res = await fetch(API_URL, {method:'POST', body:JSON.stringify(data)});
-        let json = await res.json();
-        setLoading(false);
-        if(json.status=="fail" || json.status=="error") { showToast(json.msg, "error"); return null; }
-        return json;
-    } catch(e) { setLoading(false); showToast("Bağlantı Hatası", "error"); return null; }
-}
-
-// --- GİRİŞ & OTURUM ---
-window.addEventListener('load', () => {
-    setLoading(false); // Başlangıçta loader'ı gizle
-    try {
-        const saved = localStorage.getItem('educationUser');
-        if(saved) {
-            initializeUser(JSON.parse(saved));
-        } else {
-            document.getElementById("loginScreen").classList.remove("hidden");
-        }
-    } catch(e) {
-        console.error("Oturum hatası:", e);
-        localStorage.removeItem('educationUser'); // Bozuk datayı temizle
-        document.getElementById("loginScreen").classList.remove("hidden");
-    }
+// INITIALIZATION
+document.addEventListener('DOMContentLoaded', () => {
+    checkSession();
+    setupNavigation();
+    setupLogin();
 });
 
-function initializeUser(res) {
-    currentUser = res;
-    document.getElementById("loginScreen").classList.add("hidden");
-    document.getElementById("mainApp").classList.remove("hidden");
-    document.getElementById("userName").innerText = res.name;
-    document.getElementById("userRole").innerText = res.role;
+// --- AUTHENTICATION ---
 
-    if(res.role == "Ogretmen") { setupNav("teacher"); loadTeacher(); }
-    else { setupNav("student"); loadStudent(); }
-}
-
-async function login() {
-    const code = document.getElementById("loginCode").value.trim();
-    if(!code) return showToast("Kod girin", "error");
-    let res = await api("login", {password:code});
-    if(res) {
-        localStorage.setItem('educationUser', JSON.stringify(res));
-        initializeUser(res);
-        showToast("Giriş Başarılı", "success");
+function checkSession() {
+    const stored = localStorage.getItem('sinav_user');
+    if (stored) {
+        currentUser = JSON.parse(stored);
+        initApp(currentUser);
     }
 }
 
-// --- NAVİGASYON ---
-function navTo(id) {
-    document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
+function setupLogin() {
+    dom.loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const code = document.getElementById('login-code').value.trim();
+        if (!code) return showToast('Lütfen kod giriniz', 'error');
+
+        showLoader(true);
+        try {
+            const response = await apiCall('login', { code });
+            if (response.status === 'success') {
+                currentUser = response.data;
+                localStorage.setItem('sinav_user', JSON.stringify(currentUser));
+                initApp(currentUser);
+            } else {
+                showToast(response.message || 'Giriş başarısız', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Bağlantı hatası', 'error');
+        } finally {
+            showLoader(false);
+        }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('sinav_user');
+        location.reload();
+    });
 }
-function setupNav(role) {
-    const bar = document.getElementById("tabBar");
-    if(role === "teacher") {
-        bar.innerHTML = `<button class="tab-item" onclick="navTo('page-t-home')"><i class="fas fa-home"></i>Özet</button>
-                         <button class="tab-item" onclick="navTo('page-t-analysis')"><i class="fas fa-chart-pie"></i>Analiz</button>
-                         <button class="tab-item" onclick="navTo('page-t-create')"><i class="fas fa-plus-circle"></i>Ekle</button>
-                         <button class="tab-item" onclick="navTo('page-t-students')"><i class="fas fa-users"></i>Öğrenci</button>`;
-        navTo('page-t-home');
+
+function initApp(user) {
+    // Hide Login, Show App
+    dom.loginView.classList.add('hidden');
+    dom.appContainer.classList.remove('hidden');
+
+    // Set Header
+    dom.userName.textContent = user.name;
+    dom.userRole.textContent = user.role;
+    dom.userAvatar.textContent = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+
+    currentRole = user.role;
+
+    if (currentRole === 'Öğrenci') {
+        dom.studentViews.classList.remove('hidden');
+        dom.studentNav.classList.remove('hidden');
+        dom.teacherViews.classList.add('hidden');
+        dom.teacherNav.classList.add('hidden');
+        loadStudentDashboard();
+        switchTab('student-exams-tab');
     } else {
-        bar.innerHTML = `<button class="tab-item" onclick="navTo('page-s-home')"><i class="fas fa-pen"></i>Sınavlar</button>
-                         <button class="tab-item" onclick="navTo('page-s-history')"><i class="fas fa-chart-line"></i>Karnem</button>`;
-        navTo('page-s-home');
-    }
-}
-function logout() {
-    localStorage.removeItem('educationUser');
-    location.reload();
-}
-
-// --- ÖĞRETMEN ---
-async function loadTeacher() {
-    let res = await api("getTeacherData");
-    if(res) {
-        teacherData = res;
-        document.getElementById("stCount").innerText = res.students.length;
-        document.getElementById("exCount").innerText = res.exams.length;
-        renderExamList();
-        renderStudentList();
-        updateAnalysisSelect();
+        dom.teacherViews.classList.remove('hidden');
+        dom.teacherNav.classList.remove('hidden');
+        dom.studentViews.classList.add('hidden');
+        dom.studentNav.classList.add('hidden');
+        loadTeacherDashboard();
+        switchTab('teacher-summary-tab');
     }
 }
 
-function renderExamList() {
-    let h = "";
-    teacherData.exams.slice().reverse().forEach(ex => {
-        let active = ex.status == "Aktif";
-        let sco = ex.showScore == "Evet";
-        let rnk = ex.showRank == "Evet";
-        let ret = ex.allowRetake == "Evet";
-        
-        h += `<div class="list-item">
-            <div class="item-info"><div>${ex.name}</div><small>${ex.id}</small></div>
-            <div class="item-actions">
-                <button onclick="toggleSet('${ex.id}','status')" style="color:${active?'green':'red'}"><i class="fas ${active?'fa-toggle-on':'fa-toggle-off'}"></i></button>
-                <button onclick="toggleSet('${ex.id}','score')" style="color:${sco?'blue':'gray'}"><i class="fas ${sco?'fa-eye':'fa-eye-slash'}"></i></button>
-                <button onclick="toggleSet('${ex.id}','rank')" style="color:${rnk?'orange':'gray'}"><i class="fas ${rnk?'fa-list-ol':'fa-ban'}"></i></button>
-                <button onclick="toggleSet('${ex.id}','retake')" style="color:${ret?'purple':'gray'}"><i class="fas ${ret?'fa-redo':'fa-times'}"></i></button>
-                <button onclick="openEditor('examKey','${ex.id}')"><i class="fas fa-key"></i></button>
-            </div>
-        </div>`;
+// --- NAVIGATION ---
+
+function setupNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const targetId = item.getAttribute('data-target');
+            switchTab(targetId);
+
+            // Update UI
+            navItems.forEach(n => {
+                if (n.parentElement === item.parentElement) n.classList.remove('active', 'text-blue-600');
+            });
+            item.classList.add('active', 'text-blue-600');
+        });
     });
-    document.getElementById("examList").innerHTML = h;
 }
 
-function renderStudentList() {
-    let h="";
-    teacherData.students.forEach(s => {
-        h += `<div class="list-item">
-            <div class="item-info"><div>${s.name}</div><small>Şifre: ${s.pass}</small></div>
-            <div class="item-actions">
-                <button onclick="openPassEdit('${s.name}')"><i class="fas fa-pen"></i></button>
-                <button onclick="openStudentHistory('${s.name}')"><i class="fas fa-file-alt"></i></button>
-            </div>
-        </div>`;
-    });
-    document.getElementById("studentList").innerHTML = h;
+function switchTab(tabId) {
+    // Hide all tab contents
+    document.querySelectorAll('[id$="-tab"]').forEach(el => el.classList.add('hidden'));
+    // Show target
+    document.getElementById(tabId).classList.remove('hidden');
+    activeTab = tabId;
 }
 
-async function toggleSet(id, type) { await api("toggleSetting", {examId:id, type:type}); loadTeacher(); }
+// --- STUDENT LOGIC ---
 
-// ANALİZ & TELEGRAM
-function updateAnalysisSelect() {
-    const sel = document.getElementById("analysisSelect");
-    sel.innerHTML = "<option>Sınav Seçiniz...</option>";
-    teacherData.exams.slice().reverse().forEach(ex => sel.innerHTML += `<option value="${ex.id}">${ex.name}</option>`);
+async function loadStudentDashboard() {
+    showLoader(true);
+    try {
+        const res = await apiCall('getStudentData', { name: currentUser.name });
+        if (res.status === 'success') {
+            renderStudentExams(res.data.exams);
+            renderStudentResults(res.data.results);
+        }
+    } catch (e) {
+        showToast('Veri yüklenemedi', 'error');
+    } finally {
+        showLoader(false);
+    }
 }
-function loadAnalysis() {
-    const id = document.getElementById("analysisSelect").value;
-    const resDiv = document.getElementById("analysisResult");
-    if(!id || id.length<2) { resDiv.classList.add("hidden"); return; }
-    resDiv.classList.remove("hidden");
+
+function renderStudentExams(exams) {
+    const container = document.getElementById('active-exams-list');
+    container.innerHTML = '';
     
-    let results = teacherData.results.filter(r => r.examId === id);
-    let nets = results.map(r => r.net);
-    
-    if(nets.length === 0) {
-        document.getElementById("anAvg").innerText = "-";
-        document.getElementById("anMax").innerText = "-";
-        document.getElementById("participantsList").innerHTML = "<p>Katılım yok.</p>";
+    if (exams.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-400 py-10">Aktif sınav bulunmamaktadır.</div>';
         return;
     }
 
-    let avg = (nets.reduce((a,b)=>a+b,0) / nets.length).toFixed(2);
-    document.getElementById("anAvg").innerText = avg;
-    document.getElementById("anMax").innerText = Math.max(...nets);
-
-    let html = "";
-    results.sort((a,b)=>b.net-a.net).forEach((r, i) => {
-        html += `<div class="list-item">
-            <div style="display:flex; gap:10px; align-items:center;">
-                <div class="opt-big" style="width:30px; height:30px; background:#4f46e5; color:white; border:none; font-size:12px;">${i+1}</div>
-                <div>${r.student}</div>
+    exams.forEach(exam => {
+        const el = document.createElement('div');
+        el.className = 'bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center exam-card cursor-pointer';
+        el.innerHTML = `
+            <div>
+                <h4 class="font-bold text-gray-800">${exam.name}</h4>
+                <p class="text-xs text-gray-500">${exam.date} • 120 dk</p>
             </div>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <b>${r.net} Net</b>
-                <button class="btn-telegram" onclick="sendTelegramReport('${r.student}', '${r.examId}')"><i class="fab fa-telegram-plane"></i></button>
+            <button class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-200">
+                Başla
+            </button>
+        `;
+        el.addEventListener('click', () => startExam(exam));
+        container.appendChild(el);
+    });
+}
+
+function renderStudentResults(results) {
+    const container = document.getElementById('past-results-list');
+    const chartCtx = document.getElementById('student-progress-chart').getContext('2d');
+
+    container.innerHTML = '';
+
+    // Chart Data
+    const labels = results.map(r => r.examId);
+    const scores = results.map(r => parseFloat(r.score));
+
+    new Chart(chartCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Başarı (%)',
+                data: scores,
+                borderColor: '#2563EB',
+                tension: 0.4
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    results.forEach(res => {
+        const el = document.createElement('div');
+        el.className = 'bg-white p-4 rounded-xl shadow-sm border border-gray-100';
+        el.innerHTML = `
+            <div class="flex justify-between items-center">
+                <span class="font-bold text-gray-800">${res.examId}</span>
+                <span class="font-bold ${res.score >= 50 ? 'text-green-500' : 'text-red-500'}">%${res.score}</span>
             </div>
-        </div>`;
-    });
-    document.getElementById("participantsList").innerHTML = html;
-
-    const ctx = document.getElementById('examChart').getContext('2d');
-    if(window.myChart) window.myChart.destroy();
-    window.myChart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: results.map(r=>r.student.split(' ')[0]), datasets: [{ label: 'Net', data: nets, backgroundColor: '#4f46e5', borderRadius: 5 }] },
-        options: { responsive: true }
+            <p class="text-xs text-gray-400">${res.date}</p>
+        `;
+        container.appendChild(el);
     });
 }
 
-// --- UTILS ---
-function showConfirm(msg, cb) {
-    document.getElementById("confirmMsg").innerText = msg;
-    document.getElementById("confirmModal").classList.remove("hidden");
-    document.getElementById("confirmYes").onclick = () => {
-        cb();
-        closeModal('confirmModal');
-    };
-}
+// --- EXAM TAKING LOGIC ---
+let currentExamSession = null;
+let studentAnswers = {}; // { "Matematik": "AAAA..." }
 
-// TELEGRAM MANUEL
-async function sendTelegramReport(name, id) {
-    showConfirm(name + " için rapor Telegram'a gönderilsin mi?", async () => {
-        await api("sendManualReport", {studentName:name, examId:id});
-        showToast("Gönderildi!", "success");
-    });
-}
-
-// ŞİFRE & DETAY
-function openPassEdit(name) {
-    passEditName = name;
-    document.getElementById("passStuName").innerText = name;
-    document.getElementById("newPassInput").value = "";
-    document.getElementById("passModal").classList.remove("hidden");
-}
-async function saveNewPass() {
-    let p = document.getElementById("newPassInput").value;
-    if(!p) return showToast("Şifre yazın", "error");
-    await api("updateStudentPass", {studentName:passEditName, newPass:p});
-    showToast("Güncellendi", "success"); closeModal('passModal'); loadTeacher();
-}
-function openStudentHistory(name) {
-    let list = teacherData.results.filter(r => r.student === name);
-    let html = "";
-    list.forEach(r => {
-        let exName = teacherData.exams.find(e=>e.id==r.examId)?.name || r.examId;
-        html += `<div class="list-item"><div>${exName}</div><b>${r.net} Net</b></div>`;
-    });
-    document.getElementById("stuDetailName").innerText = name;
-    document.getElementById("stuDetailBody").innerHTML = html || "<p>Kayıt yok</p>";
-    document.getElementById("studentDetailModal").classList.remove("hidden");
-}
-
-// --- STUDENT ---
-async function loadStudent() {
-    let res = await api("getStudentData", {name:currentUser.name});
-    if(res) {
-        studentData = res;
-        document.getElementById("activeExams").innerHTML = res.active.map(e=>`<div class="list-item"><div>${e.name}</div><button class="btn-icon-bg" style="font-size:14px;width:auto;padding:0 15px;" onclick="startExam('${e.id}')">GİR</button></div>`).join('');
-        document.getElementById("historyList").innerHTML = res.history.map((h,i)=>`<div class="list-item" onclick="openReport(${i})">
-            <div>${h.examName || h.examId}</div>
-            <div style="text-align:right"><b>${h.net==null?'Bekliyor':h.net+' Net'}</b><br><small>${h.rank?'Sıra: '+h.rank:''}</small></div>
-        </div>`).join('');
-        
-        let labels = res.history.map(h => h.date.substr(0,5));
-        let data = res.history.map(h => h.net || 0);
-        new Chart(document.getElementById("studentTrendChart"), {
-            type: 'line',
-            data: { labels: labels, datasets: [{ label: 'Net Başarısı', data: data, borderColor: '#10b981', tension: 0.3 }] }
-        });
-    }
-}
-
-function openReport(idx) {
-    let h = studentData.history[idx];
-    if(!h.details) return showToast("Detaylar kapalı.", "error");
-    
-    let html = `<div class="card" style="text-align:center">
-        <h1 style="color:#4f46e5">${h.net}</h1><p>TOPLAM NET</p>
-        ${h.rank ? `<div style="background:#fff3e0; padding:5px; margin-top:5px; border-radius:5px; color:#f57c00;">🏆 Sınıf ${h.rank}.si</div>` : ''}
-    </div>`;
-    
-    if(h.correctKey && h.details.stats) {
-        let keyMap = {}; h.correctKey.split("|").forEach(x=>{let p=x.split(":"); keyMap[p[0]]=p[1]});
-        
-        h.details.stats.forEach(s => {
-            let keyStr = keyMap[s.lesson] || "";
-            let userStr = (h.details.raw && h.details.raw[s.lesson]) ? h.details.raw[s.lesson] : "";
-            
-            let bubbles = "";
-            for(let i=0; i<s.total; i++) {
-                let u = userStr[i] || "";
-                let k = keyStr[i];
-                let cls = (u==k || k=="*") ? "ans-c" : (u==""?"ans-e":"ans-w");
-                bubbles += `<div class="bubble ${cls}">${u||'-'}</div>`;
-            }
-            html += `<div class="card" style="margin-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <b>${s.lesson}</b>
-                    <small style="color:green">${s.correct}D</small> <small style="color:red">${s.wrong}Y</small> <small style="color:blue">${s.net}N</small>
-                </div>
-                <div class="ans-box">${bubbles}</div>
-            </div>`;
-        });
-    }
-    document.getElementById("reportBody").innerHTML = html;
-    document.getElementById("reportModal").classList.remove("hidden");
-}
-
-function startExam(id) {
-    currentExamId = id;
-    let ex = studentData.active.find(e => String(e.id) === String(id));
-    document.getElementById("examOverlay").classList.remove("hidden");
-    document.getElementById("opticalArea").innerHTML = "";
+function startExam(exam) {
+    currentExamSession = exam;
     studentAnswers = {};
-    ex.sections.forEach(s => {
-        studentAnswers[s.name] = new Array(s.qCount).fill("");
-        let r = "";
-        for(let i=0; i<s.qCount; i++) r += `<div class="opt-row"><span>${i+1}</span><div class="opt-grid">${['A','B','C','D'].map(o=>`<div class="opt-big" onclick="stuSel(this,'${s.name}',${i},'${o}')">${o}</div>`).join('')}</div></div>`;
-        document.getElementById("opticalArea").innerHTML += `<div class="card"><b>${s.name}</b>${r}</div>`;
-    });
+
+    dom.examModal.classList.remove('hidden');
+    document.getElementById('exam-modal-title').textContent = exam.name;
+
+    // Parse key structure to build UI (assuming key available or derived)
+    // For now, if we don't have the key structure in 'exam', we assume a generic structure
+    // But ideally backend sends "lessons" structure: ["Matematik:40", "Fen:20"]
+    // Let's Mock structure if missing or parse from key if provided (security risk but requested in prompt logic)
+
+    renderExamUI(exam);
+
+    dom.closeExamBtn.onclick = () => {
+        if(confirm("Sınavdan çıkmak istiyor musunuz? Kaydedilmeyecek.")) {
+            dom.examModal.classList.add('hidden');
+        }
+    };
+
+    dom.submitExamBtn.onclick = submitExam;
 }
-function stuSel(e,l,i,o) {
-    e.parentNode.querySelectorAll('.opt-big').forEach(b=>b.classList.remove('selected'));
-    e.classList.add('selected'); studentAnswers[l][i]=o;
-}
-async function submitExamNow() {
-    showConfirm("Bitirmek istiyor musunuz?", async () => {
-        let a={}; for(let l in studentAnswers) a[l]=studentAnswers[l].join("");
-        await api("submitExam", {studentName:currentUser.name, examId:currentExamId, answers:a});
-        showToast("Kaydedildi ve Telegram'a gönderildi!", "success");
-        closeModal('examOverlay'); loadStudent();
+
+function renderExamUI(exam) {
+    const container = dom.examQuestions;
+    container.innerHTML = '';
+
+    // Parse structure from key if available, otherwise default
+    // Example Key: "Matematik:AAAAA;Fen:BBBBB"
+    // If we rely on backend for security, we need 'structure' param.
+    // Assuming we have exam.lessonKey for demo purposes (as per prompt request for full code)
+
+    const lessons = [];
+    if (exam.lessonKey) {
+        exam.lessonKey.split(';').forEach(part => {
+            const [name, key] = part.split(':');
+            lessons.push({ name: name, count: key.length });
+        });
+    } else {
+        // Fallback for demo
+        lessons.push({ name: 'Genel', count: 20 });
+    }
+
+    lessons.forEach(lesson => {
+        const section = document.createElement('div');
+        section.className = 'mb-6';
+        section.innerHTML = `<h3 class="font-bold text-lg mb-4 text-gray-800 border-b pb-2">${lesson.name}</h3>`;
+
+        for (let i = 0; i < lesson.count; i++) {
+            const qCard = document.createElement('div');
+            qCard.className = 'question-card flex justify-between items-center';
+
+            const qNum = document.createElement('span');
+            qNum.className = 'font-bold text-gray-500 w-8';
+            qNum.textContent = `${i + 1}.`;
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'flex space-x-2';
+
+            ['A', 'B', 'C', 'D', 'E'].forEach(opt => {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.textContent = opt;
+                bubble.onclick = () => {
+                    // Deselect siblings
+                    optionsDiv.querySelectorAll('.bubble').forEach(b => b.classList.remove('selected'));
+                    // Select this
+                    bubble.classList.add('selected');
+                    // Save answer
+                    if (!studentAnswers[lesson.name]) studentAnswers[lesson.name] = Array(lesson.count).fill(" ");
+                    studentAnswers[lesson.name][i] = opt;
+                };
+                optionsDiv.appendChild(bubble);
+            });
+
+            qCard.appendChild(qNum);
+            qCard.appendChild(optionsDiv);
+            section.appendChild(qCard);
+        }
+
+        container.appendChild(section);
     });
 }
 
-// --- BUILDER & EDITOR ---
-function addBuilderLesson() { let n=document.getElementById("lName").value, c=parseInt(document.getElementById("lCount").value); if(n&&c){builderData.push({name:n,count:c,key:new Array(c).fill(null)}); document.getElementById("lName").value=""; document.getElementById("lCount").value=""; renderBuilder('builderContainer', builderData, false); } }
-function renderBuilder(cid, d, isEdit) {
-    const a = document.getElementById(cid); a.innerHTML="";
-    d.forEach((l,i)=>{
-        let r=""; for(let j=0;j<l.count;j++) r+=`<div class="opt-row"><span>${j+1}</span><div class="opt-grid">${['A','B','C','D'].map(o=>`<div class="bubble ${l.key[j]==o?'selected':''}" onclick="keySel('${cid}',${i},${j},'${o}')">${o}</div>`).join('')}${isEdit?`<div class="bubble ${l.key[j]=='*'?'selected':''}" style="color:red" onclick="keySel('${cid}',${i},${j},'*')">*</div>`:''}</div></div>`;
-        a.innerHTML+=`<div class="builder-item"><b>${l.name}</b>${r}</div>`;
-    });
-}
-window.keySel=function(cid,i,j,o) {
-    if(cid=="builderContainer") builderData[i].key[j]=o; else editKeyData[i].key[j]=o;
-    renderBuilder(cid, cid=="builderContainer"?builderData:editKeyData, cid=="editorBody");
-}
-async function saveNewExam() {
-    if(builderData.length==0) return showToast("Ders ekle", "error");
-    let k=builderData.map(l=>`${l.name}:${l.key.join("")}`).join("|");
-    await api("addExam", {
-        id:document.getElementById("newId").value, name:document.getElementById("newName").value, keysFormat:k,
-        showScore:document.getElementById("chkScore").checked?"Evet":"Hayir",
-        showRank:document.getElementById("chkRank").checked?"Evet":"Hayir",
-        allowRetake:document.getElementById("chkRetake").checked?"Evet":"Hayir"
-    });
-    showToast("Eklendi", "success"); builderData=[]; closeModal('examCreateModal'); loadTeacher();
-}
-function openEditor(m, id) {
-    editMode=m; editingId=id; document.getElementById("editorModal").classList.remove("hidden");
-    if(m=='examKey') {
-        let ex = teacherData.exams.find(e=>String(e.id)===String(id));
-        editKeyData=[];
-        if(ex.key.includes(":")) ex.key.split("|").forEach(p=>{let x=p.split(":"); editKeyData.push({name:x[0], count:x[1].length, key:x[1].split("")})});
-        renderBuilder("editorBody", editKeyData, true);
+async function submitExam() {
+    if (!confirm("Sınavı bitirmek istediğinize emin misiniz?")) return;
+    
+    // Construct raw string: "Matematik:ADC...;Fen:..."
+    const rawParts = [];
+    for (const [lesson, ansArr] of Object.entries(studentAnswers)) {
+        rawParts.push(`${lesson}:${ansArr.join('')}`);
+    }
+    const rawString = rawParts.join(';');
+    
+    showLoader(true);
+    try {
+        const res = await apiCall('submitExam', {
+            studentName: currentUser.name,
+            examId: currentExamSession.id,
+            answersRaw: rawString
+        });
+        
+        if (res.status === 'success') {
+            dom.examModal.classList.add('hidden');
+            Swal.fire({
+                title: 'Sınav Tamamlandı!',
+                text: `Netiniz: ${res.data.net.toFixed(2)} | Puan: %${res.data.score.toFixed(2)}`,
+                icon: 'success'
+            });
+            loadStudentDashboard(); // Refresh
+        }
+    } catch (e) {
+        showToast('Gönderim hatası', 'error');
+    } finally {
+        showLoader(false);
     }
 }
-async function saveEditor() {
-    if(editMode=='examKey') {
-        let k = editKeyData.map(l=>`${l.name}:${l.key.join("")}`).join("|");
-        await api("updateExamKey", {examId:editingId, newKey:k});
-        showToast("Güncellendi", "success"); closeModal('editorModal'); loadTeacher();
+
+// --- TEACHER LOGIC ---
+
+async function loadTeacherDashboard() {
+    showLoader(true);
+    try {
+        const res = await apiCall('getTeacherData');
+        if (res.status === 'success') {
+            const data = res.data;
+            document.getElementById('stat-total-students').textContent = data.students.length;
+            document.getElementById('stat-active-exams').textContent = data.exams.filter(e => e.status === 'Aktif').length;
+            
+            // Populate Matrix Select
+            const select = document.getElementById('analysis-exam-select');
+            select.innerHTML = '<option>Tüm Sınavlar</option>';
+            data.exams.forEach(e => {
+                const opt = document.createElement('option');
+                opt.value = e.id;
+                opt.textContent = e.name;
+                select.appendChild(opt);
+            });
+
+            renderTeacherManageList(data.exams);
+
+            // Setup Analysis Listener
+            const analysisSelect = document.getElementById('analysis-exam-select');
+            analysisSelect.onchange = (e) => {
+                if (e.target.value !== 'Tüm Sınavlar') {
+                    renderAnalysis(e.target.value, data.results, data.exams);
+                }
+            };
+        }
+    } catch (e) {
+        showToast('Veri yüklenemedi', 'error');
+    } finally {
+        showLoader(false);
     }
 }
-function filterStudents() {
-    let t = document.getElementById("searchStudent").value.toLowerCase();
-    Array.from(document.getElementById("studentList").children).forEach(c=>c.style.display=c.innerText.toLowerCase().includes(t)?'flex':'none');
+
+function renderAnalysis(examId, allResults, allExams) {
+    const container = document.getElementById('matrix-container');
+    const exam = allExams.find(e => e.id === examId);
+
+    // Filter results for this exam
+    const examResults = allResults.filter(r => r.examId === examId);
+
+    if (!examResults.length) {
+        container.innerHTML = '<div class="text-center text-gray-400 py-10">Bu sınava ait veri bulunamadı.</div>';
+        return;
+    }
+
+    // Parse details: details string is JSON
+    const parsedResults = examResults.map(r => {
+        try {
+            return { ...r, stats: JSON.parse(r.details) };
+        } catch (e) { return null; }
+    }).filter(r => r);
+
+    // Get Structure from Exam Key (Mock or Real)
+    // Assuming Exam Key format "Matematik:ABC...;Fen:..."
+    // We need the key to know which question is which.
+    // If exam.key is missing (mock), fallback.
+
+    let keyMap = {};
+    // Use lessonKey from mock if key is missing or use key directly
+    const keySource = exam.key || exam.lessonKey;
+    if (keySource) {
+        keySource.split(';').forEach(part => {
+            const [l, k] = part.split(':');
+            if(l) keyMap[l] = k;
+        });
+    }
+
+    // 1. Calculate Question Stats (Correct Percentage)
+    const questionStats = []; // { id: "Mat-1", correctCount: 5, total: 10, pct: 50 }
+
+    Object.keys(keyMap).forEach(lesson => {
+        const keyStr = keyMap[lesson];
+        for (let i = 0; i < keyStr.length; i++) {
+            let correct = 0;
+            parsedResults.forEach(student => {
+                // student.stats.answers[lesson] is the string "AB C..."
+                const ans = student.stats.answers && student.stats.answers[lesson] ? student.stats.answers[lesson][i] : ' ';
+                if (ans === keyStr[i]) correct++;
+            });
+
+            questionStats.push({
+                label: `${lesson.substring(0,3)} ${i+1}`,
+                correct: correct,
+                total: parsedResults.length,
+                pct: Math.round((correct / parsedResults.length) * 100)
+            });
+        }
+    });
+
+    // Sort by difficulty (Low percentage = Hard)
+    const hardest = [...questionStats].sort((a,b) => a.pct - b.pct).slice(0, 5);
+
+    // HTML GENERATION
+    let html = `
+        <div class="mb-6">
+            <h4 class="font-bold text-gray-700 mb-2 text-sm">🔥 En Zorlanan 5 Soru</h4>
+            <div class="grid grid-cols-5 gap-2">
+                ${hardest.map(q => `
+                    <div class="bg-red-50 p-2 rounded text-center border border-red-100">
+                        <div class="text-xs text-gray-500">${q.label}</div>
+                        <div class="text-lg font-bold text-red-600">%${q.pct}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                        <th class="px-2 py-2">Öğrenci</th>
+                        <th class="px-2 py-2">Puan</th>
+                        ${questionStats.map(q => `<th class="px-1 py-2 w-6 text-center text-[9px]">${q.label}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${parsedResults.map(student => {
+                        // Build Answer Cells
+                        let cells = '';
+                        Object.keys(keyMap).forEach(lesson => {
+                            const k = keyMap[lesson];
+                            const sAns = (student.stats.answers && student.stats.answers[lesson]) || "";
+                            for(let i=0; i<k.length; i++) {
+                                const isCorrect = sAns[i] === k[i];
+                                const isEmpty = !sAns[i] || sAns[i] === ' ';
+                                const color = isCorrect ? 'bg-green-100 text-green-600' : (isEmpty ? 'bg-gray-100' : 'bg-red-100 text-red-600');
+                                const val = sAns[i] || '-';
+                                cells += `<td class="px-1 py-1 text-center border-b border-gray-50"><div class="w-5 h-5 flex items-center justify-center rounded-full ${color} mx-auto font-bold">${val}</div></td>`;
+                            }
+                        });
+                        return `
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-2 py-2 font-medium text-gray-900 whitespace-nowrap">${student.student}</td>
+                                <td class="px-2 py-2 font-bold text-blue-600">%${student.score}</td>
+                                ${cells}
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    container.innerHTML = html;
 }
-function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
+
+function renderTeacherManageList(exams) {
+    const list = document.getElementById('exam-management-list');
+    list.innerHTML = '';
+    exams.forEach(exam => {
+        const item = document.createElement('div');
+        item.className = 'bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center';
+        item.innerHTML = `
+            <div class="text-sm">
+                <span class="font-bold block">${exam.name}</span>
+                <span class="text-gray-400 text-xs">${exam.id}</span>
+            </div>
+            <span class="px-2 py-1 rounded text-xs ${exam.status === 'Aktif' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">
+                ${exam.status}
+            </span>
+        `;
+        list.appendChild(item);
+    });
+}
+
+// Add Exam Form
+document.getElementById('add-exam-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+
+    showLoader(true);
+    try {
+        const res = await apiCall('saveExam', data);
+        if (res.status === 'success') {
+            showToast('Sınav eklendi', 'success');
+            e.target.reset();
+            loadTeacherDashboard();
+        }
+    } catch (err) {
+        showToast('Hata oluştu', 'error');
+    } finally {
+        showLoader(false);
+    }
+});
+
+
+// --- UTILS & MOCK API ---
+
+function showLoader(show) {
+    if (show) dom.loader.classList.remove('hidden');
+    else dom.loader.classList.add('hidden');
+}
+
+function showToast(msg, type = 'info') {
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+    });
+    Toast.fire({
+        icon: type,
+        title: msg
+    });
+}
+
+// API WRAPPER
+function apiCall(action, params = {}) {
+    return new Promise((resolve, reject) => {
+        const payload = { action, ...params };
+
+        if (USE_MOCK_API) {
+            console.log("MOCK API CALL:", payload);
+            setTimeout(() => {
+                resolve(mockBackend(action, params));
+            }, 800);
+            return;
+        }
+
+        // Real Fetch
+        fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors', // GAS limitation usually
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => resolve(data))
+        .catch(err => reject(err));
+    });
+}
+
+// MOCK BACKEND FOR LOCAL TESTING
+function mockBackend(action, params) {
+    const mockDB = {
+        users: [
+            { id: "101", name: "Ali Yılmaz", role: "Öğrenci", code: "1234" },
+            { id: "999", name: "Zeynal Hoca", role: "Öğretmen", code: "admin" }
+        ],
+        exams: [
+            { id: "MAT1", name: "Matematik Deneme 1", key: "Matematik:ABCDE", date: "2026-01-01", status: "Aktif", lessonKey: "Matematik:ABCDE" }
+        ],
+        // Sample Results with raw answers for Analysis Testing
+        results: [
+            {
+                date: "2026-01-01",
+                student: "Ali Yılmaz",
+                examId: "MAT1",
+                score: "80.00",
+                details: JSON.stringify({
+                    answers: { "Matematik": "ABCDA" }, // Last one wrong (Key: ABCDE)
+                    totalNet: 3.66
+                })
+            },
+            {
+                date: "2026-01-01",
+                student: "Veli Demir",
+                examId: "MAT1",
+                score: "60.00",
+                details: JSON.stringify({
+                    answers: { "Matematik": "ABC  " }, // 2 empty
+                    totalNet: 3.0
+                })
+            }
+        ]
+    };
+
+    if (action === 'login') {
+        const user = mockDB.users.find(u => u.code === params.code);
+        return user ? { status: 'success', data: user } : { status: 'error', message: 'Kod hatalı' };
+    }
+
+    if (action === 'getStudentData') {
+        return { status: 'success', data: { exams: mockDB.exams, results: mockDB.results } };
+    }
+
+    if (action === 'submitExam') {
+        const net = 4.0; // Mock calculation
+        const score = 80;
+        return { status: 'success', data: { net, score } };
+    }
+
+    if (action === 'getTeacherData') {
+        return { status: 'success', data: { exams: mockDB.exams, results: mockDB.results, students: mockDB.users } };
+    }
+
+    if (action === 'saveExam') {
+        mockDB.exams.push({ id: params.id, name: params.name, status: "Aktif", lessonKey: params.key });
+        return { status: 'success' };
+    }
+
+    return { status: 'error', message: 'Action not mocked' };
+}
