@@ -1,6 +1,6 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbz02TYzPe1pvoR5t66xtoFsXoflH1uI32mCewsca-p7sewFuRP6t8da_KP2ROPvAImU/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzq6gpkqQWjMt8TZ-QNJCMXHseZpdjqb4sYlBuoVr028Up6FTM96AV-MdWlY5L5lrVI/exec"; 
 
-let currentUser = {}, teacherData = {}, activeExamData = [], builderData = [], studentAnswers = {}, editMode = null, editingId = null;
+let currentUser = {}, teacherData = {exams:[], students:[], results:[]}, activeExamData = [], builderData = [], studentAnswers = {}, passEditName = "";
 
 function setLoading(s) { document.getElementById("loader").classList.toggle("hidden", !s); }
 async function api(data) {
@@ -11,7 +11,7 @@ async function api(data) {
         setLoading(false);
         if(json.status === "error") { alert(json.msg); return null; }
         return json;
-    } catch(e) { setLoading(false); alert("Bağlantı Hatası"); return null; }
+    } catch(e) { setLoading(false); alert("Hata"); return null; }
 }
 
 async function login() {
@@ -42,11 +42,12 @@ function setupNav(role) {
     const bar = document.getElementById("tabBar");
     if(role === "teacher") {
         bar.innerHTML = `<button class="tab-item" onclick="navTo('page-t-home')"><i class="fas fa-home"></i>Özet</button>
+                         <button class="tab-item" onclick="navTo('page-t-analysis')"><i class="fas fa-chart-pie"></i>Analiz</button>
                          <button class="tab-item" onclick="navTo('page-t-create')"><i class="fas fa-plus-circle"></i>Ekle</button>
                          <button class="tab-item" onclick="navTo('page-t-students')"><i class="fas fa-users"></i>Öğrenci</button>`;
     } else {
         bar.innerHTML = `<button class="tab-item" onclick="navTo('page-s-home')"><i class="fas fa-pen"></i>Sınavlar</button>
-                         <button class="tab-item" onclick="navTo('page-s-history')"><i class="fas fa-chart-pie"></i>Karnem</button>`;
+                         <button class="tab-item" onclick="navTo('page-s-history')"><i class="fas fa-chart-bar"></i>Karnem</button>`;
     }
 }
 function logout() { location.reload(); }
@@ -59,133 +60,123 @@ async function loadTeacherData() {
         document.getElementById("stCount").innerText = res.students.length;
         document.getElementById("exCount").innerText = res.exams.length;
         renderLists();
+        updateAnalysisSelect();
     }
 }
 
 function renderLists() {
     const el = document.getElementById("examList"); el.innerHTML = "";
     teacherData.exams.slice().reverse().forEach(ex => {
-        let act = ex.status.toLowerCase() == "aktif";
-        let sco = ex.showScore.toLowerCase() == "evet";
-        let rnk = (ex.showRank || "Hayir").toLowerCase() == "evet";
-        
-        el.innerHTML += `
-        <div class="list-item">
-            <div class="item-info"><div>${ex.name}</div><small>${ex.id}</small></div>
-            <div class="item-actions">
-                <button onclick="toggleSet('${ex.id}','status')" style="color:${act?'green':'red'}"><i class="fas ${act?'fa-toggle-on':'fa-toggle-off'}"></i></button>
-                <button onclick="toggleSet('${ex.id}','score')" style="color:${sco?'blue':'gray'}"><i class="fas ${sco?'fa-eye':'fa-eye-slash'}"></i></button>
-                <button onclick="toggleSet('${ex.id}','rank')" style="color:${rnk?'orange':'gray'}"><i class="fas fa-trophy"></i></button>
-                <button onclick="openEditor('examKey','${ex.id}')"><i class="fas fa-key"></i></button>
-            </div>
-        </div>`;
+        let active = ex.status.toLowerCase() == "aktif";
+        el.innerHTML += `<div class="list-item"><div class="item-info"><div>${ex.name}</div><small style="color:${active?'green':'red'}">${active?'Yayında':'Gizli'}</small></div>
+        <div class="item-actions"><button onclick="toggleStatus('${ex.id}')"><i class="fas ${active?'fa-toggle-on':'fa-toggle-off'}"></i></button></div></div>`;
     });
 
     const sl = document.getElementById("studentList"); sl.innerHTML = "";
     teacherData.students.forEach(st => {
-        sl.innerHTML += `<div class="list-item"><div class="item-info"><div>${st.name}</div><small>Şifre: ${st.pass}</small></div></div>`;
+        sl.innerHTML += `<div class="list-item"><div class="item-info"><div>${st.name}</div><small>****</small></div>
+        <div class="item-actions">
+            <button onclick="openPassEdit('${st.name}')"><i class="fas fa-pen"></i></button>
+            <button onclick="openStudentHistory('${st.name}')"><i class="fas fa-file-alt"></i></button>
+        </div></div>`;
     });
 }
 
-function filterStudents() {
-    let term = document.getElementById("searchStudent").value.toLowerCase();
-    let items = document.querySelectorAll("#studentList .list-item");
-    items.forEach(i => i.style.display = i.innerText.toLowerCase().includes(term) ? "flex" : "none");
+async function toggleStatus(id) { await api({action:"toggleExamStatus", examId:id}); loadTeacherData(); }
+
+// ANALİZ BÖLÜMÜ
+function updateAnalysisSelect() {
+    const sel = document.getElementById("analysisSelect");
+    sel.innerHTML = "<option>Sınav Seçiniz...</option>";
+    teacherData.exams.slice().reverse().forEach(ex => {
+        sel.innerHTML += `<option value="${ex.id}">${ex.name}</option>`;
+    });
 }
 
-async function toggleSet(id, type) { await api({action:"toggleSetting", examId:id, type:type}); loadTeacherData(); }
-
-// --- ÖĞRENCİ ---
-async function loadStudentData() {
-    const res = await api({ action: "getStudentDashboard", studentName: currentUser.name });
-    if(res && res.status === "success") {
-        let adiv = document.getElementById("activeExams"); adiv.innerHTML = "";
-        res.active.forEach(ex => adiv.innerHTML += `<div class="list-item"><div>${ex.name}</div><button class="btn-icon-bg" style="font-size:14px; width:auto; padding:0 15px;" onclick="startExam('${ex.id}')">BAŞLA</button></div>`);
-        
-        let hdiv = document.getElementById("historyList"); hdiv.innerHTML = "";
-        res.history.forEach(h => {
-            let dataStr = encodeURIComponent(JSON.stringify(h));
-            hdiv.innerHTML += `<div class="list-item" onclick="showReport('${dataStr}')">
-                <div>${h.examId}</div>
-                <div style="text-align:right">
-                    <b>${h.score==null?'Bekliyor':Math.round(h.score)}</b><br>
-                    <small>${h.rank? '🏆 '+h.rank+'. Sıradasın':''}</small>
-                </div>
-            </div>`;
-        });
-    }
-}
-
-// KARNE GÖSTERİMİ (Doğru/Yanlış Odaklı)
-function showReport(dataStr) {
-    let data = JSON.parse(decodeURIComponent(dataStr));
-    let html = `<div class="card" style="text-align:center">
-        <h2>${data.score==null?'Açıklanmadı':Math.round(data.score)}</h2>
-        <p>Puan</p>
-        ${data.rank ? `<div style="margin-top:10px; padding:5px; background:#fff3cd; border-radius:5px; color:#856404; font-weight:bold;">🏆 Sınıf ${data.rank}.si</div>` : ''}
-    </div>`;
+function loadAnalysis() {
+    const id = document.getElementById("analysisSelect").value;
+    const resDiv = document.getElementById("analysisResult");
+    if(!id || id === "Sınav Seçiniz...") { resDiv.classList.add("hidden"); return; }
     
-    if(data.correctKey && data.correctKey.includes(":")) {
-        let totalD=0, totalY=0, totalB=0;
-        let detailsHtml = "";
-        
-        data.correctKey.split("|").forEach(part => {
-            let p = part.split(":");
-            let lesName = p[0], keys = p[1];
-            let studAns = (data.userAnswers && data.userAnswers[lesName]) ? data.userAnswers[lesName] : "";
-            
-            let d=0, y=0, b=0;
-            let bubbles = "";
-            
-            for(let i=0; i<keys.length; i++) {
-                let k = keys[i], s = studAns[i] || "";
-                let color = "gray"; // Boş
-                
-                if(s === "") { b++; color="#e0e0e0"; }
-                else if(s == k || k == "*") { d++; color="#4CAF50"; } // Doğru
-                else { y++; color="#F44336"; } // Yanlış
-                
-                bubbles += `<div style="width:25px; height:25px; background:${color}; color:white; border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:bold;">${s||'-'}</div>`;
-            }
-            totalD+=d; totalY+=y; totalB+=b;
-            
-            detailsHtml += `<div class="card" style="padding:10px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <b>${lesName}</b>
-                    <small>${d}D / ${y}Y / ${b}B</small>
-                </div>
-                <div style="display:flex; flex-wrap:wrap; gap:5px;">${bubbles}</div>
-            </div>`;
-        });
-        
-        // Üst Özet
-        html += `<div style="display:flex; gap:10px; margin-bottom:15px;">
-            <div style="flex:1; background:#e8f5e9; padding:10px; border-radius:10px; text-align:center; color:#2e7d32"><b>${totalD}</b><br><small>Doğru</small></div>
-            <div style="flex:1; background:#ffebee; padding:10px; border-radius:10px; text-align:center; color:#c62828"><b>${totalY}</b><br><small>Yanlış</small></div>
-            <div style="flex:1; background:#f5f5f5; padding:10px; border-radius:10px; text-align:center; color:#616161"><b>${totalB}</b><br><small>Boş</small></div>
-        </div>`;
-        
-        html += detailsHtml;
-    } else if(data.score == null) {
-        html += `<p style="text-align:center; color:#666;">Sonuçlar henüz açıklanmadı.</p>`;
-    } else {
-        html += `<p style="text-align:center; color:#666;">Detaylar gizli.</p>`;
+    resDiv.classList.remove("hidden");
+    const results = teacherData.results.filter(r => r.examId === id);
+    const scores = results.map(r => r.score);
+    
+    if(scores.length === 0) {
+        document.getElementById("anAvg").innerText = "-";
+        document.getElementById("anMax").innerText = "-";
+        document.getElementById("participantsList").innerHTML = "<p>Katılım yok.</p>";
+        return;
     }
 
-    document.getElementById("reportBody").innerHTML = html;
-    document.getElementById("reportModal").classList.remove("hidden");
+    const avg = (scores.reduce((a,b)=>a+b,0) / scores.length).toFixed(1);
+    const max = Math.max(...scores);
+    document.getElementById("anAvg").innerText = avg;
+    document.getElementById("anMax").innerText = Math.round(max);
+
+    // Liste
+    let html = "";
+    results.sort((a,b)=>b.score-a.score).forEach(r => {
+        html += `<div class="list-item"><div>${r.student}</div><b>${Math.round(r.score)}</b></div>`;
+    });
+    document.getElementById("participantsList").innerHTML = html;
+
+    // Grafik
+    const ctx = document.getElementById('examChart').getContext('2d');
+    if(window.myChart) window.myChart.destroy();
+    window.myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: results.map(r=>r.student.split(' ')[0]), // Sadece ilk isim
+            datasets: [{
+                label: 'Puan',
+                data: scores,
+                backgroundColor: '#2563eb',
+                borderRadius: 5
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
+    });
 }
 
-// ... (Diğer fonksiyonlar: startExam, submitExam vb. aynı) ...
-// (Buraya yer sığmadığı için builder ve exam fonksiyonlarını önceki cevaptaki gibi ekleyin veya kopyalayın. Sadece yukarıdaki showReport önemli değişikliktir.)
-function addBuilderLesson() { /* Önceki kod */ let n=document.getElementById("lName").value, c=parseInt(document.getElementById("lCount").value); if(n&&c){builderData.push({name:n,count:c,key:new Array(c).fill(null)}); document.getElementById("lName").value=""; document.getElementById("lCount").value=""; renderBuilder("builderContainer",builderData,false);} }
-function renderBuilder(cid,d,e){const a=document.getElementById(cid); a.innerHTML=""; d.forEach((l,i)=>{let r=""; for(let j=0;j<l.count;j++) r+=`<div class="opt-row"><span>${j+1}</span><div class="opt-grid">${['A','B','C','D'].map(o=>`<div class="opt-big ${l.key[j]==o?'selected':''}" onclick="setKey('${cid}',${i},${j},'${o}')">${o}</div>`).join('')}${e?`<div class="opt-big ${l.key[j]=='*'?'selected':''}" style="color:red" onclick="setKey('${cid}',${i},${j},'*')">*</div>`:''}</div></div>`; a.innerHTML+=`<div class="builder-item"><b>${l.name}</b>${r}</div>`;});}
-window.setKey=function(c,l,q,o){if(c=="builderContainer")builderData[l].key[q]=o;else editingExamKey[l].key[q]=o;renderBuilder(c,c=="builderContainer"?builderData:editingExamKey,c=="editorBody");}
-async function saveNewExam(){if(builderData.length==0)return alert("Ders ekle");let k=builderData.map(l=>`${l.name}:${l.key.join("")}`).join("|");await api({action:"addExam",id:document.getElementById("newId").value,name:document.getElementById("newName").value,keysFormat:k,showScore:document.getElementById("newShowScore").value,showRank:document.getElementById("newShowRank").value});alert("Kaydedildi");builderData=[];loadTeacherData();navTo("page-t-home");}
-function startExam(id){let ex=activeExamData.find(e=>String(e.id)===String(id));if(!ex)return alert("Hata");document.getElementById("examOverlay").classList.remove("hidden");document.getElementById("examTitleOverlay").innerText=ex.name;document.getElementById("examOverlay").dataset.id=id;studentAnswers={};document.getElementById("opticalArea").innerHTML="";ex.sections.forEach(sec=>{studentAnswers[sec.name]=new Array(sec.qCount).fill("");let rows="";for(let i=0;i<sec.qCount;i++)rows+=`<div class="opt-row"><span>${i+1}</span><div class="opt-grid">${['A','B','C','D'].map(o=>`<div class="opt-big" onclick="stuSel(this,'${sec.name}',${i},'${o}')">${o}</div>`).join('')}</div></div>`;document.getElementById("opticalArea").innerHTML+=`<div class="card"><b>${sec.name}</b>${rows}</div>`;});}
-function stuSel(e,l,i,o){e.parentNode.querySelectorAll('.opt-big').forEach(b=>b.classList.remove('selected'));e.classList.add('selected');studentAnswers[l][i]=o;}
-async function submitExamNow(){if(!confirm("Bitir?"))return;let a={};for(let l in studentAnswers)a[l]=studentAnswers[l].join("");await api({action:"submitExam",studentName:currentUser.name,examId:document.getElementById("examOverlay").dataset.id,answers:a});alert("Kaydedildi");document.getElementById("examOverlay").classList.add("hidden");loadStudentData();}
-function closeExamOverlay(){document.getElementById("examOverlay").classList.add("hidden");}
-function openEditor(m,id){editMode=m;editingId=id;document.getElementById("editorModal").classList.remove("hidden");if(m=='examKey'){let ex=teacherData.exams.find(e=>String(e.id)===String(id));editingExamKey=[];if(ex.key.includes(":"))ex.key.split("|").forEach(p=>{let x=p.split(":");editingExamKey.push({name:x[0],count:x[1].length,key:x[1].split("")});});renderBuilder("editorBody",editingExamKey,true);}}
-async function saveEditor(){let k=editingExamKey.map(l=>`${l.name}:${l.key.join("")}`).join("|");await api({action:"updateExamKey",examId:editingId,newKey:k});alert("Güncellendi");document.getElementById("editorModal").classList.add("hidden");loadTeacherData();}
-function closeEditor(){document.getElementById("editorModal").classList.add("hidden");}
+// ŞİFRE DEĞİŞTİRME
+function openPassEdit(name) {
+    passEditName = name;
+    document.getElementById("passStuName").innerText = name;
+    document.getElementById("newPassInput").value = "";
+    document.getElementById("passModal").classList.remove("hidden");
+}
+async function saveNewPass() {
+    let p = document.getElementById("newPassInput").value;
+    if(!p) return alert("Şifre yazın");
+    await api({action:"updateStudentPass", studentName:passEditName, newPass:p});
+    alert("Şifre güncellendi");
+    closeModal('passModal');
+    loadTeacherData();
+}
+
+// ÖĞRENCİ TARİHÇESİ (Öğretmen Bakışı)
+function openStudentHistory(name) {
+    let stuResults = teacherData.results.filter(r => r.student === name);
+    let html = "";
+    stuResults.forEach(r => {
+        let exName = teacherData.exams.find(e=>e.id==r.examId)?.name || r.examId;
+        html += `<div class="list-item"><div>${exName}</div><b>${Math.round(r.score)}</b></div>`;
+    });
+    document.getElementById("stuDetailName").innerText = name;
+    document.getElementById("stuDetailBody").innerHTML = html || "<p>Sınav kaydı yok.</p>";
+    document.getElementById("studentDetailModal").classList.remove("hidden");
+}
+
+// OLUŞTURUCU VE DİĞERLERİ...
+function addBuilderLesson() { let n=document.getElementById("lName").value, c=parseInt(document.getElementById("lCount").value); if(n&&c){ builderData.push({name:n, count:c, key:new Array(c).fill(null)}); document.getElementById("lName").value=""; document.getElementById("lCount").value=""; renderBuilder(); } }
+function renderBuilder() { const a=document.getElementById("builderContainer"); a.innerHTML=""; builderData.forEach((l,i)=>{ let r=""; for(let j=0;j<l.count;j++) r+=`<div class="opt-row"><span>${j+1}</span><div class="opt-grid">${['A','B','C','D'].map(o=>`<div class="opt-big ${l.key[j]==o?'selected':''}" onclick="setKey(${i},${j},'${o}')">${o}</div>`).join('')}</div></div>`; a.innerHTML+=`<div class="card"><b>${l.name}</b>${r}</div>`; }); }
+window.setKey=function(l,q,o){ builderData[l].key[q]=o; renderBuilder(); }
+async function saveNewExam() { if(builderData.length==0) return alert("Ders ekle"); let k=builderData.map(l=>`${l.name}:${l.key.join("")}`).join("|"); await api({action:"addExam",id:document.getElementById("newId").value,name:document.getElementById("newName").value,keysFormat:k,showScore:document.getElementById("newShowScore").value,showRank:document.getElementById("newShowRank").value}); alert("Kaydedildi"); builderData=[]; loadTeacherData(); navTo("page-t-home"); }
+
+// ÖĞRENCİ TARAF (Aynı Mantık)
+async function loadStudentData() { const res=await api({action:"getStudentDashboard",studentName:currentUser.name}); if(res&&res.status=="success"){ activeExamData=res.active; document.getElementById("activeExams").innerHTML=res.active.map(e=>`<div class="list-item"><div>${e.name}</div><button class="btn-icon-bg" style="font-size:14px;width:auto;padding:0 15px;" onclick="startExam('${e.id}')">GİR</button></div>`).join(''); document.getElementById("historyList").innerHTML=res.history.map(h=>`<div class="list-item"><div>${h.examId}</div><b>${h.score==null?'?':Math.round(h.score)}</b></div>`).join(''); } }
+function startExam(id) { let ex=activeExamData.find(e=>String(e.id)===String(id)); document.getElementById("examOverlay").classList.remove("hidden"); document.getElementById("examOverlay").dataset.id=id; studentAnswers={}; document.getElementById("opticalArea").innerHTML=""; ex.sections.forEach(s=>{ studentAnswers[s.name]=new Array(s.qCount).fill(""); let r=""; for(let i=0;i<s.qCount;i++) r+=`<div class="opt-row"><span>${i+1}</span><div class="opt-grid">${['A','B','C','D'].map(o=>`<div class="opt-big" onclick="stuSel(this,'${s.name}',${i},'${o}')">${o}</div>`).join('')}</div></div>`; document.getElementById("opticalArea").innerHTML+=`<div class="card"><b>${s.name}</b>${r}</div>`; }); }
+function stuSel(e,l,i,o){ e.parentNode.querySelectorAll('.opt-big').forEach(b=>b.classList.remove('selected')); e.classList.add('selected'); studentAnswers[l][i]=o; }
+async function submitExamNow(){ let a={}; for(let l in studentAnswers)a[l]=studentAnswers[l].join(""); await api({action:"submitExam",studentName:currentUser.name,examId:document.getElementById("examOverlay").dataset.id,answers:a}); alert("Bitti"); closeModal('examOverlay'); loadStudentData(); }
+function closeModal(id){ document.getElementById(id).classList.add("hidden"); }
