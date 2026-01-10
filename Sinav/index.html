@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eğitim Asistanı V10</title>
+    <title>Yönetim Merkezi</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -13,8 +13,8 @@
 
     <div id="loginScreen" class="app-screen active">
         <div class="login-card">
-            <div class="logo-circle"><i class="fas fa-book-open"></i></div>
-            <h2>Öğrenci Paneli</h2>
+            <div class="logo-circle"><i class="fas fa-school"></i></div>
+            <h2>Eğitim Paneli</h2>
             <input type="password" id="loginCode" placeholder="Giriş Kodu" inputmode="numeric" class="login-input">
             <button onclick="login()" class="btn-main">GİRİŞ YAP</button>
         </div>
@@ -33,16 +33,27 @@
                     <div class="d-card"><h3>Öğrenci</h3><span id="stCount">0</span></div>
                     <div class="d-card"><h3>Sınav</h3><span id="exCount">0</span></div>
                 </div>
-                <div class="quick-grid">
-                    <button onclick="navTo('page-t-create')"><i class="fas fa-plus"></i> Ekle</button>
-                    <button onclick="navTo('page-t-exams')"><i class="fas fa-list"></i> Yönet</button>
-                    <button onclick="navTo('page-t-students')"><i class="fas fa-users"></i> Liste</button>
+                <h4 class="section-head">Sınav Listesi</h4>
+                <div id="examList" class="list-wrapper"></div>
+            </div>
+
+            <div id="page-t-analysis" class="page-section hidden">
+                <h4 class="section-head">Sınav Analizleri</h4>
+                <select id="analysisSelect" class="app-input" onchange="loadAnalysis()"><option>Sınav Seçiniz...</option></select>
+                <div id="analysisResult" class="hidden">
+                    <div class="card chart-card"><canvas id="examChart"></canvas></div>
+                    <div class="stats-grid" style="margin-top:10px;">
+                        <div class="d-card"><h3>Ortalama</h3><span id="anAvg">0</span></div>
+                        <div class="d-card"><h3>En Yüksek</h3><span id="anMax">0</span></div>
+                    </div>
+                    <h4 class="section-head">Katılım Listesi</h4>
+                    <div id="participantsList" class="list-wrapper"></div>
                 </div>
             </div>
 
             <div id="page-t-create" class="page-section hidden">
                 <div class="card">
-                    <h3>Sınav Oluştur</h3>
+                    <h3>Yeni Sınav</h3>
                     <input type="text" id="newId" placeholder="Kod (Örn: 101)" class="app-input">
                     <input type="text" id="newName" placeholder="Başlık" class="app-input">
                     <div class="adder-row">
@@ -51,25 +62,16 @@
                         <button onclick="addBuilderLesson()" class="btn-icon-bg">+</button>
                     </div>
                     <div id="builderContainer"></div>
-                    
-                    <div class="switch-row">
-                        <label>Sonuçlar Görünsün:</label>
-                        <select id="newShowScore" class="app-input small"><option value="Evet">Evet</option><option value="Hayir">Hayır</option></select>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <select id="newShowScore" class="app-input"><option value="Hayir">Sonuç Gizli</option><option value="Evet">Sonuç Açık</option></select>
+                        <select id="newShowRank" class="app-input"><option value="Hayir">Sıra Gizli</option><option value="Evet">Sıra Açık</option></select>
                     </div>
-                    <div class="switch-row">
-                        <label>Sıralama Görünsün:</label>
-                        <select id="newShowRank" class="app-input small"><option value="Hayir">Hayır</option><option value="Evet">Evet</option></select>
-                    </div>
-
                     <button onclick="saveNewExam()" class="btn-main" style="margin-top:15px;">OLUŞTUR</button>
                 </div>
             </div>
 
-            <div id="page-t-exams" class="page-section hidden">
-                <div id="examList" class="list-wrapper"></div>
-            </div>
             <div id="page-t-students" class="page-section hidden">
-                <input type="text" id="searchStudent" placeholder="Ara..." onkeyup="filterStudents()" class="app-input">
+                <input type="text" id="searchStudent" placeholder="Öğrenci Ara..." onkeyup="filterStudents()" class="app-input">
                 <div id="studentList" class="list-wrapper"></div>
             </div>
 
@@ -78,7 +80,7 @@
                 <div id="activeExams" class="list-wrapper"></div>
             </div>
             <div id="page-s-history" class="page-section hidden">
-                <h4 class="section-head">Sonuçlarım</h4>
+                <h4 class="section-head">Karnem</h4>
                 <div id="historyList" class="list-wrapper"></div>
             </div>
         </div>
@@ -86,24 +88,30 @@
         <div class="app-tabbar" id="tabBar"></div>
     </div>
 
-    <div id="reportModal" class="fullscreen-modal hidden">
-        <div class="modal-header">
-            <button onclick="document.getElementById('reportModal').classList.add('hidden')"><i class="fas fa-chevron-left"></i> Geri</button>
-            <span>Karne</span>
-            <div></div>
+    <div id="studentDetailModal" class="fullscreen-modal hidden">
+        <div class="modal-header"><button onclick="closeModal('studentDetailModal')">X</button><span id="stuDetailName">Öğrenci</span><div></div></div>
+        <div class="modal-body" id="stuDetailBody"></div>
+    </div>
+
+    <div id="passModal" class="fullscreen-modal hidden" style="z-index:4000; height:auto; top:30%; bottom:auto; border-radius:15px; margin:20px;">
+        <div class="modal-body" style="text-align:center;">
+            <h3>Şifre Değiştir</h3>
+            <p id="passStuName"></p>
+            <input type="text" id="newPassInput" class="app-input" placeholder="Yeni Şifre">
+            <button onclick="saveNewPass()" class="btn-main">KAYDET</button>
+            <button onclick="closeModal('passModal')" class="btn-text" style="margin-top:10px;">İptal</button>
         </div>
+    </div>
+
+    <div id="reportModal" class="fullscreen-modal hidden">
+        <div class="modal-header"><button onclick="closeModal('reportModal')"><i class="fas fa-chevron-left"></i></button><span>Karne</span><div></div></div>
         <div class="modal-body" id="reportBody" style="background:#f4f6f9;"></div>
     </div>
 
     <div id="examOverlay" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeExamOverlay()">Çık</button><span>Sınav</span><div></div></div>
+        <div class="modal-header"><button onclick="closeModal('examOverlay')">Çık</button><span>Sınav</span><div></div></div>
         <div class="modal-body" id="opticalArea"></div>
         <div class="modal-footer"><button onclick="submitExamNow()" class="btn-main">BİTİR</button></div>
-    </div>
-
-    <div id="editorModal" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeEditor()">X</button><span>Düzenle</span><button onclick="saveEditor()">KAYDET</button></div>
-        <div class="modal-body" id="editorBody"></div>
     </div>
 
     <script src="script.js"></script>
