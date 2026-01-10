@@ -1,7 +1,17 @@
 // *** SİZİN VERDİĞİNİZ YENİ LİNK ***
-const API_URL = "https://script.google.com/macros/s/AKfycbxmv_yHwiPgIyUZcWRxRmDJ0TSYN-qX4yaqKUjK6q58171Lf6sSTz9E4g1Cwjtk0S5a/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxk6jOrEHrVXscEc--059_sz7I8uoXpeET1W-Z_r-poe6MWtcKrtYZlNdjO4JznH6AM/exec"; 
 
 let currentUser={}, teacherData={}, studentData={}, builderData=[], activeExamData=[], studentAnswers={}, editKeyData=[], editingId=null, editMode=null;
+
+// --- TOAST ---
+function showToast(msg, type='info') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
 
 // --- API ---
 function setLoading(s) { document.getElementById("loader").classList.toggle("hidden", !s); }
@@ -12,25 +22,40 @@ async function api(act, data={}) {
         let res = await fetch(API_URL, {method:'POST', body:JSON.stringify(data)});
         let json = await res.json();
         setLoading(false);
-        if(json.status=="fail" || json.status=="error") { alert(json.msg); return null; }
+        if(json.status=="fail" || json.status=="error") { showToast(json.msg, "error"); return null; }
         return json;
-    } catch(e) { setLoading(false); alert("Bağlantı Hatası"); return null; }
+    } catch(e) { setLoading(false); showToast("Bağlantı Hatası", "error"); return null; }
 }
 
-// --- GİRİŞ ---
+// --- GİRİŞ & OTURUM ---
+window.addEventListener('load', () => {
+    const saved = localStorage.getItem('educationUser');
+    if(saved) {
+        initializeUser(JSON.parse(saved));
+    } else {
+        document.getElementById("loginScreen").classList.remove("hidden"); // Ensure login screen shows if no session
+    }
+});
+
+function initializeUser(res) {
+    currentUser = res;
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("mainApp").classList.remove("hidden");
+    document.getElementById("userName").innerText = res.name;
+    document.getElementById("userRole").innerText = res.role;
+    
+    if(res.role == "Ogretmen") { setupNav("teacher"); loadTeacher(); } 
+    else { setupNav("student"); loadStudent(); }
+}
+
 async function login() {
     const code = document.getElementById("loginCode").value.trim();
-    if(!code) return alert("Kod girin");
+    if(!code) return showToast("Kod girin", "error");
     let res = await api("login", {password:code});
     if(res) {
-        currentUser = res;
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("mainApp").classList.remove("hidden");
-        document.getElementById("userName").innerText = res.name;
-        document.getElementById("userRole").innerText = res.role;
-        
-        if(res.role == "Ogretmen") { setupNav("teacher"); loadTeacher(); } 
-        else { setupNav("student"); loadStudent(); }
+        localStorage.setItem('educationUser', JSON.stringify(res));
+        initializeUser(res);
+        showToast("Giriş Başarılı", "success");
     }
 }
 
@@ -53,7 +78,10 @@ function setupNav(role) {
         navTo('page-s-home');
     }
 }
-function logout() { location.reload(); }
+function logout() { 
+    localStorage.removeItem('educationUser'); 
+    location.reload(); 
+}
 
 // --- ÖĞRETMEN ---
 async function loadTeacher() {
@@ -156,11 +184,22 @@ function loadAnalysis() {
     });
 }
 
+// --- UTILS ---
+function showConfirm(msg, cb) {
+    document.getElementById("confirmMsg").innerText = msg;
+    document.getElementById("confirmModal").classList.remove("hidden");
+    document.getElementById("confirmYes").onclick = () => {
+        cb();
+        closeModal('confirmModal');
+    };
+}
+
 // TELEGRAM MANUEL
 async function sendTelegramReport(name, id) {
-    if(!confirm(name + " için rapor Telegram'a gönderilsin mi?")) return;
-    await api("sendManualReport", {studentName:name, examId:id});
-    alert("Gönderildi!");
+    showConfirm(name + " için rapor Telegram'a gönderilsin mi?", async () => {
+        await api("sendManualReport", {studentName:name, examId:id});
+        showToast("Gönderildi!", "success");
+    });
 }
 
 // ŞİFRE & DETAY
@@ -172,9 +211,9 @@ function openPassEdit(name) {
 }
 async function saveNewPass() {
     let p = document.getElementById("newPassInput").value;
-    if(!p) return alert("Şifre yazın");
+    if(!p) return showToast("Şifre yazın", "error");
     await api("updateStudentPass", {studentName:passEditName, newPass:p});
-    alert("Güncellendi"); closeModal('passModal'); loadTeacher();
+    showToast("Güncellendi", "success"); closeModal('passModal'); loadTeacher();
 }
 function openStudentHistory(name) {
     let list = teacherData.results.filter(r => r.student === name);
@@ -210,7 +249,7 @@ async function loadStudent() {
 
 function openReport(idx) {
     let h = studentData.history[idx];
-    if(!h.details) return alert("Detaylar kapalı.");
+    if(!h.details) return showToast("Detaylar kapalı.", "error");
     
     let html = `<div class="card" style="text-align:center">
         <h1 style="color:#4f46e5">${h.net}</h1><p>TOPLAM NET</p>
@@ -262,11 +301,12 @@ function stuSel(e,l,i,o) {
     e.classList.add('selected'); studentAnswers[l][i]=o;
 }
 async function submitExamNow() {
-    if(!confirm("Bitirmek istiyor musunuz?")) return;
-    let a={}; for(let l in studentAnswers) a[l]=studentAnswers[l].join("");
-    await api("submitExam", {studentName:currentUser.name, examId:currentExamId, answers:a});
-    alert("Kaydedildi ve Telegram'a gönderildi!"); 
-    closeModal('examOverlay'); loadStudent();
+    showConfirm("Bitirmek istiyor musunuz?", async () => {
+        let a={}; for(let l in studentAnswers) a[l]=studentAnswers[l].join("");
+        await api("submitExam", {studentName:currentUser.name, examId:currentExamId, answers:a});
+        showToast("Kaydedildi ve Telegram'a gönderildi!", "success"); 
+        closeModal('examOverlay'); loadStudent();
+    });
 }
 
 // --- BUILDER & EDITOR ---
@@ -283,7 +323,7 @@ window.keySel=function(cid,i,j,o) {
     renderBuilder(cid, cid=="builderContainer"?builderData:editKeyData, cid=="editorBody");
 }
 async function saveNewExam() {
-    if(builderData.length==0) return alert("Ders ekle");
+    if(builderData.length==0) return showToast("Ders ekle", "error");
     let k=builderData.map(l=>`${l.name}:${l.key.join("")}`).join("|");
     await api("addExam", {
         id:document.getElementById("newId").value, name:document.getElementById("newName").value, keysFormat:k,
@@ -291,7 +331,7 @@ async function saveNewExam() {
         showRank:document.getElementById("chkRank").checked?"Evet":"Hayir",
         allowRetake:document.getElementById("chkRetake").checked?"Evet":"Hayir"
     });
-    alert("Eklendi"); builderData=[]; closeModal('examCreateModal'); loadTeacher();
+    showToast("Eklendi", "success"); builderData=[]; closeModal('examCreateModal'); loadTeacher();
 }
 function openEditor(m, id) {
     editMode=m; editingId=id; document.getElementById("editorModal").classList.remove("hidden");
@@ -306,7 +346,7 @@ async function saveEditor() {
     if(editMode=='examKey') {
         let k = editKeyData.map(l=>`${l.name}:${l.key.join("")}`).join("|");
         await api("updateExamKey", {examId:editingId, newKey:k});
-        alert("Güncellendi"); closeModal('editorModal'); loadTeacher();
+        showToast("Güncellendi", "success"); closeModal('editorModal'); loadTeacher();
     }
 }
 function filterStudents() {
