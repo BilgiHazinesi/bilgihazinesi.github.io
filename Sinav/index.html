@@ -2,140 +2,132 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eğitim Asistanı V17</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Eğitim Asistanı V19</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <div id="loader" class="loader"><div class="spin"></div></div>
 
-    <div id="globalLoader" class="loader hidden"><div class="spin"></div></div>
-
-    <div id="loginScreen" class="app-screen active">
-        <div class="login-card">
-            <div class="logo-circle"><i class="fas fa-rocket"></i></div>
-            <h2>Sınıf Asistanı</h2>
-            <p>Öğrenci & Öğretmen Girişi</p>
-            <input type="password" id="userPassInput" placeholder="Giriş Kodunuz" inputmode="numeric" class="app-input" style="text-align:center; font-size:18px;">
-            <button onclick="attemptLogin()" class="btn-main">GİRİŞ YAP</button>
+    <div id="loginScreen" class="screen active">
+        <div class="card login-card">
+            <div class="logo"><i class="fab fa-telegram-plane"></i></div>
+            <h2>Öğrenci & Öğretmen</h2>
+            <input type="password" id="passIn" placeholder="Giriş Kodu" class="inp" inputmode="numeric">
+            <button onclick="login()" class="btn-main">GİRİŞ</button>
         </div>
     </div>
 
-    <div id="mainApp" class="hidden">
-        
-        <div class="app-header">
-            <div class="user-info">
-                <span id="headerName">Kullanıcı</span>
-                <small id="headerRole">Yetki</small>
+    <div id="appScreen" class="screen hidden">
+        <header>
+            <div><b id="uName">...</b><br><small id="uRole">...</small></div>
+            <button onclick="location.reload()"><i class="fas fa-power-off"></i></button>
+        </header>
+
+        <main id="main">
+            <div id="tab-home" class="tab hidden">
+                <div class="stats-row">
+                    <div class="stat-card"><h3>Öğrenci</h3><span id="cStu">0</span></div>
+                    <div class="stat-card"><h3>Sınav</h3><span id="cExam">0</span></div>
+                </div>
+                <h4 class="head">Yönetim Paneli</h4>
+                <div id="examList" class="list"></div>
+                <button onclick="showModal('modalCreate')" class="fab"><i class="fas fa-plus"></i></button>
             </div>
-            <button onclick="appLogout()" class="btn-icon"><i class="fas fa-power-off"></i></button>
+
+            <div id="tab-analysis" class="tab hidden">
+                <select id="anSelect" class="inp" onchange="runAnalysis()"><option>Sınav Seçiniz...</option></select>
+                
+                <div id="anResult" class="hidden">
+                    <div class="stats-row">
+                        <div class="stat-card"><h3>Ort. Net</h3><span id="sAvg">0</span></div>
+                        <div class="stat-card"><h3>En Yüksek</h3><span id="sMax">0</span></div>
+                        <div class="stat-card" style="border-color:red"><h3>Girmeyen</h3><span id="sAbsence" style="color:red">0</span></div>
+                    </div>
+
+                    <div class="card warning-card"><h4>⚠️ Zor Sorular</h4><div id="hardestQuestions"></div></div>
+                    <div id="absentListContainer" class="hidden card error-card"><h4>🚫 Girmeyenler</h4><div id="absentList" style="display:flex; flex-wrap:wrap; gap:5px;"></div></div>
+
+                    <h4 class="head">KUŞ BAKIŞI ANALİZ</h4>
+                    <div class="matrix-wrapper">
+                        <table id="matrixTable"></table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-students" class="tab hidden">
+                <input type="text" id="stuSearch" placeholder="Öğrenci Ara..." onkeyup="filterStu()" class="inp">
+                <div id="studentList" class="list"></div>
+            </div>
+
+            <div id="tab-s-home" class="tab hidden">
+                <h4 class="head">Aktif Sınavlar</h4>
+                <div id="sExamList" class="grid-list"></div>
+            </div>
+            <div id="tab-s-hist" class="tab hidden">
+                <h4 class="head">Gelişimim</h4>
+                <div class="card"><canvas id="sChart"></canvas></div>
+                <div id="sHistList" class="list"></div>
+            </div>
+        </main>
+
+        <nav>
+            <div id="navTeacher" class="hidden">
+                <button onclick="go('tab-home')" class="act"><i class="fas fa-home"></i>Özet</button>
+                <button onclick="go('tab-analysis')"><i class="fas fa-th"></i>Analiz</button>
+                <button onclick="go('tab-students')"><i class="fas fa-users"></i>Öğrenci</button>
+            </div>
+            <div id="navStudent" class="hidden">
+                <button onclick="go('tab-s-home')" class="act"><i class="fas fa-pen"></i>Sınavlar</button>
+                <button onclick="go('tab-s-hist')"><i class="fas fa-history"></i>Karnem</button>
+            </div>
+        </nav>
+    </div>
+
+    <div id="modalCreate" class="modal hidden">
+        <div class="box">
+            <h3>Sınav Ekle</h3>
+            <input type="text" id="nId" placeholder="Kod" class="inp">
+            <input type="text" id="nName" placeholder="Ad" class="inp">
+            <div class="row">
+                <input type="text" id="bName" placeholder="Ders" style="flex:2" class="inp">
+                <input type="number" id="bCount" placeholder="Soru" style="flex:1" class="inp">
+                <button onclick="addPart()" class="btn-icon">+</button>
+            </div>
+            <div id="bCont"></div>
+            <div class="checks">
+                <label><input type="checkbox" id="chkScore" checked> Sonuç</label>
+                <label><input type="checkbox" id="chkRank"> Sıra</label>
+                <label><input type="checkbox" id="chkRetake"> Tekrar</label>
+            </div>
+            <div class="row">
+                <button onclick="saveExam()" class="btn-main">KAYDET</button>
+                <button onclick="closeModal('modalCreate')" class="btn-sec">İPTAL</button>
+            </div>
         </div>
+    </div>
 
-        <div class="app-content">
-            
-            <div id="page-t-home" class="page-section hidden">
-                <div class="dashboard-cards">
-                    <div class="d-card"><h3>Öğrenci</h3><span id="countStu">0</span></div>
-                    <div class="d-card"><h3>Sınav</h3><span id="countExam">0</span></div>
-                </div>
-                <h4 class="section-head">Panel</h4>
-                <div class="quick-grid">
-                    <button onclick="navTo('page-t-create')"><i class="fas fa-plus-circle"></i> Ekle</button>
-                    <button onclick="navTo('page-t-exams')"><i class="fas fa-cog"></i> Yönet</button>
-                    <button onclick="navTo('page-t-students')"><i class="fas fa-user-graduate"></i> Liste</button>
-                </div>
-            </div>
+    <div id="modalReport" class="modal full hidden">
+        <div class="head-bar"><button onclick="closeModal('modalReport')"><i class="fas fa-arrow-left"></i></button><span>Karne</span><div></div></div>
+        <div id="repBody" class="body-scroll"></div>
+    </div>
 
-            <div id="page-t-analysis" class="page-section hidden">
-                <h4 class="section-head">Sınav Analizleri</h4>
-                <select id="analysisSelect" class="app-input" onchange="loadAnalysisData()"><option>Sınav Seçiniz...</option></select>
-                <div id="analysisArea" class="hidden">
-                    <div class="card chart-box"><canvas id="examChart"></canvas></div>
-                    <div class="stats-grid">
-                        <div class="d-card"><h3>Ortalama</h3><span id="statAvg">0</span></div>
-                        <div class="d-card"><h3>En Yüksek</h3><span id="statMax">0</span></div>
-                    </div>
-                    <h4 class="section-head">Sıralama & Rapor</h4>
-                    <div id="rankList" class="list-wrapper"></div>
-                </div>
-            </div>
-
-            <div id="page-t-create" class="page-section hidden">
-                <div class="card">
-                    <h3>Sınav Oluştur</h3>
-                    <input type="text" id="newId" placeholder="Kod (Örn: DENEME-1)" class="app-input">
-                    <input type="text" id="newName" placeholder="Başlık" class="app-input">
-                    <div class="adder-row">
-                        <input type="text" id="lName" placeholder="Ders" style="flex:2" class="app-input">
-                        <input type="number" id="lCount" placeholder="Soru" style="flex:1" class="app-input">
-                        <button onclick="addLessonToBuilder()" class="btn-icon-bg">+</button>
-                    </div>
-                    <div id="builderArea"></div>
-                    <div class="settings-box">
-                        <label><input type="checkbox" id="setScore" checked> Sonuçlar Açık</label>
-                        <label><input type="checkbox" id="setRank"> Sıralama Açık</label>
-                        <label><input type="checkbox" id="setRetake"> Tekrar İzni</label>
-                    </div>
-                    <button onclick="sendNewExam()" class="btn-main" style="margin-top:15px;">KAYDET</button>
-                </div>
-            </div>
-
-            <div id="page-t-exams" class="page-section hidden">
-                <div id="manageExamList" class="list-wrapper"></div>
-            </div>
-
-            <div id="page-t-students" class="page-section hidden">
-                <input type="text" id="filterInput" placeholder="Öğrenci Ara..." onkeyup="filterStudentList()" class="app-input">
-                <div id="manageStudentList" class="list-wrapper"></div>
-            </div>
-
-            <div id="page-s-home" class="page-section hidden">
-                <h4 class="section-head">Sınavlarım</h4>
-                <div id="studentActiveExams" class="list-wrapper"></div>
-            </div>
-
-            <div id="page-s-history" class="page-section hidden">
-                <h4 class="section-head">Gelişim Grafiğim</h4>
-                <div class="card chart-box"><canvas id="studentTrendChart"></canvas></div>
-                <h4 class="section-head">Geçmiş Sonuçlar</h4>
-                <div id="studentHistoryList" class="list-wrapper"></div>
-            </div>
-
-        </div>
-
-        <div class="app-tabbar" id="mainTabBar"></div>
+    <div id="modalExam" class="modal full hidden">
+        <div class="head-bar"><button onclick="closeModal('modalExam')">Çık</button><span id="runTitle">Sınav</span><div></div></div>
+        <div id="runBody" class="body-scroll"></div>
+        <div class="foot-bar"><button onclick="finishExam()" class="btn-main">BİTİR VE GÖNDER</button></div>
     </div>
 
     <div id="modalPass" class="modal hidden">
-        <div class="modal-content">
-            <h3>Şifre Değiştir</h3>
-            <p id="passTargetName"></p>
-            <input type="text" id="newPassVal" class="app-input" placeholder="Yeni Şifre">
-            <button onclick="doChangePass()" class="btn-main">KAYDET</button>
-            <button onclick="closeAllModals()" class="btn-text" style="width:100%; margin-top:10px;">İptal</button>
+        <div class="box">
+            <h3>Şifre</h3>
+            <p id="passName"></p>
+            <input type="text" id="newPass" class="inp">
+            <button onclick="doPass()" class="btn-main">DEĞİŞTİR</button>
+            <button onclick="closeModal('modalPass')" class="btn-sec">İPTAL</button>
         </div>
-    </div>
-
-    <div id="modalStuDetail" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeAllModals()">X</button><span id="detailTitle"></span><div></div></div>
-        <div class="modal-body" id="detailBody"></div>
-    </div>
-
-    <div id="modalReport" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeAllModals()"><i class="fas fa-arrow-left"></i></button><span>Karne</span><div></div></div>
-        <div class="modal-body" id="reportBody" style="background:#f8f9fa;"></div>
-    </div>
-
-    <div id="modalExamRun" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeAllModals()">Çık</button><span id="runTitle">Sınav</span><div></div></div>
-        <div class="modal-body" id="runBody"></div>
-        <div class="modal-footer"><button onclick="finishExam()" class="btn-main">SINAVI BİTİR</button></div>
-    </div>
-
-    <div id="modalEditor" class="fullscreen-modal hidden">
-        <div class="modal-header"><button onclick="closeAllModals()">X</button><span>Düzenle</span><button onclick="doSaveKey()" style="color:blue">Kaydet</button></div>
-        <div class="modal-body" id="editorBody"></div>
     </div>
 
     <script src="script.js"></script>
