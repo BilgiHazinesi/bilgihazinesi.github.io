@@ -1,5 +1,5 @@
 // *** SİZİN VERDİĞİNİZ YENİ LİNK ***
-const API_URL = "https://script.google.com/macros/s/AKfycbxk6jOrEHrVXscEc--059_sz7I8uoXpeET1W-Z_r-poe6MWtcKrtYZlNdjO4JznH6AM/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbziCaCwtjZX_KiCllB3jQoPzS7wX2Mpi2xUBLoxhwwMTTWYqswUFZz1iYyANaCb8YqR/exec"; 
 
 let currentUser={}, teacherData={}, studentData={}, builderData=[], activeExamData=[], studentAnswers={}, editKeyData=[], editingId=null, editMode=null;
 
