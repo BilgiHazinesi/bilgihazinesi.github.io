@@ -29,11 +29,18 @@ async function api(act, data={}) {
 
 // --- GİRİŞ & OTURUM ---
 window.addEventListener('load', () => {
-    const saved = localStorage.getItem('educationUser');
-    if(saved) {
-        initializeUser(JSON.parse(saved));
-    } else {
-        document.getElementById("loginScreen").classList.remove("hidden"); // Ensure login screen shows if no session
+    setLoading(false); // Başlangıçta loader'ı gizle
+    try {
+        const saved = localStorage.getItem('educationUser');
+        if(saved) {
+            initializeUser(JSON.parse(saved));
+        } else {
+            document.getElementById("loginScreen").classList.remove("hidden");
+        }
+    } catch(e) {
+        console.error("Oturum hatası:", e);
+        localStorage.removeItem('educationUser'); // Bozuk datayı temizle
+        document.getElementById("loginScreen").classList.remove("hidden");
     }
 });
 
