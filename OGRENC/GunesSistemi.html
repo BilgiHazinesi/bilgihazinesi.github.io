@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gelişmiş Güneş Sistemi - Zeynal Hoca</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;600&display=swap');
+
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Exo 2', sans-serif; }
+        
+        /* Başlangıç Ekranı - Işıltı Efekti için güncellendi */
+        #startScreen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            /* Varsayılan karanlık arka plan */
+            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10; transition: opacity 1s;
+        }
+        h1 { color: #fff; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px #4facfe; font-size: 3rem; text-align: center; pointer-events: none;}
+        p { pointer-events: none; }
+        
+        button {
+            padding: 15px 40px; font-size: 1.2rem; cursor: pointer;
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            border: none; border-radius: 50px; color: #333; font-weight: bold;
+            box-shadow: 0 0 20px rgba(255, 154, 158, 0.5); transition: transform 0.2s; z-index: 12;
+        }
+        button:hover { transform: scale(1.1); }
+
+        /* UI Kontrolleri */
+        #uiControls {
+            position: absolute; top: 20px; right: 20px; z-index: 5; display: none;
+        }
+        .hud-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white; padding: 10px 20px; margin-left: 10px; backdrop-filter: blur(5px); cursor: pointer;
+        }
+
+        /* Soru Paneli */
+        #quizPanel {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 70%; max-height: 80%; overflow-y: auto;
+            background: rgba(0, 0, 0, 0.9); border: 2px solid #4facfe;
+            color: white; padding: 30px; border-radius: 15px; display: none; z-index: 20;
+            box-shadow: 0 0 50px rgba(79, 172, 254, 0.5);
+        }
+        .question-item { border-bottom: 1px solid #333; padding: 15px 0; }
+        .question-title { color: #ffeb3b; font-weight: bold; font-size: 1.1rem; }
+        .options label { display: block; margin: 5px 0; cursor: pointer; }
+        .close-btn { float: right; background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+
+        /* Bilgi Etiketi */
+        #infoLabel {
+            position: absolute; color: #fff; background: rgba(0,0,0,0.7); padding: 10px;
+            border-radius: 8px; border: 1px solid #4facfe; pointer-events: none; display: none; z-index: 6;
+            box-shadow: 0 0 10px #4facfe;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <div id="startScreen">
+        <h1>Güneş Sistemi Yolculuğu</h1>
+        <p style="color: #aaa; margin-bottom: 30px;">Zeynal Hoca ve 4. Sınıf Öğrencileri İçin Hazırlanmıştır</p>
+        <button onclick="startApp()">YOLCULUĞA BAŞLA</button>
+    </div>
+
+    <div id="uiControls">
+        <button class="hud-btn" onclick="toggleQuiz()">Soruları Çöz (20 Soru)</button>
+        <button class="hud-btn" onclick="resetView()">Görünümü Sıfırla / Devam Et</button>
+    </div>
+
+    <div id="quizPanel">
+        <button class="close-btn" onclick="toggleQuiz()">Kapat</button>
+        <h2 style="text-align: center;">Güneş Sistemi Bilgi Yarışması</h2>
+        <div id="questionsContainer"></div>
+    </div>
+
+    <div id="infoLabel"></div>
+
+    <script>
+        // --- 1. SİMÜLASYON DEĞİŞKENLERİ ---
+        let scene, camera, renderer, controls;
+        let planets = [];
+        let asteroids = []; // Asteroitler için dizi
+        let sunMesh;
+        let isPaused = false;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // Gezegen Verileri
+        const planetData = [
+            { name: "Merkür", color: 0xA9A9A9, size: 0.8, distance: 20, speed: 0.04 },
+            { name: "Venüs", color: 0xE6C229, size: 1.5, distance: 30, speed: 0.015 },
+            { name: "Dünya", color: 0x2E86C1, size: 1.6, distance: 45, speed: 0.01, isEarth: true },
+            { name: "Mars", color: 0xC0392B, size: 1.2, distance: 60, speed: 0.008 },
+            // Asteroit Kuşağı Buraya Gelecek
+            { name: "Jüpiter", color: 0xD4AC0D, size: 4.5, distance: 100, speed: 0.002 },
+            { name: "Satürn", color: 0xF4D03F, size: 3.8, distance: 130, speed: 0.0018, ring: true },
+            { name: "Uranüs", color: 0x5DADE2, size: 2.5, distance: 160, speed: 0.001 },
+            { name: "Neptün", color: 0x2874A6, size: 2.4, distance: 185, speed: 0.0009 }
+        ];
+
+        // --- BAŞLANGIÇ EKRANI IŞILTI EFEKTİ ---
+        const startScreen = document.getElementById('startScreen');
+        startScreen.addEventListener('mousemove', (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+            startScreen.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(79, 172, 254, 0.4) 0%, rgba(0,0,0,0.95) 40%)`;
+        });
+
+        // --- 2. BAŞLATMA FONKSİYONLARI ---
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 120, 250); // Biraz daha uzaktan başlat
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.maxDistance = 500; // Çok uzaklaşmayı engelle
+
+            createStars();
+            createSun();
+            createPlanets();
+            createAsteroids(); // Asteroitleri ekle
+
+            window.addEventListener('resize', onWindowResize, false);
+            window.addEventListener('click', onMouseClick, false);
+
+            animate();
+        }
+
+        function createSun() {
+            const sunGeometry = new THREE.SphereGeometry(10, 32, 32);
+            const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
+            sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+            const sunLight = new THREE.PointLight(0xFFFFFF, 2.5, 400);
+            scene.add(sunMesh);
+            scene.add(sunLight);
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+        }
+
+        function createStars() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starMaterial = new THREE.PointsMaterial({color: 0xFFFFFF, size: 0.5});
+            const starVertices = [];
+            for(let i=0; i<8000; i++) {
+                const x = (Math.random() - 0.5) * 2000;
+                const y = (Math.random() - 0.5) * 2000;
+                const z = (Math.random() - 0.5) * 2000;
+                starVertices.push(x,y,z);
+            }
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        // YENİ: Asteroit Kuşağı Oluşturma
+        function createAsteroids() {
+            const asteroidGeo = new THREE.DodecahedronGeometry(0.5, 0); // Düşük poligonlu kaya şekli
+            const asteroidMat = new THREE.MeshPhongMaterial({ color: 0x888888, shininess: 0 });
+            
+            // Mars (60) ile Jüpiter (100) arası
+            for(let i = 0; i < 400; i++) {
+                const asteroid = new THREE.Mesh(asteroidGeo, asteroidMat);
+                
+                const dist = 70 + Math.random() * 20; // 70 ile 90 birim arası mesafe
+                const angle = Math.random() * Math.PI * 2;
+                
+                asteroid.position.x = Math.cos(angle) * dist;
+                asteroid.position.y = (Math.random() - 0.5) * 5; // Hafif yukarı aşağı sapma
+                asteroid.position.z = Math.sin(angle) * dist;
+                
+                // Rastgele boyut ve dönüş hızı
+                const scale = 0.5 + Math.random();
+                asteroid.scale.set(scale, scale, scale);
+                asteroid.rotation.set(Math.random(), Math.random(), Math.random());
+                
+                asteroid.userData = {
+                    distance: dist,
+                    angle: angle,
+                    speed: 0.002 + Math.random() * 0.004, // Rastgele hız
+                    rotSpeed: vec3Noisy(0.02)
+                };
+
+                scene.add(asteroid);
+                asteroids.push(asteroid);
+            }
+        }
+        // Asteroit rastgele dönüşü için yardımcı
+        function vec3Noisy(scale) {
+             return new THREE.Vector3(
+                 (Math.random()-0.5)*scale, (Math.random()-0.5)*scale, (Math.random()-0.5)*scale
+             );
+        }
+
+        function createPlanets() {
+            planetData.forEach(data => {
+                const orbitGeometry = new THREE.RingGeometry(data.distance - 0.1, data.distance + 0.1, 128);
+                const orbitMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, opacity: 0.08, transparent: true });
+                const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+                orbit.rotation.x = Math.PI / 2;
+                scene.add(orbit);
+
+                const geometry = new THREE.SphereGeometry(data.size, 32, 32);
+                const material = new THREE.MeshPhongMaterial({ color: data.color, shininess: 20 });
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                const angle = Math.random() * Math.PI * 2;
+                mesh.position.x = Math.cos(angle) * data.distance;
+                mesh.position.z = Math.sin(angle) * data.distance;
+
+                if(data.ring) {
+                    const ringGeo = new THREE.RingGeometry(data.size + 1.5, data.size + 4, 64);
+                    const ringMat = new THREE.MeshBasicMaterial({ color: 0xCBAA77, side: THREE.DoubleSide, opacity: 0.7, transparent: true });
+                    const ring = new THREE.Mesh(ringGeo, ringMat);
+                    ring.rotation.x = Math.PI / 2.2; 
+                    mesh.add(ring);
+                }
+
+                mesh.userData = { ...data, angle: angle, radius: data.size };
+                scene.add(mesh);
+                planets.push(mesh);
+            });
+        }
+
+        // --- 3. ANİMASYON VE ETKİLEŞİM ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!isPaused) {
+                // Gezegenleri döndür
+                planets.forEach(planet => {
+                    planet.userData.angle += planet.userData.speed;
+                    planet.position.x = Math.cos(planet.userData.angle) * planet.userData.distance;
+                    planet.position.z = Math.sin(planet.userData.angle) * planet.userData.distance;
+                    planet.rotation.y += 0.015;
+                });
+            }
+
+            // Asteroitleri her zaman döndür (arka plan hareketi)
+            asteroids.forEach(ast => {
+                if(!isPaused) {
+                     ast.userData.angle += ast.userData.speed;
+                     ast.position.x = Math.cos(ast.userData.angle) * ast.userData.distance;
+                     ast.position.z = Math.sin(ast.userData.angle) * ast.userData.distance;
+                }
+                ast.rotation.x += ast.userData.rotSpeed.x;
+                ast.rotation.y += ast.userData.rotSpeed.y;
+                ast.rotation.z += ast.userData.rotSpeed.z;
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onMouseClick(event) {
+            if(event.target.closest('#uiControls') || event.target.closest('#quizPanel') || event.target.closest('#startScreen') || event.target.tagName === 'BUTTON') return;
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(planets);
+            const label = document.getElementById('infoLabel');
+
+            if (intersects.length > 0) {
+                // BİR GEZEGENE TIKLANDI
+                const object = intersects[0].object;
+                isPaused = true; // Hareketi durdur
+
+                // Kamerayı gezegene yaklaştır
+                const targetPos = object.position.clone();
+                // Gezegenin boyutuna göre bir ofset (mesafe) belirle
+                const offsetDistance = object.userData.radius * 4 + 5; 
+                
+                // Kamerayı gezegenin biraz yukarısına ve yanına taşı
+                camera.position.set(targetPos.x + offsetDistance, targetPos.y + offsetDistance/2, targetPos.z + offsetDistance);
+                controls.target.copy(targetPos); // Kameranın odağını gezegen yap
+
+                // Bilgi etiketini göster
+                label.style.display = 'block';
+                label.style.left = (window.innerWidth/2 - 100) + 'px'; // Merkeze yakın göster
+                label.style.top = (window.innerHeight - 150) + 'px';
+                
+                if (object.userData.isEarth) {
+                    label.innerHTML = `<strong>DÜNYA (Yakınlaştırıldı)</strong><br>Güneşe dönük taraf Gündüz, diğer taraf Gece.<br><i>Devam etmek için "Görünümü Sıfırla"ya bas.</i>`;
+                } else {
+                    label.innerHTML = `<strong>${object.userData.name} (Yakınlaştırıldı)</strong><br>Simülasyon durduruldu.<br><i>Devam etmek için "Görünümü Sıfırla"ya bas.</i>`;
+                }
+
+            } else {
+                // Boşluğa tıklandığında etiketi gizle (isteğe bağlı olarak resetView de çağrılabilir)
+                label.style.display = 'none';
+            }
+        }
+
+        function startApp() {
+            document.getElementById('startScreen').style.opacity = 0;
+            // mousemove olayını kaldır ki performans artsın
+            startScreen.removeEventListener('mousemove', null);
+            setTimeout(() => {
+                document.getElementById('startScreen').style.display = 'none';
+                document.getElementById('uiControls').style.display = 'block';
+                init();
+                renderQuestions();
+            }, 1000);
+        }
+
+        function resetView() {
+            isPaused = false;
+            // Kamerayı varsayılan uzak pozisyona al
+            camera.position.set(0, 120, 250);
+            controls.target.set(0,0,0); // Odağı tekrar Güneş yap
+            document.getElementById('infoLabel').style.display = 'none';
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+       // --- 4. SORULAR (Aynı kaldı) ---
+       const questions = [
+            { q: "Güneş sistemimizin merkezinde ne bulunur?", options: ["Dünya", "Ay", "Güneş", "Mars"], a: 2 },
+            { q: "Dünya'nın ısı ve ışık kaynağı nedir?", options: ["Ay", "Yıldızlar", "Güneş", "Bulutlar"], a: 2 },
+            { q: "Güneş'e en yakın gezegen hangisidir?", options: ["Merkür", "Venüs", "Dünya", "Jüpiter"], a: 0 },
+            { q: "Üzerinde yaşadığımız gezegen hangisidir?", options: ["Mars", "Venüs", "Dünya", "Uranüs"], a: 2 },
+            { q: "Güneş sisteminin en büyük gezegeni hangisidir?", options: ["Dünya", "Satürn", "Jüpiter", "Neptün"], a: 2 },
+            { q: "Etrafında belirgin halkaları olan gezegen hangisidir?", options: ["Merkür", "Mars", "Satürn", "Venüs"], a: 2 },
+            { q: "Dünya'nın kendi etrafında dönmesi sonucu ne oluşur?", options: ["Mevsimler", "Gece ve Gündüz", "Yıllar", "Ay Tutulması"], a: 1 },
+            { q: "Dünya'nın Güneş etrafında dönmesi ne kadar sürer?", options: ["24 Saat", "1 Ay", "365 Gün 6 Saat", "10 Yıl"], a: 2 },
+            { q: "Kızıl Gezegen olarak bilinen gezegen hangisidir?", options: ["Venüs", "Mars", "Jüpiter", "Merkür"], a: 1 },
+            { q: "Güneş sisteminde kaç tane büyük gezegen vardır?", options: ["7", "8", "9", "10"], a: 1 },
+            { q: "Dünya'nın tek doğal uydusu nedir?", options: ["Güneş", "Kutup Yıldızı", "Ay", "Titan"], a: 2 },
+            { q: "Aşağıdakilerden hangisi bir gezegen değildir?", options: ["Dünya", "Plüton", "Mars", "Jüpiter"], a: 1 },
+            { q: "Güneş ışınlarının Dünya'ya vurduğu taraf neyi yaşar?", options: ["Geceyi", "Gündüzü", "Kışı", "Sonbaharı"], a: 1 },
+            { q: "Güneş'e en uzak gezegen hangisidir?", options: ["Uranüs", "Neptün", "Satürn", "Mars"], a: 1 },
+            { q: "Dünya'nın şekli neye benzer?", options: ["Küp", "Düz Tepsi", "Küre", "Piramit"], a: 2 },
+            { q: "Hangi gezegen yan yatmış bir varil gibi döner?", options: ["Uranüs", "Dünya", "Merkür", "Venüs"], a: 0 },
+            { q: "Sabahları Güneş hangi yönden doğar?", options: ["Batı", "Kuzey", "Güney", "Doğu"], a: 3 },
+            { q: "Dünya kendi etrafındaki dönüşünü ne kadar sürede tamamlar?", options: ["1 Yılda", "24 Saatte", "1 Haftada", "1 Ayda"], a: 1 },
+            { q: "Güneş aslında nedir?", options: ["Bir Gezegendir", "Bir Yıldızdır", "Bir Uydudur", "Bir Göktaşıdır"], a: 1 },
+            { q: "Ay'ın evrelerinin oluşma sebebi nedir?", options: ["Ay'ın Dünya etrafında dönmesi", "Dünya'nın kendi etrafında dönmesi", "Güneş'in sönmesi", "Bulutların hareketi"], a: 0 }
+        ];
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            questions.forEach((item, index) => {
+                let html = `<div class="question-item">
+                    <div class="question-title">${index + 1}. ${item.q}</div>
+                    <div class="options">`;
+                item.options.forEach((opt, optIndex) => {
+                    const isCorrect = (optIndex === item.a);
+                    html += `<label><input type="radio" name="q${index}" onclick="checkAnswer(this, ${isCorrect})"> ${opt}</label>`;
+                });
+                html += `</div></div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        function checkAnswer(radio, isCorrect) {
+            const parent = radio.parentElement;
+            if (isCorrect) {
+                parent.style.color = "#4caf50";
+                parent.style.fontWeight = "bold";
+                parent.innerHTML += " ✅ Doğru!";
+            } else {
+                parent.style.color = "#f44336";
+                parent.innerHTML += " ❌ Yanlış";
+            }
+        }
+
+        function toggleQuiz() {
+            const panel = document.getElementById('quizPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+    </script>
+</body>
+</html>
