@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sınıf İçi Kesir Atölyesi - Zoom & Gelişmiş Manuel</title>
+    <style>
+        :root {
+            --primary: #F4A261;
+            --secondary: #2A9D8F;
+            --accent: #E76F51;
+            --dark: #264653;
+            --bg: #F1FAEE;
+            --paper: #ffffff;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Segoe UI', cursive, sans-serif;
+            background-color: var(--bg);
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { margin: 10px 0; color: var(--dark); text-align: center; }
+
+        .main-card {
+            background: var(--paper);
+            width: 100%;
+            max-width: 1100px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+            border: 4px solid var(--dark);
+        }
+
+        .tabs {
+            display: flex;
+            background: #e9ecef;
+            border-bottom: 3px solid var(--dark);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab-btn:hover { background: rgba(0,0,0,0.05); }
+        .tab-btn.active {
+            background: var(--paper);
+            color: var(--secondary);
+            border-top: 5px solid var(--secondary);
+        }
+
+        .tab-content { display: none; padding: 30px; }
+        .tab-content.active { display: block; animation: fadeEffect 0.5s; }
+        @keyframes fadeEffect { from {opacity: 0;} to {opacity: 1;} }
+
+        /* --- INPUTS & CONTROLS --- */
+        .control-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px dashed #ccc;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-blue { background: var(--secondary); color: white; }
+        .btn-red { background: var(--accent); color: white; }
+        .btn-dark { background: var(--dark); color: white; }
+        .btn:hover { transform: translateY(-2px); }
+
+        .fraction-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 2px solid var(--secondary);
+        }
+
+        .vertical-inputs {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
+        }
+        
+        input.num-input {
+            width: 50px;
+            height: 40px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            color: var(--dark);
+        }
+        input.num-input:focus { border-color: var(--primary); outline: none; }
+
+        .fraction-bar { width: 100%; height: 4px; background: var(--dark); margin: 4px 0; border-radius: 2px; }
+        .whole-input { width: 50px; height: 50px; text-align: center; font-size: 2rem; font-weight: bold; border: 2px solid var(--accent); border-radius: 8px; margin-right: 5px; }
+
+        /* --- OKUMA --- */
+        .reading-display { text-align: center; margin-top: 20px; }
+        .big-text { font-size: 2.5rem; font-weight: bold; color: var(--dark); }
+        .blur { color: transparent; text-shadow: 0 0 15px rgba(0,0,0,0.5); }
+
+        /* --- MODELLEME --- */
+        .model-canvas {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            min-height: 250px;
+            align-items: center;
+        }
+        .interactive-part { cursor: pointer; transition: 0.2s; }
+        .interactive-part:hover { opacity: 0.8; }
+        
+        .manual-settings-box {
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            background: #fff3e0; 
+            padding: 10px; 
+            border-radius: 10px; 
+            border: 1px solid var(--primary);
+        }
+
+        /* --- SAYI DOĞRUSU --- */
+        .number-line-wrapper {
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            min-height: 240px; /* Zoom için biraz yer */
+            text-align: center; /* Ortala */
+        }
+        
+        /* Zoom Slider */
+        .zoom-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            background: #e9ecef;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        input[type=range] { accent-color: var(--dark); cursor: pointer; }
+
+    </style>
+</head>
+<body>
+
+    <h1>🎈 4. Sınıf Kesir Atölyesi</h1>
+
+    <div class="main-card">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('tab1')">📖 Okuma & Yazma</button>
+            <button class="tab-btn" onclick="openTab('tab2')">🎨 Modelleme</button>
+            <button class="tab-btn" onclick="openTab('tab3')">🥨 Sayı Doğrusu</button>
+        </div>
+
+        <div id="tab1" class="tab-content active">
+            <div class="control-row">
+                <label><input type="checkbox" id="chk-read-mixed" onchange="updateRead()"> Tam Sayılı Mod</label>
+                
+                <div class="fraction-input-group">
+                    <div id="read-whole-wrapper" style="display:none;">
+                        <input type="number" id="read-whole" class="whole-input" value="1" min="0" oninput="updateRead()">
+                        <span style="font-size:1.5rem; font-weight:bold;">Tam</span>
+                    </div>
+                    
+                    <div class="vertical-inputs">
+                        <input type="number" id="read-num" class="num-input" value="3" min="0" oninput="updateRead()">
+                        <div class="fraction-bar"></div>
+                        <input type="number" id="read-den" class="num-input" value="4" min="1" oninput="updateRead()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="reading-display">
+                <button class="btn btn-dark" style="margin: 0 auto 20px auto;" onclick="toggleText()">👁️ Yazıyı Gizle/Göster</button>
+                <div id="read-text" class="big-text">Bir Tam Dörtte Üç</div>
+            </div>
+        </div>
+
+        <div id="tab2" class="tab-content">
+            <div class="control-row">
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <div style="font-weight:bold;">Mod:</div>
+                    <label><input type="radio" name="modelMode" value="auto" checked onchange="updateModelUI()"> Otomatik</label>
+                    <label><input type="radio" name="modelMode" value="manual" onchange="updateModelUI()"> Manuel (Boya)</label>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-blue" onclick="setModelShape('circle')">Daire</button>
+                    <button class="btn btn-blue" onclick="setModelShape('rect')">Dikdörtgen</button>
+                </div>
+
+                <div class="fraction-input-group" id="model-inputs">
+                    <div class="vertical-inputs">
+                        <input type="number" id="model-num" class="num-input" value="2" min="0" oninput="drawModel()">
+                        <div class="fraction-bar"></div>
+                        <input type="number" id="model-den" class="num-input" value="4" min="1" oninput="drawModel()">
+                    </div>
+                </div>
+                
+                <div id="manual-model-settings" class="manual-settings-box" style="display:none;">
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <small>Kaç Bütün?</small>
+                        <input type="number" id="manual-whole-count" class="num-input" value="1" min="1" max="5" style="width:40px; height:30px;" onchange="resetManualModel()">
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <small>Kaça Böl?</small>
+                        <input type="number" id="manual-parts-per-whole" class="num-input" value="4" min="1" max="12" style="width:40px; height:30px;" onchange="resetManualModel()">
+                    </div>
+                    <button class="btn btn-red" onclick="resetManualModel()">🧹 Temizle</button>
+                </div>
+            </div>
+
+            <div id="model-canvas" class="model-canvas"></div>
+            <div id="model-result" style="text-align:center; font-size:2rem; font-weight:bold; color:var(--secondary); margin-top:10px;"></div>
+        </div>
+
+        <div id="tab3" class="tab-content">
+            <div class="control-row" style="justify-content: space-between;">
+                
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <div class="mode-toggle-group">
+                        <label><input type="radio" name="lineMode" value="auto" checked onchange="toggleLineMode()"> Otomatik</label>
+                        <label><input type="radio" name="lineMode" value="manual" onchange="toggleLineMode()"> Manuel</label>
+                    </div>
+                    <div class="mode-toggle-group">
+                        <label><input type="radio" name="lineStyle" value="pretzel" checked onchange="drawNumberLine()"> 🥨 Kraker</label>
+                        <label><input type="radio" name="lineStyle" value="line" onchange="drawNumberLine()"> ➖ Çizgi</label>
+                    </div>
+                </div>
+
+                <div class="fraction-input-group" id="line-auto-inputs">
+                    <div style="margin-right:10px;">
+                        <input type="checkbox" id="chk-line-mixed" onchange="drawNumberLine()"> <small>Tam S.</small>
+                    </div>
+                    <div id="line-whole-wrapper" style="display:none;">
+                        <input type="number" id="line-whole" class="whole-input" value="0" min="0" oninput="drawNumberLine()">
+                    </div>
+                    <div class="vertical-inputs">
+                        <input type="number" id="line-num" class="num-input" value="5" min="0" oninput="drawNumberLine()">
+                        <div class="fraction-bar"></div>
+                        <input type="number" id="line-den" class="num-input" value="4" min="1" oninput="drawNumberLine()">
+                    </div>
+                </div>
+
+                <div id="line-manual-controls" style="display:none; gap:10px; align-items:center;">
+                    <button class="btn btn-blue" onclick="manualAddCracker()">➕ Ekle</button>
+                    <div class="fraction-input-group" style="padding:5px 10px;">
+                        <small>Böl:</small>
+                        <input type="number" id="manual-line-div" class="num-input" value="4" min="1" max="12" style="width:40px; height:30px; font-size:1.2rem;" onchange="drawNumberLine()">
+                    </div>
+                    <button class="btn btn-red" onclick="manualResetLine()">🗑️ Sıfırla</button>
+                </div>
+
+                <div class="zoom-control">
+                    <span>🔍 Zoom:</span>
+                    <input type="range" id="zoom-slider" min="0.5" max="1.5" step="0.1" value="1.0" oninput="drawNumberLine()">
+                </div>
+            </div>
+
+            <div class="number-line-wrapper" id="line-wrapper">
+                </div>
+            <div style="text-align:center; color:#555; margin-top:5px; font-style:italic;">
+                <span id="line-instruction"></span>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    /* --- GLOBAL DEĞİŞKENLER --- */
+    let currentModelShape = 'circle';
+    let manualModelParts = []; // [true, false, true...]
+    
+    let lineMode = 'auto'; // 'auto' | 'manual'
+    let manualCrackerCount = 0;
+    let manualMarkerPos = null; // { crackerIndex, partIndex }
+
+    /* --- TAB DEĞİŞİMİ --- */
+    function openTab(id) {
+        document.querySelectorAll('.tab-content').forEach(d => d.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        if(id==='tab1') updateRead();
+        if(id==='tab2') drawModel();
+        if(id==='tab3') drawNumberLine();
+    }
+
+    /* --- BÖLÜM 1: OKUMA --- */
+    let isTextHidden = false;
+    function toggleText() {
+        isTextHidden = !isTextHidden;
+        const el = document.getElementById('read-text');
+        if(isTextHidden) el.classList.add('blur'); else el.classList.remove('blur');
+    }
+
+    function updateRead() {
+        const isMixed = document.getElementById('chk-read-mixed').checked;
+        document.getElementById('read-whole-wrapper').style.display = isMixed ? 'block' : 'none';
+
+        const whole = isMixed ? parseInt(document.getElementById('read-whole').value) || 0 : 0;
+        const num = parseInt(document.getElementById('read-num').value) || 0;
+        const den = parseInt(document.getElementById('read-den').value) || 1;
+
+        const nums = ["Sıfır","Bir","İki","Üç","Dört","Beş","Altı","Yedi","Sekiz","Dokuz","On","On Bir","On İki","On Üç","On Dört","On Beş","On Altı","On Yedi","On Sekiz","On Dokuz","Yirmi","Yirmi Bir","Yirmi İki","Yirmi Üç","Yirmi Dört","Yirmi Beş"];
+        
+        let suffix = "'de";
+        const last = den.toString().slice(-1);
+        if(['1','2','7','8'].includes(last)) suffix = "'de";
+        else if(['3','4','5'].includes(last)) suffix = "'te";
+        else if(['6','9'].includes(last)) suffix = "'da";
+        if(den===6) suffix="da"; if(den===2) suffix="de";
+
+        let t = "";
+        if(whole > 0 && isMixed) t += `${nums[whole] || whole} Tam `;
+        if(num > 0) t += `${nums[den]||den}${suffix} ${nums[num]||num}`;
+        else if(whole === 0) t = "Sıfır";
+
+        document.getElementById('read-text').textContent = t;
+    }
+
+    /* --- BÖLÜM 2: MODELLEME --- */
+    function updateModelUI() {
+        const mode = document.querySelector('input[name="modelMode"]:checked').value;
+        if(mode === 'auto') {
+            document.getElementById('model-inputs').style.display = 'flex';
+            document.getElementById('manual-model-settings').style.display = 'none';
+        } else {
+            document.getElementById('model-inputs').style.display = 'none';
+            document.getElementById('manual-model-settings').style.display = 'flex';
+            resetManualModel();
+        }
+        drawModel();
+    }
+
+    function setModelShape(s) { currentModelShape = s; drawModel(); }
+    
+    function resetManualModel() {
+        const wholes = parseInt(document.getElementById('manual-whole-count').value) || 1;
+        const parts = parseInt(document.getElementById('manual-parts-per-whole').value) || 4;
+        
+        // Toplam parça sayısı = Bütün Sayısı x Parça Sayısı
+        const totalSlots = wholes * parts;
+        manualModelParts = new Array(totalSlots).fill(false);
+        drawModel();
+    }
+
+    function toggleManualPart(globalIndex) {
+        const mode = document.querySelector('input[name="modelMode"]:checked').value;
+        if(mode !== 'manual') return;
+        manualModelParts[globalIndex] = !manualModelParts[globalIndex];
+        drawModel();
+    }
+
+    function drawModel() {
+        const mode = document.querySelector('input[name="modelMode"]:checked').value;
+        let num, den, totalShapes;
+
+        if(mode === 'auto') {
+            num = parseInt(document.getElementById('model-num').value) || 0;
+            den = parseInt(document.getElementById('model-den').value) || 1;
+            totalShapes = Math.max(1, Math.ceil(num/den));
+            document.getElementById('model-result').innerText = `${num} / ${den}`;
+        } else {
+            // Manuel mod
+            totalShapes = parseInt(document.getElementById('manual-whole-count').value) || 1;
+            den = parseInt(document.getElementById('manual-parts-per-whole').value) || 4;
+            num = manualModelParts.filter(Boolean).length;
+            document.getElementById('model-result').innerText = `${num} / ${den}`;
+        }
+
+        const container = document.getElementById('model-canvas');
+        let html = '';
+        const size = 180; 
+
+        for(let s=0; s<totalShapes; s++) {
+            // Bu şeklin kaçı dolu?
+            let filledCount = 0;
+            if(mode==='auto') {
+                if(num >= (s+1)*den) filledCount = den;
+                else filledCount = Math.max(0, num - (s*den));
+            }
+
+            // SVG Başlangıç
+            html += `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="overflow:visible;">`;
+
+            if(currentModelShape === 'circle') {
+                html += `<circle cx="50" cy="50" r="48" fill="white" stroke="#333" stroke-width="2"/>`;
+                for(let i=0; i<den; i++) {
+                    const start = (i*360/den)-90;
+                    const end = ((i+1)*360/den)-90;
+                    const x1 = 50 + 48*Math.cos(start*Math.PI/180);
+                    const y1 = 50 + 48*Math.sin(start*Math.PI/180);
+                    const x2 = 50 + 48*Math.cos(end*Math.PI/180);
+                    const y2 = 50 + 48*Math.sin(end*Math.PI/180);
+                    
+                    let pathD = `M 50 50 L ${x1} ${y1} A 48 48 0 0 1 ${x2} ${y2} Z`;
+                    if(den===1) pathD = `M 50 50 m -48, 0 a 48,48 0 1,0 96,0 a 48,48 0 1,0 -96,0`;
+
+                    // Renk ve Tıklama Mantığı
+                    let isFilled = false;
+                    let globalIdx = (s * den) + i; // Manuel mod için global index
+
+                    if(mode==='auto') isFilled = (i < filledCount);
+                    else isFilled = manualModelParts[globalIdx];
+
+                    const color = isFilled ? 'var(--secondary)' : 'transparent';
+                    
+                    html += `<path d="${pathD}" fill="${color}" stroke="#333" stroke-width="1" 
+                             class="interactive-part" onclick="toggleManualPart(${globalIdx})"/>`;
+                }
+            } else {
+                // Rect
+                html += `<rect x="0" y="25" width="100" height="50" fill="white" stroke="#333" stroke-width="2"/>`;
+                const w = 100/den;
+                for(let i=0; i<den; i++) {
+                    let globalIdx = (s * den) + i;
+                    let isFilled = (mode==='auto') ? (i < filledCount) : manualModelParts[globalIdx];
+                    const color = isFilled ? 'var(--secondary)' : 'transparent';
+                    
+                    html += `<rect x="${i*w}" y="25" width="${w}" height="50" fill="${color}" stroke="#333" stroke-width="1"
+                             class="interactive-part" onclick="toggleManualPart(${globalIdx})"/>`;
+                }
+            }
+            html += `</svg>`;
+        }
+        container.innerHTML = html;
+    }
+
+    /* --- BÖLÜM 3: SAYI DOĞRUSU --- */
+    function toggleLineMode() {
+        lineMode = document.querySelector('input[name="lineMode"]:checked').value;
+        if(lineMode === 'auto') {
+            document.getElementById('line-auto-inputs').style.display = 'flex';
+            document.getElementById('line-manual-controls').style.display = 'none';
+            document.getElementById('line-instruction').innerText = "Kesir değerlerini gir, sayı doğrusundaki yerini gör.";
+        } else {
+            document.getElementById('line-auto-inputs').style.display = 'none';
+            document.getElementById('line-manual-controls').style.display = 'flex';
+            document.getElementById('line-instruction').innerText = "Önce 'Kraker Ekle' butonuna bas, sonra krakerin üzerindeki çizgilere tıklayarak işaretle.";
+            manualResetLine();
+        }
+        drawNumberLine();
+    }
+
+    function manualAddCracker() {
+        if(manualCrackerCount < 10) manualCrackerCount++;
+        drawNumberLine();
+    }
+
+    function manualResetLine() {
+        manualCrackerCount = 0;
+        manualMarkerPos = null;
+        drawNumberLine();
+    }
+
+    function onLineClick(event, crackerIndex, partIndex) {
+        if(lineMode !== 'manual') return;
+        manualMarkerPos = { c: crackerIndex, p: partIndex };
+        drawNumberLine();
+    }
+
+    function drawNumberLine() {
+        const container = document.getElementById('line-wrapper');
+        const style = document.querySelector('input[name="lineStyle"]:checked').value; 
+        const zoom = parseFloat(document.getElementById('zoom-slider').value);
+
+        let whole = 0, num = 0, den = 1;
+        let totalWholes = 0;
+        let markerValue = 0; 
+
+        if (lineMode === 'auto') {
+            const isMixed = document.getElementById('chk-line-mixed').checked;
+            document.getElementById('line-whole-wrapper').style.display = isMixed ? 'block' : 'none';
+            whole = isMixed ? (parseInt(document.getElementById('line-whole').value) || 0) : 0;
+            num = parseInt(document.getElementById('line-num').value) || 0;
+            den = parseInt(document.getElementById('line-den').value) || 1;
+            
+            markerValue = whole + (num/den);
+            totalWholes = Math.max(1, Math.ceil(markerValue));
+            if(markerValue === totalWholes && markerValue > 0) totalWholes++;
+            if(totalWholes < 2) totalWholes = 2; // En az 0-1-2 görünsün
+        } else {
+            den = parseInt(document.getElementById('manual-line-div').value) || 1;
+            totalWholes = manualCrackerCount;
+            if(manualMarkerPos) markerValue = manualMarkerPos.c + (manualMarkerPos.p / den);
+        }
+
+        if(lineMode === 'manual' && totalWholes === 0) {
+            container.innerHTML = '<div style="padding:40px; text-align:center; color:#999;">Henüz kraker eklemedin.<br>Yukarıdan "Kraker Ekle" butonuna bas.</div>';
+            return;
+        }
+
+        // --- SVG ÇİZİMİ ---
+        const unitW = 250 * zoom; // Zoom burada çalışır
+        const gap = 5; 
+        const padX = 40;
+        const svgW = (totalWholes * (unitW + gap)) + 100;
+        const svgH = 200;
+
+        let svg = `<svg width="${svgW}" height="${svgH}" xmlns="http://www.w3.org/2000/svg">`;
+        
+        // Defs
+        svg += `<defs>
+            <linearGradient id="pretzelGrad" x1="0" y1="0" x2="0" y2="100%">
+                <stop offset="0%" stop-color="#E9C46A"/>
+                <stop offset="50%" stop-color="#F4A261"/>
+                <stop offset="100%" stop-color="#E76F51"/>
+            </linearGradient>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#333" />
+            </marker>
+            <marker id="arrowReverse" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto">
+                <path d="M9,0 L9,6 L0,3 z" fill="#333" />
+            </marker>
+        </defs>`;
+
+        // Ana Eksen Çizgisi (Her zaman altta var)
+        const lineEnd = padX + (totalWholes * (unitW + gap));
+        // Başlangıca (x1) marker-start ekledik
+        svg += `<line x1="10" y1="120" x2="${lineEnd+20}" y2="120" stroke="#333" stroke-width="3" 
+                 marker-start="url(#arrowReverse)" marker-end="url(#arrow)" />`;
+
+        // Döngü: Her tam sayı aralığını çiz
+        for(let i=0; i < totalWholes; i++) {
+            const startX = padX + (i * (unitW + gap));
+            
+            // 1. Kraker
+            if (style === 'pretzel') {
+                svg += `<rect x="${startX}" y="95" width="${unitW}" height="50" rx="15" fill="url(#pretzelGrad)" stroke="#8b4513" stroke-width="2" />`;
+                for(let k=0; k<8; k++) {
+                    let rx = startX + Math.random()*(unitW-10)+5;
+                    let ry = 95 + Math.random()*40+5;
+                    svg += `<circle cx="${rx}" cy="${ry}" r="2" fill="white" opacity="0.6"/>`;
+                }
+            }
+
+            // 2. Sayı Etiketleri
+            if(i === 0) {
+                 svg += `<text x="${startX}" y="170" text-anchor="middle" font-weight="bold" font-size="20">${i}</text>`;
+                 svg += `<line x1="${startX}" y1="120" x2="${startX}" y2="145" stroke="#333" stroke-width="3"/>`;
+            }
+            
+            const endX = startX + unitW;
+            const midGap = endX + (gap/2);
+            
+            svg += `<text x="${midGap}" y="170" text-anchor="middle" font-weight="bold" font-size="20">${i+1}</text>`;
+            svg += `<line x1="${midGap}" y1="120" x2="${midGap}" y2="145" stroke="#333" stroke-width="3"/>`;
+
+            // 3. Bölüntüler
+            const step = unitW / den;
+            for(let j=1; j<den; j++) {
+                const tickX = startX + (j * step);
+                svg += `<line x1="${tickX}" y1="100" x2="${tickX}" y2="140" stroke="#333" stroke-width="2" stroke-opacity="0.7" 
+                        style="cursor:pointer" onclick="onLineClick(event, ${i}, ${j})"/>`;
+                
+                if(lineMode === 'manual') {
+                     svg += `<rect x="${tickX-5}" y="90" width="10" height="60" fill="transparent" style="cursor:pointer" onclick="onLineClick(event, ${i}, ${j})"/>`;
+                }
+            }
+        }
+
+        // 4. İŞARETLEYİCİ
+        if (lineMode === 'manual' && !manualMarkerPos) {
+            svg += `</svg>`;
+            container.innerHTML = svg;
+            return;
+        }
+
+        const mWhole = Math.floor(markerValue);
+        const mFrac = markerValue - mWhole;
+        
+        let flagX = padX + (mWhole * (unitW + gap)) + (mFrac * unitW);
+        if(mFrac < 0.001 && mWhole > 0) {
+             flagX = padX + ((mWhole-1) * (unitW + gap)) + unitW + (gap/2);
+        }
+
+        svg += `<g transform="translate(${flagX}, 50)">
+                    <line x1="0" y1="0" x2="0" y2="70" stroke="#D62828" stroke-width="4"/>
+                    <circle cx="0" cy="70" r="5" fill="#D62828"/>
+                    <path d="M0,0 L50,15 L0,30 Z" fill="#D62828"/>
+                    <text x="5" y="20" fill="white" font-weight="bold" font-size="14">Burada!</text>
+                </g>`;
+
+        svg += `</svg>`;
+        container.innerHTML = svg;
+    }
+
+    window.onload = function() {
+        updateRead();
+        drawModel();
+        drawNumberLine();
+    };
+</script>
+
+</body>
+</html>
