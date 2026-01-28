@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Ders Takip Paneli</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+      /* --- GÖRÜNÜM AYARLARI --- */
+      body { font-family: 'Poppins', sans-serif; padding: 15px; background-color: #f0f2f5; color: #1f2937; font-size: 13px; padding-bottom: 80px; margin: 0; }
+      h2 { text-align: center; color: #111827; margin: 10px 0 20px 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
+      .header-icon { color: #4f46e5; font-size: 26px; }
+      .kart { background: white; padding: 15px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative; border: 1px solid #e5e7eb; }
+      label { font-size: 11px; font-weight: 600; color: #6b7280; display: block; margin-bottom: 5px; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+      label:first-child { margin-top: 0; }
+      input, select { width: 100%; padding: 10px 12px; margin-bottom: 5px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-family: 'Poppins', sans-serif; font-size: 13px; transition: border-color 0.2s; }
+      input:focus { border-color: #4f46e5; outline: none; }
+      .autocomplete-liste { position: absolute; z-index: 99; top: 80px; left: 15px; right: 15px; border: 1px solid #d1d5db; border-top: none; background-color: #fff; max-height: 150px; overflow-y: auto; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; }
+      .autocomplete-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f3f4f6; font-weight: 500; }
+      .autocomplete-item strong { color: #4f46e5; }
+      .hizli-butonlar { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+      .chip-btn { flex: 1; padding: 10px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; color: #4b5563; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; font-size: 12px; }
+      .chip-btn.secili { background: #4f46e5; color: white; border-color: #4f46e5; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); }
+      .btn-kalem { padding: 0 12px; height: 38px; background: white; border: 1px solid #d1d5db; border-radius: 8px; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+      .btn-kalem.aktif { background: #e0e7ff; color: #4f46e5; border-color: #4f46e5; }
+      #manuelAlan { display: none; padding-top: 15px; border-top: 1px dashed #e5e7eb; margin-top: 15px; }
+      .btn-ana { width: 100%; padding: 12px; cursor: pointer; background: #4f46e5; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); transition: 0.2s; }
+      .btn-ana:disabled { background: #9ca3af; box-shadow: none; }
+      .baslik { font-size: 14px; font-weight: 700; color: #111827; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 10px; }
+      .ders-satir { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; cursor: pointer; transition: 0.2s; }
+      .checkbox-wrapper { position: relative; display: flex; align-items: center; }
+      .custom-checkbox { width: 22px; height: 22px; border: 2px solid #d1d5db; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: 0.2s; background: white; }
+      .ders-satir.secili .custom-checkbox { background: #4f46e5; border-color: #4f46e5; }
+      .ders-satir.secili .custom-checkbox::after { content: '✔'; color: white; font-size: 14px; }
+      .ozet { background: #f9fafb; padding: 12px; border-radius: 10px; margin-top: 12px; font-weight: 600; font-size: 13px; display: flex; justify-content: flex-start; align-items: center; gap: 15px; border: 1px solid #e5e7eb; }
+      .btn-kopyala { width: 100%; padding: 10px; margin-top: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); }
+      .btn-arsiv-guzel { margin-top: 25px; width: 100%; padding: 12px; background: #64748b; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+      #bulkActionParams { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 24px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; align-items: center; gap: 20px; z-index: 1000; width: auto; min-width: 250px; justify-content: space-between; }
+      .btn-toplu-onay { background: #4f46e5; border: none; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 12px; }
+      
+      /* GİRİŞ EKRANI */
+      #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f0f2f5; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+      .login-box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 80%; max-width: 300px; }
+      .login-btn { width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 8px; margin-top: 10px; font-weight: 600; cursor: pointer; }
+      .loader { border: 3px solid #f3f3f3; border-top: 3px solid #4f46e5; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+
+    <div id="login-screen">
+      <div class="login-box">
+        <h3>🔒 Giriş Yap</h3>
+        <p style="font-size:12px; color:#666; margin-bottom:15px">Bu uygulama özeldir. Lütfen erişim şifresini giriniz.</p>
+        <input type="password" id="app-password" placeholder="Şifre" style="text-align:center">
+        <button class="login-btn" onclick="checkLogin()">GİRİŞ</button>
+        <p id="login-msg" style="color:red; font-size:11px; margin-top:10px;"></p>
+      </div>
+    </div>
+
+    <div id="app-container" style="display:none">
+      <h2><span class="material-icons-round header-icon">import_contacts</span> Ders Takip Paneli</h2>
+      
+      <div class="kart">
+        <label>Öğrenci Adı</label>
+        <div style="position:relative">
+          <input type="text" id="studentInput" placeholder="İsim baş harfi yaz..." autocomplete="off">
+          <div id="autocomplete-list" class="autocomplete-liste"></div>
+        </div>
+        
+        <label>Ders Sayısı</label>
+        <div class="hizli-butonlar">
+          <div class="chip-btn" onclick="sureSec(1, this)">1 Ders</div>
+          <div class="chip-btn" onclick="sureSec(2, this)">2 Ders</div>
+          <button class="btn-kalem" onclick="toggleManuel()" title="Manuel Giriş"><span class="material-icons-round" style="font-size:20px">edit</span></button>
+        </div>
+
+        <div id="manuelAlan">
+          <label style="color:#4f46e5">Manuel Ders Sayısı</label>
+          <input type="number" id="durationInput" placeholder="Örn: 1.5" step="0.5">
+          <label style="color:#4f46e5">Birim Ücret</label>
+          <input type="number" id="rateInput" placeholder="Fiyat güncellemek için">
+        </div>
+
+        <button id="saveBtn" class="btn-ana" onclick="kaydet()"><span class="material-icons-round" style="font-size:20px">save</span> KAYDET</button>
+      </div>
+
+      <div id="durumMesaji" style="text-align:center; color:#666; margin-top:20px"></div>
+      <div id="listeAlani"></div>
+
+      <button class="btn-arsiv-guzel" onclick="arsivle()">
+        <span class="material-icons-round" style="font-size:20px">inventory_2</span> Ödenmiş Dersleri Arşivle
+      </button>
+
+      <div id="bulkActionParams">
+        <span id="seciliSayisi" style="font-weight:600">0 Ders Seçildi</span>
+        <button class="btn-toplu-onay" onclick="secilenleriOdendiYap()">ÖDENDİ İŞARETLE</button>
+      </div>
+    </div>
+
+    <script>
+      // ==========================================
+      // BURAYA KOPYALADIĞIN GOOGLE DEPLOY LINKINI YAPIŞTIR
+      // ==========================================
+      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwKQARU0uV0KUtW7i91mkd60Dc6l5o_tDgdc8KPJSBXMiltUI0sYUNkI0jxBRtu3TyU/exec";
+      // ==========================================
+
+      var USER_PASS = "";
+      var globalMesajlar = {};
+      var knownStudents = [];
+      var studentPrices = {};
+      var selectedRows = new Set();
+
+      // GİRİŞ KONTROLÜ
+      function checkLogin() {
+        var pass = document.getElementById("app-password").value;
+        var msg = document.getElementById("login-msg");
+        var btn = document.querySelector(".login-btn");
+        
+        if(!pass) { msg.innerText = "Şifre giriniz."; return; }
+        
+        btn.innerHTML = '<div class="loader"></div>';
+        btn.disabled = true;
+
+        // Şifreyi doğrulamak için sunucudan veri çekmeyi dene
+        fetch(GOOGLE_SCRIPT_URL + "?action=getInitData&pass=" + pass)
+        .then(response => response.json())
+        .then(data => {
+          if(data.error) {
+            msg.innerText = "Hatalı Şifre!";
+            btn.innerHTML = "GİRİŞ";
+            btn.disabled = false;
+          } else {
+            // Şifre Doğru
+            USER_PASS = pass;
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("app-container").style.display = "block";
+            islemeVeri(data); // Verileri işle
+          }
+        })
+        .catch(err => {
+          msg.innerText = "Bağlantı Hatası!";
+          btn.innerHTML = "GİRİŞ";
+          btn.disabled = false;
+        });
+      }
+
+      function listeyiGetir() {
+        document.getElementById("durumMesaji").innerHTML = '<div class="loader"></div> Yükleniyor...';
+        document.getElementById("listeAlani").innerHTML = "";
+        selectedRows.clear();
+        updateBulkBar();
+
+        fetch(GOOGLE_SCRIPT_URL + "?action=getInitData&pass=" + USER_PASS)
+        .then(res => res.json())
+        .then(data => islemeVeri(data));
+      }
+
+      function islemeVeri(data) {
+        document.getElementById("durumMesaji").innerHTML = "";
+        
+        // Öğrenci Listesi
+        knownStudents = data.students || [];
+        studentPrices = {};
+        knownStudents.forEach(s => { studentPrices[s[0].toLowerCase()] = s[1]; });
+
+        // Ödenmemiş Dersler
+        var unpaid = data.unpaid || {};
+        listeyiCiz(unpaid);
+      }
+
+      function listeyiCiz(data) {
+        var container = document.getElementById("listeAlani");
+        if (!data || Object.keys(data).length === 0) {
+          document.getElementById("durumMesaji").innerHTML = '🎉 Tüm ödemeler tamam.';
+          container.innerHTML = "";
+          return;
+        }
+
+        var html = "";
+        globalMesajlar = {};
+
+        for (var ogrenci in data) {
+          var dersler = data[ogrenci];
+          var toplamPara = 0; var toplamDers = 0; var mesajDetay = "";
+          
+          html += '<div class="kart"><div class="baslik"><span class="material-icons-round" style="font-size:20px; color:#4f46e5">person</span> ' + ogrenci + '</div>';
+          
+          dersler.forEach(function(ders) {
+            toplamPara += ders.amount; toplamDers += ders.duration;
+            var tarihSade = ders.date.split(" ")[0]; 
+            
+            html += `<div class="ders-satir" onclick="toggleSelection(this, ${ders.rowIndex})" data-row="${ders.rowIndex}">
+              <div class="checkbox-wrapper"><div class="custom-checkbox"></div></div>
+              <span>📅 ${tarihSade} <b style="margin-left:5px; color:#4f46e5">${ders.duration} Ders</b></span>
+            </div>`;
+            mesajDetay += `🗓️ ${tarihSade} ▪ ${ders.duration} Ders\n`;
+          });
+
+          var paraText = toplamPara.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'});
+          globalMesajlar[ogrenci] = `👋 Merhaba ${ogrenci} ile\nyapılan derslerin listesi:\n\n${mesajDetay}\n🔢 Toplam: ${toplamDers} Ders\nToplam Tutar: ${paraText}`;
+
+          html += `<div class="ozet"><span>Top: ${toplamDers} Ders</span><span style="color:#d1d5db">|</span><span style="color:#10b981;">${paraText}</span></div>
+          <button class="btn-kopyala" onclick="mesajKopyala('${ogrenci}')"><span class="material-icons-round" style="font-size:16px">content_copy</span> Mesajı Kopyala</button></div>`;
+        }
+        container.innerHTML = html;
+      }
+
+      // --- İŞLEM FONKSİYONLARI ---
+      function kaydet() {
+        var btn = document.getElementById("saveBtn");
+        var ogr = document.getElementById("studentInput").value;
+        var ders = document.getElementById("durationInput").value;
+        var fiyat = document.getElementById("rateInput").value;
+
+        if (!ogr) { alert("İsim giriniz!"); return; }
+        if (!ders && !fiyat) { alert("Ders veya Fiyat giriniz!"); return; }
+
+        btn.disabled = true; btn.innerHTML = 'Kaydediliyor...';
+
+        var postData = JSON.stringify({ student: ogr, duration: ders, rate: fiyat });
+
+        fetch(GOOGLE_SCRIPT_URL + "?action=saveLesson&pass=" + USER_PASS, {
+          method: 'POST', body: postData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data.result === "PRICE_UPDATED") alert("✅ Fiyat Güncellendi!");
+          btn.disabled = false; btn.innerHTML = '<span class="material-icons-round" style="font-size:20px">save</span> KAYDET';
+          listeyiGetir();
+          // Temizlik
+          document.getElementById("studentInput").value = "";
+          document.getElementById("durationInput").value = "";
+          document.getElementById("rateInput").value = "";
+          document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('secili'));
+          document.getElementById("manuelAlan").style.display = "none";
+          document.querySelector(".btn-kalem").classList.remove("aktif");
+        });
+      }
+
+      function secilenleriOdendiYap() {
+        if (selectedRows.size === 0) return;
+        var indices = Array.from(selectedRows);
+        var btn = document.querySelector(".btn-toplu-onay");
+        btn.innerText = "İşleniyor...";
+        
+        indices.forEach(idx => {
+           var el = document.querySelector(`.ders-satir[data-row='${idx}']`);
+           if(el) el.style.opacity = "0.3";
+        });
+
+        fetch(GOOGLE_SCRIPT_URL + "?action=markPaid&pass=" + USER_PASS, {
+          method: 'POST', body: JSON.stringify({ indices: indices })
+        })
+        .then(() => {
+          btn.innerText = "ÖDENDİ İŞARETLE";
+          listeyiGetir();
+        });
+      }
+
+      function arsivle() {
+        if(!confirm("Ödenmiş dersler arşive taşınacak?")) return;
+        var btn = document.querySelector(".btn-arsiv-guzel");
+        btn.innerText = "Arşivleniyor...";
+        
+        fetch(GOOGLE_SCRIPT_URL + "?action=archive&pass=" + USER_PASS)
+        .then(res => res.json())
+        .then(data => {
+          alert(data.result);
+          btn.innerHTML = '<span class="material-icons-round" style="font-size:20px">inventory_2</span> Ödenmiş Dersleri Arşivle';
+          listeyiGetir();
+        });
+      }
+
+      // --- YARDIMCI FONKSİYONLAR ---
+      function toggleSelection(element, rowIndex) {
+        element.classList.toggle("secili");
+        if (selectedRows.has(rowIndex)) selectedRows.delete(rowIndex); else selectedRows.add(rowIndex);
+        updateBulkBar();
+      }
+      function updateBulkBar() {
+        var bar = document.getElementById("bulkActionParams");
+        var count = selectedRows.size;
+        bar.style.display = count > 0 ? "flex" : "none";
+        document.getElementById("seciliSayisi").innerText = count + " Ders Seçildi";
+      }
+      function toggleManuel() {
+        var alan = document.getElementById("manuelAlan");
+        var btn = document.querySelector(".btn-kalem");
+        var isHidden = alan.style.display === "none" || alan.style.display === "";
+        alan.style.display = isHidden ? "block" : "none";
+        if(isHidden) { btn.classList.add("aktif"); document.getElementById("durationInput").focus(); } else { btn.classList.remove("aktif"); }
+      }
+      function sureSec(sayi, btn) {
+        document.getElementById("durationInput").value = sayi;
+        document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('secili'));
+        btn.classList.add('secili');
+      }
+      document.getElementById("durationInput").addEventListener("input", function() {
+        document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('secili'));
+      });
+      function mesajKopyala(ogrenciAdi) {
+        var metin = globalMesajlar[ogrenciAdi];
+        navigator.clipboard.writeText(metin).then(() => alert("Kopyalandı!"));
+      }
+      
+      // Autocomplete
+      document.getElementById("studentInput").addEventListener("input", function(e) {
+        var val = this.value;
+        var list = document.getElementById("autocomplete-list");
+        list.innerHTML = ""; list.style.display = "none";
+        if (!val) return;
+        
+        var count = 0;
+        knownStudents.forEach(item => {
+          if (item[0].toUpperCase().includes(val.toUpperCase())) {
+            var div = document.createElement("div");
+            div.className = "autocomplete-item";
+            div.innerHTML = item[0];
+            div.onclick = function() {
+              document.getElementById("studentInput").value = item[0];
+              list.style.display = "none";
+            };
+            list.appendChild(div);
+            count++;
+          }
+        });
+        if(count > 0) list.style.display = "block";
+      });
+      document.addEventListener("click", function (e) {
+        if(e.target.id !== "studentInput") document.getElementById("autocomplete-list").style.display = "none";
+      });
+
+    </script>
+  </body>
+</html>
