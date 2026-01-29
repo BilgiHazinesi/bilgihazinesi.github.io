@@ -18,6 +18,7 @@
             position: relative;
             transition: transform 0.8s;
             transform-style: preserve-3d;
+            /* Soruların üst üste binmesini önleyen Grid yapısı */
             display: grid; 
             grid-template-columns: 1fr;
         }
@@ -33,6 +34,7 @@
             padding: 20px;
             box-sizing: border-box;
             background: white;
+            /* Ön ve arka yüzü aynı hücreye hizalar */
             grid-row: 1;
             grid-column: 1;
             width: 100%;
@@ -70,6 +72,7 @@
             box-shadow: 0 0 10px rgba(0,123,255,0.5);
         }
         
+        /* Butonlar ve Seçim Göstergesi */
         .action-bar { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         
         .flip-btn {
@@ -123,9 +126,9 @@
         }
 
         #finishBtn {
-            padding: 15px 50px; background-color: #28a745; color: white;
+            padding: 15px 50px; background-color: #0088cc; color: white;
             border: none; border-radius: 50px; font-size: 1.3em; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); transition: transform 0.2s;
             width: 100%; max-width: 400px;
         }
         #finishBtn:active { transform: scale(0.98); }
@@ -154,7 +157,7 @@
 
 <script>
     // ============================================================
-    // 1. AYARLAR: BURALARI DOLDURMAYI UNUTMA
+    // 1. AYARLAR: TELEGRAM
     // ============================================================
     const TELEGRAM_BOT_TOKEN = "8502986412:AAFgRp9L6KRDkpNCM82lOUWxgSzC0kA-wCo";
     const TELEGRAM_CHAT_ID = "373077730";
@@ -176,12 +179,12 @@
     };
 
     // ============================================================
-    // 3. SORU VE VİDEO BİLGİLERİ
+    // 3. SORU VE VİDEO BİLGİLERİ (GÜNCELLENDİ)
     // ============================================================
     const questions = [
-        { id: 1, correct: "B", img: "soru1.png", video: null },
+        { id: 1, correct: "B", img: "soru1.png", video: "https://www.youtube.com/watch?v=PVyRjW6YrnQ" }, // EKLENDİ
         { id: 2, correct: "B", img: "soru2.png", video: "https://youtu.be/PtsCk2v9THM" },
-        { id: 3, correct: "A", img: "soru3.png", video: "https://youtu.be/YIXl7A8RUws" },
+        { id: 3, correct: "A", img: "soru3.png", video: "https://www.youtube.com/watch?v=NR9D_7iSfwc" }, // GÜNCELLENDİ
         { id: 4, correct: "B", img: "soru4.png", video: "https://youtu.be/7r-WOtW8WdI" },
         { id: 5, correct: "D", img: "soru5.png", video: "https://youtu.be/gCnU8FtCJig" },
         { id: 6, correct: "D", img: "soru6.png", video: "https://youtu.be/uWE4ZlSUfOA" },
@@ -200,7 +203,14 @@
         questions.forEach(q => {
             let embedLink = "";
             if (q.video) {
-                const videoId = q.video.split("/").pop();
+                // YouTube linkini embed formatına çevir
+                // Hem "youtu.be" hem "youtube.com/watch?v=" formatlarını destekler
+                let videoId = "";
+                if(q.video.includes("v=")) {
+                    videoId = q.video.split("v=")[1].split("&")[0];
+                } else {
+                    videoId = q.video.split("/").pop();
+                }
                 embedLink = `https://www.youtube.com/embed/${videoId}`;
             }
 
@@ -279,18 +289,15 @@
         const name = document.getElementById('studentName').value.trim();
         const studentClass = document.getElementById('studentClass').value.trim();
 
-        // 1. KONTROL: İSİM GİRİLMİŞ Mİ?
         if (!name || !studentClass) {
             statusDiv.innerText = "⚠️ Lütfen Ad Soyad ve Sınıf/Şube bilgilerini giriniz!";
             statusDiv.style.color = "red";
-            // Kutuya odaklan
             if(!name) document.getElementById('studentName').focus();
             else document.getElementById('studentClass').focus();
             return;
         }
 
-        // 2. KONTROL: TOKEN GİRİLMİŞ Mİ?
-        if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("BURAYA")) {
+        if (!TELEGRAM_BOT_TOKEN) {
             statusDiv.innerText = "⚠️ Hata: Telegram Token girilmemiş!";
             statusDiv.style.color = "red";
             return;
@@ -314,7 +321,6 @@
             details += `S${q.id}: ${ans || 'Boş'} (${sembol})\n`;
         });
 
-        // 3. RAPOR HAZIRLAMA (İSİM DAHİL)
         const report = `📝 *TEST SONUCU RAPORU*\n\n` +
                        `👤 *Öğrenci:* ${name}\n` +
                        `🏫 *Sınıf/Şube:* ${studentClass}\n` +
@@ -355,5 +361,4 @@
 </script>
 
 </body>
-
 </html>
