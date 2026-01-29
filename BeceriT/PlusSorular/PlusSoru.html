@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnteraktif Test Sınavı</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; max-width: 800px; margin: 0 auto; color: #333; }
+        
+        /* --- KART YAPISI (SADELEŞTİRİLMİŞ) --- */
+        .scene {
+            margin-bottom: 40px; 
+        }
+        
+        .card-object {
+            width: 100%;
+            position: relative;
+            background: transparent;
+        }
+
+        .card-face {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            box-sizing: border-box;
+            background: white;
+            width: 100%;
+        }
+
+        .question-header { font-weight: bold; font-size: 1.2em; margin-bottom: 10px; color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+        .image-wrapper { position: relative; display: block; width: 100%; cursor: pointer; }
+        .q-img { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid #ddd; }
+
+        .marker {
+            position: absolute;
+            width: 30px; height: 30px;
+            border: 3px solid #007bff;
+            background-color: rgba(0, 123, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: none; pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(0,123,255,0.5);
+        }
+        
+        /* Seçim kutusunu sağa yaslamak için flex-end kullanıyoruz */
+        .action-bar { margin-top: 15px; display: flex; justify-content: flex-end; align-items: center; }
+        
+        .choice-display { font-weight: bold; padding: 5px 12px; background: #e3f2fd; border-radius: 6px; color: #1565c0; border: 1px solid #bbdefb; }
+
+        /* --- ALT BÖLÜM (Form ve Buton) --- */
+        .submit-section { 
+            text-align: center; 
+            margin-top: 60px; 
+            padding-bottom: 60px; 
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .student-inputs {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .student-inputs input {
+            padding: 12px 15px;
+            width: 100%;
+            max-width: 350px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .student-inputs input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        #finishBtn {
+            padding: 15px 50px; background-color: #0088cc; color: white; /* Telegram Mavisi */
+            border: none; border-radius: 50px; font-size: 1.3em; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); transition: transform 0.2s;
+            width: 100%; max-width: 400px; display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto;
+        }
+        #finishBtn:active { transform: scale(0.98); }
+        .status-msg { margin-top: 15px; font-weight: bold; min-height: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1 style="text-align:center;">📝 Plus Sorular</h1>
+    
+    <div id="quiz-container">
+        </div>
+
+    <div class="submit-section">
+        <h3>Sınavı Tamamla</h3>
+        <p style="color:#666; margin-bottom:15px;">Sonuçları göndermek için lütfen bilgilerinizi giriniz.</p>
+        
+        <div class="student-inputs">
+            <input type="text" id="studentName" placeholder="Adınız Soyadınız" required>
+            <input type="text" id="studentClass" placeholder="Sınıf / Şube (Örn: 4-A)" required>
+        </div>
+
+        <button id="finishBtn" onclick="finishTest()">
+            <svg style="width:24px;height:24px;fill:white" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+            Testi Bitir ve Gönder
+        </button>
+        <div id="status" class="status-msg"></div>
+    </div>
+
+<script>
+    // ============================================================
+    // 1. AYARLAR
+    // ============================================================
+    const TELEGRAM_BOT_TOKEN = "8502986412:AAFgRp9L6KRDkpNCM82lOUWxgSzC0kA-wCo";
+    const TELEGRAM_CHAT_ID = "373077730";
+
+    // ============================================================
+    // 2. KOORDİNAT VERİSİ
+    // ============================================================
+    const coordinateMap = {
+      "1": { "A": [15.17, 91.96, 7, 5], "B": [41.30, 92.99, 7, 5], "C": [66.91, 92.73, 7, 5], "D": [92.64, 92.73, 7, 5] },
+      "2": { "A": [14.91, 93.38, 7, 5], "B": [40.38, 92.88, 7, 5], "C": [66.12, 92.88, 7, 5], "D": [91.59, 93.13, 7, 5] },
+      "3": { "A": [14.78, 90.43, 7, 5], "B": [40.91, 90.43, 7, 5], "C": [66.38, 90.67, 7, 5], "D": [92.12, 90.43, 7, 5] },
+      "4": { "A": [16.22, 90.86, 7, 5], "B": [41.43, 90.86, 7, 5], "C": [66.64, 90.61, 7, 5], "D": [91.33, 91.11, 7, 5] },
+      "5": { "A": [15.04, 88.87, 7, 5], "B": [39.99, 89.38, 7, 5], "C": [65.59, 89.38, 7, 5], "D": [90.67, 89.13, 7, 5] },
+      "6": { "A": [15.04, 88.96, 7, 5], "B": [40.51, 89.20, 7, 5], "C": [66.51, 88.96, 7, 5], "D": [92.38, 88.71, 7, 5] },
+      "8": { "A": [15.70, 91.54, 7, 5], "B": [41.70, 91.54, 7, 5], "C": [67.30, 91.29, 7, 5], "D": [93.30, 91.79, 7, 5] },
+      "9": { "A": [15.70, 83.56, 7, 5], "B": [41.43, 84.07, 7, 5], "C": [67.17, 83.31, 7, 5], "D": [92.77, 83.31, 7, 5] },
+      "10": { "A": [35.79, 56.01, 7, 5], "B": [36.05, 67.16, 7, 5], "C": [36.18, 77.87, 7, 5], "D": [35.92, 89.67, 7, 5] },
+      "11": { "A": [16.75, 77.45, 7, 5], "B": [40.78, 77.20, 7, 5], "C": [64.94, 77.95, 7, 5], "D": [89.23, 77.45, 7, 5] }
+    };
+
+    // ============================================================
+    // 3. SORU BİLGİLERİ (Video linkleri kaldırıldı)
+    // ============================================================
+    const questions = [
+        { id: 1, correct: "B", img: "soru1.png" },
+        { id: 2, correct: "B", img: "soru2.png" },
+        { id: 3, correct: "A", img: "soru3.png" },
+        { id: 4, correct: "B", img: "soru4.png" },
+        { id: 5, correct: "D", img: "soru5.png" },
+        { id: 6, correct: "D", img: "soru6.png" },
+        { id: 8, correct: "C", img: "soru8.png" },
+        { id: 9, correct: "A", img: "soru9.png" },
+        { id: 10, correct: "A", img: "soru10.png" },
+        { id: 11, correct: "C", img: "soru11.png" }
+    ];
+
+    let userAnswers = {};
+
+    function renderQuiz() {
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = "";
+        
+        questions.forEach(q => {
+            const scene = document.createElement('div');
+            scene.className = 'scene';
+            scene.innerHTML = `
+                <div class="card-object" id="card-${q.id}">
+                    <div class="card-face">
+                        <div class="question-header">Soru ${q.id}</div>
+                        <div class="image-wrapper" id="wrapper-${q.id}" onclick="handleImageClick(event, ${q.id})">
+                            <img src="${q.img}" class="q-img" id="img-${q.id}">
+                            <div id="marker-${q.id}" class="marker"></div>
+                        </div>
+                        <div class="action-bar">
+                            <span id="choice-${q.id}" class="choice-display">Seçim: -</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(scene);
+        });
+    }
+
+    // flipCard fonksiyonuna gerek kalmadı.
+
+    function handleImageClick(event, qId) {
+        if (!coordinateMap[qId]) return;
+
+        const img = document.getElementById(`img-${qId}`);
+        const rect = img.getBoundingClientRect();
+        
+        const xPercent = ((event.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((event.clientY - rect.top) / rect.height) * 100;
+
+        const qOptions = coordinateMap[qId];
+        let selected = null;
+
+        for (const [opt, coords] of Object.entries(qOptions)) {
+            const [cX, cY, cW, cH] = coords; 
+            if (xPercent >= cX - cW/2 && xPercent <= cX + cW/2 &&
+                yPercent >= cY - cH/2 && yPercent <= cY + cH/2) {
+                selected = opt;
+                break;
+            }
+        }
+
+        if (selected) {
+            userAnswers[qId] = selected;
+            const marker = document.getElementById(`marker-${qId}`);
+            const [cX, cY] = qOptions[selected];
+            marker.style.left = cX + "%";
+            marker.style.top = cY + "%";
+            marker.style.display = "block";
+            
+            const choiceSpan = document.getElementById(`choice-${qId}`);
+            choiceSpan.innerText = "Seçim: " + selected;
+            choiceSpan.style.background = "#c8e6c9"; 
+            choiceSpan.style.borderColor = "#43a047";
+            choiceSpan.style.color = "#1b5e20";
+        }
+    }
+
+    function finishTest() {
+        const statusDiv = document.getElementById('status');
+        const name = document.getElementById('studentName').value.trim();
+        const studentClass = document.getElementById('studentClass').value.trim();
+
+        // 1. KONTROL: İSİM GİRİLMİŞ Mİ?
+        if (!name || !studentClass) {
+            statusDiv.innerText = "⚠️ Lütfen Ad Soyad ve Sınıf/Şube bilgilerini giriniz!";
+            statusDiv.style.color = "red";
+            if(!name) document.getElementById('studentName').focus();
+            else document.getElementById('studentClass').focus();
+            return;
+        }
+
+        // 2. KONTROL: TOKEN GİRİLMİŞ Mİ?
+        if (!TELEGRAM_BOT_TOKEN) {
+            statusDiv.innerText = "⚠️ Hata: Telegram Token girilmemiş!";
+            statusDiv.style.color = "red";
+            return;
+        }
+
+        statusDiv.innerText = "Sonuçlar gönderiliyor...";
+        statusDiv.style.color = "#555";
+        
+        let correct = 0;
+        let incorrect = 0;
+        let empty = 0;
+        let details = "";
+        
+        questions.forEach(q => {
+            const ans = userAnswers[q.id];
+            let sembol = "";
+            if (!ans) { sembol = "⚪"; empty++; } 
+            else if (ans === q.correct) { sembol = "✅"; correct++; } 
+            else { sembol = "❌"; incorrect++; }
+            
+            details += `S${q.id}: ${ans || 'Boş'} (${sembol})\n`;
+        });
+
+        const report = `📝 *TEST SONUCU RAPORU*\n\n` +
+                       `👤 *Öğrenci:* ${name}\n` +
+                       `🏫 *Sınıf/Şube:* ${studentClass}\n` +
+                       `--------------------------\n` +
+                       `✅ Doğru: ${correct}\n` +
+                       `❌ Yanlış: ${incorrect}\n` +
+                       `⚪ Boş: ${empty}\n\n` +
+                       `*Ayrıntılı Cevaplar:*\n${details}`;
+
+        fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: report,
+                parse_mode: 'Markdown'
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                statusDiv.innerText = `✅ Tebrikler ${name}! Sonuçların öğretmene iletildi.`;
+                statusDiv.style.color = "green";
+                document.getElementById('finishBtn').disabled = true;
+                document.getElementById('finishBtn').style.backgroundColor = "#ccc";
+            } else {
+                statusDiv.innerText = "⚠️ Gönderim hatası oluştu.";
+                statusDiv.style.color = "red";
+            }
+        })
+        .catch(error => {
+            statusDiv.innerText = "⚠️ Bağlantı hatası.";
+            statusDiv.style.color = "red";
+        });
+    }
+
+    renderQuiz();
+
+</script>
+
+</body>
+</html>
