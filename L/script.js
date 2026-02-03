@@ -1,4 +1,4 @@
-// --- ZEYNAL ÖĞRETMEN V76 (GİRİŞ HATASI ÇÖZÜLDÜ) ---
+// --- ZEYNAL ÖĞRETMEN V77 (KESİN BAĞLANTI) ---
 
 const firebaseConfig = {
   apiKey: "AIzaSyAP9qwq7rGzgruRI0tDv9s9bUKl5GWOXqo",
@@ -9,93 +9,61 @@ const firebaseConfig = {
   appId: "1:155483919432:web:3fa53293603368c037347d"
 };
 
-// Firebase'i güvenli şekilde başlat
-if (typeof firebase !== 'undefined') {
-    firebase.initializeApp(firebaseConfig);
-    var db = firebase.firestore();
-}
-
-let settings = { classTarget: 830 };
-let students = [];
+// Global Değişkenler
+let db;
+let teacherPassword = "14531453";
 let studentPassObj = {};
-let teacherPassword = "14531453"; // Sabit öğretmen şifresi
-let records = [];
-let loginMode = 'teacher';
 let isDataLoaded = false;
+let loginMode = 'teacher';
 
 window.onload = function() {
-    startRealTimeSync();
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        console.log("Firebase Başlatıldı.");
+        startRealTimeSync();
+    } catch (e) {
+        console.error("Firebase Hatası:", e);
+        document.getElementById('loader').innerText = "Bağlantı Hatası!";
+    }
 };
 
 function startRealTimeSync() {
-    // Ayarları Çek
+    // Şifre ve Ayarları Dinle
     db.collection("settings").doc("general").onSnapshot(doc => {
-        if(doc.exists) { 
-            settings = doc.data(); 
-            teacherPassword = String(settings.password || "14531453"); 
-        }
+        if(doc.exists) teacherPassword = String(doc.data().password || "14531453");
     });
 
-    // Öğrencileri Çek
+    // Öğrencileri Dinle
     db.collection("students").onSnapshot(snap => {
         studentPassObj = {};
         snap.forEach(doc => { studentPassObj[doc.id] = String(doc.data().password); });
         isDataLoaded = true;
-        document.getElementById('loader').innerText = "Sistem Hazır ✅";
+        document.getElementById('loader').innerText = "Bağlı ✅";
     });
+}
 
-    // Kayıtları Çek
-    db.collection("records").orderBy("timestamp", "desc").onSnapshot(snap => {
-        records = [];
-        snap.forEach(doc => { let d = doc.data(); d.id = doc.id; records.push(d); });
-        updateUI();
-    });
+function login() {
+    const input = loginMode === 'teacher' ? 
+        document.getElementById('appPassword').value : 
+        document.getElementById('studentLoginPass').value;
+
+    if(loginMode === 'teacher') {
+        if(String(input).trim() === teacherPassword) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('teacherContainer').style.display = 'block';
+            document.getElementById('teacherNav').style.display = 'flex';
+        } else { alert("Şifre Hatalı!"); }
+    }
 }
 
 function setLoginMode(mode) {
     loginMode = mode;
-    document.getElementById('tabTeacher').classList.toggle('active', mode === 'teacher');
-    document.getElementById('tabStudent').classList.toggle('active', mode === 'student');
     document.getElementById('teacherLoginForm').style.display = (mode === 'teacher' ? 'block' : 'none');
     document.getElementById('studentLoginForm').style.display = (mode === 'student' ? 'block' : 'none');
-}
-
-function login() {
-    if(!isDataLoaded) { alert("Lütfen verilerin yüklenmesini bekleyin..."); return; }
-    
-    const inputVal = loginMode === 'teacher' ? 
-        document.getElementById('appPassword').value.trim() : 
-        document.getElementById('studentLoginPass').value.trim();
-
-    if(loginMode === 'teacher') {
-        if(String(inputVal) === String(teacherPassword)) {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            document.getElementById('teacherContainer').style.display = 'block';
-            updateUI();
-        } else { alert("Öğretmen şifresi hatalı!"); }
-    } else {
-        const student = Object.keys(studentPassObj).find(s => String(studentPassObj[s]) === String(inputVal));
-        if(student) {
-            alert("Hoş geldin " + student);
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-        } else { alert("Öğrenci şifresi hatalı!"); }
-    }
-}
-
-function updateUI() {
-    let completed = records.filter(r => r.status === "İade Etti").length;
-    let percent = Math.floor((completed / settings.classTarget) * 100);
-    document.getElementById('progressBar').style.width = percent + "%";
-    document.getElementById('targetText').innerText = `${completed} / ${settings.classTarget} Kitap`;
-    
-    // Son hareketler listesini render et
-    const div = document.getElementById('historyList');
-    div.innerHTML = "";
-    records.filter(r => r.status === "Okuyor").forEach(r => {
-        div.innerHTML += `<div class="list-item" style="padding:10px; border-bottom:1px solid #eee;">
-            <strong>${r.book}</strong><br><small>${r.student}</small>
-        </div>`;
-    });
+    document.getElementById('tabTeacher').classList.toggle('active', mode === 'teacher');
+    document.getElementById('tabStudent').classList.toggle('active', mode === 'student');
 }
