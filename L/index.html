@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#f5f7fa">
     <title>Zeynal Öğretmen Kütüphanesi</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -104,7 +107,7 @@
         
         <div class="container" id="teacherContainer" style="display:none;">
             <div class="glass-panel" style="padding: 15px; padding-bottom: 10px; margin-bottom: 20px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem; font-weight:600; color:var(--text-sub);"><span>🎯 Sınıf Hedefi</span><span id="targetText">0 / 500 Kitap</span></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem; font-weight:600; color:var(--text-sub);"><span>🎯 Sınıf Hedefi</span><span id="targetText">0 / 830 Kitap</span></div>
                 <div class="progress-container"><div class="progress-fill" id="progressBar" style="width: 0%;"></div><div class="progress-text" id="progressPercent">0%</div></div>
             </div>
             
@@ -116,7 +119,7 @@
                     <button class="btn btn-primary" onclick="lendBook()">Kitabı Teslim Et</button>
                 </div>
                 <div class="glass-panel">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h4 style="margin:0; color:var(--text-main);">Son Hareketler</h4><span id="syncStatus" style="font-size:0.75rem; color:var(--text-sub); opacity:0.7;">Senkronize</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h4 style="margin:0; color:var(--text-main);">Son Hareketler</h4><span id="syncStatus" style="font-size:0.75rem; color:var(--text-sub); opacity:0.7;">Bağlanıyor...</span></div>
                     <div id="historyList"></div>
                 </div>
             </div>
@@ -124,8 +127,8 @@
             <div id="tab-books" class="section">
                 <div class="glass-panel">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div class="filter-group" style="margin-bottom:0; flex:1;"><div class="filter-chip active" onclick="filterBooks('all', this)">Tümü</div><div class="filter-chip" onclick="filterBooks('out', this)">Dışarıda</div><div class="filter-chip" onclick="filterBooks('rating', this)">Puan</div></div>
-                    <button class="btn-edit-toggle" id="editToggleBtn" onclick="toggleEditMode()">✏️ Düzenle</button>
+                        <div class="filter-group" style="margin-bottom:0; flex:1;"><div class="filter-chip active" onclick="filterBooks('all', this)">Tümü</div><div class="filter-chip" onclick="filterBooks('out', this)">Dışarıda</div><div class="filter-chip" onclick="filterBooks('rating', this)">Puan</div></div>
+                        <button class="btn-edit-toggle" id="editToggleBtn" onclick="toggleEditMode()">✏️ Düzenle</button>
                     </div>
                     <div class="input-wrapper"><input type="text" id="bookSearch" placeholder="Kitap Ara..." onkeyup="handleInput(this); renderBookManager()"><i class="fas fa-times-circle clear-btn" onclick="clearField('bookSearch', renderBookManager)"></i></div>
                     <div id="bookManagerList"></div>
@@ -158,8 +161,8 @@
             <div id="tab-settings" class="section">
                 <div class="glass-panel">
                     <h3 style="margin:0 0 15px 0; color:var(--primary);">⚙️ Genel Ayarlar</h3>
-                    <label class="setting-label">Sınıf Kitap Hedefi</label><div class="input-wrapper"><input type="number" id="set-target" placeholder="Örn: 500"></div>
-                    <div class="setting-row"><div style="flex:1"><label class="setting-label">Gümüş Madalya</label><input type="number" id="set-silver" placeholder="3"></div><div style="flex:1"><label class="setting-label">Altın Madalya</label><input type="number" id="set-gold" placeholder="5"></div></div>
+                    <label class="setting-label">Sınıf Kitap Hedefi</label><div class="input-wrapper"><input type="number" id="set-target" placeholder="Örn: 830"></div>
+                    <div class="setting-row"><div style="flex:1"><label class="setting-label">Gümüş Madalya</label><input type="number" id="set-silver" placeholder="4"></div><div style="flex:1"><label class="setting-label">Altın Madalya</label><input type="number" id="set-gold" placeholder="6"></div></div>
                     <button class="btn btn-primary" onclick="saveSettings()">Ayarları Kaydet</button>
                 </div>
                 <div class="glass-panel">
@@ -167,10 +170,8 @@
                     <div class="input-wrapper" style="margin-bottom:5px;"><input type="text" id="single-student-add" placeholder="Yeni Öğrenci Adı..."></div>
                     <div class="input-wrapper"><input type="text" id="single-student-pass" placeholder="Öğrenci Şifresi (İsteğe bağlı)"></div>
                     <button class="btn btn-primary" onclick="addSingleStudent()">Öğrenciyi Kaydet</button>
-                    
                     <div class="divider-text">Mevcut Şifreleri Düzenle</div>
                     <div id="studentPassList" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div>
-                    
                     <div class="divider-text" style="color:#ef4444;">Silme İşlemleri</div>
                     <div style="display:flex; gap:5px;"><input type="text" list="studentList" id="single-student-del" placeholder="Silinecek Öğrenci..." style="flex:1;"><button class="btn btn-danger" style="width:auto; margin-bottom:0;" onclick="delSingleStudent()">Sil</button></div>
                 </div>
@@ -187,7 +188,6 @@
         </div>
 
         <div class="container" id="studentContainer" style="display:none;">
-            
             <div class="glass-panel" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
@@ -198,7 +198,6 @@
                         <div style="font-size:1.5rem;" id="stMedals"></div>
                     </div>
                 </div>
-                
                 <div style="display:flex; gap:10px; margin-top:15px;">
                     <div class="summary-box" style="background:rgba(255,255,255,0.4);">
                         <div class="sb-title">Okunan Kitap</div>
@@ -216,7 +215,6 @@
                     <h4 style="margin:0 0 10px 0; color:var(--text-main);">🚀 Okuma Yolculuğum</h4>
                     <div class="journey-container" id="studentSpaceJourney"><div class="stars"></div><svg class="svg-path" id="studentJourneySvg"></svg></div>
                 </div>
-
                 <div class="glass-panel">
                     <h4 style="margin:0 0 10px 0; color:var(--text-main);">📚 Kütüphane Geçmişim</h4>
                     <div id="studentMyBooksList"></div>
