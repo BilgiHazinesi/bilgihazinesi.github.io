@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2113.65">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+    span.s1 {font: 12.0px 'Apple Color Emoji'}
+  </style>
+</head>
+<body>
+<p class="p1">// --- ZEYNAL ÖĞRETMEN V70 (FIREBASE REAL-TIME EDITION) ---</p>
+<p class="p2"><br></p>
+<p class="p1">// 1. FIREBASE YAPILANDIRMASI</p>
+<p class="p1">const firebaseConfig = {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>apiKey: "AIzaSyAP9qwq7rGzgruRI0tDv9s9bUKl5GWOXqo",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>authDomain: "veri-8e938.firebaseapp.com",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>projectId: "veri-8e938",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>storageBucket: "veri-8e938.firebasestorage.app",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>messagingSenderId: "155483919432",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>appId: "1:155483919432:web:3fa53293603368c037347d"</p>
+<p class="p1">};</p>
+<p class="p2"><br></p>
+<p class="p1">// Firebase Başlatma</p>
+<p class="p1">firebase.initializeApp(firebaseConfig);</p>
+<p class="p1">const db = firebase.firestore();</p>
+<p class="p2"><br></p>
+<p class="p1">// Global Değişkenler</p>
+<p class="p1">let settings = { classTarget: 830, silverLimit: 4, goldLimit: 6 }; // Varsayılanlar resimdeki gibi güncellendi</p>
+<p class="p1">let students = [];<span class="Apple-converted-space"> </span></p>
+<p class="p1">let books = [];<span class="Apple-converted-space"> </span></p>
+<p class="p1">let bookPages = {};<span class="Apple-converted-space"> </span></p>
+<p class="p1">let records = [];<span class="Apple-converted-space"> </span></p>
+<p class="p1">let studentPassObj = {};</p>
+<p class="p1">let teacherPassword = "14531453"; // Varsayılan şifre</p>
+<p class="p1">let currentFilter = 'all';<span class="Apple-converted-space"> </span></p>
+<p class="p1">let statsSortMode = 'book_desc';<span class="Apple-converted-space"> </span></p>
+<p class="p1">let loginMode = 'teacher';<span class="Apple-converted-space"> </span></p>
+<p class="p1">let loggedInStudent = "";</p>
+<p class="p1">let isDataLoaded = false;</p>
+<p class="p1">let tempReturnId = null;</p>
+<p class="p1">let currentRating = 0;</p>
+<p class="p1">let isEditMode = false;</p>
+<p class="p2"><br></p>
+<p class="p1">// Sabitler</p>
+<p class="p1">const RANKS = [{c:0, t:"<span class="s1">🌱</span> Başlangıç"}, {c:5, t:"<span class="s1">🥉</span> Okuma Çırağı"}, {c:10, t:"<span class="s1">📖</span> Kitap Kurdu"},{c:15, t:"<span class="s1">🚀</span> Bilgi Kaşifi"}, {c:20, t:"<span class="s1">🏹</span> Kelime Avcısı"}, {c:25, t:"<span class="s1">👑</span> Kütüphane Muhafızı"},{c:30, t:"<span class="s1">🎩</span> Edebiyat Ustası"}, {c:35, t:"<span class="s1">🌍</span> Bilge Okur"}, {c:40, t:"<span class="s1">💎</span> EFSANE"}];</p>
+<p class="p1">const EXIT_CARDS = {"1":{title:"Macera Hatırası",prompt:"En unutulmaz sahne neydi?"},"2":{title:"Öğrenen Profil",prompt:"Karakter hangi özelliği taşıyor?"},"3":{title:"Duygu Kartı",prompt:"Hangi duyguları hissettin?"},"4":{title:"Bağlantı Kartı",prompt:"Nasıl bir bağ kurdun?"},"5":{title:"Eleştiri Kartı",prompt:"Katılmadığın bir olay var mı?"},"6":{title:"Soru Kartı",prompt:"Seni düşündüren soru neydi?"},"7":{title:"Yaratıcı Son",prompt:"Sonunu nasıl değiştirirdin?"},"8":{title:"Gelişim Kartı",prompt:"Hangi becerini geliştirdi?"},"9":{title:"Tavsiye Kartı",prompt:"Tavsiye eder misin?"}};</p>
+<p class="p2"><br></p>
+<p class="p1">// --- BAŞLANGIÇ ---</p>
+<p class="p1">window.onload = function() {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>console.log("Zeynal Öğretmen Işık Hızı Modu Aktif! V70");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(localStorage.getItem('theme') === 'dark') {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.body.classList.add('dark-mode');<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('themeIcon').innerText = '<span class="s1">☀️</span>';<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Çıkış kartlarını yükle</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let select = document.getElementById('exitCardSelect');<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(select) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>select.innerHTML = '&lt;option value=""&gt;Bir Kart Seç...&lt;/option&gt;';<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>for (const [key, value] of Object.entries(EXIT_CARDS)) {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>let opt = document.createElement('option');<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>opt.value = key;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>opt.innerText = value.title;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>select.appendChild(opt);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>startRealTimeSync();</p>
+<p class="p1">};</p>
+<p class="p2"><br></p>
+<p class="p1">// --- <span class="s1">🔥</span> FIREBASE GERÇEK ZAMANLI SENKRONİZASYON ---</p>
+<p class="p1">function startRealTimeSync() {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 1. Ayarları Dinle</p>
+<p class="p1"><span class="Apple-converted-space">    </span>db.collection("settings").doc("general").onSnapshot((doc) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (doc.exists) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>settings = doc.data();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>teacherPassword = settings.password || "14531453";</p>
+<p class="p1"><span class="Apple-converted-space">            </span>updateUI();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 2. Öğrencileri Dinle</p>
+<p class="p1"><span class="Apple-converted-space">    </span>db.collection("students").onSnapshot((querySnapshot) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>students = [];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>studentPassObj = {};</p>
+<p class="p1"><span class="Apple-converted-space">        </span>querySnapshot.forEach((doc) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let data = doc.data();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>students.push(doc.id);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>studentPassObj[doc.id] = data.password;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>students.sort();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>populateDatalists();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>updateUI();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 3. Kitapları Dinle</p>
+<p class="p1"><span class="Apple-converted-space">    </span>db.collection("books").onSnapshot((querySnapshot) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>books = [];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>bookPages = {};</p>
+<p class="p1"><span class="Apple-converted-space">        </span>querySnapshot.forEach((doc) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>books.push(doc.id);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>bookPages[doc.id] = doc.data().pageCount;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>books.sort();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>populateDatalists();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>updateUI();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 4. Kayıtları Dinle (En Önemli Kısım)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>db.collection("records").orderBy("timestamp", "desc").onSnapshot((querySnapshot) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>records = [];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>querySnapshot.forEach((doc) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let data = doc.data();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>data.id = doc.id; // Firestore belge ID'sini kullan</p>
+<p class="p1"><span class="Apple-converted-space">            </span>records.push(data);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>isDataLoaded = true;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('loader').style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('syncStatus').innerText = "Anlık Bağlı <span class="s1">✅</span>";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>updateUI();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(loginMode === 'student' &amp;&amp; loggedInStudent) renderStudentPanel();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}, (error) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>console.error("Firebase Hatası:", error);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('syncStatus').innerText = "Bağlantı Koptu <span class="s1">❌</span>";</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// --- VERİ YAZMA İŞLEMLERİ (FIREBASE) ---</p>
+<p class="p1">function lendBook() {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const s = document.getElementById('studentInput').value.trim().toUpperCase();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const b = document.getElementById('bookInput').value.trim();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(!s || !b) { alert("Eksik bilgi!"); return; }<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const newRecord = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>timestamp: firebase.firestore.FieldValue.serverTimestamp(),</p>
+<p class="p1"><span class="Apple-converted-space">        </span>date: getLocalTime(),</p>
+<p class="p1"><span class="Apple-converted-space">        </span>student: s,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>book: b,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status: "Okuyor",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>returnDate: "-",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>rating: 0,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>comment: "",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>cardId: ""</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Kaydı ekle</p>
+<p class="p1"><span class="Apple-converted-space">    </span>db.collection("records").add(newRecord).then(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('bookInput').value = "";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>handleInput(document.getElementById('bookInput'));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function submitReturn() {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!tempReturnId) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let cardId = document.getElementById('exitCardSelect').value;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let comment = document.getElementById('returnComment').value;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const updateData = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>status: "İade Etti",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>returnDate: getLocalTime(),</p>
+<p class="p1"><span class="Apple-converted-space">        </span>rating: currentRating,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>cardId: cardId,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>cardTitle: cardId ? EXIT_CARDS[cardId].title : "",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>comment: comment</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>db.collection("records").doc(tempReturnId).update(updateData).then(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>closeRatingModal();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// --- DİĞER FONKSİYONLAR (ARAYÜZ VE MANTIK) ---</p>
+<p class="p1">function updateUI() {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>analyzeData();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>renderHistory();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>renderBookManager();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>renderRanking();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>updateProgressBar();<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(document.getElementById('studentPassList')) renderPassManager();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} catch(e) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>console.error("UI Güncelleme Hatası:", e);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function analyzeData() {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>activeBooksMap = {};<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>lastHistoryMap = {};<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>records.forEach(r =&gt; {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let key = normalizeStr(r.book);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(r.status === "Okuyor") {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if(!activeBooksMap[key]) activeBooksMap[key] = [];<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>activeBooksMap[key].push(r);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else if (r.status === "İade Etti") {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if(!lastHistoryMap[key]) lastHistoryMap[key] = { student: r.student, date: r.returnDate };<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>});<span class="Apple-converted-space"> </span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let totalPagesRead = 0;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>records.forEach(r =&gt; {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(r.status === "İade Etti") totalPagesRead += (parseInt(bookPages[r.book]) || 0);<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>});<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(document.getElementById('statTotalPages')) document.getElementById('statTotalPages').innerText = totalPagesRead.toLocaleString();<span class="Apple-converted-space"> </span></p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ... (Buradan sonrası senin mevcut renderRanking, renderStudentPanel vb. fonksiyonlarınla aynı kalacak) ...</p>
+<p class="p1">// Not: syncData() fonksiyonuna artık ihtiyaç yok çünkü Firebase her işlemi anında senkronize eder.</p>
+<p class="p2"><br></p>
+<p class="p1">function deleteRecord(id) {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(confirm("Silmek istiyor musunuz?")) {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>db.collection("records").doc(id).delete();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}<span class="Apple-converted-space"> </span></p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function normalizeStr(str) { return str ? str.toString().trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr-TR') : ""; }</p>
+<p class="p1">function getLocalTime() { let now = new Date(); return now.toLocaleDateString('tr-TR') + " " + now.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}); }</p>
+<p class="p1">function handleInput(input) { let btn = input.nextElementSibling; if(btn &amp;&amp; btn.classList.contains('clear-btn')) { btn.style.display = input.value.length &gt; 0 ? 'block' : 'none'; } }</p>
+<p class="p1">function toggleTheme() { document.body.classList.toggle('dark-mode'); let isDark = document.body.classList.contains('dark-mode'); document.getElementById('themeIcon').innerText = isDark ? '<span class="s1">☀️</span>' : '<span class="s1">🌙</span>'; localStorage.setItem('theme', isDark ? 'dark' : 'light'); }</p>
+</body>
+</html>
