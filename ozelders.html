@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Özel Ders Takip - Zeynal Öğretmen</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; padding: 15px; margin: 0; padding-bottom: 80px; }
+        .kart { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; border: 1px solid #e5e7eb; }
+        h2 { text-align: center; color: #111827; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        .btn-ana { width: 100%; padding: 14px; background: #4f46e5; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .ders-satir { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 10px; margin-bottom: 8px; border: 1px solid #e5e7eb; cursor: pointer; }
+        .ders-satir.secili { border: 2px solid #4f46e5; background: #eef2ff; }
+        .ucret { font-weight: 700; color: #059669; }
+        #bulkBar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 25px; border-radius: 30px; display: none; align-items: center; gap: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+    <h2><span class="material-icons-round" style="color:#4f46e5">cloud_done</span> Ders Takip Bulut Sürümü</h2>
+
+    <div class="kart">
+        <label style="font-size:11px; font-weight:600; color:#6b7280;">ÖĞRENCİ ADI</label>
+        <input type="text" id="studentInput" list="studentList" placeholder="Seçiniz...">
+        <datalist id="studentList"></datalist>
+
+        <label style="font-size:11px; font-weight:600; color:#6b7280;">DERS SÜRESİ</label>
+        <input type="number" id="durationInput" placeholder="Süre (Örn: 2)">
+        
+        <button class="btn-ana" onclick="saveLesson()"><span class="material-icons-round">save</span> KAYDET</button>
+    </div>
+
+    <div id="lessonList"></div>
+
+    <div id="bulkBar">
+        <span id="bulkCount">0 Seçildi</span>
+        <button onclick="markPaid()" style="background:#4f46e5; color:white; border:none; padding:8px 15px; border-radius:20px; cursor:pointer; font-weight:600;">ÖDENDİ YAP</button>
+    </div>
+
+    <script>
+        // FIREBASE AYARLARI
+        const firebaseConfig = {
+            apiKey: "AIzaSyAP9qwq7rGzgruRI0tDv9s9bUKl5GWOXqo",
+            authDomain: "veri-8e938.firebaseapp.com",
+            projectId: "veri-8e938",
+            storageBucket: "veri-8e938.firebasestorage.app",
+            messagingSenderId: "155483919432",
+            appId: "1:155483919432:web:3fa53293603368c037347d"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let selectedIds = new Set();
+        let studentsMap = {};
+
+        window.onload = function() {
+            // Öğrencileri ve Ücretleri Çek
+            db.collection("students").onSnapshot(snap => {
+                const dl = document.getElementById('studentList');
+                dl.innerHTML = "";
+                snap.forEach(doc => {
+                    studentsMap[doc.id] = doc.data().rate || 0;
+                    dl.innerHTML += `<option value="${doc.id}">`;
+                });
+            });
+
+            // Ödenmemiş Dersleri Listele
+            db.collection("lessons")
+              .where("status", "==", "Ödenmedi")
+              .onSnapshot(snap => {
+                  const listDiv = document.getElementById("lessonList");
+                  listDiv.innerHTML = "";
+                  if(snap.empty) { listDiv.innerHTML = "<p style='text-align:center; color:#888;'>Ödenmemiş ders yok. 🎉</p>"; return; }
+
+                  snap.forEach(doc => {
+                      const d = doc.data();
+                      const rate = studentsMap[d.student] || 0;
+                      listDiv.innerHTML += `
+                        <div class="ders-satir" onclick="toggleSelect('${doc.id}', this)">
+                            <div><strong>${d.student}</strong><br><small style="color:#999">${d.date}</small></div>
+                            <div class="ucret">${d.duration * rate} ₺</div>
+                        </div>`;
+                  });
+              });
+        };
+
+        function saveLesson() {
+            const student = document.getElementById("studentInput").value.trim();
+            const duration = parseFloat(document.getElementById("durationInput").value);
+            if(!student || !duration) return alert("Eksik bilgi!");
+
+            db.collection("lessons").add({
+                student,
+                duration,
+                status: "Ödenmedi",
+                date: new Date().toLocaleString('tr-TR'),
+                timestamp: Date.now()
+            }).then(() => {
+                alert("Kaydedildi!");
+                document.getElementById("durationInput").value = "";
+            });
+        }
+
+        function toggleSelect(id, el) {
+            if(selectedIds.has(id)) { selectedIds.delete(id); el.classList.remove('secili'); }
+            else { selectedIds.add(id); el.classList.add('secili'); }
+            document.getElementById("bulkBar").style.display = selectedIds.size > 0 ? "flex" : "none";
+            document.getElementById("bulkCount").innerText = selectedIds.size + " Seçildi";
+        }
+
+        function markPaid() {
+            const batch = db.batch();
+            selectedIds.forEach(id => batch.update(db.collection("lessons").doc(id), { status: "Ödendi" }));
+            batch.commit().then(() => {
+                alert("Ödendi işaretlendi!");
+                selectedIds.clear();
+                document.getElementById("bulkBar").style.display = "none";
+            });
+        }
+    </script>
+</body>
+</html>
