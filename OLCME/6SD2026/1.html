@@ -27,6 +27,15 @@
         .summary-table th { background: #f8fafc; padding: 10px; border-bottom: 2px solid #e2e8f0; font-size: 0.85rem; text-transform: uppercase; }
         .summary-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: center; font-weight: 500; }
         .summary-table tr:hover { background-color: #f1f5f9; }
+        
+        /* Büyük X butonu için özel stil */
+        .clear-btn {
+            position: absolute; right: 0; top: 0; bottom: 0;
+            width: 50px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: #ef4444; cursor: pointer;
+            z-index: 20;
+        }
+        .clear-btn:hover { background-color: #fee2e2; border-top-right-radius: 0.75rem; border-bottom-right-radius: 0.75rem; }
     </style>
 </head>
 <body class="pb-40" onclick="closeSearchOutside(event)">
@@ -45,21 +54,32 @@
     <div id="app-content" style="display:none;">
         <div class="sticky-nav">
             <div class="max-w-7xl mx-auto px-4">
-                <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-3 pt-3">
+                <div class="flex flex-col md:flex-row gap-3 items-center justify-between mb-3 pt-3">
                     <div id="classBadgeDisplay" class="class-badge hidden md:flex min-w-[140px] justify-center"><span id="badgeText">A Şubesi</span></div>
+                    
                     <div class="relative w-full md:max-w-md lg:max-w-lg">
-                        <div class="relative">
-                            <input type="text" id="searchInput" class="w-full pl-11 p-3 border-2 border-slate-300 rounded-xl bg-white focus:border-blue-600 focus:ring-0 font-bold text-lg outline-none shadow-sm transition" placeholder="Öğrenci Ara..." oninput="filterStudents()" onfocus="filterStudents()" autocomplete="off">
-                            <i class="fas fa-search absolute left-4 top-4 text-slate-400 text-lg"></i>
-                            <i class="fas fa-times absolute right-4 top-4 text-slate-400 cursor-pointer hover:text-red-500 text-lg" onclick="clearSearch()"></i>
+                        <div class="relative h-12">
+                            <input type="text" id="searchInput" class="w-full h-full pl-10 pr-14 border-2 border-slate-300 rounded-xl bg-white focus:border-blue-600 focus:ring-0 font-bold text-base outline-none shadow-sm transition" placeholder="Öğrenci Ara..." oninput="filterStudents()" onfocus="filterStudents()" autocomplete="off">
+                            
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg"></i>
+                            
+                            <div class="clear-btn" onclick="clearSearch()">
+                                <i class="fas fa-times"></i>
+                            </div>
                         </div>
                         <ul id="dropdownContainer" class="hidden absolute w-full bg-white mt-1 rounded-xl shadow-2xl border border-slate-200 z-[100] max-h-72 overflow-y-auto"><ul id="searchResults" class="divide-y divide-slate-100"></ul></ul>
                     </div>
+                    
                     <div class="flex gap-2 w-full md:w-auto justify-end">
                         <div id="mobileClassBadge" class="class-badge md:hidden text-sm px-3 py-2 mr-auto"><span id="mobileBadgeText">A</span></div>
-                        <button onclick="openClassReport()" class="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow hover:bg-teal-700 flex items-center gap-2 transition active:scale-95"><i class="fas fa-chart-bar"></i> <span class="hidden sm:inline">Özet</span></button>
-                        <button onclick="openEditModal()" class="bg-slate-700 text-white px-4 py-2 rounded-lg font-bold text-sm shadow hover:bg-slate-800 flex items-center gap-2 transition active:scale-95"><i class="fas fa-list"></i> <span class="hidden sm:inline">Liste</span></button>
-                        <button onclick="syncToCloud()" id="syncBtn" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow hover:bg-orange-700 flex items-center gap-2 transition active:scale-95"><i class="fas fa-cloud-upload-alt"></i> <span class="hidden sm:inline">Kaydet</span></button>
+                        
+                        <button onclick="openClassReport()" class="bg-teal-600 text-white px-3 py-2 rounded-lg font-bold text-sm shadow hover:bg-teal-700 flex items-center gap-2 transition active:scale-95"><i class="fas fa-chart-bar"></i> <span class="hidden sm:inline">Özet</span></button>
+                        <button onclick="openEditModal()" class="bg-slate-700 text-white px-3 py-2 rounded-lg font-bold text-sm shadow hover:bg-slate-800 flex items-center gap-2 transition active:scale-95"><i class="fas fa-list"></i> <span class="hidden sm:inline">Liste</span></button>
+                        
+                        <button onclick="syncToCloud()" id="syncBtn" class="flex-1 md:flex-none justify-center bg-orange-600 text-white px-6 py-3 md:py-2 rounded-lg font-black text-base md:text-sm shadow-md hover:bg-orange-700 flex items-center gap-2 transition active:scale-95 border-b-4 border-orange-800 active:border-b-0 active:translate-y-1">
+                            <i class="fas fa-cloud-upload-alt text-lg"></i> 
+                            <span>KAYDET</span>
+                        </button>
                     </div>
                 </div>
                 <div class="flex space-x-1 border-b-2 border-slate-200">
@@ -145,16 +165,16 @@
                 { id: 't10', title: '10. Kelime Anlamı', max: 6, type: 'score', step: 2, desc: 'Teleskop, Havalara uçmak' }
             ],
             MAT: [
-                { id: 'm1', title: '1. Çarpma İşlemleri', max: 10, type: 'score', step: 2, desc: '5 işlem' },
-                { id: 'm2', title: '2. Problem (Elma)', max: 10, type: 'score', step: 1, desc: 'Çarpma ve toplama' },
-                { id: 'm3', title: '3. Çıkarma', max: 10, type: 'score', step: 1, desc: 'Eksilen-Çıkan' },
-                { id: 'm4', title: '4. Boşluk Doldurma', max: 10, type: 'multi', parts:[{l:'Toplam', v:4}, {l:'Sıralama', v:3}, {l:'Tek Sayı', v:3}], desc: 'Sayı oluşturma' },
-                { id: 'm5', title: '5. Eşitliği Sağlama', max: 10, type: 'score', step: 1, desc: 'Denklem çözümü (35)' },
-                { id: 'm6', title: '6. İşlem Sonucu', max: 10, type: 'score', step: 1, desc: 'Bölme ve çarpma farkı' },
-                { id: 'm7', title: '7. Ritmik Sayma', max: 10, type: 'score', step: 2, desc: 'Yuvarlama' },
-                { id: 'm8', title: '8. Problem (Torun)', max: 10, type: 'score', step: 1, desc: 'Toplama ve bölme' },
-                { id: 'm9', title: '9. Problem (Kazak)', max: 10, type: 'score', step: 1, desc: 'Kat problemleri' },
-                { id: 'm10', title: '10. Problem (Poşet)', max: 10, type: 'score', step: 1, desc: 'Adım adım işlemler' }
+                { id: 'm1', title: '1. İşlemler', max: 10, type: 'multi', parts:[{l:'8753 + 4879 = 13632', v:2}, {l:'6098 - 732 = 5366', v:2}, {l:'705 x 45 = 31725', v:2}, {l:'Bölme İşlemi', v:2}, {l:'Diğer İşlem', v:2}], desc: '4 işlem becerisi' },
+                { id: 'm2', title: '2. Elma Problemi', max: 10, type: 'multi', parts:[{l:'36 x 12 = 432 (3p)', v:3}, {l:'27 x 15 = 405 (3p)', v:3}, {l:'432 + 405 = 837 (4p)', v:4}], desc: 'Çarpma ve Toplama' },
+                { id: 'm3', title: '3. Eksilen-Çıkan', max: 10, type: 'multi', parts:[{l:'Eksilen: 9876 (3p)', v:3}, {l:'Çıkan: 1023 (3p)', v:3}, {l:'Fark: 8853 (4p)', v:4}], desc: 'Sayı oluşturma ve çıkarma' },
+                { id: 'm4', title: '4. Sayı Bilgisi', max: 10, type: 'multi', parts:[{l:'a) 100 + 99 = 199', v:4}, {l:'b) 2. Sıra: 1075', v:3}, {l:'c) En küçük: 1001', v:3}], desc: 'Tek/Çift ve Sıralama' },
+                { id: 'm5', title: '5. Eşitlik Sağlama', max: 10, type: 'multi', parts:[{l:'15 x 4 = 60', v:3}, {l:'60 - 25 İşlemi', v:3}, {l:'Sonuç: 35', v:4}], desc: 'Verilmeyeni bulma' },
+                { id: 'm6', title: '6. A ve B İşlemleri', max: 10, type: 'multi', parts:[{l:'A (3472 : 4 = 868)', v:3}, {l:'B (254 x 25 = 6350)', v:3}, {l:'Fark (5482)', v:4}], desc: 'Bölme ve Çarpma farkı' },
+                { id: 'm7', title: '7. Ritmik/Yuvarlama', max: 10, type: 'multi', parts:[{l:'3. Sayı (9386)', v:4}, {l:'Yuvarlama (9390)', v:6}], desc: 'Yüzer sayma ve onluğa yuvarlama' },
+                { id: 'm8', title: '8. Bayram Harçlığı', max: 10, type: 'multi', parts:[{l:'Toplam: 1080 TL', v:5}, {l:'1080 : 60 = 18', v:5}], desc: 'Toplama ve bölme' },
+                { id: 'm9', title: '9. Kazak Problemi', max: 10, type: 'multi', parts:[{l:'A Fiyatı (3278 TL)', v:6}, {l:'Toplam (5667 TL)', v:4}], desc: 'Kat ve fazlalık hesabı' },
+                { id: 'm10', title: '10. Poşetleme', max: 10, type: 'multi', parts:[{l:'İlk Durum (110 Poşet)', v:6}, {l:'İkinci (150) ve Fark (40)', v:4}], desc: 'Bölme ve karşılaştırma' }
             ],
             FEN: [
                 { id: 'f1', title: '1. Hacim Hesaplama', max: 15, type: 'multi', parts:[{l:'X Hacmi', v:5}, {l:'Kap', v:5}, {l:'Y Hacmi', v:5}], desc: 'Sıvı seviyeleri' },
@@ -358,7 +378,11 @@
             renderQuestions();
         }
         function clearSearch() { document.getElementById('searchInput').value=""; document.getElementById('dropdownContainer').classList.add('hidden'); }
-        function closeSearchOutside(e) { if(!document.getElementById('dropdownContainer').contains(e.target) && e.target.id!=='searchInput') document.getElementById('dropdownContainer').classList.add('hidden'); }
+        function closeSearchOutside(e) { 
+            // clear-btn'e tıklanırsa da kapanmasın, kendi fonksiyonu çalışsın
+            if(!document.getElementById('dropdownContainer').contains(e.target) && e.target.id!=='searchInput' && !e.target.closest('.clear-btn')) 
+                document.getElementById('dropdownContainer').classList.add('hidden'); 
+        }
         
         function syncToCloud() {
             const btn = document.getElementById('syncBtn'); const original = btn.innerHTML;
