@@ -28,7 +28,6 @@
         .summary-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: center; font-weight: 500; }
         .summary-table tr:hover { background-color: #f1f5f9; }
         
-        /* Büyük X butonu için özel stil */
         .clear-btn {
             position: absolute; right: 0; top: 0; bottom: 0;
             width: 50px; display: flex; align-items: center; justify-content: center;
@@ -48,6 +47,12 @@
             <button onclick="loadClass('C')" class="aspect-square bg-white text-slate-900 rounded-3xl text-5xl font-black hover:bg-blue-50 hover:scale-105 transition shadow-2xl border-4 border-transparent hover:border-blue-500">C</button>
             <button onclick="loadClass('D')" class="aspect-square bg-white text-slate-900 rounded-3xl text-5xl font-black hover:bg-blue-50 hover:scale-105 transition shadow-2xl border-4 border-transparent hover:border-blue-500">D</button>
         </div>
+        
+        <div class="mt-8 flex gap-4">
+            <button onclick="openDataModal()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition border border-gray-500">
+                <i class="fas fa-database"></i> Veri Yönetimi / JSON Yükle
+            </button>
+        </div>
         <div id="spinner" class="hidden mt-10"><i class="fas fa-circle-notch fa-spin text-5xl text-blue-400"></i></div>
     </div>
 
@@ -60,9 +65,7 @@
                     <div class="relative w-full md:max-w-md lg:max-w-lg">
                         <div class="relative h-12">
                             <input type="text" id="searchInput" class="w-full h-full pl-10 pr-14 border-2 border-slate-300 rounded-xl bg-white focus:border-blue-600 focus:ring-0 font-bold text-base outline-none shadow-sm transition" placeholder="Öğrenci Ara..." oninput="filterStudents()" onfocus="filterStudents()" autocomplete="off">
-                            
                             <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg"></i>
-                            
                             <div class="clear-btn" onclick="clearSearch()">
                                 <i class="fas fa-times"></i>
                             </div>
@@ -72,6 +75,8 @@
                     
                     <div class="flex gap-2 w-full md:w-auto justify-end">
                         <div id="mobileClassBadge" class="class-badge md:hidden text-sm px-3 py-2 mr-auto"><span id="mobileBadgeText">A</span></div>
+                        
+                        <button onclick="openDataModal()" class="bg-gray-700 text-white px-3 py-2 rounded-lg font-bold text-sm shadow hover:bg-gray-800 flex items-center gap-2 transition active:scale-95"><i class="fas fa-database"></i></button>
                         
                         <button onclick="openClassReport()" class="bg-teal-600 text-white px-3 py-2 rounded-lg font-bold text-sm shadow hover:bg-teal-700 flex items-center gap-2 transition active:scale-95"><i class="fas fa-chart-bar"></i> <span class="hidden sm:inline">Özet</span></button>
                         <button onclick="openEditModal()" class="bg-slate-700 text-white px-3 py-2 rounded-lg font-bold text-sm shadow hover:bg-slate-800 flex items-center gap-2 transition active:scale-95"><i class="fas fa-list"></i> <span class="hidden sm:inline">Liste</span></button>
@@ -141,6 +146,48 @@
         </div>
     </div>
 
+    <div id="dataModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[80] backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 class="font-bold mb-4 text-2xl text-slate-800 text-center">Veri Yönetimi</h3>
+            
+            <div class="mb-8 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <h4 class="font-bold text-blue-800 mb-2">1. Seçili Sınıfı İnternetten Çek</h4>
+                <p class="text-sm text-blue-600 mb-3">Çalışacağınız sınıfı seçip "İndir" butonuna basarak verileri telefona kaydedin. Tüm okulu indirmek yerine sadece ilgili sınıfı indirir.</p>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <select id="classSelect" class="p-2 border rounded-lg font-bold text-slate-700">
+                        <option value="A">A Şubesi</option>
+                        <option value="B">B Şubesi</option>
+                        <option value="C">C Şubesi</option>
+                        <option value="D">D Şubesi</option>
+                    </select>
+                    <button onclick="downloadSingleClass()" id="btnDownloadSingle" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition">
+                        <i class="fas fa-cloud-download-alt"></i> İndir
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                <h4 class="font-bold text-orange-800 mb-2">2. Manuel JSON Yükle</h4>
+                <p class="text-sm text-orange-600 mb-3">Google Script çıktısını (JSON) kopyalayıp buraya yapıştırın. İnternet olmadan verileri yüklemenizi sağlar.</p>
+                
+                <div class="flex gap-2 mb-2">
+                    <select id="jsonClass" class="p-1 border rounded w-1/2 text-sm font-bold"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+                    <select id="jsonSubject" class="p-1 border rounded w-1/2 text-sm font-bold"><option value="TR">Türkçe</option><option value="MAT">Matematik</option><option value="FEN">Fen</option><option value="SOS">Sosyal</option></select>
+                </div>
+                
+                <textarea id="jsonInput" class="w-full h-32 border-2 p-3 rounded-xl text-xs bg-white focus:border-orange-500 outline-none resize-none font-mono" placeholder='{"status":"success", "students": [...], "scores": {...}}'></textarea>
+                
+                <button onclick="saveManualJSON()" class="w-full mt-3 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg transition">
+                    <i class="fas fa-save"></i> Hafızaya Kaydet
+                </button>
+            </div>
+
+            <button onclick="document.getElementById('dataModal').classList.add('hidden')" class="mt-6 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-xl transition">
+                Kapat
+            </button>
+        </div>
+    </div>
+
     <script>
         // *** LÜTFEN GÜNCEL SCRİPT URL'NİZİ BURAYA YAPIŞTIRIN ***
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNy5gr9FMT6o6bU-Zhvl7OJrwW61lMYEyiumodgvf7snRuY2a1wC561cOa57N8u5Td8A/exec"; 
@@ -150,6 +197,7 @@
         let students = [];
         let db = {}; 
         let currentStudent = null;
+        const memoryCache = {}; // Geçici hafıza (Localstorage yedeği)
 
         const questionsData = {
             TR: [
@@ -177,94 +225,73 @@
                 { id: 'm10', title: '10. Poşetleme', max: 10, type: 'multi', parts:[{l:'İlk Durum (110 Poşet)', v:6}, {l:'İkinci (150) ve Fark (40)', v:4}], desc: 'Bölme ve karşılaştırma' }
             ],
             FEN: [
-                {
-                    id: 'f1',
-                    title: '1. Hacim Hesaplama',
-                    max: 15,
-                    type: 'multi',
-                    parts: [
-                        {l: 'X (150 mL)', v: 7},
-                        {l: 'Y (250 mL)', v: 8}
-                    ],
-                    desc: 'X ve Y cisimlerinin hacimleri'
-                },
-                {
-                    id: 'f2',
-                    title: '2. Doğru/Yanlış',
-                    max: 15,
-                    type: 'multi',
-                    parts: [
-                        {l: 'a. Güneş Konumu (Y)', v: 3},
-                        {l: 'b. Hızlandırıcı (D)', v: 3},
-                        {l: 'c. Mıknatıs (Y)', v: 3},
-                        {l: 'd. Brüt Kütle (Y)', v: 3},
-                        {l: 'e. Fosil (Y)', v: 3}
-                    ],
-                    desc: 'Dünya, Kuvvet, Mıknatıs, Kütle, Fosil'
-                },
-                {
-                    id: 'f3',
-                    title: '3. Boşluk Doldurma',
-                    max: 30,
-                    type: 'multi',
-                    parts: [
-                        {l: 'a. İtme Kuvveti', v: 5},
-                        {l: 'b. Belirli Şekil', v: 5},
-                        {l: 'c. Sıkıştırılabilir', v: 5},
-                        {l: 'd. Çekilemeyen', v: 5},
-                        {l: 'e. Sıvılarla', v: 5},
-                        {l: 'f. Suda Yüzme', v: 5}
-                    ],
-                    desc: 'Kavram bilgisi'
-                },
-                {
-                    id: 'f4',
-                    title: '4. Madde Özellikleri',
-                    max: 15,
-                    type: 'multi',
-                    parts: [
-                        {l: 'Lego (Emmez)', v: 7},
-                        {l: 'Bez (Emer)', v: 8}
-                    ],
-                    desc: 'Suyu emme ve emmeme'
-                },
-                {
-                    id: 'f5',
-                    title: '5. Maddenin Halleri',
-                    max: 15,
-                    type: 'multi',
-                    parts: [
-                        {l: '1. Katı + Örnek', v: 5},
-                        {l: '2. Sıvı + Örnek', v: 5},
-                        {l: '3. Gaz + Örnek', v: 5}
-                    ],
-                    desc: 'Katı, Sıvı, Gaz tespiti ve örnekleri'
-                },
-                {
-                    id: 'f6',
-                    title: '6. Isı Yorumları',
-                    max: 10,
-                    type: 'multi',
-                    parts: [
-                        {l: 'I. Isı Akış Yönü (İşaretlenmeli)', v: 5},
-                        {l: 'II. Tüm Isı (İşaretlenmemeli)', v: 0},
-                        {l: 'III. Sıcaklık Artışı (İşaretlenmemeli)', v: 0},
-                        {l: 'IV. Isı Alan (İşaretlenmeli)', v: 5}
-                    ],
-                    desc: 'I ve IV doğru işaretlenmeli'
-                }
+                { id: 'f1', title: '1. Hacim Hesaplama', max: 15, type: 'multi', parts: [{l: 'X (150 mL)', v: 7}, {l: 'Y (250 mL)', v: 8}], desc: 'X ve Y cisimlerinin hacimleri' },
+                { id: 'f2', title: '2. Doğru/Yanlış', max: 15, type: 'multi', parts: [{l: 'a. Güneş Konumu (Y)', v: 3}, {l: 'b. Hızlandırıcı (D)', v: 3}, {l: 'c. Mıknatıs (Y)', v: 3}, {l: 'd. Brüt Kütle (Y)', v: 3}, {l: 'e. Fosil (Y)', v: 3}], desc: 'Dünya, Kuvvet, Mıknatıs, Kütle, Fosil' },
+                { id: 'f3', title: '3. Boşluk Doldurma', max: 30, type: 'multi', parts: [{l: 'a. İtme Kuvveti', v: 5}, {l: 'b. Belirli Şekil', v: 5}, {l: 'c. Sıkıştırılabilir', v: 5}, {l: 'd. Çekilemeyen', v: 5}, {l: 'e. Sıvılarla', v: 5}, {l: 'f. Suda Yüzme', v: 5}], desc: 'Kavram bilgisi' },
+                { id: 'f4', title: '4. Madde Özellikleri', max: 15, type: 'multi', parts: [{l: 'Lego (Emmez)', v: 7}, {l: 'Bez (Emer)', v: 8}], desc: 'Suyu emme ve emmeme' },
+                { id: 'f5', title: '5. Maddenin Halleri', max: 15, type: 'multi', parts: [{l: '1. Katı + Örnek', v: 5}, {l: '2. Sıvı + Örnek', v: 5}, {l: '3. Gaz + Örnek', v: 5}], desc: 'Katı, Sıvı, Gaz tespiti ve örnekleri' },
+                { id: 'f6', title: '6. Isı Yorumları', max: 10, type: 'multi', parts: [{l: 'I. Isı Akış Yönü (İşaretlenmeli)', v: 5}, {l: 'II. Tüm Isı (İşaretlenmemeli)', v: 0}, {l: 'III. Sıcaklık Artışı (İşaretlenmemeli)', v: 0}, {l: 'IV. Isı Alan (İşaretlenmeli)', v: 5}], desc: 'I ve IV doğru işaretlenmeli' }
             ],
             SOS: [
-                { id: 's1', title: '1. Eşleştirme', max: 15, type: 'score', step: 5, desc: 'Sözlü tarih, Kültür' },
-                { id: 's2', title: '2. Doğru/Yanlış', max: 20, type: 'score', step: 4, desc: 'Milli Mücadele' },
-                { id: 's3', title: '3. Yön Seçimi', max: 15, type: 'score', step: 1, desc: 'Doğu cephesi' },
-                { id: 's4', title: '4. Boşluk Doldurma', max: 20, type: 'score', step: 4, desc: 'Kroki, Yön' },
-                { id: 's5', title: '5. Grafik Çizimi', max: 20, type: 'multi', parts:[{l:'Gün Hesabı', v:10}, {l:'Grafik', v:10}], desc: 'Hava durumu' },
-                { id: 's6', title: '6. Kroki Yorumlama', max: 10, type: 'score', step: 1, desc: 'Konum hatası' }
+                { id: 's1', title: '1. Eşleştirme', max: 15, type: 'multi', parts: [{l: 'Sözlü Tarih (Tanıkla Görüşme)', v: 5}, {l: 'Millî Kültür (Bize Özgü)', v: 5}, {l: 'Kronoloji (Zaman Sıralaması)', v: 5}], desc: 'Kavramları tanımlarıyla eşleştirme' },
+                { id: 's2', title: '2. Doğru/Yanlış', max: 20, type: 'multi', parts: [{l: 'Batı Cephesi Komutanı (D)', v: 4}, {l: 'T.C. No Aynılığı (Y)', v: 4}, {l: 'Krokide Detay Yoktur (D)', v: 4}, {l: 'Havalimanı Doğaldır (Y)', v: 4}, {l: 'Hava Bilimi Paleontoloji (Y)', v: 4}], desc: 'Milli Mücadele, Kültür ve Çevre' },
+                { id: 's3', title: '3. Ev Seçimi (Yönler)', max: 15, type: 'multi', parts: [{l: 'Doğru Seçim (1. Ev)', v: 7}, {l: 'Sebep (Sabah Güneşi)', v: 8}], desc: 'Güneşin doğuş yönüne göre tercih' },
+                { id: 's4', title: '4. Boşluk Doldurma', max: 20, type: 'multi', parts: [{l: 'Kuşbakışı', v: 4}, {l: 'Yön', v: 4}, {l: 'Grup', v: 4}, {l: 'Hasan Tahsin', v: 4}, {l: 'Beşeri', v: 4}], desc: 'Kavramları cümlelere yerleştirme' },
+                { id: 's5', title: '5. Hava Durumu Grafiği', max: 20, type: 'multi', parts: [{l: 'Yağmurlu (3 Gün)', v: 5}, {l: 'Parçalı Bulutlu (2 Gün)', v: 5}, {l: 'Güneşli (1 Gün)', v: 5}, {l: 'Karlı (4 Gün)', v: 5}], desc: 'Verilen bilgilere göre grafik çizimi' },
+                { id: 's6', title: '6. Kroki Hatası', max: 10, type: 'score', step: 2, desc: 'Evin konum hatasının tespiti' }
             ]
         };
 
-        // RENDER 
+        // --- VERİ YÖNETİM FONKSİYONLARI ---
+        function openDataModal() { document.getElementById('dataModal').classList.remove('hidden'); document.getElementById('dataModal').classList.add('flex'); }
+        
+        async function downloadSingleClass() {
+            const cls = document.getElementById('classSelect').value;
+            const btn = document.getElementById('btnDownloadSingle');
+            const subjects = ['TR', 'MAT', 'FEN', 'SOS'];
+            
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> İndiriliyor...';
+
+            try {
+                for (const subj of subjects) {
+                    const res = await fetch(GOOGLE_SCRIPT_URL + `?sinif=${cls}&ders=${subj}`);
+                    const data = await res.json();
+                    localStorage.setItem(`CACHE_${cls}_${subj}`, JSON.stringify({timestamp: Date.now(), data: data}));
+                }
+                alert(`✅ ${cls} Şubesi verileri başarıyla indirildi.`);
+                document.getElementById('dataModal').classList.add('hidden');
+                if(!activeClass || activeClass === cls) loadClass(cls);
+            } catch (e) {
+                alert("Hata: " + e);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        function saveManualJSON() {
+            const jsonText = document.getElementById('jsonInput').value.trim();
+            if(!jsonText) return alert("Lütfen JSON yapıştırın.");
+            
+            try {
+                const data = JSON.parse(jsonText);
+                const cls = document.getElementById('jsonClass').value;
+                const subj = document.getElementById('jsonSubject').value;
+                
+                localStorage.setItem(`CACHE_${cls}_${subj}`, JSON.stringify({timestamp: Date.now(), data: data}));
+                
+                alert("✅ Veri hafızaya kaydedildi.");
+                document.getElementById('studentInput').value = ""; // temizle
+                
+                if(activeClass === cls && activeSubject === subj) loadClass(cls);
+            } catch(e) {
+                alert("Geçersiz JSON formatı!");
+            }
+        }
+
+        // --- ANA FONKSİYONLAR ---
         function renderQuestions() {
             const container = document.getElementById('questionsContainer');
             container.innerHTML = "";
@@ -361,6 +388,31 @@
             if(badge) badge.innerText = className + " Şubesi";
             if(mobileBadge) mobileBadge.innerText = className;
             
+            // 1. Önce Cache Kontrol Et
+            const cacheKey = `CACHE_${className}_${activeSubject}`;
+            const cached = localStorage.getItem(cacheKey);
+
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                const data = parsed.data;
+                students = data.students || [];
+                const incomingScores = data.scores || {};
+                
+                if (!db[activeSubject]) db[activeSubject] = {};
+                Object.keys(incomingScores).forEach(s => { 
+                    if (!db[s]) db[s] = {}; 
+                    db[s][activeSubject] = incomingScores[s]; 
+                });
+
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+                const activeDisplay = document.getElementById('activeClassDisplay');
+                if(activeDisplay) activeDisplay.innerText = activeClass + " Şubesi";
+                if(currentStudent) renderQuestions();
+                return;
+            }
+
+            // 2. Cache Yoksa İnternetten Çek
             document.getElementById('spinner').classList.remove('hidden');
             fetch(GOOGLE_SCRIPT_URL + "?sinif=" + className + "&ders=" + activeSubject)
             .then(res => res.json())
@@ -370,6 +422,10 @@
                 if (!db[activeSubject]) db[activeSubject] = {};
                 const incomingScores = data.scores || {};
                 Object.keys(incomingScores).forEach(s => { if(!db[s]) db[s] = {}; db[s][activeSubject] = incomingScores[s]; });
+                
+                // Cache'e at
+                localStorage.setItem(cacheKey, JSON.stringify({timestamp: Date.now(), data: data}));
+
                 document.getElementById('spinner').classList.add('hidden');
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-content').style.display = 'block';
@@ -389,31 +445,38 @@
 
         function openWhatsappModal() {
             if(!currentStudent) return;
-            const subs = ['TR', 'MAT', 'FEN', 'SOS'];
-            let fullReport = ""; let perfect = true;
-            subs.forEach(subj => {
+            const msgSubjectNames = {'TR':'TÜRKÇE', 'MAT':'MATEMATİK', 'FEN':'FEN BİLİMLERİ', 'SOS':'SOSYAL BİLGİLER'};
+            const msgEmojis = {'TR':'🇹🇷', 'MAT':'➗', 'FEN':'🧪', 'SOS':'🌍'};
+            let fullMsg = `Sayın Velim,\n\nÖğrencimiz ${currentStudent}'in 6 Şubat değerlendirme sonuçları aşağıdadır. Gayretinden dolayı öğrencimizi tebrik ederim.\n\n`;
+            
+            ['TR', 'MAT', 'FEN', 'SOS'].forEach(subj => {
                 const data = (db[currentStudent] && db[currentStudent][subj]) ? db[currentStudent][subj] : {};
                 const qList = questionsData[subj];
-                let missing = []; let partial = [];
+                let missing = []; 
+                let totalPoints = 0;
+                let maxPoints = 0;
+
                 qList.forEach(q => {
                     let s = calculateSafeScore(data, q);
-                    if(s === 0) missing.push(q.title.replace(/^\d+\.\s*/, ''));
-                    else if(s < q.max) partial.push(q.title.replace(/^\d+\.\s*/, ''));
+                    totalPoints += s;
+                    maxPoints += q.max;
+                    if(s < q.max) missing.push(q.title.replace(/^\d+\.\s*/, '')); 
                 });
-                if(missing.length === 0 && partial.length === 0) fullReport += `✅ *${getSubjectName(subj)}:* Tebrikler! Tüm kazanımlar tam.\n\n`;
-                else {
-                    perfect = false;
-                    fullReport += `🔸 *${getSubjectName(subj)}:* Genel durum iyi, ancak:\n`;
-                    if(partial.length) fullReport += `   • Pekiştirilmeli: ${partial.join(', ')}\n`;
-                    if(missing.length) fullReport += `   • Tekrar Edilmeli: ${missing.join(', ')}\n`;
-                    fullReport += `\n`;
+
+                fullMsg += `${msgEmojis[subj]} *${msgSubjectNames[subj]}:* `;
+                if(totalPoints === maxPoints) {
+                    fullMsg += "Harika! Tüm kazanımlar tam.\n\n";
+                } else if(missing.length === 0) {
+                     fullMsg += "Eksiksiz tamamlandı.\n\n";
+                } else {
+                    fullMsg += "Genel durum iyi. Şu konuların üzerinden tekrar geçmemiz faydalı olacaktır:\n";
+                    missing.forEach(m => fullMsg += `   • ${m}\n`);
+                    fullMsg += "\n";
                 }
             });
-            let msg = `Sayın Velim,\n\nÖğrencimiz ${currentStudent}'in 6 Şubat değerlendirme sonuçları:\n\n` + fullReport;
-            if(perfect) msg += "🌟 Öğrencimiz tüm derslerde üstün başarı göstermiştir. Tebrikler!\n";
-            else msg += "Yukarıdaki konulara evde göz atılması gelişimi destekleyecektir.\n";
-            msg += "\nSınıf Öğretmeni";
-            document.getElementById('waText').value = msg;
+            
+            fullMsg += "İşbirliğiniz için teşekkür eder, iyi akşamlar dilerim.\nSınıf Öğretmeni";
+            document.getElementById('waText').value = fullMsg;
             document.getElementById('waModal').classList.remove('hidden'); document.getElementById('waModal').classList.add('flex');
         }
 
@@ -459,8 +522,23 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
             let currentSubjectScores = {};
             students.forEach(s => { if(db[s] && db[s][activeSubject]) currentSubjectScores[s] = db[s][activeSubject]; });
+            
             fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: JSON.stringify({ sinif: activeClass, ders: activeSubject, data: { students: students, scores: currentSubjectScores } }) })
-            .then(r => r.json()).then(res => { btn.innerHTML = original; btn.disabled = false; if(res.status==='success') alert("✅ Kaydedildi!"); else alert("Hata: "+res.msg); })
+            .then(r => r.json()).then(res => { 
+                btn.innerHTML = original; 
+                btn.disabled = false; 
+                
+                if(res.status==='success') {
+                    const key = `CACHE_${activeClass}_${activeSubject}`;
+                    localStorage.setItem(key, JSON.stringify({
+                        timestamp: Date.now(),
+                        data: { students: students, scores: currentSubjectScores }
+                    }));
+                    alert("✅ Kaydedildi!"); 
+                } else {
+                    alert("Hata: "+res.msg); 
+                }
+            })
             .catch(e => { btn.innerHTML = original; btn.disabled = false; alert("Hata"); });
         }
 
@@ -489,20 +567,29 @@
             tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-500 font-bold"><i class="fas fa-spinner fa-spin"></i> Lütfen Bekleyiniz, Veriler Yükleniyor...</td></tr>';
             const subs = ['TR','MAT','FEN','SOS'];
             
-            // Unique students set
             let allStudentsSet = new Set(students);
 
             try {
-                const results = await Promise.all(subs.map(s => fetch(GOOGLE_SCRIPT_URL+"?sinif="+activeClass+"&ders="+s).then(r=>r.json())));
+                const results = [];
+                for(const s of subs) {
+                    const key = `CACHE_${activeClass}_${s}`;
+                    const cached = localStorage.getItem(key);
+                    if(cached) {
+                        results.push(JSON.parse(cached).data);
+                    } else {
+                        const res = await fetch(GOOGLE_SCRIPT_URL+"?sinif="+activeClass+"&ders="+s);
+                        const d = await res.json();
+                        results.push(d);
+                    }
+                }
+
                 results.forEach((d,i) => { 
                     if(d.status!=='error') { 
-                        // Merge scores
                         Object.keys(d.scores||{}).forEach(s=>{ 
                             if(!db[s]) db[s]={}; 
                             db[s][subs[i]]=d.scores[s]; 
-                            allStudentsSet.add(s); // Add found student to set
+                            allStudentsSet.add(s); 
                         }); 
-                        // Merge student list just in case
                         if(d.students) d.students.forEach(s => allStudentsSet.add(s)); 
                     }
                 });
@@ -516,9 +603,7 @@
                     subs.forEach(subj => {
                         let sc = 0; 
                         const d = (db[s]&&db[s][subj])?db[s][subj]:{};
-                        // Calculate total per subject using robust helper
                         questionsData[subj].forEach(q => { sc += calculateSafeScore(d, q); });
-                        
                         total += sc; 
                         html += `<td class="text-center font-semibold text-slate-600">${sc}</td>`;
                     });
@@ -536,9 +621,7 @@
             doc.addFileToVFS("Roboto.ttf", font); doc.addFont("Roboto.ttf", "Roboto", "normal"); doc.setFont("Roboto");
             doc.setFontSize(14); doc.text(`${activeClass} Şubesi Genel Tablo`, 14, 15);
             
-            // Re-calculate or use existing students list (better to re-calc to be safe)
             let allStudentsSet = new Set(students);
-            // Ensure db has all data (assuming openClassReport was called, but let's be safe and iterate db keys too)
             Object.keys(db).forEach(s => allStudentsSet.add(s));
             let sortedStudents = Array.from(allStudentsSet).sort((a,b)=>a.localeCompare(b,'tr'));
 
