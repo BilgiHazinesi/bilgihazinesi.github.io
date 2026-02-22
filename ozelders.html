@@ -21,24 +21,29 @@
         input { width: 100%; padding: 10px 12px; margin-bottom: 5px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-family: 'Poppins', sans-serif; font-size: 13px; }
         
         .hizli-butonlar { display: flex; gap: 8px; margin-bottom: 8px; }
-        .chip-btn { flex: 1; padding: 10px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; color: #4b5563; font-weight: 600; cursor: pointer; text-align: center; }
+        .chip-btn { flex: 1; padding: 10px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; color: #4b5563; font-weight: 600; cursor: pointer; text-align: center; transition: 0.2s;}
         .chip-btn.secili { background: #4f46e5; color: white; border-color: #4f46e5; }
         
-        .btn-ana { width: 100%; padding: 12px; cursor: pointer; background: #4f46e5; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); }
+        .btn-ana { width: 100%; padding: 12px; cursor: pointer; background: #4f46e5; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); transition: 0.2s;}
+        .btn-ana:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; }
         
-        .ders-satir { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
-        .custom-checkbox { width: 22px; height: 22px; border: 2px solid #d1d5db; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: white; }
+        .ders-satir { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: 0.2s;}
+        .custom-checkbox { width: 22px; height: 22px; border: 2px solid #d1d5db; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: white; transition: 0.2s;}
         .ders-satir.secili .custom-checkbox { background: #4f46e5; border-color: #4f46e5; }
         .ders-satir.secili .custom-checkbox::after { content: '✔'; color: white; font-size: 14px; }
         
-        .ozet { background: #f9fafb; padding: 12px; border-radius: 10px; margin-top: 12px; font-weight: 600; display: flex; gap: 15px; border: 1px solid #e5e7eb; }
-        .btn-kopyala { width: 100%; padding: 10px; margin-top: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .ozet { background: #f9fafb; padding: 12px; border-radius: 10px; margin-top: 12px; font-weight: 600; display: flex; justify-content:space-between; border: 1px solid #e5e7eb; }
+        .btn-kopyala { width: 100%; padding: 10px; margin-top: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition:0.2s;}
+        .btn-kopyala:active { transform:scale(0.98); }
+
+        /* GENEL TOPLAM KARTI */
+        #genelToplamAlani { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-align: center; font-size: 16px; border: none; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
 
         /* GİRİŞ EKRANI */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f0f2f5; z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .login-box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 85%; max-width: 320px; }
         
-        #bulkActionParams { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 24px; border-radius: 30px; display: none; align-items: center; gap: 20px; z-index: 1000; }
+        #bulkActionParams { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 24px; border-radius: 30px; display: none; align-items: center; gap: 20px; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: max-content;}
         .btn-toplu-onay { background: #4f46e5; border: none; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
@@ -58,14 +63,14 @@
         
         <div class="kart">
             <label>Öğrenci Adı</label>
-            <input type="text" id="studentInput" list="studentList" placeholder="İsim seçiniz...">
+            <input type="text" id="studentInput" list="studentList" placeholder="İsim seçiniz..." autocomplete="off">
             <datalist id="studentList"></datalist>
             
             <label>Ders Sayısı</label>
             <div class="hizli-butonlar">
                 <div class="chip-btn" onclick="sureSec(1, this)">1 Ders</div>
                 <div class="chip-btn" onclick="sureSec(2, this)">2 Ders</div>
-                <button class="btn-kalem" onclick="toggleManuel()"><span class="material-icons-round">edit</span></button>
+                <button class="btn-kalem" onclick="toggleManuel()" style="background:white; border:1px solid #d1d5db; border-radius:8px; padding:0 10px; cursor:pointer;"><span class="material-icons-round" style="color:#666">edit</span></button>
             </div>
 
             <div id="manuelAlan" style="display:none">
@@ -78,8 +83,14 @@
             <button id="saveBtn" class="btn-ana" onclick="kaydet()"><span class="material-icons-round">save</span> KAYDET</button>
         </div>
 
-        <div id="loader" style="text-align:center; display:none;"><small>Yükleniyor...</small></div>
+        <div id="loader" style="text-align:center; display:none; color:#666"><small>Yükleniyor...</small></div>
+        
         <div id="listeAlani"></div>
+
+        <div id="genelToplamAlani" class="kart" style="display:none;">
+            <div style="font-size:12px; opacity:0.9;">Tüm Öğrencilerden Beklenen Toplam:</div>
+            <div id="genelToplamTutar" style="font-size:24px; font-weight:700; margin-top:5px;">0,00 ₺</div>
+        </div>
 
         <div id="bulkActionParams">
             <span id="seciliSayisi">0 Ders Seçildi</span>
@@ -131,41 +142,86 @@
             });
         }
 
+        // --- YENİ KAYDETME SİSTEMİ (Sayfa Yüklenmez, Kesintisiz Çalışır) ---
         function kaydet() {
-            const name = document.getElementById('studentInput').value.trim();
-            const manualDur = document.getElementById('manualDuration').value;
+            const nameInput = document.getElementById('studentInput');
+            const manualDurInput = document.getElementById('manualDuration');
+            const rateInput = document.getElementById('rateInput');
+            
+            const name = nameInput.value.trim();
+            const manualDur = manualDurInput.value;
             const selectedChip = document.querySelector('.chip-btn.secili');
-            const rate = document.getElementById('rateInput').value;
+            const rate = rateInput.value;
 
             let duration = manualDur ? parseFloat(manualDur) : (selectedChip ? parseFloat(selectedChip.innerText) : 0);
 
-            if (!name) return alert("İsim seçin!");
+            if (!name) return alert("Lütfen bir öğrenci ismi girin veya seçin!");
 
-            // 1. Ücret güncelleme
+            // Butonu yükleniyor moduna al
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.innerHTML = '<span class="material-icons-round" style="animation:spin 1s linear infinite">sync</span> KAYDEDİLİYOR...';
+            saveBtn.disabled = true;
+
+            let savePromises = [];
+
+            // 1. Ücret güncelleme varsa Promise'e ekle
             if (rate) {
-                db.collection("students").doc(name).set({ rate: parseInt(rate) }, { merge: true });
+                savePromises.push(db.collection("students").doc(name).set({ rate: parseInt(rate) }, { merge: true }));
             }
 
-            // 2. Ders ekleme (Otomatik Tarih)
+            // 2. Ders ekleme varsa Promise'e ekle
             if (duration > 0) {
                 const now = new Date();
-                db.collection("lessons").add({
+                savePromises.push(db.collection("lessons").add({
                     student: name,
                     duration: duration,
                     date: now.toLocaleDateString('tr-TR') + " " + now.toLocaleTimeString('tr-TR').slice(0,5),
                     status: "Ödenmedi",
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    alert("Kaydedildi!");
-                    document.getElementById('manualDuration').value = "";
-                });
+                }));
             }
+
+            // Eğer hiçbir şey girilmediyse
+            if(savePromises.length === 0) {
+                alert("Lütfen ders sayısı veya ücret girin!");
+                saveBtn.innerHTML = '<span class="material-icons-round">save</span> KAYDET';
+                saveBtn.disabled = false;
+                return;
+            }
+
+            // Tüm işlemler bitince arayüzü sessizce sıfırla
+            Promise.all(savePromises).then(() => {
+                // Formu temizle
+                nameInput.value = "";
+                manualDurInput.value = "";
+                rateInput.value = "";
+                document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('secili'));
+                
+                // Başarı Butonu Efekti
+                saveBtn.style.background = "#10b981"; // Yeşil
+                saveBtn.innerHTML = '<span class="material-icons-round">check</span> KAYDEDİLDİ';
+                
+                // 1.5 Saniye sonra butonu eski haline getir
+                setTimeout(() => {
+                    saveBtn.style.background = "#4f46e5"; // Mavi
+                    saveBtn.innerHTML = '<span class="material-icons-round">save</span> KAYDET';
+                    saveBtn.disabled = false;
+                }, 1500);
+            }).catch(error => {
+                alert("Bir hata oluştu: " + error);
+                saveBtn.innerHTML = '<span class="material-icons-round">save</span> KAYDET';
+                saveBtn.disabled = false;
+            });
         }
 
         function renderLessons(snap) {
             const container = document.getElementById('listeAlani');
+            const genelToplamAlani = document.getElementById('genelToplamAlani');
+            const genelToplamTutar = document.getElementById('genelToplamTutar');
+            
             container.innerHTML = "";
             const grouped = {};
+            let grandTotal = 0; // GENEL TOPLAM İÇİN DEĞİŞKEN
 
             snap.forEach(doc => {
                 const d = doc.data();
@@ -173,26 +229,39 @@
                 grouped[d.student].push({ id: doc.id, ...d });
             });
 
+            // Eğer hiç ödenmemiş ders yoksa
+            if(Object.keys(grouped).length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#6b7280;">🎉 Tüm ödemeler tamamlanmış!</div>';
+                genelToplamAlani.style.display = "none";
+                return;
+            }
+
             for (let student in grouped) {
                 let totalRate = 0; let totalDur = 0; let msg = student + " Dersleri:\n";
-                let html = `<div class="kart"><div class="baslik"><b>${student}</b></div>`;
+                let html = `<div class="kart"><div class="baslik" style="font-weight:700; font-size:15px; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:8px;"><span class="material-icons-round" style="color:#4f46e5; vertical-align:middle; margin-right:5px; font-size:20px;">person</span>${student}</div>`;
                 
                 grouped[student].forEach(l => {
                     const price = l.duration * (studentsMap[student] || 0);
                     totalRate += price; totalDur += l.duration;
-                    msg += `🗓️ ${l.date} - ${l.duration} Ders\n`;
+                    msg += `🗓️ ${l.date.split(' ')[0]} - ${l.duration} Ders\n`;
                     
                     html += `<div class="ders-satir" id="row-${l.id}" onclick="toggleSelect('${l.id}')">
                         <div class="custom-checkbox"></div>
-                        <span>📅 ${l.date.split(' ')[0]} - <b>${l.duration} Ders</b></span>
+                        <span>📅 ${l.date.split(' ')[0]} <b style="color:#4f46e5; margin-left:5px">${l.duration} Ders</b></span>
                     </div>`;
                 });
 
+                grandTotal += totalRate; // Öğrencinin tutarını Genel Toplama ekle
+
                 const totalText = totalRate.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'});
-                html += `<div class="ozet">Top: ${totalDur} Ders | <span style="color:#10b981">${totalText}</span></div>
-                <button class="btn-kopyala" onclick="copyMsg('${student}', '${msg + "Toplam: " + totalText}')">Mesajı Kopyala</button></div>`;
+                html += `<div class="ozet"><span>Top: ${totalDur} Ders</span><span style="color:#10b981">${totalText}</span></div>
+                <button class="btn-kopyala" onclick="copyMsg('${student}', '${msg + "▬▬▬▬▬▬▬▬\nToplam: " + totalText}')"><span class="material-icons-round" style="font-size:16px;">content_copy</span> Mesajı Kopyala</button></div>`;
                 container.innerHTML += html;
             }
+
+            // GENEL TOPLAMI EKRANA YANSIT
+            genelToplamTutar.innerText = grandTotal.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'});
+            genelToplamAlani.style.display = "block";
         }
 
         function toggleSelect(id) {
@@ -208,16 +277,24 @@
         }
 
         function topluOdendi() {
-            if(!confirm("Ödendi işaretlensin mi?")) return;
+            const btn = document.querySelector('.btn-toplu-onay');
+            btn.innerText = "İşleniyor...";
+            
             const batch = db.batch();
             selectedLessonIds.forEach(id => {
                 batch.update(db.collection("lessons").doc(id), { status: "Ödendi" });
             });
-            batch.commit().then(() => { selectedLessonIds.clear(); alert("Tamamlandı!"); });
+            batch.commit().then(() => { 
+                selectedLessonIds.clear(); 
+                btn.innerText = "ÖDENDİ İŞARETLE";
+                document.getElementById('bulkActionParams').style.display = 'none';
+            });
         }
 
+        // WhatsApp ve panoya uygun kopyalama formatı
         function copyMsg(name, text) {
-            navigator.clipboard.writeText("👋 Merhaba " + text).then(() => alert("Kopyalandı!"));
+            const fullText = "👋 Merhaba " + text;
+            navigator.clipboard.writeText(fullText).then(() => alert("Kopyalandı!"));
         }
 
         function sureSec(val, btn) {
@@ -231,5 +308,6 @@
             alan.style.display = alan.style.display === 'none' ? 'block' : 'none';
         }
     </script>
+    <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
 </body>
 </html>
