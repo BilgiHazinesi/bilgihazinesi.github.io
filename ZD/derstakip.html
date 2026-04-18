@@ -37,7 +37,6 @@
       .baslik { font-size: 14px; font-weight: 700; color: #111827; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 10px; }
       .ders-satir { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 10px; border-bottom: 1px solid #f3f4f6; font-size: 13px; cursor: pointer; transition: 0.2s; border-radius: 8px; }
       
-      /* YENİ: Hesaplandı Durumu Stili */
       .ders-satir.hesaplandi { background-color: #fffbeb; border-left: 4px solid #f59e0b; }
       .durum-etiket { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: auto; }
       .durum-etiket.hesaplandi { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
@@ -51,7 +50,6 @@
       .btn-kopyala { width: 100%; padding: 10px; margin-top: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2); }
       .btn-arsiv-guzel { margin-top: 25px; width: 100%; padding: 12px; background: #64748b; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
       
-      /* YENİ: Gelişmiş Çoklu İşlem Çubuğu */
       #bulkActionParams { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 15px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: none; flex-direction: column; gap: 12px; z-index: 1000; width: 90%; max-width: 400px; }
       .bulk-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #374151; padding-bottom: 10px; }
       .bulk-header-text { display: flex; flex-direction: column; }
@@ -59,7 +57,8 @@
       .btn-toplu { flex: 1; border: none; color: white; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; }
       .btn-hesaplandi { background: #f59e0b; }
       .btn-odendi { background: #10b981; }
-      .btn-kopyala-ikon { background: #4b5563; padding: 8px; border-radius: 10px; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+      .btn-kopyala-ikon { background: #4b5563; padding: 8px; border-radius: 10px; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+      .btn-kopyala-ikon:active { transform: scale(0.95); }
 
       #genelToplamAlani { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-align: center; border: none; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); margin-top: 20px;}
 
@@ -130,9 +129,17 @@
               <span id="seciliSayisi" style="font-weight:600; font-size:13px; color:#9ca3af;">0 Ders Seçildi</span>
               <span id="seciliTutar" style="font-weight:700; font-size:18px; color:#34d399;">0,00 ₺</span>
            </div>
-           <button class="btn-kopyala-ikon" onclick="kopyalaSecilenleriDetayli()" title="Seçilenleri Kopyala">
-              <span class="material-icons-round" style="font-size:22px">content_copy</span>
-           </button>
+           
+           <div style="display:flex; align-items:center; gap:10px;">
+              <label style="margin:0; font-size:11px; display:flex; align-items:center; gap:4px; color:#d1d5db; cursor:pointer;" title="Kopyalanan mesaja fiyat eklensin mi?">
+                 <input type="checkbox" id="ucretDahilCheck" checked style="width:16px; height:16px; margin:0; accent-color:#10b981;">
+                 Ücreti Ekle
+              </label>
+
+              <button class="btn-kopyala-ikon" onclick="kopyalaSecilenleriDetayli()" title="Seçilenleri Kopyala">
+                 <span class="material-icons-round" style="font-size:22px">content_copy</span>
+              </button>
+           </div>
         </div>
         <div class="bulk-actions-row">
            <button class="btn-toplu btn-hesaplandi" onclick="secilenleriHesaplandiYap()">
@@ -239,7 +246,6 @@
             toplamDers += ders.duration;
             var tarihSade = ders.date.split(" ")[0]; 
             
-            // Eğer Google Sheets'ten 'Hesaplandı' bilgisi geliyorsa
             var durumClass = (ders.status && ders.status === 'Hesaplandı') ? 'hesaplandi' : '';
             var durumHtml = (durumClass === 'hesaplandi') ? '<span class="durum-etiket hesaplandi">Hesaplandı</span>' : '';
             
@@ -329,7 +335,6 @@
         });
       }
 
-      // YENİ: Seçilenleri Hesaplandı İşaretleme
       function secilenleriHesaplandiYap() {
         if (selectedRows.size === 0) return;
         var indices = Array.from(selectedRows);
@@ -346,9 +351,12 @@
         });
       }
 
-      // YENİ: Seçilenleri Toplu Detaylı Kopyalama
+      // YENİ: Ücret dahil etme/etmeme özelliğine sahip kopyalama fonksiyonu
       function kopyalaSecilenleriDetayli() {
          if (selectedRows.size === 0) return;
+         
+         // Ücret Ekle kutusunun durumunu alıyoruz
+         var ucretDahil = document.getElementById("ucretDahilCheck").checked;
          
          var extractedData = {};
          var totalAmount = 0;
@@ -364,7 +372,13 @@
 
                if(!extractedData[ogr]) extractedData[ogr] = { dersler: [], toplamMiktar: 0, toplamSure: 0 };
                
-               extractedData[ogr].dersler.push(`🗓️ ${tarih} ▪ ${sure} Ders (${miktar.toLocaleString('tr-TR',{style:'currency', currency:'TRY'})})`);
+               // Eğer ücret dahil ise yanına parayı yaz, değilse sadece tarih ve süre
+               var satirMetni = `🗓️ ${tarih} ▪ ${sure} Ders`;
+               if(ucretDahil) {
+                  satirMetni += ` (${miktar.toLocaleString('tr-TR',{style:'currency', currency:'TRY'})})`;
+               }
+
+               extractedData[ogr].dersler.push(satirMetni);
                extractedData[ogr].toplamMiktar += miktar;
                extractedData[ogr].toplamSure += sure;
                
@@ -377,15 +391,26 @@
          for(var ogr in extractedData) {
             copyText += `👤 ${ogr}\n`;
             copyText += extractedData[ogr].dersler.join("\n") + "\n";
-            copyText += `👉 Ara Toplam: ${extractedData[ogr].toplamSure} Ders | ${extractedData[ogr].toplamMiktar.toLocaleString('tr-TR',{style:'currency', currency:'TRY'})}\n\n`;
+            
+            // Eğer ücret dahilse para toplamını da ekle, değilse sadece ders toplamını ekle
+            copyText += `👉 Ara Toplam: ${extractedData[ogr].toplamSure} Ders`;
+            if(ucretDahil) {
+               copyText += ` | ${extractedData[ogr].toplamMiktar.toLocaleString('tr-TR',{style:'currency', currency:'TRY'})}`;
+            }
+            copyText += "\n\n";
          }
          
          copyText += `======================\n`;
-         copyText += `🔢 GENEL TOPLAM: ${totalDers} Ders\n`;
-         copyText += `💰 ÖDENECEK TUTAR: ${totalAmount.toLocaleString('tr-TR',{style:'currency', currency:'TRY'})}`;
+         copyText += `🔢 GENEL TOPLAM: ${totalDers} Ders`;
+         
+         // Eğer ücret dahilse genel toplam tutarını ekle
+         if(ucretDahil) {
+            copyText += `\n💰 ÖDENECEK TUTAR: ${totalAmount.toLocaleString('tr-TR',{style:'currency', currency:'TRY'})}`;
+         }
 
          navigator.clipboard.writeText(copyText).then(() => {
-            alert("Seçilen derslerin özeti kopyalandı! 📋\n(İstediğiniz yere yapıştırabilirsiniz)");
+            var msj = ucretDahil ? "Seçilen dersler (ücretli) kopyalandı! 📋" : "Seçilen dersler (sadece tarih/süre) kopyalandı! 📋";
+            alert(msj);
          });
       }
 
@@ -412,7 +437,6 @@
         updateBulkBar();
       }
 
-      // YENİ: Toplu İşlem Barının Fiyatı da Hesaplaması
       function updateBulkBar() {
         var bar = document.getElementById("bulkActionParams");
         var count = selectedRows.size;
