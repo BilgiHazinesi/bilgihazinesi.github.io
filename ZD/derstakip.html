@@ -40,7 +40,7 @@
       }
 
       /* --- GÖRÜNÜM AYARLARI --- */
-      body { font-family: 'Poppins', sans-serif; padding: 15px; background-color: var(--bg-main); color: var(--text-main); font-size: 13px; padding-bottom: 120px; margin: 0; transition: background-color 0.3s, color 0.3s; }
+      body { font-family: 'Poppins', sans-serif; padding: 15px; background-color: var(--bg-main); color: var(--text-main); font-size: 13px; padding-bottom: 150px; margin: 0; transition: background-color 0.3s, color 0.3s; }
       
       .app-header { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 20px 0; }
       h2 { margin: 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
@@ -73,7 +73,8 @@
       .btn-ana:disabled { background: var(--text-muted); cursor: not-allowed; }
       
       .baslik { font-size: 14px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 10px; }
-      .baslik-sol { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+      .baslik-sol { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1; }
+      .baslik-sag { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end;}
       
       .ders-satir { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 13px; cursor: pointer; transition: 0.2s; border-radius: 8px; position: relative; }
       .ders-satir:last-child { border-bottom: none; }
@@ -82,7 +83,9 @@
       .ders-not { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-style: italic; }
       
       .ders-satir.hesaplandi { background-color: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); }
-      .durum-etiket { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: auto; }
+      .ders-satir.ozel-durum { border-left: 4px solid var(--primary); }
+      
+      .durum-etiket { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: auto; text-align: center; }
       .durum-etiket.hesaplandi { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.4); }
 
       .checkbox-wrapper { position: relative; display: flex; align-items: center; }
@@ -102,7 +105,7 @@
       #bulkActionParams { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 15px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; flex-direction: column; gap: 12px; z-index: 1000; width: 90%; max-width: 400px; border: 1px solid #374151; }
       .bulk-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #4b5563; padding-bottom: 10px; }
       .bulk-header-text { display: flex; flex-direction: column; }
-      .bulk-actions-row { display: flex; gap: 8px; width: 100%; }
+      .bulk-actions-row { display: flex; gap: 8px; width: 100%; flex-direction: column; }
       .btn-toplu { flex: 1; border: none; color: white; padding: 10px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; }
       .btn-hesaplandi { background: var(--warning); }
       .btn-odendi { background: var(--success); }
@@ -128,7 +131,7 @@
       .edit-btn-ikon:hover { color: var(--primary); background:var(--primary-light); border-radius:5px;}
       
       .btn-tehlike { padding: 10px; background: var(--danger); color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-      .tumunu-sec-btn { background: none; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+      .tumunu-sec-btn { background: none; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 10px; padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-weight: 600; }
       .tumunu-sec-btn:hover { background: var(--bg-main); color: var(--primary); border-color: var(--primary); }
     </style>
   </head>
@@ -233,18 +236,23 @@
       <!-- LİSTELEME ALANI -->
       <div id="listeAlani"></div>
 
-      <!-- ÖĞRENCİ / GENEL TOPLAM ALANI -->
+      <!-- ÖĞRENCİ / GENEL TOPLAM ALANI (DİNAMİK GÜNCEL) -->
       <div id="genelToplamAlani" class="kart" style="display:none; color:white;">
-          <div style="font-size:12px; opacity:0.9;" id="genelToplamBaslik">Ekrondaki Derslerin Toplamı:</div>
-          <div style="display:flex; justify-content:space-around; align-items:center; margin-top:8px;">
-             <div>
-                <span style="font-size:12px; opacity:0.8; display:block">Toplam Ders</span>
-                <span id="genelToplamDers" style="font-size:20px; font-weight:700;">0</span>
+          <div style="font-size:12px; opacity:0.9; text-align:left; margin-bottom:10px;" id="genelToplamBaslik">Ekrandaki Derslerin Dinamik Özeti:</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:5px;">
+             <div style="text-align:center; flex:1;">
+                <span style="font-size:11px; opacity:0.8; display:block">Genel Toplam</span>
+                <span id="genelToplamTutar" style="font-size:16px; font-weight:700;">0,00 ₺</span>
              </div>
              <div style="width:1px; height:30px; background:rgba(255,255,255,0.3)"></div>
-             <div>
-                <span style="font-size:12px; opacity:0.8; display:block">Toplam Kazanç</span>
-                <span id="genelToplamTutar" style="font-size:22px; font-weight:700;">0,00 ₺</span>
+             <div style="text-align:center; flex:1;">
+                <span style="font-size:11px; opacity:0.8; display:block">Seçili (Dahil)</span>
+                <span id="seciliToplamTutarGenel" style="font-size:16px; font-weight:700; color:#86efac;">0,00 ₺</span>
+             </div>
+             <div style="width:1px; height:30px; background:rgba(255,255,255,0.3)"></div>
+             <div style="text-align:center; flex:1;">
+                <span style="font-size:11px; opacity:0.8; display:block">Seçili Hariç</span>
+                <span id="kalanToplamTutarGenel" style="font-size:16px; font-weight:700; color:#fca5a5;">0,00 ₺</span>
              </div>
           </div>
       </div>
@@ -253,7 +261,7 @@
         <span class="material-icons-round" style="font-size:20px">inventory_2</span> Ödenmiş Dersleri Arşivle
       </button>
 
-      <!-- TOPLU İŞLEM MENÜSÜ -->
+      <!-- TOPLU İŞLEM MENÜSÜ (GELİŞTİRİLDİ) -->
       <div id="bulkActionParams">
         <div class="bulk-header">
            <div class="bulk-header-text">
@@ -271,20 +279,33 @@
               </button>
            </div>
         </div>
+        
         <div class="bulk-actions-row">
-           <button class="btn-toplu btn-hesaplandi" onclick="secilenleriHesaplandiYap()">
-              <span class="material-icons-round" style="font-size:18px">hourglass_bottom</span> HESAPLANDI
-           </button>
-           <button class="btn-toplu btn-odendi" onclick="secilenleriOdendiYap()">
-              <span class="material-icons-round" style="font-size:18px">check_circle</span> ÖDENDİ
-           </button>
+           <!-- Özel Etiket Alanı -->
+           <div style="display:flex; gap:8px; width:100%;">
+               <input type="text" id="ozelEtiketInput" placeholder="Örn: Bekleniyor" style="flex:2; margin:0; padding:8px; font-size:12px; border-radius:8px; color:#1f2937; border:none;">
+               <input type="color" id="ozelEtiketRenk" value="#3b82f6" title="Renk Seç" style="flex:0.5; height:35px; border-radius:8px; padding:0; cursor:pointer; border:none; background:transparent;">
+               <button class="btn-toplu" style="flex:1; background:var(--primary);" onclick="secilenlereOzelEtiketEkle()">
+                  <span class="material-icons-round" style="font-size:16px">label</span> ETİKETLE
+               </button>
+           </div>
+           
+           <!-- Klasik Durumlar -->
+           <div style="display:flex; gap:8px; width:100%;">
+               <button class="btn-toplu btn-hesaplandi" onclick="secilenleriHesaplandiYap()">
+                  <span class="material-icons-round" style="font-size:18px">hourglass_bottom</span> HESAPLANDI
+               </button>
+               <button class="btn-toplu btn-odendi" onclick="secilenleriOdendiYap()">
+                  <span class="material-icons-round" style="font-size:18px">check_circle</span> ÖDENDİ
+               </button>
+           </div>
         </div>
       </div>
     </div>
 
     <script>
       // ==========================================
-      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyAFC7kIJZ2_zxBLEDhrEaqoTEapl3hKzyqAo95ZEpM9qXn-xqe4UuCRMompEQvBc2x/exec";
+      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw__jO5mn6eycPugfWEccIk5Dgg_ZW-ZjgCLynaYUyfE6qXyV2hbcjA3SXIbc7EW8Sf/exec";
       // ==========================================
 
       var USER_PASS = "";
@@ -293,7 +314,6 @@
       var cachedUnpaidData = {};
       var selectedRows = new Set();
 
-      // Tema Yönetimi
       function toggleTheme() {
          var body = document.body;
          var isDark = body.getAttribute('data-theme') === 'dark';
@@ -308,7 +328,6 @@
          }
       }
 
-      // Sayfa yüklenince temayı kontrol et
       if(localStorage.getItem('theme') === 'dark') {
          document.body.setAttribute('data-theme', 'dark');
          document.getElementById('themeIcon').innerText = 'light_mode';
@@ -395,7 +414,6 @@
         return d[2] + "." + d[1] + "." + d[0] + " " + t + ":00";
       }
 
-      // Dropdown Filtreleri Doldur
       function updateFilters() {
         var monthFilter = document.getElementById("monthFilter");
         var studentFilter = document.getElementById("studentListFilter");
@@ -423,7 +441,6 @@
         if (Array.from(studentsSet).includes(selectedStudent)) studentFilter.value = selectedStudent;
       }
 
-      // Veriyi Ekrana Çiz
       function renderList() {
         var container = document.getElementById("listeAlani");
         var valMonth = document.getElementById("monthFilter").value;
@@ -437,11 +454,11 @@
 
         var groupedByMonth = {};
         for (var ogrenci in cachedUnpaidData) {
-          if (valStudent !== "all" && ogrenci !== valStudent) continue; // Öğrenci Filtresi
+          if (valStudent !== "all" && ogrenci !== valStudent) continue; 
           
           cachedUnpaidData[ogrenci].forEach(ders => {
              var month = getMonthYear(ders.date);
-             if (valMonth !== "all" && month !== valMonth) return; // Ay Filtresi
+             if (valMonth !== "all" && month !== valMonth) return; 
              
              if(!groupedByMonth[month]) groupedByMonth[month] = {};
              if(!groupedByMonth[month][ogrenci]) groupedByMonth[month][ogrenci] = [];
@@ -451,7 +468,6 @@
 
         var html = ""; 
         var grandTotalPara = 0; 
-        var grandTotalDers = 0;
         globalMesajlar = {};
 
         for (var ay in groupedByMonth) {
@@ -462,24 +478,25 @@
               var dersler = groupedByMonth[ay][std];
               var toplamPara = 0; var toplamDers = 0; var mesajDetay = "";
               
-              // Öğrencinin o ana kadar birikmiş TÜM (ödenmemiş) bakiyesini hesapla
               var ogrenciGenelToplamPara = 0;
               if (cachedUnpaidData[std]) {
                  cachedUnpaidData[std].forEach(d => ogrenciGenelToplamPara += d.amount);
               }
               var ogrenciGenelToplamText = ogrenciGenelToplamPara.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'});
+              var safeStdName = std.replace(/\s/g,'');
 
               var studentHtml = `
-              <div class="kart" id="card-${std.replace(/\s/g,'')}-${ay.replace(/\s/g,'')}">
+              <div class="kart" id="card-${safeStdName}-${ay.replace(/\s/g,'')}">
                  <div class="baslik">
                     <div class="baslik-sol">
                        <span class="material-icons-round" style="font-size:20px; color:var(--primary)">person</span> 
                        <span style="font-weight:700;">${std}</span>
-                       <span style="font-size:11px; color:var(--danger); background:rgba(239, 68, 68, 0.1); padding:2px 6px; border-radius:6px; margin-left:6px; border:1px solid rgba(239, 68, 68, 0.2);" title="Öğrencinin tüm aylardaki toplam ödenmemiş bakiyesi">
-                          Bakiye: ${ogrenciGenelToplamText}
-                       </span>
+                       <span style="font-size:11px; color:var(--danger); background:rgba(239, 68, 68, 0.1); padding:2px 6px; border-radius:6px; margin-left:6px; border:1px solid rgba(239, 68, 68, 0.2);" title="Öğrencinin tüm aylardaki toplam ödenmemiş bakiyesi">Bakiye: ${ogrenciGenelToplamText}</span>
                     </div>
-                    <button class="tumunu-sec-btn" onclick="selectAllInCard('${std.replace(/\s/g,'')}-${ay.replace(/\s/g,'')}')">Hepsini Seç</button>
+                    <div class="baslik-sag">
+                       <button class="tumunu-sec-btn" onclick="selectAllForStudent('${safeStdName}')" title="Bu öğrencinin tüm aylardaki derslerini seç">Tüm Aylar</button>
+                       <button class="tumunu-sec-btn" onclick="selectAllInCard('${safeStdName}-${ay.replace(/\s/g,'')}')" title="Sadece bu aydaki dersleri seç">Bu Ay</button>
+                    </div>
                  </div>`;
               
               dersler.forEach(function(ders) {
@@ -487,8 +504,24 @@
                 toplamDers += ders.duration;
                 var tarihSade = ders.date.split(" ")[0]; 
                 
-                var durumClass = (ders.status && ders.status === 'Hesaplandı') ? 'hesaplandi' : '';
-                var durumHtml = (durumClass === 'hesaplandi') ? '<span class="durum-etiket hesaplandi" style="margin-right:10px;">Hesaplandı</span>' : '';
+                // Durum (Hesaplandı veya Özel Etiket) Parsing İşlemi
+                var durumClass = '';
+                var durumHtml = '';
+                
+                if (ders.status && ders.status !== '') {
+                   if (ders.status === 'Hesaplandı') {
+                      durumClass = 'hesaplandi';
+                      durumHtml = '<span class="durum-etiket hesaplandi" style="margin-right:10px;">Hesaplandı</span>';
+                   } else if (ders.status.startsWith('CUSTOM:')) {
+                      // CUSTOM:Bekleniyor:#3b82f6
+                      var parts = ders.status.split(':');
+                      var text = parts[1] || 'Özel';
+                      var color = parts[2] || '#3b82f6';
+                      durumClass = 'ozel-durum';
+                      // inline styling for custom color
+                      durumHtml = `<span class="durum-etiket" style="margin-right:10px; background-color:${color}22; color:${color}; border: 1px solid ${color}66;">${text}</span>`;
+                   }
+                }
                 
                 var noteHtml = ders.note ? `<span class="ders-not">${ders.note}</span>` : '';
                 var noteForMsg = ders.note ? ` (${ders.note})` : '';
@@ -498,7 +531,7 @@
                 var sNote = ders.note ? ders.note.replace(/'/g, "\\'") : '';
 
                 studentHtml += `
-                <div class="ders-satir ${durumClass}" onclick="toggleSelection(this, ${ders.rowIndex})" data-row="${ders.rowIndex}" data-amount="${ders.amount}" data-student="${std}" data-date="${tarihSade}" data-duration="${ders.duration}">
+                <div class="ders-satir ${durumClass}" onclick="toggleSelection(this, ${ders.rowIndex})" data-row="${ders.rowIndex}" data-amount="${ders.amount}" data-student="${std}" data-student-safe="${safeStdName}" data-date="${tarihSade}" data-duration="${ders.duration}">
                   <div class="checkbox-wrapper"><div class="custom-checkbox"></div></div>
                   <div class="ders-detay-wrapper">
                      <span style="display:flex; align-items:center;">📅 ${tarihSade} <b style="margin-left:5px; color:var(--primary)">${ders.duration} Ders</b></span>
@@ -515,7 +548,6 @@
 
               ayTotal += toplamPara;
               grandTotalPara += toplamPara; 
-              grandTotalDers += toplamDers;
 
               var paraText = toplamPara.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'});
               var ayMesajKey = std + "_" + ay;
@@ -543,8 +575,10 @@
         container.innerHTML = html;
         
         if(html !== "") {
+           // GENEL TOPLAM YAZDIRMA (HAM VERİ SAKLANIR)
+           document.getElementById("genelToplamTutar").setAttribute('data-raw-total', grandTotalPara);
            document.getElementById("genelToplamTutar").innerText = grandTotalPara.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'});
-           document.getElementById("genelToplamDers").innerText = grandTotalDers;
+           
            document.getElementById("genelToplamAlani").style.display = "block";
         } else {
            document.getElementById("genelToplamAlani").style.display = "none";
@@ -558,7 +592,7 @@
         updateBulkBar();
       }
 
-      // Bir Öğrencinin Tüm Derslerini Seç
+      // SADECE BULUNULAN AYDAKİLERİ SEÇ
       function selectAllInCard(cardId) {
          var rows = document.querySelectorAll(`#card-${cardId} .ders-satir`);
          var allSelected = Array.from(rows).every(r => r.classList.contains('secili'));
@@ -576,7 +610,24 @@
          updateBulkBar();
       }
 
-      // --- KULLANICI ETKİLEŞİMLERİ ---
+      // ÖĞRENCİNİN LİSTEDEKİ TÜM AYLARINI SEÇ
+      function selectAllForStudent(safeStdName) {
+         var rows = document.querySelectorAll(`.ders-satir[data-student-safe="${safeStdName}"]`);
+         var allSelected = Array.from(rows).every(r => r.classList.contains('secili'));
+         
+         rows.forEach(r => {
+            var idx = parseInt(r.getAttribute('data-row'));
+            if(allSelected) {
+               r.classList.remove('secili');
+               selectedRows.delete(idx);
+            } else {
+               r.classList.add('secili');
+               selectedRows.add(idx);
+            }
+         });
+         updateBulkBar();
+      }
+
       function whatsappGonder(key) {
          var metin = encodeURIComponent(globalMesajlar[key]);
          window.open(`https://wa.me/?text=${metin}`, '_blank');
@@ -601,7 +652,6 @@
         btn.classList.add('secili');
       }
 
-      // --- EDIT MODAL FONKSİYONLARI ---
       function openEditModal(e, rowIndex, studentName, dateStr, duration, note) {
          e.stopPropagation();
          document.getElementById("editRowIndex").value = rowIndex;
@@ -656,7 +706,6 @@
          }).catch(() => alert("Bağlantı Hatası veya Backend (Apps Script) tarafında silme fonksiyonu eksik!"));
       }
 
-      // --- YENİ KAYIT VE TOPLU İŞLEMLER ---
       function kaydet() {
         var btn = document.getElementById("saveBtn");
         var ogr = document.getElementById("studentInput").value;
@@ -705,19 +754,57 @@
       function updateBulkBar() {
         var bar = document.getElementById("bulkActionParams");
         var count = selectedRows.size;
+        var totalVal = 0;
         
+        selectedRows.forEach(idx => {
+           var el = document.querySelector(`.ders-satir[data-row='${idx}']`);
+           if(el) totalVal += parseFloat(el.getAttribute("data-amount")) || 0;
+        });
+
+        // 1. Aşağıdaki sabit Toplu İşlem Barını Güncelle
         if (count > 0) {
-           var totalVal = 0;
-           selectedRows.forEach(idx => {
-              var el = document.querySelector(`.ders-satir[data-row='${idx}']`);
-              if(el) totalVal += parseFloat(el.getAttribute("data-amount")) || 0;
-           });
            document.getElementById("seciliSayisi").innerText = count + " Ders Seçildi";
            document.getElementById("seciliTutar").innerText = totalVal.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'});
            bar.style.display = "flex";
         } else {
            bar.style.display = "none";
         }
+
+        // 2. Yukarıdaki Dinamik Genel Toplamı Güncelle (Dahil / Hariç mantığı)
+        var genelTutarEl = document.getElementById("genelToplamTutar");
+        if(genelTutarEl) {
+           var grandTotal = parseFloat(genelTutarEl.getAttribute('data-raw-total')) || 0;
+           var kalanTutar = grandTotal - totalVal;
+           
+           document.getElementById("seciliToplamTutarGenel").innerText = totalVal.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'});
+           document.getElementById("kalanToplamTutarGenel").innerText = kalanTutar.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'});
+        }
+      }
+
+      // --- YENİ EKLENEN ÖZEL ETİKET FONKSİYONU ---
+      function secilenlereOzelEtiketEkle() {
+        if (selectedRows.size === 0) return;
+        var etiketInput = document.getElementById("ozelEtiketInput").value.trim();
+        var etiket = etiketInput !== "" ? etiketInput : "Bekleniyor";
+        var renk = document.getElementById("ozelEtiketRenk").value;
+        
+        // Backend'in tanıması için formatlıyoruz (Örn: CUSTOM:Bekleniyor:#ff0000)
+        var combinedStatus = "CUSTOM:" + etiket + ":" + renk;
+
+        // Buton animasyonu
+        var btn = document.querySelector(".btn-ozel");
+        var tempHtml = btn.innerHTML; 
+        btn.innerHTML = "İşleniyor...";
+        
+        fetch(GOOGLE_SCRIPT_URL + "?action=markCustom&pass=" + USER_PASS, {
+          method: 'POST', body: JSON.stringify({ indices: Array.from(selectedRows), status: combinedStatus })
+        }).then(res => res.json()).then(data => {
+           btn.innerHTML = tempHtml; 
+           listeyiGetir(true); 
+        }).catch(err => {
+           alert("Hata: Apps Script tarafına kod eklemesi yapmanız gerekebilir.");
+           btn.innerHTML = tempHtml;
+        });
       }
 
       function secilenleriOdendiYap() {
@@ -793,7 +880,6 @@
         });
       }
 
-      // Autocomplete Algoritması
       document.getElementById("studentInput").addEventListener("input", function(e) {
         var val = this.value;
         var list = document.getElementById("autocomplete-list");
