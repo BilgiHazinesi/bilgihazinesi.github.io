@@ -95,6 +95,12 @@
       .btn-sil-manuel { width: 100%; margin-top: 15px; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 5px; font-weight: 600; transition: 0.2s; font-family: "Poppins", sans-serif; }
       .btn-sil-manuel:hover { background: var(--danger); color: white; }
 
+      /* --- SEKMELER (TABS) GÖRSEL STİLLERİ --- */
+      .ana-sekmeler-wrapper { background: var(--bg-card); padding: 4px; border-radius: 12px; display: flex; box-shadow: var(--card-shadow); border: 1px solid var(--border-color); margin-bottom: 20px; position: relative; }
+      .sekme-btn { flex: 1; padding: 12px; font-size: 14px; font-weight: 700; color: var(--text-muted); background: transparent; border: none; border-radius: 10px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 2; font-family: "Poppins", sans-serif; }
+      .sekme-btn.aktif { color: white; }
+      .sekme-hareketli-arkaplan { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); background: var(--primary); border-radius: 10px; transition: transform 0.3s ease; z-index: 1; }
+
       /* --- GRUP DERSİ STİLLERİ --- */
       .grup-kart { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s; }
       .grup-kart:hover { border-color: var(--primary); }
@@ -223,7 +229,7 @@
 
         <!-- 1. GÖRÜNÜM: GRUPLARIM LİSTESİ -->
         <div id="grupListeGorunumu">
-          <button class="btn-ikincil" onclick="yeniGrupEkraniAc()" style="margin-top:0; margin-bottom:15px;">
+          <button class="btn-ikincil" onclick="yeniGrupEkraniAc()" style="margin-top:0; margin-bottom:15px; border-style:dashed;">
             <span class="material-icons-round">add</span> YENİ GRUP OLUŞTUR
           </button>
           <div id="grupKartlariAlani">
@@ -305,8 +311,19 @@
         </div>
       </div>
 
-      <!-- DERS EKLEME ALANI -->
-      <div class="kart">
+      <!-- YENİ: ANA SEKMELER (TABS) -->
+      <div class="ana-sekmeler-wrapper">
+        <div id="sekme-arkaplan" class="sekme-hareketli-arkaplan"></div>
+        <button id="sekme-bireysel" class="sekme-btn aktif" onclick="sekmeDegistir('bireysel')">
+          <span class="material-icons-round">person</span> Bireysel Dersler
+        </button>
+        <button id="sekme-grup" class="sekme-btn" onclick="sekmeDegistir('grup')">
+          <span class="material-icons-round">groups</span> Grup Dersleri
+        </button>
+      </div>
+
+      <!-- BİREYSEL DERS EKLEME KARTI -->
+      <div class="kart" id="bireyselEklemeAlani">
         <label>Öğrenci Adı</label>
         <div style="position: relative">
           <input type="text" id="studentInput" placeholder="İsim baş harfi yaz..." autocomplete="off" />
@@ -342,11 +359,13 @@
         <button id="saveBtn" class="btn-ana" onclick="kaydet()">
           <span class="material-icons-round" style="font-size: 20px">add_task</span> DERSİ KAYDET
         </button>
+      </div>
 
-        <button class="btn-ikincil" onclick="openGrupDersiModal()" style="border-style: solid;">
-          <span class="material-icons-round" style="font-size: 20px">groups</span> GRUP DERSİ EKLE
+      <!-- GRUP DERSİ EKLEME YÖNLENDİRME ALANI (SADECE GRUP SEKMESİNDE GÖZÜKÜR) -->
+      <div id="grupEklemeAlani" style="display: none; margin-bottom: 15px;">
+        <button class="btn-ikincil" onclick="openGrupDersiModal()" style="border-style: solid; margin-top:0; padding: 15px; font-size: 16px; background:var(--primary); color:white; border:none; box-shadow: 0 4px 10px rgba(79,70,229,0.3);">
+          <span class="material-icons-round" style="font-size: 24px">groups</span> GRUP DERSİ YÖNETİMİ & YOKLAMA
         </button>
-
       </div>
 
       <!-- FİLTRELER -->
@@ -454,6 +473,9 @@
       
       var aktifUser = localStorage.getItem("app_user") || "";
       var aktifSifre = localStorage.getItem("app_sifre") || "";
+      
+      // YENİ: Aktif Sekme Durumu
+      var aktifSekme = "bireysel"; // 'bireysel' veya 'grup'
 
       window.alert = function (message) {
         Swal.fire({ text: message, confirmButtonText: "Kapat", confirmButtonColor: "var(--primary)", background: "var(--bg-card)", color: "var(--text-main)", customClass: { popup: 'kart' } });
@@ -483,6 +505,32 @@
             checkLogin(aktifUser, aktifSifre);
          }
       };
+
+      // YENİ: SEKME DEĞİŞTİRME FONKSİYONU
+      function sekmeDegistir(sekme) {
+        aktifSekme = sekme;
+        var bg = document.getElementById("sekme-arkaplan");
+        
+        if (sekme === 'bireysel') {
+            bg.style.transform = "translateX(0)";
+            document.getElementById("sekme-bireysel").classList.add("aktif");
+            document.getElementById("sekme-grup").classList.remove("aktif");
+            
+            document.getElementById("bireyselEklemeAlani").style.display = "block";
+            document.getElementById("grupEklemeAlani").style.display = "none";
+        } else {
+            bg.style.transform = "translateX(100%)";
+            document.getElementById("sekme-bireysel").classList.remove("aktif");
+            document.getElementById("sekme-grup").classList.add("aktif");
+            
+            document.getElementById("bireyselEklemeAlani").style.display = "none";
+            document.getElementById("grupEklemeAlani").style.display = "block";
+        }
+        
+        secimiTemizle();
+        updateFilters();
+        renderList();
+      }
 
       async function apiIstekAt(action, postData = null) {
          let url = SCRIPT_URL + "?action=" + action + "&user=" + encodeURIComponent(aktifUser) + "&pass=" + encodeURIComponent(aktifSifre);
@@ -608,7 +656,7 @@
              toggleManuel(true); 
          }
          
-         updateFilters(); renderList();
+         sekmeDegistir(aktifSekme); // Görünümü tazeler
       }
 
       function getMonthYear(dateStr) {
@@ -626,15 +674,28 @@
         var monthFilter = document.getElementById("monthFilter");
         var studentFilter = document.getElementById("studentListFilter");
         var selectedMonth = monthFilter.value; var selectedStudent = studentFilter.value;
+        var isGrupSekmesi = (aktifSekme === "grup");
 
-        monthFilter.innerHTML = '<option value="all">Tüm Aylar</option>'; studentFilter.innerHTML = '<option value="all">Tüm Öğrenciler</option>';
+        monthFilter.innerHTML = '<option value="all">Tüm Aylar</option>'; 
+        studentFilter.innerHTML = '<option value="all">' + (isGrupSekmesi ? "Tüm Grup Öğrencileri" : "Tüm Öğrenciler") + '</option>';
+        
         var monthsSet = new Set(); var studentsSet = new Set();
 
         for (var ogrenci in cachedUnpaidData) {
-          studentsSet.add(ogrenci); cachedUnpaidData[ogrenci].forEach((ders) => { monthsSet.add(getMonthYear(ders.date)); });
+          var isGrupOgrenci = ogrenci.includes("(Grup)");
+          if (isGrupSekmesi && !isGrupOgrenci) continue; // Grup sekmesinde bireyseli atla
+          if (!isGrupSekmesi && isGrupOgrenci) continue; // Bireysel sekmesinde grubu atla
+
+          studentsSet.add(ogrenci); 
+          cachedUnpaidData[ogrenci].forEach((ders) => { monthsSet.add(getMonthYear(ders.date)); });
         }
+        
         Array.from(monthsSet).sort().forEach((m) => { monthFilter.innerHTML += `<option value="${m}">${m}</option>`; });
-        Array.from(studentsSet).sort().forEach((s) => { studentFilter.innerHTML += `<option value="${s}">${s}</option>`; });
+        Array.from(studentsSet).sort().forEach((s) => { 
+            // Seçeneklerde Grup yazısını çıkararak daha temiz gösterebiliriz
+            var disp = isGrupSekmesi ? s.replace(" (Grup)", "") : s;
+            studentFilter.innerHTML += `<option value="${s}">${disp}</option>`; 
+        });
 
         if (Array.from(monthsSet).includes(selectedMonth)) monthFilter.value = selectedMonth;
         if (Array.from(studentsSet).includes(selectedStudent)) studentFilter.value = selectedStudent;
@@ -643,15 +704,30 @@
       function renderList() {
         var container = document.getElementById("listeAlani");
         var valMonth = document.getElementById("monthFilter").value; var valStudent = document.getElementById("studentListFilter").value;
+        var isGrupSekmesi = (aktifSekme === "grup");
 
-        if (Object.keys(cachedUnpaidData).length === 0) {
-          container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:15px; font-weight:600;">🎉 İşlem bekleyen ders yok!</div>';
-          document.getElementById("genelToplamAlani").style.display = "none"; return;
+        // Önce ekranda gösterilecek kayıt var mı onu kontrol edelim
+        var hasRecordsForTab = false;
+        for(var o in cachedUnpaidData) {
+            if(isGrupSekmesi && o.includes("(Grup)")) { hasRecordsForTab = true; break; }
+            if(!isGrupSekmesi && !o.includes("(Grup)")) { hasRecordsForTab = true; break; }
+        }
+
+        if (!hasRecordsForTab) {
+          container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:15px; font-weight:600;">🎉 İşlem bekleyen ${isGrupSekmesi ? 'grup' : 'bireysel'} ders yok!</div>`;
+          document.getElementById("genelToplamAlani").style.display = "none"; 
+          document.getElementById("renkSeridiWrapper").style.display = "none";
+          return;
         }
 
         var groupedByMonth = {};
         for (var ogrenci in cachedUnpaidData) {
+          var isGrupOgrenci = ogrenci.includes("(Grup)");
+          if (isGrupSekmesi && !isGrupOgrenci) continue;
+          if (!isGrupSekmesi && isGrupOgrenci) continue;
+
           if (valStudent !== "all" && ogrenci !== valStudent) continue;
+          
           cachedUnpaidData[ogrenci].forEach((ders) => {
             var month = getMonthYear(ders.date);
             if (valMonth !== "all" && month !== valMonth) return;
@@ -670,15 +746,20 @@
             var ogrenciGenelToplamPara = 0;
             if (cachedUnpaidData[std]) { cachedUnpaidData[std].forEach((d) => (ogrenciGenelToplamPara += d.amount)); }
             var ogrenciGenelToplamText = ogrenciGenelToplamPara.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
-            var safeStdName = std.replace(/\s/g, ""); var safeStdHtml = std.replace(/'/g, "\\'");
+            
+            // Güvenli ID oluşturma
+            var safeStdName = std.replace(/\s/g, "").replace(/[^a-zA-Z0-9]/g, ""); 
+            var safeStdHtml = std.replace(/'/g, "\\'");
             var ozelUcret = window.studentRates[std] ? window.studentRates[std] : defaultRate;
             
+            var stdDisplayName = isGrupSekmesi ? std.replace(" (Grup)", "") : std;
+
             var studentHtml = `
               <div class="kart" id="card-${safeStdName}-${ay.replace(/\s/g, "")}">
                  <div class="baslik">
                     <div class="baslik-sol">
                        <span class="material-icons-round" style="font-size:20px; color:var(--primary)">person</span> 
-                       <span style="font-weight:700;">${std}</span>
+                       <span style="font-weight:700;">${stdDisplayName}</span>
                        <span class="material-icons-round" style="font-size:14px; color:var(--text-muted); cursor:pointer; margin-left:4px;" onclick="openStudentModal('${safeStdHtml}', ${ozelUcret})" title="Öğrenci Yönetimi">edit</span>
                        <span style="font-size:11px; color:var(--danger); background:rgba(239, 68, 68, 0.1); padding:2px 6px; border-radius:6px; margin-left:6px; border:1px solid rgba(239, 68, 68, 0.2);">Bakiye: ${ogrenciGenelToplamText}</span>
                     </div>
@@ -726,7 +807,13 @@
             ayTotal += toplamPara; grandTotalPara += toplamPara;
             var paraText = toplamPara.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
             var ayMesajKey = std + "_" + ay; var safeAyMesajKeyHtml = ayMesajKey.replace(/'/g, "\\'");
-            globalMesajlar[ayMesajKey] = `👋 Merhaba ${std} ile ${ay} ayında\nyapılan derslerin listesi:\n\n${mesajDetay}\n🔢 Toplam: ${toplamDers} Ders\n💰 Toplam Tutar: ${paraText}`;
+            
+            // Mesaj içeriğini grup/bireysel duruma göre ayırma
+            if(isGrupSekmesi) {
+               globalMesajlar[ayMesajKey] = `👋 Merhaba ${stdDisplayName},\n${ay} ayında katıldığın GRUP derslerinin listesi:\n\n${mesajDetay}\n🔢 Toplam: ${toplamDers} Ders\n💰 Toplam Tutar: ${paraText}`;
+            } else {
+               globalMesajlar[ayMesajKey] = `👋 Merhaba ${stdDisplayName} ile ${ay} ayında\nyapılan derslerin listesi:\n\n${mesajDetay}\n🔢 Toplam: ${toplamDers} Ders\n💰 Toplam Tutar: ${paraText}`;
+            }
 
             studentHtml += `
                  <div class="ozet"><span>Ay Top: ${toplamDers} Ders</span><span style="color:var(--border-color)">|</span><span style="color:var(--success);">${paraText}</span></div>
@@ -969,7 +1056,6 @@
          GRUP DERSİ YÖNETİMİ FONKSİYONLARI (PRO+)
          ========================================== */
       var dersGruplari = JSON.parse(localStorage.getItem("dersGruplariPro")) || {};
-      var aktifSeciliGrup = "";
 
       function openGrupDersiModal() {
         document.getElementById("grupDersiModal").style.display = "flex";
@@ -978,7 +1064,6 @@
 
       function closeGrupDersiModal() {
         document.getElementById("grupDersiModal").style.display = "none";
-        aktifSeciliGrup = "";
       }
 
       function grupAnaEkranaDon() {
@@ -1078,7 +1163,6 @@
         if (!ucret) return alert("Lütfen kişi başı ücreti girin!");
         if (eskiIsim !== yeniIsim && dersGruplari[yeniIsim]) return alert("Bu isimde bir grup zaten var!");
         
-        // Hangi öğrenciler işaretlendi?
         var seciliOgrenciler = [];
         document.querySelectorAll(".grup-ogrenci-check:checked").forEach(cb => {
            seciliOgrenciler.push(cb.value);
@@ -1106,8 +1190,10 @@
         grupAnaEkranaDon();
       }
 
+      var yoklamaIcinSeciliGrup = "";
+
       function grupYoklamaAc(grupAdi) {
-        aktifSeciliGrup = grupAdi;
+        yoklamaIcinSeciliGrup = grupAdi;
         document.getElementById("grupListeGorunumu").style.display = "none";
         document.getElementById("grupYoklamaGorunumu").style.display = "block";
         document.getElementById("yoklamaGrupBaslik").innerText = "📌 " + grupAdi;
@@ -1143,8 +1229,8 @@
       async function seciliGrupDersiniKaydet() {
         var btn = document.getElementById("grupKaydetBtn");
         var notGenel = document.getElementById("grupDersNotu").value.trim();
-        var ogrenciler = dersGruplari[aktifSeciliGrup].ogrenciler;
-        var grupUcreti = dersGruplari[aktifSeciliGrup].ucret;
+        var ogrenciler = dersGruplari[yoklamaIcinSeciliGrup].ogrenciler;
+        var grupUcreti = dersGruplari[yoklamaIcinSeciliGrup].ucret;
         
         var kaydedilecekler = [];
         
@@ -1163,7 +1249,7 @@
             kaydedilecekler.push({
               isim: ogr + " (Grup)", 
               sure: sure,
-              not: aktifSeciliGrup + " | " + katilimNotu + (notGenel ? " | " + notGenel : "")
+              not: yoklamaIcinSeciliGrup + " | " + katilimNotu + (notGenel ? " | " + notGenel : "")
             });
           }
         });
@@ -1190,6 +1276,7 @@
           
           btn.style.background = "var(--success)";
           btn.innerHTML = `<span class="material-icons-round">check</span> ${basariliSayisi} KAYIT EKLENDİ`;
+          
           listeyiGetir(true); 
           
           setTimeout(function() { 
@@ -1207,6 +1294,7 @@
         }
       }
 
+      // Hızlı Arama çubuğunda "Grup" kelimesi geçenleri GİZLE (Bireysel ekrandayken yanlışlıkla gruba ders atmayı önler)
       document.getElementById("studentInput").addEventListener("input", function (e) {
         var val = this.value; var list = document.getElementById("autocomplete-list");
         list.innerHTML = ""; list.style.display = "none"; document.getElementById("rateInput").placeholder = "Sadece özel fiyat belirlemek için";
@@ -1216,6 +1304,8 @@
         }
         var count = 0;
         knownStudents.forEach((item) => {
+          if(item[0].includes("(Grup)")) return; // YENİ: Grubu gizle
+
           if (item[0].toUpperCase().includes(val.toUpperCase())) {
             var div = document.createElement("div"); div.className = "autocomplete-item"; div.innerHTML = item[0];
             div.onclick = function () {
